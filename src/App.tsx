@@ -596,14 +596,16 @@ function App() {
                   </p>
                 )}
 
-              <p className="export-limit-notice">Max 1 export per day.</p>
-              <button
-                className="btn-primary btn-primary-large"
-                disabled={loading || selectedKeys.length === 0}
-                onClick={handleExport}
-              >
-                {loading ? "Processing..." : "Build Excel"}
-              </button>
+              <div className="export-btn-wrapper">
+                <span className="export-limit-notice">Max 1 export per day.</span>
+                <button
+                  className="btn-primary btn-primary-large"
+                  disabled={loading || selectedKeys.length === 0}
+                  onClick={handleExport}
+                >
+                  {loading ? "Processing..." : "Build Excel"}
+                </button>
+              </div>
             </section>
           </>
         )}

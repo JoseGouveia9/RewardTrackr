@@ -174,11 +174,18 @@ button:disabled {
   padding: 12px 22px;
 }
 
+.export-btn-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
 .export-limit-notice {
-  font-size: 12px;
-  color: #888;
-  text-align: center;
-  margin-bottom: 6px;
+  position: absolute;
+  top: -16px;
+  right: 0;
+  font-size: 11px;
+  color: #aaa;
+  white-space: nowrap;
 }
 
 .btn-secondary {
