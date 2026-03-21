@@ -37,11 +37,7 @@ export function FiatDropdown({ value, onChange }: FiatDropdownProps) {
       </button>
 
       {open && (
-        <div
-          className="fiat-dropdown-menu"
-          role="listbox"
-          aria-label="Extra fiat currency"
-        >
+        <div className="fiat-dropdown-menu" role="listbox" aria-label="Extra fiat currency">
           <input
             className="fiat-dropdown-search"
             type="text"

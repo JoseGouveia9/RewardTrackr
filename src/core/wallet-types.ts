@@ -1,6 +1,11 @@
 import type { RewardKey } from "./types";
 
-export const WALLET_TX_KEYS = new Set<RewardKey>(["bounty", "deposits", "withdrawals", "transactions"]);
+export const WALLET_TX_KEYS = new Set<RewardKey>([
+  "bounty",
+  "deposits",
+  "withdrawals",
+  "transactions",
+]);
 
 export const TX_CHECKBOX_OPTIONS: Array<{ label: string; fromTypes: string[] }> = [
   { label: "veGoMining Reward", fromTypes: ["auto-claim"] },

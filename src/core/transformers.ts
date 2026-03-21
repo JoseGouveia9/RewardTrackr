@@ -116,7 +116,17 @@ async function transformWalletTxCoingecko(
   const txType = fromType ? (TX_FROM_TYPE_LABEL[fromType] ?? fromType) : undefined;
 
   if (!includeFiat) {
-    return { createdAt: raw.createdAt, currency, reward, priceAtTime: 0, priceTimestamp: null, rewardInUSD: 0, rewardInFiat: 0, fromType, txType };
+    return {
+      createdAt: raw.createdAt,
+      currency,
+      reward,
+      priceAtTime: 0,
+      priceTimestamp: null,
+      rewardInUSD: 0,
+      rewardInFiat: 0,
+      fromType,
+      txType,
+    };
   }
 
   let priceAtTime: number | null = null;
@@ -150,7 +160,10 @@ async function transformWalletTxCoingecko(
   };
 }
 
-function transformExistingPrice(raw: ExistingPriceRawRecord, fiatRate: number): StandardEnrichedRecord {
+function transformExistingPrice(
+  raw: ExistingPriceRawRecord,
+  fiatRate: number,
+): StandardEnrichedRecord {
   const reward = raw.reward ?? 0;
   const rewardInUSD = raw.rewardInUsd ?? raw.rewardInUSD ?? 0;
   return {
@@ -194,25 +207,35 @@ export async function reenrichFiatValues(
   records: RewardRecord[],
   extraFiatCurrency: string,
 ): Promise<RewardRecord[]> {
-  await prefetchExchangeRates(records.map((r) => r?.createdAt), extraFiatCurrency);
+  await prefetchExchangeRates(
+    records.map((r) => r?.createdAt),
+    extraFiatCurrency,
+  );
 
-  return Promise.all(records.map(async (r) => {
-    try {
-      const fiatRate = await getRate(r.createdAt as string, extraFiatCurrency);
-      switch (config.enrichType) {
-        case "solo-mining":
-        case "minerwars":
-          return { ...r, poolRewardFiat: ((r.poolRewardUSD as number) ?? 0) * fiatRate, maintenanceFiat: ((r.maintenanceUSD as number) ?? 0) * fiatRate, rewardInFiat: ((r.rewardInUSD as number) ?? 0) * fiatRate };
-        case "purchase":
-        case "upgrade":
-          return { ...r, valueFiat: ((r.valueUsd as number) ?? 0) * fiatRate };
-        default:
-          return { ...r, rewardInFiat: ((r.rewardInUSD as number) ?? 0) * fiatRate };
+  return Promise.all(
+    records.map(async (r) => {
+      try {
+        const fiatRate = await getRate(r.createdAt as string, extraFiatCurrency);
+        switch (config.enrichType) {
+          case "solo-mining":
+          case "minerwars":
+            return {
+              ...r,
+              poolRewardFiat: ((r.poolRewardUSD as number) ?? 0) * fiatRate,
+              maintenanceFiat: ((r.maintenanceUSD as number) ?? 0) * fiatRate,
+              rewardInFiat: ((r.rewardInUSD as number) ?? 0) * fiatRate,
+            };
+          case "purchase":
+          case "upgrade":
+            return { ...r, valueFiat: ((r.valueUsd as number) ?? 0) * fiatRate };
+          default:
+            return { ...r, rewardInFiat: ((r.rewardInUSD as number) ?? 0) * fiatRate };
+        }
+      } catch {
+        return r;
       }
-    } catch {
-      return r;
-    }
-  }));
+    }),
+  );
 }
 
 // Enriches raw API records with fiat pricing. All fiat values use historical rates for `extraFiatCurrency`.
@@ -251,7 +274,9 @@ export async function enrichRecords(
           break;
         case "wallet-tx-coingecko": {
           const currency = currencyFromWalletType(raw?.walletType as string | undefined);
-          onProgress?.(`Fetching ${currency} price for ${String(raw?.createdAt || "").slice(0, 10)} (${i + 1} of ${rawRecords.length})...`);
+          onProgress?.(
+            `Fetching ${currency} price for ${String(raw?.createdAt || "").slice(0, 10)} (${i + 1} of ${rawRecords.length})...`,
+          );
           record = await transformWalletTxCoingecko(
             raw as unknown as WalletTxRawRecord,
             fiatRate,
@@ -276,7 +301,9 @@ export async function enrichRecords(
 
       enriched.push(record);
     } catch (err) {
-      onProgress?.(`Warning: Skipped malformed record at index ${i + 1}, ${err instanceof Error ? err.message : String(err)}`);
+      onProgress?.(
+        `Warning: Skipped malformed record at index ${i + 1}, ${err instanceof Error ? err.message : String(err)}`,
+      );
     }
   }
 

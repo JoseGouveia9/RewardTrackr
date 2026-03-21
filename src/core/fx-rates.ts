@@ -20,7 +20,9 @@ export function seedFxCache(): void {
     for (const [k, v] of Object.entries(obj)) {
       if (typeof v === "number" && Number.isFinite(v) && v > 0) rateCache.set(k, v);
     }
-  } catch { /* ignore corrupt storage */ }
+  } catch {
+    /* ignore corrupt storage */
+  }
 }
 
 // Writes the current in-memory rate cache back to localStorage.
@@ -29,11 +31,17 @@ export function persistFxCache(): void {
     const obj: Record<string, number> = {};
     for (const [k, v] of rateCache.entries()) obj[k] = v;
     localStorage.setItem(LS_KEY_FX, JSON.stringify(obj));
-  } catch { /* ignore quota errors */ }
+  } catch {
+    /* ignore quota errors */
+  }
 }
 
 // Fetches historical USD→currency rates for a date range from the FX timeseries API.
-async function fetchRatesForRange(startDate: string, endDate: string, currency: string): Promise<Record<string, number>> {
+async function fetchRatesForRange(
+  startDate: string,
+  endDate: string,
+  currency: string,
+): Promise<Record<string, number>> {
   const url = `${FX_TIMESERIES_API}?start_date=${startDate}&end_date=${endDate}&base=USD&currencies=${currency}`;
   const data = await getJsonTolerant<FxTimeseriesResponse>(url);
 
@@ -57,7 +65,10 @@ export async function prefetchExchangeRates(rawDates: unknown[], currency: strin
 
   let deletedAny = false;
   for (const k of [...rateCache.keys()]) {
-    if (!k.endsWith(`_${currency}`)) { rateCache.delete(k); deletedAny = true; }
+    if (!k.endsWith(`_${currency}`)) {
+      rateCache.delete(k);
+      deletedAny = true;
+    }
   }
   if (deletedAny) persistFxCache();
 
@@ -81,7 +92,11 @@ export async function prefetchExchangeRates(rawDates: unknown[], currency: strin
   const needsToday = dates.some((d) => d >= todayKey) && !rateCache.has(`${todayKey}_${currency}`);
 
   const [rates, todayRate] = await Promise.all([
-    fetchRatesForRange(rangeStart.toISOString().split("T")[0], missing[missing.length - 1], currency),
+    fetchRatesForRange(
+      rangeStart.toISOString().split("T")[0],
+      missing[missing.length - 1],
+      currency,
+    ),
     needsToday ? fetchLatestRate(currency as ExtraFiatCurrency) : Promise.resolve(null),
   ]);
 

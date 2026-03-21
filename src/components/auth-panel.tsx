@@ -22,6 +22,7 @@ export function AuthPanel({ onSync }: AuthPanelProps) {
           src="img/extension-sync.png"
           alt="Extension ready to sync"
           className="auth-preview-img auth-preview-img--wide"
+          loading="lazy"
         />
         <div className="auth-step">
           <span className="auth-step-num">3</span>
@@ -33,20 +34,20 @@ export function AuthPanel({ onSync }: AuthPanelProps) {
         <div className="auth-step">
           <span className="auth-step-num">4</span>
           <span>
-            Once synced, the extension shows <strong>"Welcome [name]!"</strong>{" "}
-            and <strong>"Profile synced."</strong>
+            Once synced, the extension shows <strong>"Welcome [name]!"</strong> and{" "}
+            <strong>"Profile synced."</strong>
           </span>
         </div>
         <img
           src="img/extension-success.png"
           alt="Extension profile synced"
           className="auth-preview-img"
+          loading="lazy"
         />
         <div className="auth-step">
           <span className="auth-step-num">5</span>
           <span>
-            Click <strong>"Open Exporter"</strong> and you will be redirected
-            here
+            Click <strong>"Open Exporter"</strong> and you will be redirected here
           </span>
         </div>
       </div>

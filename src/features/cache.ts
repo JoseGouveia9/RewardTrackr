@@ -61,13 +61,17 @@ export function saveCacheEntry(
       CACHE_PREFIX + key,
       JSON.stringify({ sheetName, records, totalCount, fetchedAt: Date.now(), ...extras }),
     );
-  } catch { /* QuotaExceededError, skip silently */ }
+  } catch {
+    /* QuotaExceededError, skip silently */
+  }
 }
 
 // Loads cache entries for all reward keys and returns them as a keyed map.
 export function loadAllCacheEntries(): CacheState {
   const state = {} as CacheState;
-  ALL_REWARD_KEYS.forEach((key) => { state[key] = loadCacheEntry(key); });
+  ALL_REWARD_KEYS.forEach((key) => {
+    state[key] = loadCacheEntry(key);
+  });
   return state;
 }
 
@@ -81,7 +85,8 @@ export function persistPriceCache(key: RewardKey, records: RewardRecord[]): void
   if (!WALLET_TX_KEYS.has(key) || !records.length) return;
   try {
     const store = parseJsonSafe<Record<string, PriceCacheValue>>(
-      localStorage.getItem(LS_KEY_PRICE_CACHE), {},
+      localStorage.getItem(LS_KEY_PRICE_CACHE),
+      {},
     );
 
     for (const item of records) {
@@ -96,9 +101,12 @@ export function persistPriceCache(key: RewardKey, records: RewardRecord[]): void
       const cacheKey = `${coingeckoId}_${entryDate.toISOString().slice(0, 16)}`;
       const usd = asNumber(item.rewardInUSD ?? item.rewardInUsd ?? item.valueUsd);
       const reward = asNumber(item.reward);
-      const price = item.priceAtTime != null
-        ? asNumber(item.priceAtTime)
-        : reward > 0 && usd > 0 ? usd / reward : null;
+      const price =
+        item.priceAtTime != null
+          ? asNumber(item.priceAtTime)
+          : reward > 0 && usd > 0
+            ? usd / reward
+            : null;
 
       if (price && Number.isFinite(price) && price > 0) {
         store[cacheKey] = {
@@ -111,7 +119,9 @@ export function persistPriceCache(key: RewardKey, records: RewardRecord[]): void
     }
 
     localStorage.setItem(LS_KEY_PRICE_CACHE, JSON.stringify(store));
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 }
 
 // Returns true if any wallet-tx records in the cache entry are missing their fiat price.
@@ -136,17 +146,27 @@ export function filterCacheableRecords(
   records: RewardRecord[],
   totalCount: number,
 ): { records: RewardRecord[]; totalCount: number; removedCreated: number } {
-  if (!Array.isArray(records)) return { records: [], totalCount: asNumber(totalCount), removedCreated: 0 };
+  if (!Array.isArray(records))
+    return { records: [], totalCount: asNumber(totalCount), removedCreated: 0 };
 
   if (!["solo-mining", "minerwars"].includes(key)) {
-    return { records, totalCount: typeof totalCount === "number" ? totalCount : records.length, removedCreated: 0 };
+    return {
+      records,
+      totalCount: typeof totalCount === "number" ? totalCount : records.length,
+      removedCreated: 0,
+    };
   }
 
-  const filtered = records.filter((r) => String(r?.reinvestmentStatus || "").toLowerCase() !== "created");
+  const filtered = records.filter(
+    (r) => String(r?.reinvestmentStatus || "").toLowerCase() !== "created",
+  );
   const removedCreated = records.length - filtered.length;
-  const cachedTotalCount = removedCreated > 0
-    ? filtered.length
-    : typeof totalCount === "number" ? totalCount : filtered.length;
+  const cachedTotalCount =
+    removedCreated > 0
+      ? filtered.length
+      : typeof totalCount === "number"
+        ? totalCount
+        : filtered.length;
 
   return { records: filtered, totalCount: cachedTotalCount, removedCreated };
 }

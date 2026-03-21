@@ -1,7 +1,9 @@
 import type { CursorPaginationItem, RewardConfig, RewardGroup, RewardKey } from "./types";
 import { ALL_TX_FROM_TYPES } from "./wallet-types";
 
-const API = (import.meta.env.VITE_API_BASE as string | undefined)?.replace(/\/$/, "") ?? "https://api.gomining.com";
+const API =
+  (import.meta.env.VITE_API_BASE as string | undefined)?.replace(/\/$/, "") ??
+  "https://api.gomining.com";
 
 export const REWARD_GROUPS: RewardGroup[] = [
   { id: "solo-mining", label: "Solo Mining", keys: ["solo-mining"] },
@@ -16,13 +18,17 @@ export const REWARD_GROUPS: RewardGroup[] = [
   { id: "transactions", label: "Transactions", keys: ["transactions"] },
 ];
 
-export const ALL_REWARD_KEYS: RewardKey[] = [
-  ...new Set(REWARD_GROUPS.flatMap((g) => g.keys)),
-];
+export const ALL_REWARD_KEYS: RewardKey[] = [...new Set(REWARD_GROUPS.flatMap((g) => g.keys))];
 
 const WALLET_TYPES = [
-  "VIRTUAL_BNB", "VIRTUAL_BTC", "VIRTUAL_ETH", "VIRTUAL_GMT",
-  "VIRTUAL_SOL", "VIRTUAL_TON", "VIRTUAL_USDC", "VIRTUAL_USDT",
+  "VIRTUAL_BNB",
+  "VIRTUAL_BTC",
+  "VIRTUAL_ETH",
+  "VIRTUAL_GMT",
+  "VIRTUAL_SOL",
+  "VIRTUAL_TON",
+  "VIRTUAL_USDC",
+  "VIRTUAL_USDT",
 ];
 
 export const REWARD_CONFIGS: RewardConfig[] = [
@@ -92,8 +98,12 @@ export const REWARD_CONFIGS: RewardConfig[] = [
         },
         status: [],
         type: [
-          "registration", "nft-payment", "internal-payment",
-          "nft-game-ability-payment", "card-issued", "card-transaction",
+          "registration",
+          "nft-payment",
+          "internal-payment",
+          "nft-game-ability-payment",
+          "card-issued",
+          "card-transaction",
           "simple-earn-reward",
         ],
       },
@@ -152,8 +162,12 @@ export const REWARD_CONFIGS: RewardConfig[] = [
       filter: {
         walletType: WALLET_TYPES,
         fromType: [
-          "withdraw", "withdraw-order", "income-withdraw-instant",
-          "income-withdraw", "nft-income-withdraw", "nft-game-income-withdraw",
+          "withdraw",
+          "withdraw-order",
+          "income-withdraw-instant",
+          "income-withdraw",
+          "nft-income-withdraw",
+          "nft-game-income-withdraw",
           "income-withdraw-order",
         ],
         range: null,
@@ -187,8 +201,13 @@ export const REWARD_CONFIGS: RewardConfig[] = [
         dataType: { in: ["nftEnergyEfficiencyUpgrade", "nftPowerUpgrade"] },
         status: {
           in: [
-            "pending", "success", "error", "waitingForProviderConfirmation",
-            "approvedByProvider", "waitingForConfirmation", "waiting-for-user-approve",
+            "pending",
+            "success",
+            "error",
+            "waitingForProviderConfirmation",
+            "approvedByProvider",
+            "waitingForConfirmation",
+            "waiting-for-user-approve",
           ],
         },
       },

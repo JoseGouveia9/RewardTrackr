@@ -45,37 +45,41 @@ function autoFitColumns(ws: Worksheet): void {
   });
 }
 
-const PURPLE_FILL: ExcelJS.FillPattern = { type: "pattern", pattern: "solid", fgColor: { argb: "FF7A4DF6" } };
+const PURPLE_FILL: ExcelJS.FillPattern = {
+  type: "pattern",
+  pattern: "solid",
+  fgColor: { argb: "FF7A4DF6" },
+};
 const BOLD_WHITE: Partial<ExcelJS.Font> = { bold: true, color: { argb: "FFFFFFFF" } };
 const CENTER: Partial<ExcelJS.Alignment> = { horizontal: "center", vertical: "middle" };
 
 // Maps ISO 4217 currency code → Excel number format. Falls back to "CODE #,##0.00".
 const CURRENCY_FMT: Record<string, string> = {
   EUR: FMT_EUR,
-  GBP: '"\u00a3"#,##0.00',   // £
-  JPY: '"\u00a5"#,##0',       // ¥ (no decimals)
+  GBP: '"\u00a3"#,##0.00', // £
+  JPY: '"\u00a5"#,##0', // ¥ (no decimals)
   CNY: '"\u00a5"#,##0.00',
   BRL: '"R$"#,##0.00',
   CHF: '"CHF"#,##0.00',
-  ILS: '"\u20aa"#,##0.00',    // ₪
-  INR: '"\u20b9"#,##0.00',    // ₹
-  KRW: '"\u20a9"#,##0',       // ₩ (no decimals)
-  RUB: '"\u20bd"#,##0.00',    // ₽
-  THB: '"\u0e3f"#,##0.00',    // ฿
-  UAH: '"\u20b4"#,##0.00',    // ₴
-  PHP: '"\u20b1"#,##0.00',    // ₱
-  NGN: '"\u20a6"#,##0.00',    // ₦
-  GEL: '"\u20be"#,##0.00',    // ₾
-  KZT: '"\u20b8"#,##0.00',    // ₸
-  MNT: '"\u20ae"#,##0',       // ₮ (no decimals)
-  GHS: '"\u20b5"#,##0.00',    // ₵
-  LAK: '"\u20ad"#,##0',       // ₭ (no decimals)
-  VND: '"\u20ab"#,##0',       // ₫ (no decimals)
-  AZN: '"\u20bc"#,##0.00',    // ₼
-  CRC: '"\u20a1"#,##0.00',    // ₡
-  AMD: '"\u058f"#,##0.00',    // ֏
-  BDT: '"\u09f3"#,##0.00',    // ৳
-  KHR: '"\u17db"#,##0',       // ៛ (no decimals)
+  ILS: '"\u20aa"#,##0.00', // ₪
+  INR: '"\u20b9"#,##0.00', // ₹
+  KRW: '"\u20a9"#,##0', // ₩ (no decimals)
+  RUB: '"\u20bd"#,##0.00', // ₽
+  THB: '"\u0e3f"#,##0.00', // ฿
+  UAH: '"\u20b4"#,##0.00', // ₴
+  PHP: '"\u20b1"#,##0.00', // ₱
+  NGN: '"\u20a6"#,##0.00', // ₦
+  GEL: '"\u20be"#,##0.00', // ₾
+  KZT: '"\u20b8"#,##0.00', // ₸
+  MNT: '"\u20ae"#,##0', // ₮ (no decimals)
+  GHS: '"\u20b5"#,##0.00', // ₵
+  LAK: '"\u20ad"#,##0', // ₭ (no decimals)
+  VND: '"\u20ab"#,##0', // ₫ (no decimals)
+  AZN: '"\u20bc"#,##0.00', // ₼
+  CRC: '"\u20a1"#,##0.00', // ₡
+  AMD: '"\u058f"#,##0.00', // ֏
+  BDT: '"\u09f3"#,##0.00', // ৳
+  KHR: '"\u17db"#,##0', // ៛ (no decimals)
   ALL: '"L"#,##0.00',
   BAM: '"KM"#,##0.00',
   BGN: '"\u043b\u0432"#,##0.00',
@@ -196,7 +200,12 @@ function getFiatFormats(extraCurrency: ExtraFiatCurrency | null, includeUsd = tr
   return extraCurrency ? [FMT_USD, getCurrencyFormat(extraCurrency)] : [FMT_USD];
 }
 
-function getFiatValues(usdValue: number, fiatValue: number, extraCurrency: ExtraFiatCurrency | null, includeUsd = true): number[] {
+function getFiatValues(
+  usdValue: number,
+  fiatValue: number,
+  extraCurrency: ExtraFiatCurrency | null,
+  includeUsd = true,
+): number[] {
   if (!includeUsd) return [];
   return extraCurrency ? [usdValue, fiatValue] : [usdValue];
 }
@@ -234,11 +243,14 @@ function buildMiningSheet(
   const fiatHeaders = getFiatHeaders(extraCurrency);
   const headers = [
     "Date",
-    "Pool Reward (BTC)", "Pool Reward (GMT)",
+    "Pool Reward (BTC)",
+    "Pool Reward (GMT)",
     ...fiatHeaders.map((h) => h.replace("Reward", "Pool Reward")),
-    "Maintenance (BTC)", "Maintenance (GMT)",
+    "Maintenance (BTC)",
+    "Maintenance (GMT)",
     ...fiatHeaders.map((h) => h.replace("Reward", "Maintenance")),
-    "Reward (BTC)", "Reward (GMT)",
+    "Reward (BTC)",
+    "Reward (GMT)",
     ...fiatHeaders,
     "Reinvested to Power",
   ];
@@ -249,11 +261,14 @@ function buildMiningSheet(
     const date = new Date(r.createdAt);
     ws.addRow([
       Number.isNaN(date.getTime()) ? "" : date,
-      r.poolReward ?? 0, r.poolRewardGMT ?? 0,
+      r.poolReward ?? 0,
+      r.poolRewardGMT ?? 0,
       ...getFiatValues(r.poolRewardUSD ?? 0, r.poolRewardFiat ?? 0, extraCurrency),
-      r.maintenance ?? 0, r.maintenanceGMT ?? 0,
+      r.maintenance ?? 0,
+      r.maintenanceGMT ?? 0,
       ...getFiatValues(r.maintenanceUSD ?? 0, r.maintenanceFiat ?? 0, extraCurrency),
-      r.reward ?? 0, r.rewardGMT ?? 0,
+      r.reward ?? 0,
+      r.rewardGMT ?? 0,
       ...getFiatValues(r.rewardInUSD ?? 0, r.rewardInFiat ?? 0, extraCurrency),
       r.reinvested ? "Yes" : "No",
     ]);
@@ -267,13 +282,19 @@ function buildMiningSheet(
     ws.getCell(row, col++).numFmt = FMT_DATE;
     ws.getCell(row, col++).numFmt = FMT_BTC;
     ws.getCell(row, col++).numFmt = FMT_OTHER;
-    fiatFormats.forEach((fmt) => { ws.getCell(row, col++).numFmt = fmt; });
+    fiatFormats.forEach((fmt) => {
+      ws.getCell(row, col++).numFmt = fmt;
+    });
     ws.getCell(row, col++).numFmt = FMT_BTC;
     ws.getCell(row, col++).numFmt = FMT_OTHER;
-    fiatFormats.forEach((fmt) => { ws.getCell(row, col++).numFmt = fmt; });
+    fiatFormats.forEach((fmt) => {
+      ws.getCell(row, col++).numFmt = fmt;
+    });
     ws.getCell(row, col++).numFmt = FMT_BTC;
     ws.getCell(row, col++).numFmt = FMT_OTHER;
-    fiatFormats.forEach((fmt) => { ws.getCell(row, col++).numFmt = fmt; });
+    fiatFormats.forEach((fmt) => {
+      ws.getCell(row, col++).numFmt = fmt;
+    });
   }
 
   ws.spliceRows(1, 0, new Array(COLS).fill(""));
@@ -286,22 +307,28 @@ function buildMiningSheet(
 
   ws.getCell("A1").value = "TOTAL";
   let totalCol = 2;
-  ws.getCell(1, totalCol).value = subtotal("B", dataFrom, dataTo); ws.getCell(1, totalCol++).numFmt = FMT_BTC;
-  ws.getCell(1, totalCol).value = subtotal("C", dataFrom, dataTo); ws.getCell(1, totalCol++).numFmt = FMT_OTHER;
+  ws.getCell(1, totalCol).value = subtotal("B", dataFrom, dataTo);
+  ws.getCell(1, totalCol++).numFmt = FMT_BTC;
+  ws.getCell(1, totalCol).value = subtotal("C", dataFrom, dataTo);
+  ws.getCell(1, totalCol++).numFmt = FMT_OTHER;
   fiatFormats.forEach((fmt) => {
     const letter = String.fromCharCode(64 + totalCol);
     ws.getCell(1, totalCol).value = subtotal(letter, dataFrom, dataTo);
     ws.getCell(1, totalCol++).numFmt = fmt;
   });
-  ws.getCell(1, totalCol).value = subtotal(String.fromCharCode(64 + totalCol), dataFrom, dataTo); ws.getCell(1, totalCol++).numFmt = FMT_BTC;
-  ws.getCell(1, totalCol).value = subtotal(String.fromCharCode(64 + totalCol), dataFrom, dataTo); ws.getCell(1, totalCol++).numFmt = FMT_OTHER;
+  ws.getCell(1, totalCol).value = subtotal(String.fromCharCode(64 + totalCol), dataFrom, dataTo);
+  ws.getCell(1, totalCol++).numFmt = FMT_BTC;
+  ws.getCell(1, totalCol).value = subtotal(String.fromCharCode(64 + totalCol), dataFrom, dataTo);
+  ws.getCell(1, totalCol++).numFmt = FMT_OTHER;
   fiatFormats.forEach((fmt) => {
     const letter = String.fromCharCode(64 + totalCol);
     ws.getCell(1, totalCol).value = subtotal(letter, dataFrom, dataTo);
     ws.getCell(1, totalCol++).numFmt = fmt;
   });
-  ws.getCell(1, totalCol).value = subtotal(String.fromCharCode(64 + totalCol), dataFrom, dataTo); ws.getCell(1, totalCol++).numFmt = FMT_BTC;
-  ws.getCell(1, totalCol).value = subtotal(String.fromCharCode(64 + totalCol), dataFrom, dataTo); ws.getCell(1, totalCol++).numFmt = FMT_OTHER;
+  ws.getCell(1, totalCol).value = subtotal(String.fromCharCode(64 + totalCol), dataFrom, dataTo);
+  ws.getCell(1, totalCol++).numFmt = FMT_BTC;
+  ws.getCell(1, totalCol).value = subtotal(String.fromCharCode(64 + totalCol), dataFrom, dataTo);
+  ws.getCell(1, totalCol++).numFmt = FMT_OTHER;
   fiatFormats.forEach((fmt) => {
     const letter = String.fromCharCode(64 + totalCol);
     ws.getCell(1, totalCol).value = subtotal(letter, dataFrom, dataTo);
@@ -342,7 +369,9 @@ function buildStandardSheet(
     const cur = ws.getCell(`B${row}`).value;
     ws.getCell(`C${row}`).numFmt = cur === "BTC" ? FMT_BTC : FMT_OTHER;
     const fmts = getFiatFormats(extraCurrency, includeUsd);
-    fmts.forEach((fmt, i) => { ws.getCell(`${String.fromCharCode(68 + i)}${row}`).numFmt = fmt; });
+    fmts.forEach((fmt, i) => {
+      ws.getCell(`${String.fromCharCode(68 + i)}${row}`).numFmt = fmt;
+    });
   }
 
   ws.spliceRows(1, 0, new Array(COLS).fill(""));
@@ -399,7 +428,9 @@ function buildMultiCurrencySheet(
     const cur = ws.getCell(`B${row}`).value;
     ws.getCell(`C${row}`).numFmt = cur === "BTC" ? FMT_BTC : FMT_OTHER;
     const fmts = getFiatFormats(extraCurrency, includeUsd);
-    fmts.forEach((fmt, i) => { ws.getCell(`${String.fromCharCode(68 + i)}${row}`).numFmt = fmt; });
+    fmts.forEach((fmt, i) => {
+      ws.getCell(`${String.fromCharCode(68 + i)}${row}`).numFmt = fmt;
+    });
   }
 
   const totalRowCount = Math.max(currencies.length, 1);
@@ -510,7 +541,13 @@ function buildTransactionsSheet(
   includeUsd = true,
 ): void {
   const ws = workbook.addWorksheet(sheetName);
-  const headers = ["Date", "Currency", "Type", "Reward", ...getFiatHeaders(extraCurrency, includeUsd)];
+  const headers = [
+    "Date",
+    "Currency",
+    "Type",
+    "Reward",
+    ...getFiatHeaders(extraCurrency, includeUsd),
+  ];
   const COLS = headers.length;
 
   ws.addRow(headers);
@@ -531,7 +568,9 @@ function buildTransactionsSheet(
     const cur = ws.getCell(`B${row}`).value;
     ws.getCell(`D${row}`).numFmt = cur === "BTC" ? FMT_BTC : FMT_OTHER;
     const fmts = getFiatFormats(extraCurrency, includeUsd);
-    fmts.forEach((fmt, i) => { ws.getCell(`${String.fromCharCode(69 + i)}${row}`).numFmt = fmt; });
+    fmts.forEach((fmt, i) => {
+      ws.getCell(`${String.fromCharCode(69 + i)}${row}`).numFmt = fmt;
+    });
   }
 
   ws.spliceRows(1, 0, new Array(COLS).fill(""));
@@ -596,21 +635,46 @@ export async function buildExcelFromSheets(
 
     switch (sheetType) {
       case "mining":
-        buildMiningSheet(workbook, sheet.sheetName, records as MiningEnrichedRecord[], extraFiatCurrency);
+        buildMiningSheet(
+          workbook,
+          sheet.sheetName,
+          records as MiningEnrichedRecord[],
+          extraFiatCurrency,
+        );
         break;
       case "multi-currency":
-        buildMultiCurrencySheet(workbook, sheet.sheetName, records as Array<StandardEnrichedRecord | WalletTxEnrichedRecord>, walletExtraCurrency, includeUsd);
+        buildMultiCurrencySheet(
+          workbook,
+          sheet.sheetName,
+          records as Array<StandardEnrichedRecord | WalletTxEnrichedRecord>,
+          walletExtraCurrency,
+          includeUsd,
+        );
         break;
       case "transactions":
-        buildTransactionsSheet(workbook, sheet.sheetName, records as WalletTxEnrichedRecord[], walletExtraCurrency, includeUsd);
+        buildTransactionsSheet(
+          workbook,
+          sheet.sheetName,
+          records as WalletTxEnrichedRecord[],
+          walletExtraCurrency,
+          includeUsd,
+        );
         break;
       default:
-        buildStandardSheet(workbook, sheet.sheetName, records as Array<StandardEnrichedRecord | WalletTxEnrichedRecord>, walletExtraCurrency, includeUsd);
+        buildStandardSheet(
+          workbook,
+          sheet.sheetName,
+          records as Array<StandardEnrichedRecord | WalletTxEnrichedRecord>,
+          walletExtraCurrency,
+          includeUsd,
+        );
     }
   }
 
   if (purchaseRecords !== null) {
-    purchaseRecords.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    purchaseRecords.sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
     const purchaseSheetName =
       purchaseKeys.has("purchases") && purchaseKeys.has("upgrades")
         ? "Purchases & Upgrades"

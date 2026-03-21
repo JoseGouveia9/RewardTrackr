@@ -2,7 +2,8 @@ import { WALLET_TX_KEYS } from "@/core/wallet-types";
 import { REWARD_CONFIG_MAP, ALL_REWARD_KEYS } from "@/core/reward-configs";
 import { buildApiHeaders, postJson } from "@/core/http";
 
-const WORKER_URL = (import.meta.env.VITE_WORKER_URL as string | undefined)?.replace(/\/$/, "") ?? "";
+const WORKER_URL =
+  (import.meta.env.VITE_WORKER_URL as string | undefined)?.replace(/\/$/, "") ?? "";
 
 async function checkExportRateLimit(token: string): Promise<void> {
   if (!WORKER_URL) return;
@@ -11,7 +12,7 @@ async function checkExportRateLimit(token: string): Promise<void> {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!response.ok) {
-    const data = await response.json().catch(() => null) as { message?: string } | null;
+    const data = (await response.json().catch(() => null)) as { message?: string } | null;
     throw new Error(data?.message ?? "Export limit reached. Please try again tomorrow.");
   }
 }
@@ -69,18 +70,28 @@ async function fetchAllPages(
     incremental?.knownCreatedAt?.filter((v): v is string => typeof v === "string") ?? [],
   );
   const currentRunDates = new Set<string>();
-  const knownTotalCount = typeof incremental?.knownTotalCount === "number" ? incremental.knownTotalCount : null;
+  const knownTotalCount =
+    typeof incremental?.knownTotalCount === "number" ? incremental.knownTotalCount : null;
   const incrementalMode = knownCreatedAt.size > 0;
   let expectedNewItems = 0;
 
   while (guard < 1000) {
     guard += 1;
-    const payload = await postJson<GoMiningApiResponse>(config.apiUrl, headers, config.buildBody(pointer));
+    const payload = await postJson<GoMiningApiResponse>(
+      config.apiUrl,
+      headers,
+      config.buildBody(pointer),
+    );
     const page = payload?.data?.array || [];
 
     if (totalCount === null && payload?.data?.count !== undefined) {
       totalCount = payload.data.count ?? null;
-      if (incrementalMode && knownTotalCount !== null && totalCount !== null && totalCount > knownTotalCount) {
+      if (
+        incrementalMode &&
+        knownTotalCount !== null &&
+        totalCount !== null &&
+        totalCount > knownTotalCount
+      ) {
         expectedNewItems = totalCount - knownTotalCount;
       }
     }
@@ -126,8 +137,12 @@ async function fetchAllPages(
 
 // Returns the cache extras (pricingMode + currency) for a given key.
 function cacheExtras(key: RewardKey, includeWalletFiat: boolean, currency: ExtraFiatCurrency) {
-  const pricingMode = WALLET_TX_KEYS.has(key) ? (includeWalletFiat ? "fiat-on" : "fiat-off") as "fiat-on" | "fiat-off" : undefined;
-  return pricingMode ? { pricingMode, extraFiatCurrency: currency } : { extraFiatCurrency: currency };
+  const pricingMode = WALLET_TX_KEYS.has(key)
+    ? ((includeWalletFiat ? "fiat-on" : "fiat-off") as "fiat-on" | "fiat-off")
+    : undefined;
+  return pricingMode
+    ? { pricingMode, extraFiatCurrency: currency }
+    : { extraFiatCurrency: currency };
 }
 
 // Fetches the current total record count for each key using a cheap limit=1 probe request.
@@ -166,14 +181,18 @@ function mergeRecords(existing: RewardRecord[], incoming: RewardRecord[]): Rewar
 
   for (const item of [...incoming, ...existing]) {
     const createdAt = typeof item?.createdAt === "string" ? item.createdAt : "";
-    if (!createdAt) { merged.push(item); continue; }
+    if (!createdAt) {
+      merged.push(item);
+      continue;
+    }
     if (seen.has(createdAt)) continue;
     seen.add(createdAt);
     merged.push(item);
   }
 
-  return merged.sort((a, b) =>
-    new Date(String(b?.createdAt || 0)).getTime() - new Date(String(a?.createdAt || 0)).getTime(),
+  return merged.sort(
+    (a, b) =>
+      new Date(String(b?.createdAt || 0)).getTime() - new Date(String(a?.createdAt || 0)).getTime(),
   );
 }
 
@@ -227,7 +246,10 @@ export async function executeExportFlow({
 
       const liveCount = counts[k];
       if (liveCount == null) return true;
-      if (liveCount > entry.totalCount) { incrementalKeys.add(k); return true; }
+      if (liveCount > entry.totalCount) {
+        incrementalKeys.add(k);
+        return true;
+      }
       if (liveCount !== entry.totalCount) return true;
 
       // Count matches — if only the currency changed, re-enrich in place (no GoMining fetch).
@@ -245,7 +267,12 @@ export async function executeExportFlow({
 
   // Phase 1: Fetch all raw records from GoMining API before any CoinGecko work,
   // so the auth token is not at risk of expiring during long enrichment waits.
-  type RawFetch = { config: RewardConfig; rawRecords: unknown[]; totalCount: number | null; useIncremental: boolean };
+  type RawFetch = {
+    config: RewardConfig;
+    rawRecords: unknown[];
+    totalCount: number | null;
+    useIncremental: boolean;
+  };
   const fetched: RawFetch[] = [];
 
   for (let i = 0; i < keysToFetch.length; i++) {
@@ -257,16 +284,22 @@ export async function executeExportFlow({
 
     const currentEntry = updatedCache[key];
     const useIncremental = Boolean(currentEntry && incrementalKeys.has(key));
-    const incrementalOptions: IncrementalFetchOptions | undefined = useIncremental && currentEntry
-      ? {
-          knownCreatedAt: currentEntry.records
-            .map((r) => (typeof r?.createdAt === "string" ? r.createdAt : ""))
-            .filter(Boolean),
-          knownTotalCount: currentEntry.totalCount,
-        }
-      : undefined;
+    const incrementalOptions: IncrementalFetchOptions | undefined =
+      useIncremental && currentEntry
+        ? {
+            knownCreatedAt: currentEntry.records
+              .map((r) => (typeof r?.createdAt === "string" ? r.createdAt : ""))
+              .filter(Boolean),
+            knownTotalCount: currentEntry.totalCount,
+          }
+        : undefined;
 
-    const { records: rawRecords, totalCount } = await fetchAllPages(config, accessToken, incrementalOptions, onMessage);
+    const { records: rawRecords, totalCount } = await fetchAllPages(
+      config,
+      accessToken,
+      incrementalOptions,
+      onMessage,
+    );
     fetched.push({ config, rawRecords, totalCount, useIncremental });
   }
 
@@ -298,28 +331,47 @@ export async function executeExportFlow({
     const key = config.key;
 
     onMessage(`Enriching ${config.sheetName} (${i + 1} of ${fetched.length})...`);
-    const enriched = await enrichRecords(config, rawRecords, priceCache, includeWalletFiat, excelFiatCurrency, onMessage);
+    const enriched = await enrichRecords(
+      config,
+      rawRecords,
+      priceCache,
+      includeWalletFiat,
+      excelFiatCurrency,
+      onMessage,
+    );
     const prepared = filterCacheableRecords(key, enriched as RewardRecord[], totalCount ?? 0);
 
     if (prepared.removedCreated > 0) {
-      onMessage(`${config.sheetName}: Skipped ${prepared.removedCreated} pending reinvestment ${prepared.removedCreated === 1 ? "entry" : "entries"}, will retry on next export.`);
+      onMessage(
+        `${config.sheetName}: Skipped ${prepared.removedCreated} pending reinvestment ${prepared.removedCreated === 1 ? "entry" : "entries"}, will retry on next export.`,
+      );
     }
 
     const extras = cacheExtras(key, includeWalletFiat, excelFiatCurrency);
     const currentEntry = updatedCache[key];
-    const recordsForCache = useIncremental && currentEntry
-      ? mergeRecords(currentEntry.records, prepared.records)
-      : prepared.records;
-    const totalCountForCache = typeof totalCount === "number"
-      ? totalCount
-      : (useIncremental && currentEntry ? currentEntry.totalCount : prepared.totalCount);
+    const recordsForCache =
+      useIncremental && currentEntry
+        ? mergeRecords(currentEntry.records, prepared.records)
+        : prepared.records;
+    const totalCountForCache =
+      typeof totalCount === "number"
+        ? totalCount
+        : useIncremental && currentEntry
+          ? currentEntry.totalCount
+          : prepared.totalCount;
 
     saveCacheEntry(key, config.sheetName, recordsForCache, totalCountForCache, extras);
     persistPriceCache(key, recordsForCache);
 
     updatedCache = {
       ...updatedCache,
-      [key]: { sheetName: config.sheetName, records: recordsForCache, totalCount: totalCountForCache, fetchedAt: Date.now(), ...extras },
+      [key]: {
+        sheetName: config.sheetName,
+        records: recordsForCache,
+        totalCount: totalCountForCache,
+        fetchedAt: Date.now(),
+        ...extras,
+      },
     };
     onCacheUpdate(updatedCache);
   }
@@ -331,15 +383,19 @@ export async function executeExportFlow({
     const config = REWARD_CONFIG_MAP[key];
     let records = cached.records as RewardSheetPayload["records"];
     if (key === "transactions" && txFromTypeFilter && txFromTypeFilter.length > 0) {
-      records = records.filter((r) => txFromTypeFilter.includes((r as { fromType?: string }).fromType ?? ""));
+      records = records.filter((r) =>
+        txFromTypeFilter.includes((r as { fromType?: string }).fromType ?? ""),
+      );
     }
-    return [{
-      key,
-      sheetName: cached.sheetName,
-      sheetType: config?.sheetType ?? "standard",
-      records,
-      totalCount: cached.totalCount,
-    } as RewardSheetPayload];
+    return [
+      {
+        key,
+        sheetName: cached.sheetName,
+        sheetType: config?.sheetType ?? "standard",
+        records,
+        totalCount: cached.totalCount,
+      } as RewardSheetPayload,
+    ];
   });
 
   const options: FetchRewardsOptions = {
