@@ -2,6 +2,13 @@ name = "gominingexporter"
 main = "workers/worker.js"
 compatibility_date = "2025-03-21"
 
+[observability]
+enabled = true
+
+[observability.logs]
+enabled = true
+invocation_logs = true
+
 [[kv_namespaces]]
 binding = "RATE_LIMIT"
 id = "be4396d2374d4fbb9ae1f782179f9fe5"
