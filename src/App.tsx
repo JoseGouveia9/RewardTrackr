@@ -166,6 +166,22 @@ function App() {
   }, []);
 
   useEffect(() => {
+    if (user) return;
+    const interval = setInterval(() => {
+      const token = localStorage.getItem(EXTENSION_SYNC_TOKEN_STORE_KEY);
+      if (!token) return;
+      const userData = loginWithToken(token);
+      if (!userData) return;
+      const storedAlias = localStorage.getItem(EXTENSION_SYNC_ALIAS_STORE_KEY)?.trim() ?? null;
+      if (storedAlias) userData.alias = storedAlias;
+      setStoredToken(token);
+      setUser(userData);
+      setMessage("Session synced from extension.");
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [user]);
+
+  useEffect(() => {
     if (!fiatDropdownOpen) return;
     const handleClickOutside = (event: MouseEvent): void => {
       if (!fiatDropdownRef.current) return;
