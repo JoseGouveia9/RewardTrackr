@@ -32,7 +32,8 @@ export default {
       return new Response(null, { status: 204, headers: CORS_HEADERS });
     }
 
-    // Rate limit check endpoint — called once per export attempt
+    // Check + increment — called before export starts.
+    // Counter goes to 1 immediately to prevent abuse.
     if (url.pathname === "/rl-check") {
       const userId = getUserId(request);
       if (!userId) {
@@ -44,7 +45,6 @@ export default {
 
       const day = new Date().toISOString().slice(0, 10);
       const key = `rl_${userId}_${day}`;
-
       const current = await env.RATE_LIMIT.get(key);
       const count = current ? parseInt(current) : 0;
 
@@ -74,6 +74,39 @@ export default {
           headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
         },
       );
+    }
+
+    // Rollback — called only when the export fails after /rl-check already incremented.
+    // Decrements the counter back so the user can retry.
+    if (url.pathname === "/rl-rollback") {
+      const userId = getUserId(request);
+      if (!userId) {
+        return new Response(JSON.stringify({ message: "Unauthorized." }), {
+          status: 401,
+          headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+        });
+      }
+
+      const day = new Date().toISOString().slice(0, 10);
+      const key = `rl_${userId}_${day}`;
+      const current = await env.RATE_LIMIT.get(key);
+      const count = current ? parseInt(current) : 0;
+
+      try {
+        const next = Math.max(0, count - 1);
+        if (next === 0) {
+          await env.RATE_LIMIT.delete(key);
+        } else {
+          await env.RATE_LIMIT.put(key, String(next), { expirationTtl: 86400 });
+        }
+      } catch {
+        // Non-fatal
+      }
+
+      return new Response(JSON.stringify({ rolled_back: true }), {
+        status: 200,
+        headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+      });
     }
 
     // All other requests — proxy to GoMining API freely

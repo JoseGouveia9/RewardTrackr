@@ -16,6 +16,16 @@ async function checkExportRateLimit(token: string): Promise<void> {
     throw new Error(data?.message ?? "Export limit reached. Please try again tomorrow.");
   }
 }
+
+async function rollbackExportRateLimit(token: string): Promise<void> {
+  if (!WORKER_URL) return;
+  await fetch(`${WORKER_URL}/rl-rollback`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  }).catch(() => {
+    // Non-fatal
+  });
+}
 import { enrichRecords, reenrichFiatValues } from "./utils/transformers";
 import { getSessionPriceCache } from "./api/coingecko";
 import { buildExcelFromSheets } from "./utils/excel-builder";
@@ -222,6 +232,7 @@ export async function executeExportFlow({
 }: ExportFlowParams): Promise<string> {
   await checkExportRateLimit(accessToken);
 
+  try {
   const cachedKeys = selectedKeys.filter((k) => cache[k]);
   const uncachedKeys = selectedKeys.filter((k) => !cache[k]);
 
@@ -413,4 +424,8 @@ export async function executeExportFlow({
   if (currencyChangeKeys.size > 0) parts.push(`${currencyChangeKeys.size} re-enriched`);
   if (freshCount > 0) parts.push(`${freshCount} from cache`);
   return `Excel file downloaded! (${parts.join(", ") || "all from cache"})`;
+  } catch (err) {
+    await rollbackExportRateLimit(accessToken);
+    throw err;
+  }
 }
