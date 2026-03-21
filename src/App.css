@@ -172,11 +172,13 @@ button:disabled {
 
 .btn-primary-large {
   padding: 12px 22px;
+  width: 100%;
+  margin-top: 2px;
 }
 
 .export-btn-wrapper {
   position: relative;
-  display: inline-block;
+  display: block;
 }
 
 .export-limit-notice {
