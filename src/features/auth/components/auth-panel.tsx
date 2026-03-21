@@ -1,6 +1,6 @@
 import { memo } from "react";
-import extensionSyncImg from "../assets/extension-sync.png";
-import extensionSuccessImg from "../assets/extension-success.png";
+import extensionSyncImg from "../assets/extension-sync.webp";
+import extensionSuccessImg from "../assets/extension-success.webp";
 import "./auth-panel.css";
 
 interface AuthPanelProps {
