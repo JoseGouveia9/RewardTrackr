@@ -1,4 +1,5 @@
-import { REWARD_CONFIG_MAP, ALL_REWARD_KEYS, WALLET_TX_KEYS } from "../core/config";
+import { WALLET_TX_KEYS } from "../core/wallet-types";
+import { REWARD_CONFIG_MAP, ALL_REWARD_KEYS } from "../core/reward-configs";
 import { buildApiHeaders, postJson } from "../core/http";
 import { enrichRecords, reenrichFiatValues } from "../core/transformers";
 import { getSessionPriceCache } from "../core/coingecko";

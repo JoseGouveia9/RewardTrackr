@@ -1,4 +1,5 @@
-import { CURRENCY_TO_COINGECKO, TX_FROM_TYPE_LABEL, WALLET_TO_CURRENCY } from "./config";
+import { CURRENCY_TO_COINGECKO, WALLET_TO_CURRENCY } from "./currencies";
+import { TX_FROM_TYPE_LABEL } from "./wallet-types";
 import type {
   CoinGeckoPriceCacheValue,
   EnrichedRecord,

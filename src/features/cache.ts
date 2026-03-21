@@ -1,4 +1,6 @@
-import { ALL_REWARD_KEYS, CURRENCY_TO_COINGECKO, WALLET_TX_KEYS } from "../core/config";
+import { CURRENCY_TO_COINGECKO } from "../core/currencies";
+import { WALLET_TX_KEYS } from "../core/wallet-types";
+import { ALL_REWARD_KEYS } from "../core/reward-configs";
 import { LS_KEY_PRICE_CACHE } from "../core/coingecko";
 import type { CacheEntry, CacheState, RewardKey, RewardRecord } from "../core/types";
 

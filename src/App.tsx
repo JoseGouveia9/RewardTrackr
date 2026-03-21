@@ -1,13 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { decodeJwt } from "./core/http";
-import {
-  REWARD_GROUPS,
-  ALL_REWARD_KEYS,
-  WALLET_TX_KEYS,
-  TX_CHECKBOX_OPTIONS,
-  ALL_TX_FROM_TYPES,
-  FIAT_OPTIONS,
-} from "./core/config";
+import { FIAT_OPTIONS } from "./core/currencies";
+import { WALLET_TX_KEYS, TX_CHECKBOX_OPTIONS, ALL_TX_FROM_TYPES } from "./core/wallet-types";
+import { REWARD_GROUPS, ALL_REWARD_KEYS } from "./core/reward-configs";
 import {
   loadAllCacheEntries,
   clearAllCacheEntries,

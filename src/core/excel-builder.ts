@@ -1,6 +1,7 @@
 import ExcelJS from "exceljs";
 import type { Workbook, Worksheet } from "exceljs";
-import { REWARD_CONFIG_MAP, WALLET_TX_KEYS } from "./config";
+import { REWARD_CONFIG_MAP } from "./reward-configs";
+import { WALLET_TX_KEYS } from "./wallet-types";
 
 const FMT_DATE = "dd/mm/yyyy hh:mm:ss";
 const FMT_BTC = "0.00000000";
