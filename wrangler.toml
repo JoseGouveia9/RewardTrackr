@@ -4,4 +4,4 @@ compatibility_date = "2025-03-21"
 
 [[kv_namespaces]]
 binding = "RATE_LIMIT"
-id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
+id = "be4396d2374d4fbb9ae1f782179f9fe5"
