@@ -1,0 +1,7 @@
+name = "gomining-exporter-worker"
+main = "workers/worker.js"
+compatibility_date = "2025-03-21"
+
+[[kv_namespaces]]
+binding = "RATE_LIMIT"
+id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
