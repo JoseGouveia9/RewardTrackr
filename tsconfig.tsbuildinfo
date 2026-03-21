@@ -1,1 +1,0 @@
-{"root":["./src/app.tsx","./src/main.tsx","./src/core/coingecko.ts","./src/core/config.ts","./src/core/excel-builder.ts","./src/core/fx-rates.ts","./src/core/http.ts","./src/core/transformers.ts","./src/core/types.ts","./src/features/cache.ts","./src/features/export-flow.ts"],"version":"5.9.3"}
