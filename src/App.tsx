@@ -596,6 +596,7 @@ function App() {
                   </p>
                 )}
 
+              <p className="export-limit-notice">Max 1 export per day.</p>
               <button
                 className="btn-primary btn-primary-large"
                 disabled={loading || selectedKeys.length === 0}
