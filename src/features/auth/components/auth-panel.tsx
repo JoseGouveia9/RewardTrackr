@@ -1,4 +1,6 @@
 import { memo } from "react";
+import extensionSyncImg from "../assets/extension-sync.png";
+import extensionSuccessImg from "../assets/extension-success.png";
 
 interface AuthPanelProps {
   onSync: () => void;
@@ -21,7 +23,7 @@ export const AuthPanel = memo(function AuthPanel({ onSync }: AuthPanelProps) {
           <span>Open GoMining and click the extension icon</span>
         </div>
         <img
-          src="img/extension-sync.png"
+          src={extensionSyncImg}
           alt="Extension ready to sync"
           className="auth-preview-img auth-preview-img--wide"
           loading="lazy"
@@ -41,7 +43,7 @@ export const AuthPanel = memo(function AuthPanel({ onSync }: AuthPanelProps) {
           </span>
         </div>
         <img
-          src="img/extension-success.png"
+          src={extensionSuccessImg}
           alt="Extension profile synced"
           className="auth-preview-img"
           loading="lazy"
