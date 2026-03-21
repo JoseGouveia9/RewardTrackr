@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GoMining Exporter</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <div id="introScreen" class="wrap">
+      <h1>GoMining Exporter</h1>
+      <p class="sub">Your GoMining rewards, beautifully exported.</p>
+      <div class="intro-card">
+        <p class="intro-label">This extension</p>
+        <p class="intro-text">
+          Reads your active GoMining session and securely syncs it to the
+          exporter app.
+        </p>
+      </div>
+      <div class="intro-card">
+        <p class="intro-label">The exporter</p>
+        <p class="intro-text">
+          Generates a complete Excel report of all your rewards: Solo Mining,
+          MinerWars, Referrals, Bounties, Deposits, Withdrawals, and more.
+        </p>
+      </div>
+      <button id="nextBtn">Get Started</button>
+    </div>
+
+    <div id="syncScreen" class="wrap hidden">
+      <h1>GoMining Exporter</h1>
+      <p class="sub">
+        Connect your GoMining session and sync your exporter access in one
+        click.
+      </p>
+      <div id="welcome" class="welcome hidden"></div>
+      <button id="syncBtn">Sync to Exporter</button>
+      <div id="status" class="status"></div>
+    </div>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
