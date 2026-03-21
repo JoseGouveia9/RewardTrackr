@@ -1,9 +1,22 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import { sentryVitePlugin } from "@sentry/vite-plugin";
 import { fileURLToPath, URL } from "node:url";
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    // Only active in CI when SENTRY_AUTH_TOKEN is set; no-ops locally.
+    sentryVitePlugin({
+      org: process.env.SENTRY_ORG,
+      project: process.env.SENTRY_PROJECT,
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+      telemetry: false,
+    }),
+  ],
+  build: {
+    sourcemap: true,
+  },
   base: "./",
   resolve: {
     alias: {

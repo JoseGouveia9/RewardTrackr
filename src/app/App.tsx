@@ -4,6 +4,7 @@ import { AuthPanel, UserPanel, useAuth } from "@/features/auth";
 import { SheetSelector, ExportOptions, useExport, useExportConfig } from "@/features/export";
 import type { CacheState } from "@/features/export";
 import { DonateSection } from "@/components/donate-section";
+import { ErrorBoundary } from "@/components/error-boundary";
 import { useTheme } from "./theme-context";
 import "./App.css";
 
@@ -77,57 +78,61 @@ function App() {
           <>
             <UserPanel user={user} displayAlias={displayAlias} onLogout={handleLogout} />
 
-            <section className="panel panel-actions">
-              <div className="actions-header">
-                <h2>Select Sheets</h2>
-                {hasCachedSheets && (
-                  <button className="btn-danger btn-danger-small" onClick={handleClearCache}>
-                    Clear Cache
-                  </button>
+            <ErrorBoundary>
+              <section className="panel panel-actions">
+                <div className="actions-header">
+                  <h2>Select Sheets</h2>
+                  {hasCachedSheets && (
+                    <button className="btn-danger btn-danger-small" onClick={handleClearCache}>
+                      Clear Cache
+                    </button>
+                  )}
+                </div>
+
+                <SheetSelector
+                  cache={cache}
+                  onToggleGroup={toggleGroup}
+                  onToggleAll={toggleAll}
+                  isGroupSelected={isGroupSelected}
+                />
+
+                <ExportOptions
+                  selectedKeys={selectedKeys}
+                  walletSheetsSelected={walletSheetsSelected}
+                  selectedTxFromTypes={selectedTxFromTypes}
+                  onToggleTxType={toggleTxType}
+                  includeWalletFiat={includeWalletFiat}
+                  onToggleWalletFiat={setIncludeWalletFiat}
+                  includeExcelFiat={includeExcelFiat}
+                  onToggleExcelFiat={setIncludeExcelFiat}
+                  excelFiatCurrency={excelFiatCurrency}
+                  onChangeFiatCurrency={setFiatCurrency}
+                />
+
+                {cachedCount > 0 && cachedCount < selectedKeys.length && (
+                  <p className="subtle">
+                    {selectedKeys.length - cachedCount} sheet(s) will be fetched. {cachedCount}{" "}
+                    stored, will be probed for updates first.
+                  </p>
                 )}
-              </div>
+                {cachedCount === selectedKeys.length && selectedKeys.length > 0 && (
+                  <p className="subtle">
+                    All sheets stored. Will probe for updates before building.
+                  </p>
+                )}
 
-              <SheetSelector
-                cache={cache}
-                onToggleGroup={toggleGroup}
-                onToggleAll={toggleAll}
-                isGroupSelected={isGroupSelected}
-              />
-
-              <ExportOptions
-                selectedKeys={selectedKeys}
-                walletSheetsSelected={walletSheetsSelected}
-                selectedTxFromTypes={selectedTxFromTypes}
-                onToggleTxType={toggleTxType}
-                includeWalletFiat={includeWalletFiat}
-                onToggleWalletFiat={setIncludeWalletFiat}
-                includeExcelFiat={includeExcelFiat}
-                onToggleExcelFiat={setIncludeExcelFiat}
-                excelFiatCurrency={excelFiatCurrency}
-                onChangeFiatCurrency={setFiatCurrency}
-              />
-
-              {cachedCount > 0 && cachedCount < selectedKeys.length && (
-                <p className="subtle">
-                  {selectedKeys.length - cachedCount} sheet(s) will be fetched. {cachedCount}{" "}
-                  stored, will be probed for updates first.
-                </p>
-              )}
-              {cachedCount === selectedKeys.length && selectedKeys.length > 0 && (
-                <p className="subtle">All sheets stored. Will probe for updates before building.</p>
-              )}
-
-              <div className="export-btn-wrapper">
-                <span className="export-limit-notice">Max 1 export per day.</span>
-                <button
-                  className="btn-primary btn-primary-large"
-                  disabled={loading || selectedKeys.length === 0}
-                  onClick={handleExport}
-                >
-                  {loading ? "Processing..." : "Build Excel"}
-                </button>
-              </div>
-            </section>
+                <div className="export-btn-wrapper">
+                  <span className="export-limit-notice">Max 1 export per day.</span>
+                  <button
+                    className="btn-primary btn-primary-large"
+                    disabled={loading || selectedKeys.length === 0}
+                    onClick={handleExport}
+                  >
+                    {loading ? "Processing..." : "Build Excel"}
+                  </button>
+                </div>
+              </section>
+            </ErrorBoundary>
           </>
         )}
 

@@ -1,8 +1,10 @@
 import { Component } from "react";
 import type { ErrorInfo, ReactNode } from "react";
+import * as Sentry from "@sentry/react";
 
 interface Props {
   children: ReactNode;
+  fallback?: ReactNode;
 }
 
 interface State {
@@ -19,11 +21,12 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: ErrorInfo): void {
-    console.error("ErrorBoundary caught:", error, info.componentStack);
+    Sentry.captureException(error, { extra: { componentStack: info.componentStack } });
   }
 
   render(): ReactNode {
     if (this.state.hasError) {
+      if (this.props.fallback) return this.props.fallback;
       return (
         <div style={{ padding: "2rem", textAlign: "center" }}>
           <h2>Something went wrong</h2>
