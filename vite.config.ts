@@ -1,9 +1,15 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import { fileURLToPath, URL } from "node:url";
 
 export default defineConfig({
   plugins: [react()],
   base: "./",
+  resolve: {
+    alias: {
+      "@": fileURLToPath(new URL("./src", import.meta.url)),
+    },
+  },
   server: {
     proxy: {
       // In local dev, proxy /gomining-api/* → https://api.gomining.com/*
@@ -11,7 +17,7 @@ export default defineConfig({
       "/gomining-api": {
         target: "https://api.gomining.com",
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/gomining-api/, ""),
+        rewrite: (p) => p.replace(/^\/gomining-api/, ""),
       },
     },
   },
