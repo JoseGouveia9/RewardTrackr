@@ -1,0 +1,27 @@
+.identity-line {
+  margin: 6px 0;
+  color: #6d7589;
+}
+
+.identity-label {
+  font-weight: 700 !important;
+}
+
+.identity-value {
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+}
+
+.page.theme-dark .identity-line {
+  color: rgba(255, 255, 255, 0.84);
+}
+
+.page.theme-dark .identity-label {
+  color: #ffffff;
+}
+
+.page.theme-dark .identity-value {
+  color: #ffffff;
+}

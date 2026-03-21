@@ -1,5 +1,6 @@
 import { memo } from "react";
 import type { AuthUser } from "../types";
+import "./user-panel.css";
 
 interface UserPanelProps {
   user: AuthUser;

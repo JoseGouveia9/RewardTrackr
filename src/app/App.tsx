@@ -1,24 +1,11 @@
 import { useCallback, useMemo, useState } from "react";
-import {
-  WALLET_TX_KEYS,
-  TX_CHECKBOX_OPTIONS,
-  ALL_TX_FROM_TYPES,
-} from "@/features/export/config/wallet-types";
+import { WALLET_TX_KEYS, ALL_TX_FROM_TYPES } from "@/features/export/config/wallet-types";
 import { ALL_REWARD_KEYS } from "@/features/export/config/reward-configs";
 import { loadAllCacheEntries } from "@/features/export/utils/cache";
-import type {
-  CacheState,
-  ExtraFiatCurrency,
-  RewardGroup,
-  RewardKey,
-} from "@/features/export/types";
-import { AuthPanel } from "@/features/auth/components/auth-panel";
-import { FiatDropdown } from "@/features/export/components/fiat-dropdown";
+import { AuthPanel, UserPanel, useAuth } from "@/features/auth";
+import { SheetSelector, ExportOptions, useExport } from "@/features/export";
+import type { CacheState, ExtraFiatCurrency, RewardGroup, RewardKey } from "@/features/export";
 import { DonateSection } from "@/components/donate-section";
-import { UserPanel } from "@/features/auth/components/user-panel";
-import { SheetSelector } from "@/features/export/components/sheet-selector";
-import { useAuth } from "@/features/auth/hooks/use-auth";
-import { useExport } from "@/features/export/hooks/use-export";
 import "./App.css";
 
 const THEME_STORAGE_KEY = "gm_theme";
@@ -79,6 +66,14 @@ function App() {
     setSelectedKeys((prev) => (prev.length === ALL_REWARD_KEYS.length ? [] : [...ALL_REWARD_KEYS]));
   }, []);
 
+  const handleToggleTxType = useCallback((fromTypes: string[], checked: boolean): void => {
+    setSelectedTxFromTypes((prev) =>
+      checked
+        ? [...new Set([...prev, ...fromTypes])]
+        : prev.filter((ft) => !fromTypes.includes(ft)),
+    );
+  }, []);
+
   const walletSheetsSelected = useMemo(
     () => [...WALLET_TX_KEYS].some((k) => selectedKeys.includes(k)),
     [selectedKeys],
@@ -134,76 +129,18 @@ function App() {
                 isGroupSelected={isGroupSelected}
               />
 
-              {selectedKeys.includes("transactions") && (
-                <div className="wallet-options">
-                  <p className="wallet-options-title">Transactions Filter</p>
-                  {TX_CHECKBOX_OPTIONS.map((opt) => {
-                    const checked = opt.fromTypes.every((ft) => selectedTxFromTypes.includes(ft));
-                    return (
-                      <label key={opt.label} className="wallet-option-row">
-                        <input
-                          type="checkbox"
-                          className="toggle-switch"
-                          checked={checked}
-                          onChange={(e) => {
-                            setSelectedTxFromTypes((prev) =>
-                              e.target.checked
-                                ? [...new Set([...prev, ...opt.fromTypes])]
-                                : prev.filter((ft) => !opt.fromTypes.includes(ft)),
-                            );
-                          }}
-                        />
-                        {opt.label}
-                      </label>
-                    );
-                  })}
-                </div>
-              )}
-
-              {walletSheetsSelected && (
-                <div className="wallet-options">
-                  <p className="wallet-options-title">Wallet Pricing</p>
-                  <p className="subtle wallet-note">
-                    Applies only to Bounty, Deposits, Withdrawals and Transactions. GoMining API
-                    does not return fiat pricing for these sheets, so we enrich them using CoinGecko
-                    during export.
-                  </p>
-                  <label className="wallet-option-row">
-                    <input
-                      type="checkbox"
-                      className="toggle-switch"
-                      checked={includeWalletFiat}
-                      onChange={(e) => setIncludeWalletFiat(e.target.checked)}
-                    />
-                    Include fiat pricing (USD). Extra fiat is configured below.
-                  </label>
-                  {includeWalletFiat && (
-                    <p className="wallet-warning">
-                      Warning: this can take some time. CoinGecko free plan has rate limits, and
-                      each limit hit triggers a 60s cooldown.
-                    </p>
-                  )}
-                </div>
-              )}
-
-              <div className="excel-options">
-                <p className="wallet-options-title">Extra Fiat Conversion</p>
-                <label className="wallet-option-row">
-                  <input
-                    type="checkbox"
-                    className="toggle-switch"
-                    checked={includeExcelFiat}
-                    onChange={(e) => setIncludeExcelFiat(e.target.checked)}
-                  />
-                  Include extra conversion column (USD is always included)
-                </label>
-                {includeExcelFiat && (
-                  <label className="wallet-option-row wallet-currency-row">
-                    Currency
-                    <FiatDropdown value={excelFiatCurrency} onChange={setExcelFiatCurrency} />
-                  </label>
-                )}
-              </div>
+              <ExportOptions
+                selectedKeys={selectedKeys}
+                walletSheetsSelected={walletSheetsSelected}
+                selectedTxFromTypes={selectedTxFromTypes}
+                onToggleTxType={handleToggleTxType}
+                includeWalletFiat={includeWalletFiat}
+                onToggleWalletFiat={setIncludeWalletFiat}
+                includeExcelFiat={includeExcelFiat}
+                onToggleExcelFiat={setIncludeExcelFiat}
+                excelFiatCurrency={excelFiatCurrency}
+                onChangeFiatCurrency={setExcelFiatCurrency}
+              />
 
               {cachedCount > 0 && cachedCount < selectedKeys.length && (
                 <p className="subtle">

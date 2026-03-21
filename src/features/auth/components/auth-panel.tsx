@@ -1,6 +1,7 @@
 import { memo } from "react";
 import extensionSyncImg from "../assets/extension-sync.png";
 import extensionSuccessImg from "../assets/extension-success.png";
+import "./auth-panel.css";
 
 interface AuthPanelProps {
   onSync: () => void;

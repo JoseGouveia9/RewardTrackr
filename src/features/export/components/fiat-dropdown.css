@@ -1,0 +1,126 @@
+.fiat-dropdown-wrap {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.fiat-dropdown-trigger {
+  min-width: 130px;
+  border: 0;
+  border-radius: 14px;
+  padding: 8px 10px 8px 12px;
+  background: #f0f2fb;
+  color: #2f3647;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.fiat-dropdown-caret {
+  color: rgba(47, 54, 71, 0.75);
+  font-size: 0.75rem;
+  line-height: 1;
+  transition: transform 0.16s ease;
+}
+
+.fiat-dropdown-caret.open {
+  transform: rotate(180deg);
+}
+
+.fiat-dropdown-menu {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  z-index: 20;
+  min-width: 300px;
+  max-height: 240px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-radius: 18px;
+  padding: 8px;
+  background: #25283b;
+  box-shadow: 0 14px 30px rgba(5, 8, 22, 0.45);
+  scrollbar-width: thin;
+  scrollbar-color: #6f56f5 #1f2233;
+}
+
+.fiat-dropdown-menu::-webkit-scrollbar {
+  width: 10px;
+}
+
+.fiat-dropdown-menu::-webkit-scrollbar-track {
+  background: #1f2233;
+  border-radius: 999px;
+}
+
+.fiat-dropdown-menu::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #8a6dff 0%, #6f56f5 100%);
+  border-radius: 999px;
+  border: 2px solid #1f2233;
+}
+
+.fiat-dropdown-menu::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #9a80ff 0%, #7f66ff 100%);
+}
+
+.fiat-dropdown-search {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 7px 12px;
+  border: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: transparent;
+  color: inherit;
+  font-size: 0.85rem;
+  outline: none;
+}
+
+.fiat-dropdown-option {
+  width: 100%;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: #ecefff;
+  text-align: left;
+  padding: 10px 40px 10px 10px;
+  position: relative;
+}
+
+.fiat-dropdown-option:hover,
+.fiat-dropdown-option.focused {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.fiat-option-title {
+  display: block;
+  font-weight: 700;
+}
+
+.fiat-option-sub {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.58);
+}
+
+.fiat-option-check {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #7a4df6;
+  font-size: 1.1rem;
+}
+
+/* Dark mode */
+
+.page.theme-dark .fiat-dropdown-trigger {
+  background: #24273a;
+  color: #f0f2ff;
+}
+
+.page.theme-dark .fiat-dropdown-caret {
+  color: #9b86ff;
+}

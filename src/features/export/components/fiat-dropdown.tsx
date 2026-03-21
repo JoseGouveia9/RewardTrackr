@@ -1,5 +1,6 @@
 import { memo, useEffect, useRef, useState } from "react";
 import { FIAT_OPTIONS } from "../config/currencies";
+import "./fiat-dropdown.css";
 import type { ExtraFiatCurrency } from "../types";
 
 interface FiatDropdownProps {

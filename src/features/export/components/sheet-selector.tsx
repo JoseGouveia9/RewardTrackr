@@ -1,5 +1,6 @@
 import { memo } from "react";
 import { REWARD_GROUPS } from "../config/reward-configs";
+import "./sheet-selector.css";
 import { formatAge } from "../utils/cache";
 import type { CacheState, RewardGroup } from "../types";
 

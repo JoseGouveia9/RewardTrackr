@@ -1,4 +1,5 @@
 import { memo } from "react";
+import "./donate-section.css";
 
 export const DonateSection = memo(function DonateSection() {
   return (
