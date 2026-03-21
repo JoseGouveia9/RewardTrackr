@@ -600,7 +600,8 @@ button:disabled {
   position: relative;
 }
 
-.fiat-dropdown-option:hover {
+.fiat-dropdown-option:hover,
+.fiat-dropdown-option.focused {
   background: rgba(255, 255, 255, 0.06);
 }
 

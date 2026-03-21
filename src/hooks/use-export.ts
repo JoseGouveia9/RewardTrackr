@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { decodeJwt } from "@/core/http";
 import { ALL_REWARD_KEYS } from "@/core/reward-configs";
 import { clearAllCacheEntries } from "@/features/cache";
@@ -36,13 +36,13 @@ export function useExport({
 }: UseExportParams): UseExportReturn {
   const [loading, setLoading] = useState<boolean>(false);
 
-  function handleClearCache(): void {
+  const handleClearCache = useCallback((): void => {
     clearAllCacheEntries();
     onCacheUpdate(Object.fromEntries(ALL_REWARD_KEYS.map((k) => [k, null])) as CacheState);
     onMessage("Cache cleared. Next export will fetch fresh data.");
-  }
+  }, [onMessage, onCacheUpdate]);
 
-  async function handleExport(): Promise<void> {
+  const handleExport = useCallback(async (): Promise<void> => {
     if (selectedKeys.length === 0) return;
 
     const decoded = decodeJwt(storedToken);
@@ -90,7 +90,17 @@ export function useExport({
     } finally {
       setLoading(false);
     }
-  }
+  }, [
+    storedToken,
+    selectedKeys,
+    cache,
+    includeWalletFiat,
+    includeExcelFiat,
+    excelFiatCurrency,
+    selectedTxFromTypes,
+    onMessage,
+    onCacheUpdate,
+  ]);
 
   return { loading, handleExport, handleClearCache };
 }

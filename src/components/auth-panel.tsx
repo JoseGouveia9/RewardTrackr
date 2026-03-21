@@ -1,8 +1,10 @@
+import { memo } from "react";
+
 interface AuthPanelProps {
   onSync: () => void;
 }
 
-export function AuthPanel({ onSync }: AuthPanelProps) {
+export const AuthPanel = memo(function AuthPanel({ onSync }: AuthPanelProps) {
   return (
     <section className="panel panel-auth">
       <h2>Connect via Browser Extension</h2>
@@ -57,4 +59,4 @@ export function AuthPanel({ onSync }: AuthPanelProps) {
       </button>
     </section>
   );
-}
+});

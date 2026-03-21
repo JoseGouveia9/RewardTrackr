@@ -1,4 +1,6 @@
-export function DonateSection() {
+import { memo } from "react";
+
+export const DonateSection = memo(function DonateSection() {
   return (
     <section className="donate-section">
       <p className="donate-title">Support the project</p>
@@ -25,4 +27,4 @@ export function DonateSection() {
       </div>
     </section>
   );
-}
+});

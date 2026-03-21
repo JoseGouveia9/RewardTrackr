@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { REWARD_GROUPS } from "@/core/reward-configs";
 import { formatAge } from "@/features/cache";
 import type { CacheState, RewardGroup } from "@/core/types";
@@ -9,7 +10,7 @@ interface SheetSelectorProps {
   isGroupSelected: (group: RewardGroup) => boolean;
 }
 
-export function SheetSelector({
+export const SheetSelector = memo(function SheetSelector({
   cache,
   onToggleGroup,
   onToggleAll,
@@ -66,4 +67,4 @@ export function SheetSelector({
       })}
     </div>
   );
-}
+});

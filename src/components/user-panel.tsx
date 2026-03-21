@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { AuthUser } from "@/core/types";
 
 interface UserPanelProps {
@@ -6,7 +7,7 @@ interface UserPanelProps {
   onLogout: () => void;
 }
 
-export function UserPanel({ user, displayAlias, onLogout }: UserPanelProps) {
+export const UserPanel = memo(function UserPanel({ user, displayAlias, onLogout }: UserPanelProps) {
   return (
     <section className="panel panel-split">
       <div>
@@ -25,4 +26,4 @@ export function UserPanel({ user, displayAlias, onLogout }: UserPanelProps) {
       </button>
     </section>
   );
-}
+});

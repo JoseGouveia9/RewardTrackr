@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { decodeJwt } from "@/core/http";
 import type { AuthUser } from "@/core/types";
 
@@ -115,7 +115,7 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
     return () => clearInterval(interval);
   }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  function handleCheckSync(): void {
+  const handleCheckSync = useCallback((): void => {
     const { token: hashToken, alias } = getSyncPayloadFromHash();
     const syncToken = hashToken ?? localStorage.getItem(EXTENSION_SYNC_TOKEN_STORE_KEY);
 
@@ -141,14 +141,14 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
     } else {
       onMessage("No token found. Please sync via the GoMining extension first.");
     }
-  }
+  }, [onMessage]);
 
-  function handleLogout(): void {
+  const handleLogout = useCallback((): void => {
     localStorage.removeItem(EXTENSION_SYNC_TOKEN_STORE_KEY);
     setUser(null);
     setStoredToken("");
     onMessage("Logged out.");
-  }
+  }, [onMessage]);
 
   return { storedToken, user, syncedAlias, handleCheckSync, handleLogout };
 }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { WALLET_TX_KEYS, TX_CHECKBOX_OPTIONS, ALL_TX_FROM_TYPES } from "@/core/wallet-types";
 import { ALL_REWARD_KEYS } from "@/core/reward-configs";
 import { loadAllCacheEntries } from "@/features/cache";
@@ -45,33 +45,43 @@ function App() {
     onCacheUpdate: setCache,
   });
 
-  function toggleTheme(): void {
+  const toggleTheme = useCallback((): void => {
     setTheme((prev) => {
       const next = prev === "dark" ? "light" : "dark";
       localStorage.setItem(THEME_STORAGE_KEY, next);
       return next;
     });
-  }
+  }, []);
 
-  function isGroupSelected(group: RewardGroup): boolean {
-    return group.keys.every((k) => selectedKeys.includes(k));
-  }
+  const isGroupSelected = useCallback(
+    (group: RewardGroup): boolean => group.keys.every((k) => selectedKeys.includes(k)),
+    [selectedKeys],
+  );
 
-  function toggleGroup(group: RewardGroup): void {
+  const toggleGroup = useCallback((group: RewardGroup): void => {
     setSelectedKeys((prev) => {
       const allSelected = group.keys.every((k) => prev.includes(k));
       if (allSelected) return prev.filter((k) => !group.keys.includes(k));
       return [...new Set([...prev, ...group.keys])];
     });
-  }
+  }, []);
 
-  function toggleAll(): void {
+  const toggleAll = useCallback((): void => {
     setSelectedKeys((prev) => (prev.length === ALL_REWARD_KEYS.length ? [] : [...ALL_REWARD_KEYS]));
-  }
+  }, []);
 
-  const walletSheetsSelected = [...WALLET_TX_KEYS].some((k) => selectedKeys.includes(k));
+  const walletSheetsSelected = useMemo(
+    () => [...WALLET_TX_KEYS].some((k) => selectedKeys.includes(k)),
+    [selectedKeys],
+  );
+
+  const cachedCount = useMemo(
+    () => selectedKeys.filter((k) => cache[k]).length,
+    [selectedKeys, cache],
+  );
+
   const displayAlias = syncedAlias || user?.alias?.trim() || "User";
-  const cachedCount = selectedKeys.filter((k) => cache[k]).length;
+  const hasCachedSheets = useMemo(() => Object.values(cache).some(Boolean), [cache]);
 
   return (
     <div className={`page ${theme === "dark" ? "theme-dark" : "theme-light"}`}>
@@ -101,7 +111,7 @@ function App() {
             <section className="panel panel-actions">
               <div className="actions-header">
                 <h2>Select Sheets</h2>
-                {Object.values(cache).some(Boolean) && (
+                {hasCachedSheets && (
                   <button className="btn-danger btn-danger-small" onClick={handleClearCache}>
                     Clear Cache
                   </button>
