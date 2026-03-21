@@ -1,0 +1,114 @@
+import { useCallback, useMemo, useReducer } from "react";
+import { ALL_REWARD_KEYS } from "../config/reward-configs";
+import { ALL_TX_FROM_TYPES, WALLET_TX_KEYS } from "../config/wallet-types";
+import type { ExtraFiatCurrency, RewardGroup, RewardKey } from "../types";
+
+interface ExportConfigState {
+  selectedKeys: RewardKey[];
+  selectedTxFromTypes: string[];
+  includeWalletFiat: boolean;
+  includeExcelFiat: boolean;
+  excelFiatCurrency: ExtraFiatCurrency;
+}
+
+type ExportConfigAction =
+  | { type: "TOGGLE_GROUP"; group: RewardGroup }
+  | { type: "TOGGLE_ALL" }
+  | { type: "TOGGLE_TX_TYPE"; fromTypes: string[]; checked: boolean }
+  | { type: "SET_INCLUDE_WALLET_FIAT"; checked: boolean }
+  | { type: "SET_INCLUDE_EXCEL_FIAT"; checked: boolean }
+  | { type: "SET_FIAT_CURRENCY"; currency: ExtraFiatCurrency };
+
+const initialState: ExportConfigState = {
+  selectedKeys: [...ALL_REWARD_KEYS],
+  selectedTxFromTypes: [...ALL_TX_FROM_TYPES],
+  includeWalletFiat: true,
+  includeExcelFiat: true,
+  excelFiatCurrency: "EUR",
+};
+
+function exportConfigReducer(
+  state: ExportConfigState,
+  action: ExportConfigAction,
+): ExportConfigState {
+  switch (action.type) {
+    case "TOGGLE_GROUP": {
+      const allSelected = action.group.keys.every((k) => state.selectedKeys.includes(k));
+      return {
+        ...state,
+        selectedKeys: allSelected
+          ? state.selectedKeys.filter((k) => !action.group.keys.includes(k))
+          : [...new Set([...state.selectedKeys, ...action.group.keys])],
+      };
+    }
+    case "TOGGLE_ALL":
+      return {
+        ...state,
+        selectedKeys:
+          state.selectedKeys.length === ALL_REWARD_KEYS.length ? [] : [...ALL_REWARD_KEYS],
+      };
+    case "TOGGLE_TX_TYPE":
+      return {
+        ...state,
+        selectedTxFromTypes: action.checked
+          ? [...new Set([...state.selectedTxFromTypes, ...action.fromTypes])]
+          : state.selectedTxFromTypes.filter((ft) => !action.fromTypes.includes(ft)),
+      };
+    case "SET_INCLUDE_WALLET_FIAT":
+      return { ...state, includeWalletFiat: action.checked };
+    case "SET_INCLUDE_EXCEL_FIAT":
+      return { ...state, includeExcelFiat: action.checked };
+    case "SET_FIAT_CURRENCY":
+      return { ...state, excelFiatCurrency: action.currency };
+  }
+}
+
+export function useExportConfig() {
+  const [state, dispatch] = useReducer(exportConfigReducer, initialState);
+
+  const isGroupSelected = useCallback(
+    (group: RewardGroup): boolean => group.keys.every((k) => state.selectedKeys.includes(k)),
+    [state.selectedKeys],
+  );
+
+  const walletSheetsSelected = useMemo(
+    () => [...WALLET_TX_KEYS].some((k) => state.selectedKeys.includes(k)),
+    [state.selectedKeys],
+  );
+
+  const toggleGroup = useCallback((group: RewardGroup): void => {
+    dispatch({ type: "TOGGLE_GROUP", group });
+  }, []);
+
+  const toggleAll = useCallback((): void => {
+    dispatch({ type: "TOGGLE_ALL" });
+  }, []);
+
+  const toggleTxType = useCallback((fromTypes: string[], checked: boolean): void => {
+    dispatch({ type: "TOGGLE_TX_TYPE", fromTypes, checked });
+  }, []);
+
+  const setIncludeWalletFiat = useCallback((checked: boolean): void => {
+    dispatch({ type: "SET_INCLUDE_WALLET_FIAT", checked });
+  }, []);
+
+  const setIncludeExcelFiat = useCallback((checked: boolean): void => {
+    dispatch({ type: "SET_INCLUDE_EXCEL_FIAT", checked });
+  }, []);
+
+  const setFiatCurrency = useCallback((currency: ExtraFiatCurrency): void => {
+    dispatch({ type: "SET_FIAT_CURRENCY", currency });
+  }, []);
+
+  return {
+    ...state,
+    isGroupSelected,
+    walletSheetsSelected,
+    toggleGroup,
+    toggleAll,
+    toggleTxType,
+    setIncludeWalletFiat,
+    setIncludeExcelFiat,
+    setFiatCurrency,
+  };
+}

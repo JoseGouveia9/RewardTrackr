@@ -1,31 +1,33 @@
-import { useCallback, useMemo, useState } from "react";
-import { WALLET_TX_KEYS, ALL_TX_FROM_TYPES } from "@/features/export/config/wallet-types";
-import { ALL_REWARD_KEYS } from "@/features/export/config/reward-configs";
+import { useMemo, useState } from "react";
 import { loadAllCacheEntries } from "@/features/export/utils/cache";
 import { AuthPanel, UserPanel, useAuth } from "@/features/auth";
-import { SheetSelector, ExportOptions, useExport } from "@/features/export";
-import type { CacheState, ExtraFiatCurrency, RewardGroup, RewardKey } from "@/features/export";
+import { SheetSelector, ExportOptions, useExport, useExportConfig } from "@/features/export";
+import type { CacheState } from "@/features/export";
 import { DonateSection } from "@/components/donate-section";
+import { useTheme } from "./theme-context";
 import "./App.css";
-
-const THEME_STORAGE_KEY = "gm_theme";
-
-type ThemeMode = "light" | "dark";
 
 function App() {
   const [message, setMessage] = useState<string>("");
-  const [selectedKeys, setSelectedKeys] = useState<RewardKey[]>(() => [...ALL_REWARD_KEYS]);
-  const [selectedTxFromTypes, setSelectedTxFromTypes] = useState<string[]>(() => [
-    ...ALL_TX_FROM_TYPES,
-  ]);
-  const [includeWalletFiat, setIncludeWalletFiat] = useState<boolean>(true);
-  const [includeExcelFiat, setIncludeExcelFiat] = useState<boolean>(true);
-  const [excelFiatCurrency, setExcelFiatCurrency] = useState<ExtraFiatCurrency>("EUR");
   const [cache, setCache] = useState<CacheState>(() => loadAllCacheEntries());
-  const [theme, setTheme] = useState<ThemeMode>(() => {
-    const saved = localStorage.getItem(THEME_STORAGE_KEY);
-    return saved === "light" ? "light" : "dark";
-  });
+
+  const { theme, toggleTheme } = useTheme();
+
+  const {
+    selectedKeys,
+    selectedTxFromTypes,
+    includeWalletFiat,
+    includeExcelFiat,
+    excelFiatCurrency,
+    isGroupSelected,
+    walletSheetsSelected,
+    toggleGroup,
+    toggleAll,
+    toggleTxType,
+    setIncludeWalletFiat,
+    setIncludeExcelFiat,
+    setFiatCurrency,
+  } = useExportConfig();
 
   const { storedToken, user, syncedAlias, handleCheckSync, handleLogout } = useAuth(setMessage);
 
@@ -41,50 +43,13 @@ function App() {
     onCacheUpdate: setCache,
   });
 
-  const toggleTheme = useCallback((): void => {
-    setTheme((prev) => {
-      const next = prev === "dark" ? "light" : "dark";
-      localStorage.setItem(THEME_STORAGE_KEY, next);
-      return next;
-    });
-  }, []);
-
-  const isGroupSelected = useCallback(
-    (group: RewardGroup): boolean => group.keys.every((k) => selectedKeys.includes(k)),
-    [selectedKeys],
-  );
-
-  const toggleGroup = useCallback((group: RewardGroup): void => {
-    setSelectedKeys((prev) => {
-      const allSelected = group.keys.every((k) => prev.includes(k));
-      if (allSelected) return prev.filter((k) => !group.keys.includes(k));
-      return [...new Set([...prev, ...group.keys])];
-    });
-  }, []);
-
-  const toggleAll = useCallback((): void => {
-    setSelectedKeys((prev) => (prev.length === ALL_REWARD_KEYS.length ? [] : [...ALL_REWARD_KEYS]));
-  }, []);
-
-  const handleToggleTxType = useCallback((fromTypes: string[], checked: boolean): void => {
-    setSelectedTxFromTypes((prev) =>
-      checked
-        ? [...new Set([...prev, ...fromTypes])]
-        : prev.filter((ft) => !fromTypes.includes(ft)),
-    );
-  }, []);
-
-  const walletSheetsSelected = useMemo(
-    () => [...WALLET_TX_KEYS].some((k) => selectedKeys.includes(k)),
-    [selectedKeys],
-  );
+  const displayAlias = syncedAlias || user?.alias?.trim() || "User";
 
   const cachedCount = useMemo(
     () => selectedKeys.filter((k) => cache[k]).length,
     [selectedKeys, cache],
   );
 
-  const displayAlias = syncedAlias || user?.alias?.trim() || "User";
   const hasCachedSheets = useMemo(() => Object.values(cache).some(Boolean), [cache]);
 
   return (
@@ -133,13 +98,13 @@ function App() {
                 selectedKeys={selectedKeys}
                 walletSheetsSelected={walletSheetsSelected}
                 selectedTxFromTypes={selectedTxFromTypes}
-                onToggleTxType={handleToggleTxType}
+                onToggleTxType={toggleTxType}
                 includeWalletFiat={includeWalletFiat}
                 onToggleWalletFiat={setIncludeWalletFiat}
                 includeExcelFiat={includeExcelFiat}
                 onToggleExcelFiat={setIncludeExcelFiat}
                 excelFiatCurrency={excelFiatCurrency}
-                onChangeFiatCurrency={setExcelFiatCurrency}
+                onChangeFiatCurrency={setFiatCurrency}
               />
 
               {cachedCount > 0 && cachedCount < selectedKeys.length && (
