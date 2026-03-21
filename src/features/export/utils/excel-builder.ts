@@ -1,7 +1,7 @@
 import ExcelJS from "exceljs";
 import type { Workbook, Worksheet } from "exceljs";
-import { REWARD_CONFIG_MAP } from "./reward-configs";
-import { WALLET_TX_KEYS } from "./wallet-types";
+import { REWARD_CONFIG_MAP } from "../config/reward-configs";
+import { WALLET_TX_KEYS } from "../config/wallet-types";
 
 const FMT_DATE = "dd/mm/yyyy hh:mm:ss";
 const FMT_BTC = "0.00000000";
@@ -17,7 +17,7 @@ import type {
   SheetType,
   StandardEnrichedRecord,
   WalletTxEnrichedRecord,
-} from "./types";
+} from "../types";
 
 // Style helpers
 

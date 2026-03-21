@@ -1,5 +1,5 @@
-import { getJson, getJsonTolerant } from "./http";
-import type { ExtraFiatCurrency, FxLatestResponse, FxTimeseriesResponse } from "./types";
+import { getJson, getJsonTolerant } from "@/lib/http";
+import type { ExtraFiatCurrency, FxLatestResponse, FxTimeseriesResponse } from "../types";
 
 const FX_TIMESERIES_API = "https://api.fxratesapi.com/timeseries";
 const FX_LATEST_API = "https://api.exchangerate-api.com/v4/latest/USD";

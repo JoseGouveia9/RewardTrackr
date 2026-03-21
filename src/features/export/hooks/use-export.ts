@@ -1,9 +1,9 @@
 import { useCallback, useState } from "react";
-import { decodeJwt } from "@/core/http";
-import { ALL_REWARD_KEYS } from "@/core/reward-configs";
-import { clearAllCacheEntries } from "@/features/cache";
-import { executeExportFlow } from "@/features/export-flow";
-import type { CacheState, ExtraFiatCurrency, RewardKey } from "@/core/types";
+import { decodeJwt } from "@/lib/http";
+import { ALL_REWARD_KEYS } from "../config/reward-configs";
+import { clearAllCacheEntries } from "../utils/cache";
+import { executeExportFlow } from "../export-flow";
+import type { CacheState, ExtraFiatCurrency, RewardKey } from "../types";
 
 interface UseExportParams {
   storedToken: string;

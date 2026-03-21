@@ -1,7 +1,7 @@
 import { memo } from "react";
-import { REWARD_GROUPS } from "@/core/reward-configs";
-import { formatAge } from "@/features/cache";
-import type { CacheState, RewardGroup } from "@/core/types";
+import { REWARD_GROUPS } from "../config/reward-configs";
+import { formatAge } from "../utils/cache";
+import type { CacheState, RewardGroup } from "../types";
 
 interface SheetSelectorProps {
   cache: CacheState;

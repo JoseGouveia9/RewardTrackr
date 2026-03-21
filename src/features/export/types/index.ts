@@ -252,13 +252,6 @@ export type ProbeCountsMap = Record<string, number | null>;
 
 export type PricingMode = "fiat-on" | "fiat-off";
 
-export interface AuthUser {
-  id?: string | null;
-  email?: string | null;
-  alias?: string | null;
-  exp?: number | null;
-}
-
 export interface RewardRecord {
   createdAt?: string;
   currency?: string;

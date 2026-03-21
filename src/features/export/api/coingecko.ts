@@ -3,7 +3,7 @@ import type {
   CoinGeckoPriceCacheValue,
   CoinGeckoPriceResult,
   CoinGeckoPriceTuple,
-} from "./types";
+} from "../types";
 
 const COINGECKO_MAX_RETRIES = 10;
 const COINGECKO_RETRY_WAIT_MS = 60_000;

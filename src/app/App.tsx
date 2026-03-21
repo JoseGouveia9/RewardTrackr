@@ -1,15 +1,24 @@
 import { useCallback, useMemo, useState } from "react";
-import { WALLET_TX_KEYS, TX_CHECKBOX_OPTIONS, ALL_TX_FROM_TYPES } from "@/core/wallet-types";
-import { ALL_REWARD_KEYS } from "@/core/reward-configs";
-import { loadAllCacheEntries } from "@/features/cache";
-import type { CacheState, ExtraFiatCurrency, RewardGroup, RewardKey } from "@/core/types";
-import { AuthPanel } from "@/components/auth-panel";
-import { FiatDropdown } from "@/components/fiat-dropdown";
+import {
+  WALLET_TX_KEYS,
+  TX_CHECKBOX_OPTIONS,
+  ALL_TX_FROM_TYPES,
+} from "@/features/export/config/wallet-types";
+import { ALL_REWARD_KEYS } from "@/features/export/config/reward-configs";
+import { loadAllCacheEntries } from "@/features/export/utils/cache";
+import type {
+  CacheState,
+  ExtraFiatCurrency,
+  RewardGroup,
+  RewardKey,
+} from "@/features/export/types";
+import { AuthPanel } from "@/features/auth/components/auth-panel";
+import { FiatDropdown } from "@/features/export/components/fiat-dropdown";
 import { DonateSection } from "@/components/donate-section";
-import { UserPanel } from "@/components/user-panel";
-import { SheetSelector } from "@/components/sheet-selector";
-import { useAuth } from "@/hooks/use-auth";
-import { useExport } from "@/hooks/use-export";
+import { UserPanel } from "@/features/auth/components/user-panel";
+import { SheetSelector } from "@/features/export/components/sheet-selector";
+import { useAuth } from "@/features/auth/hooks/use-auth";
+import { useExport } from "@/features/export/hooks/use-export";
 import "./App.css";
 
 const THEME_STORAGE_KEY = "gm_theme";

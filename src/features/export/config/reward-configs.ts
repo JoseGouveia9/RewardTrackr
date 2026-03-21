@@ -1,4 +1,4 @@
-import type { CursorPaginationItem, RewardConfig, RewardGroup, RewardKey } from "./types";
+import type { CursorPaginationItem, RewardConfig, RewardGroup, RewardKey } from "../types";
 import { ALL_TX_FROM_TYPES } from "./wallet-types";
 
 const API =

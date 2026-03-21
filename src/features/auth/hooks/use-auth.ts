@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { decodeJwt } from "@/core/http";
-import type { AuthUser } from "@/core/types";
+import { decodeJwt } from "@/lib/http";
+import type { AuthUser } from "../types";
 
 const EXTENSION_SYNC_HASH_KEY = "gm_sync_token";
 const EXTENSION_SYNC_ALIAS_HASH_KEY = "gm_sync_alias";
