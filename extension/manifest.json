@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "GoMining Exporter",
-  "version": "2.0.0",
-  "description": "Sync your GoMining session and launch the exporter with one secure click.",
+  "version": "1.0.0",
+  "description": "Export your full GoMining rewards history to Excel for tax reporting and personal record keeping.",
   "permissions": ["cookies", "tabs", "scripting"],
   "host_permissions": [
     "https://app.gomining.com/*",
