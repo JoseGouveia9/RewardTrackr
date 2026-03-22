@@ -9,8 +9,18 @@
     "https://*.gomining.com/*",
     "https://josegouveia9.github.io/*"
   ],
+  "icons": {
+    "16": "logo.png",
+    "48": "logo.png",
+    "128": "logo.png"
+  },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "GoMining Exporter"
+    "default_title": "GoMining Exporter",
+    "default_icon": {
+      "16": "logo.png",
+      "48": "logo.png",
+      "128": "logo.png"
+    }
   }
 }
