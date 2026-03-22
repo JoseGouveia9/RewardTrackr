@@ -6,6 +6,7 @@ import type { CacheState } from "@/features/export";
 import { DonateSection } from "@/components/donate-section";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { useTheme } from "./theme-context";
+import logo from "/logo.png";
 import "./App.css";
 
 function App() {
@@ -61,15 +62,20 @@ function App() {
       <main className="container">
         <header className="hero">
           <div className="hero-top">
-            <h1>GoMining Exporter</h1>
+            <div className="hero-title-row">
+              <img src={logo} alt="GoMining Exporter logo" className="hero-logo" />
+              <div>
+                <h1>GoMining Exporter</h1>
+                <p className="hero-subtitle">
+                  Connect your GoMining session and generate a complete all-rewards Excel report in
+                  one click. Your token never leaves your browser.
+                </p>
+              </div>
+            </div>
             <button type="button" className="btn-theme" onClick={toggleTheme}>
               {theme === "dark" ? "Light mode" : "Dark mode"}
             </button>
           </div>
-          <p className="hero-subtitle">
-            Connect your GoMining session and generate a complete all-rewards Excel report in one
-            click. Your token never leaves your browser.
-          </p>
         </header>
 
         <div className="app-notice">

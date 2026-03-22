@@ -102,6 +102,19 @@ h3,
   color: #6f758b;
 }
 
+.hero-title-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.hero-logo {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
 .hero-subtitle {
   font-family: inherit;
   font-size: inherit;
