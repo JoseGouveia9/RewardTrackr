@@ -55,7 +55,10 @@ export function useExport({
     setLoading(true);
     onMessage("");
 
-    console.log("Export started", { sheets: selectedKeys, currency: excelFiatCurrency });
+    Sentry.logger.info("Export started", {
+      sheets: selectedKeys.join(", "),
+      currency: excelFiatCurrency,
+    });
 
     try {
       const successMessage = await executeExportFlow({
@@ -69,7 +72,7 @@ export function useExport({
         onMessage,
         onCacheUpdate,
       });
-      console.log("Export completed", { sheets: selectedKeys.length });
+      Sentry.logger.info("Export completed", { sheets: selectedKeys.length });
       onMessage(successMessage);
     } catch (error: unknown) {
       const msg = error instanceof Error ? error.message : "Export failed";
@@ -87,7 +90,7 @@ export function useExport({
       Sentry.captureException(error, {
         extra: { reason: isCors ? "cors" : isAuth ? "auth" : "unknown" },
       });
-      console.error("Export failed", {
+      Sentry.logger.error("Export failed", {
         reason: isCors ? "cors" : isAuth ? "auth" : "unknown",
         message: msg,
       });
