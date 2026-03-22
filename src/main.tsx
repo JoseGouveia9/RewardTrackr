@@ -15,6 +15,7 @@ Sentry.init({
   tracesSampleRate: 0.1,
   sendDefaultPii: true,
   enableLogs: true,
+  _experiments: { enableLogs: true },
 });
 
 createRoot(document.getElementById("root")!).render(
