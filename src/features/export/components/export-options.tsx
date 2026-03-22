@@ -1,9 +1,16 @@
 import { memo } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { TransactionFilter } from "./transaction-filter";
 import { WalletPricingOptions } from "./wallet-pricing-options";
 import { ExtraFiatOptions } from "./extra-fiat-options";
 import type { ExtraFiatCurrency, RewardKey } from "../types";
 import "./export-options.css";
+
+const popVariants = {
+  initial: { opacity: 0, scale: 0.95, y: -6 },
+  animate: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.18 } },
+  exit: { opacity: 0, scale: 0.95, y: -6, transition: { duration: 0.14 } },
+};
 
 interface ExportOptionsProps {
   selectedKeys: RewardKey[];
@@ -32,18 +39,38 @@ export const ExportOptions = memo(function ExportOptions({
 }: ExportOptionsProps) {
   return (
     <>
-      {selectedKeys.includes("transactions") && (
-        <TransactionFilter
-          selectedTxFromTypes={selectedTxFromTypes}
-          onToggleTxType={onToggleTxType}
-        />
-      )}
-      {walletSheetsSelected && (
-        <WalletPricingOptions
-          includeWalletFiat={includeWalletFiat}
-          onToggle={onToggleWalletFiat}
-        />
-      )}
+      <AnimatePresence>
+        {selectedKeys.includes("transactions") && (
+          <motion.div
+            key="tx-filter"
+            variants={popVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+          >
+            <TransactionFilter
+              selectedTxFromTypes={selectedTxFromTypes}
+              onToggleTxType={onToggleTxType}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {walletSheetsSelected && (
+          <motion.div
+            key="wallet-pricing"
+            variants={popVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+          >
+            <WalletPricingOptions
+              includeWalletFiat={includeWalletFiat}
+              onToggle={onToggleWalletFiat}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
       <ExtraFiatOptions
         includeExcelFiat={includeExcelFiat}
         onToggle={onToggleExcelFiat}

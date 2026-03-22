@@ -20,7 +20,7 @@ type ExportConfigAction =
   | { type: "SET_FIAT_CURRENCY"; currency: ExtraFiatCurrency };
 
 const initialState: ExportConfigState = {
-  selectedKeys: [...ALL_REWARD_KEYS],
+  selectedKeys: [],
   selectedTxFromTypes: [],
   includeWalletFiat: false,
   includeExcelFiat: false,
