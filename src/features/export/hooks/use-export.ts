@@ -55,9 +55,10 @@ export function useExport({
     setLoading(true);
     onMessage("");
 
-    Sentry.logger.info(
-      `Export started | sheets: ${selectedKeys.join(", ")} | currency: ${excelFiatCurrency}`,
-    );
+    Sentry.logger.info("Export started", {
+      sheets: selectedKeys.join(", "),
+      currency: excelFiatCurrency,
+    });
 
     try {
       const successMessage = await executeExportFlow({
@@ -71,7 +72,7 @@ export function useExport({
         onMessage,
         onCacheUpdate,
       });
-      Sentry.logger.info(`Export completed | sheets: ${selectedKeys.length}`);
+      Sentry.logger.info("Export completed", { sheets: selectedKeys.length });
       onMessage(successMessage);
     } catch (error: unknown) {
       const msg = error instanceof Error ? error.message : "Export failed";
@@ -89,9 +90,10 @@ export function useExport({
       Sentry.captureException(error, {
         extra: { reason: isCors ? "cors" : isAuth ? "auth" : "unknown" },
       });
-      Sentry.logger.error(
-        `Export failed | reason: ${isCors ? "cors" : isAuth ? "auth" : "unknown"} | message: ${msg}`,
-      );
+      Sentry.logger.error("Export failed", {
+        reason: isCors ? "cors" : isAuth ? "auth" : "unknown",
+        message: msg,
+      });
       onMessage(
         isCors
           ? "Network error: GoMining API blocked the request (CORS). Try using the browser extension to sync your token, or run the app locally with the v2 server."
