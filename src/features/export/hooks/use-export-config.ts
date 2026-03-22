@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useReducer } from "react";
 import { ALL_REWARD_KEYS } from "../config/reward-configs";
-import { ALL_TX_FROM_TYPES, WALLET_TX_KEYS } from "../config/wallet-types";
+import { WALLET_TX_KEYS } from "../config/wallet-types";
 import type { ExtraFiatCurrency, RewardGroup, RewardKey } from "../types";
 
 interface ExportConfigState {
@@ -21,9 +21,9 @@ type ExportConfigAction =
 
 const initialState: ExportConfigState = {
   selectedKeys: [...ALL_REWARD_KEYS],
-  selectedTxFromTypes: [...ALL_TX_FROM_TYPES],
-  includeWalletFiat: true,
-  includeExcelFiat: true,
+  selectedTxFromTypes: [],
+  includeWalletFiat: false,
+  includeExcelFiat: false,
   excelFiatCurrency: "EUR",
 };
 
