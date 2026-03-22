@@ -109,6 +109,13 @@ h3,
   line-height: inherit;
 }
 
+.unofficial-notice {
+  margin: 8px 0 0;
+  font-size: 0.75rem;
+  color: #9fa5be;
+  font-style: italic;
+}
+
 .panel {
   background: #ffffff;
   border: 1px solid #e6e9f2;

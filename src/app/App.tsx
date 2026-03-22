@@ -70,6 +70,10 @@ function App() {
             Connect your GoMining session and generate a complete all-rewards Excel report in one
             click. Your token never leaves your browser.
           </p>
+          <p className="unofficial-notice">
+            This is an unofficial tool and is not affiliated with, endorsed by, or associated with
+            the GoMining team.
+          </p>
         </header>
 
         {!user ? (

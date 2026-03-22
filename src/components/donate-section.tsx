@@ -8,6 +8,14 @@ export const DonateSection = memo(function DonateSection() {
       <p className="donate-sub">
         Donations help cover API costs and keep this tool free and unrestricted.
       </p>
+      <a
+        className="kofi-btn"
+        href="https://ko-fi.com/moustachio"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Buy me a coffee
+      </a>
       <div className="donate-addresses">
         <div className="donate-group">
           <span className="donate-label">GOMINING Token / GMT · BEP-20 / ERC-20</span>
