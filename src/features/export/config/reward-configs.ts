@@ -98,11 +98,9 @@ export const REWARD_CONFIGS: RewardConfig[] = [
         },
         status: [],
         type: [
-          "registration",
           "nft-payment",
           "internal-payment",
           "nft-game-ability-payment",
-          "card-issued",
           "card-transaction",
           "simple-earn-reward",
         ],

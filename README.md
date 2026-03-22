@@ -1,3 +1,5 @@
+<img src="public/logo.png" alt="GoMining Exporter" width="60" align="left" style="margin-right:14px;border-radius:12px" />
+
 # GoMining Exporter
 
 A free tool built to help GoMining users export their full rewards history for tax reporting and personal record keeping.
