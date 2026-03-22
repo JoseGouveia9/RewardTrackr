@@ -102,6 +102,7 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
     return () => window.removeEventListener("storage", handleStorage);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Poll for new token when logged out (picks up extension re-sync)
   useEffect(() => {
     if (user) return;
     const interval = setInterval(() => {
@@ -117,6 +118,30 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
     }, 1000);
     return () => clearInterval(interval);
   }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Detect token expiry or re-sync while user is logged in
+  useEffect(() => {
+    if (!user) return;
+    const interval = setInterval(() => {
+      const token = localStorage.getItem(EXTENSION_SYNC_TOKEN_STORE_KEY);
+      if (!token || !loginWithToken(token)) {
+        // Token expired or removed — clear user so polling above restarts
+        setUser(null);
+        setStoredToken("");
+      } else if (token !== storedToken) {
+        // Extension wrote a new token into this tab — pick it up immediately
+        const userData = loginWithToken(token);
+        if (userData) {
+          const alias = localStorage.getItem(EXTENSION_SYNC_ALIAS_STORE_KEY)?.trim() ?? null;
+          if (alias) userData.alias = alias;
+          setStoredToken(token);
+          setUser(userData);
+          onMessage("Session refreshed from extension.");
+        }
+      }
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [user, storedToken, onMessage]);
 
   const handleCheckSync = useCallback((): void => {
     const { token: hashToken, alias } = getSyncPayloadFromHash();
