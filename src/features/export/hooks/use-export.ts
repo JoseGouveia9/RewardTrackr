@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import * as Sentry from "@sentry/react";
 import { decodeJwt } from "@/lib/http";
 import { ALL_REWARD_KEYS } from "../config/reward-configs";
 import { clearAllCacheEntries } from "../utils/cache";
@@ -83,6 +84,9 @@ export function useExport({
         msgLower.includes("expired") ||
         msgLower.includes("jwt") ||
         msgLower.includes("forbidden");
+      Sentry.captureException(error, {
+        extra: { reason: isCors ? "cors" : isAuth ? "auth" : "unknown" },
+      });
       console.error("Export failed", {
         reason: isCors ? "cors" : isAuth ? "auth" : "unknown",
         message: msg,
