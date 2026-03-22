@@ -109,12 +109,20 @@ h3,
   line-height: inherit;
 }
 
-.unofficial-notice {
-  margin: 8px 0 0;
-  font-size: 0.75rem;
-  color: #9fa5be;
-  font-style: italic;
-  text-align: center;
+.app-notice {
+  margin-top: 12px;
+  border: 1px solid #f2c57b;
+  background: #fff6e8;
+  color: #7a4d0b;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 0.78rem;
+}
+
+.page.theme-dark .app-notice {
+  border-color: #7d6429;
+  background: #2a220f;
+  color: #ffd789;
 }
 
 .panel {

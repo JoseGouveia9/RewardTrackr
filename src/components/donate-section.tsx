@@ -17,7 +17,7 @@ export const DonateSection = memo(function DonateSection() {
     script.onload = () => {
       window.kofiWidgetOverlay?.draw("moustachio", {
         type: "floating-chat",
-        "floating-chat.donateButton.text": "Support me",
+        "floating-chat.donateButton.text": "Support the project",
         "floating-chat.donateButton.background-color": "#7a4df6",
         "floating-chat.donateButton.text-color": "#fff",
       });
@@ -32,7 +32,8 @@ export const DonateSection = memo(function DonateSection() {
     <section className="donate-section">
       <p className="donate-title">Support the project</p>
       <p className="donate-sub">
-        Donations help cover API costs and keep this tool free and unrestricted.
+        Donations help cover API costs and keep this tool free and unrestricted. You can donate via
+        crypto below or use the button in the corner to support with fiat.
       </p>
       <div className="donate-addresses">
         <div className="donate-group">

@@ -72,6 +72,13 @@ function App() {
           </p>
         </header>
 
+        <div className="app-notice">
+          This app runs on free-tier services (Cloudflare, CoinGecko, FX Rates API). If a request
+          fails due to rate limits, wait a moment and try again, or try again tomorrow. This is an
+          unofficial tool and is not affiliated with, endorsed by, or associated with the GoMining
+          team.
+        </div>
+
         {!user ? (
           <AuthPanel onSync={handleCheckSync} />
         ) : (
@@ -137,16 +144,6 @@ function App() {
         )}
 
         {message ? <div className="message">{message}</div> : null}
-
-        <div className="free-tier-notice">
-          This app runs on free-tier services (Cloudflare, CoinGecko, FX Rates API). If a request
-          fails due to rate limits, wait a moment and try again, or try again tomorrow.
-        </div>
-
-        <p className="unofficial-notice">
-          This is an unofficial tool and is not affiliated with, endorsed by, or associated with the
-          GoMining team.
-        </p>
 
         <DonateSection />
       </main>
