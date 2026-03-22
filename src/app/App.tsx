@@ -64,18 +64,16 @@ function App() {
           <div className="hero-top">
             <div className="hero-title-row">
               <img src={logo} alt="GoMining Exporter logo" className="hero-logo" />
-              <div>
-                <h1>GoMining Exporter</h1>
-                <p className="hero-subtitle">
-                  Connect your GoMining session and generate a complete all-rewards Excel report in
-                  one click. Your token never leaves your browser.
-                </p>
-              </div>
+              <h1>GoMining Exporter</h1>
             </div>
             <button type="button" className="btn-theme" onClick={toggleTheme}>
               {theme === "dark" ? "Light mode" : "Dark mode"}
             </button>
           </div>
+          <p className="hero-subtitle">
+            Connect your GoMining session and generate a complete all-rewards Excel report in one
+            click. Your token never leaves your browser.
+          </p>
         </header>
 
         <div className="app-notice">
