@@ -109,6 +109,13 @@ h3,
   line-height: inherit;
 }
 
+.copyright {
+  margin: 12px 0 0;
+  font-size: 0.72rem;
+  color: #9fa5be;
+  text-align: center;
+}
+
 .app-notice {
   margin-top: 12px;
   border: 1px solid #f2c57b;

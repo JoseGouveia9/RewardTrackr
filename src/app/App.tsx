@@ -146,6 +146,8 @@ function App() {
         {message ? <div className="message">{message}</div> : null}
 
         <DonateSection />
+
+        <p className="copyright">© 2026 José Gouveia · Moustachio</p>
       </main>
     </div>
   );

@@ -44,3 +44,7 @@ That's it, your file will download automatically.
 ## Feedback & issues
 
 Found a bug or have a suggestion? Open an issue on [GitHub](https://github.com/JoseGouveia9/GoMiningExporter/issues).
+
+---
+
+© 2026 José Gouveia · Moustachio
