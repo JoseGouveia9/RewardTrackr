@@ -53,6 +53,10 @@ export const DonateSection = memo(function DonateSection() {
           <span className="donate-label">BTC</span>
           <code className="donate-addr">bc1qkfftx7v669cqk7jr68fnkp73wmlq9pvp3fvu3s</code>
         </div>
+        <div className="donate-group">
+          <span className="donate-label">Bitcoin · Lightning</span>
+          <code className="donate-addr">moustachio@blink.sv</code>
+        </div>
       </div>
     </section>
   );
