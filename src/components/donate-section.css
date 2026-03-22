@@ -19,13 +19,6 @@
   color: #8a8faa;
 }
 
-.donate-columns {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-  align-items: start;
-}
-
 .donate-addresses {
   display: flex;
   flex-direction: column;
@@ -57,11 +50,6 @@
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.donate-kofi {
-  border-radius: 10px;
-  overflow: hidden;
-}
-
 .page.theme-light .donate-section {
   background: rgba(0, 0, 0, 0.03);
   border-color: rgba(0, 0, 0, 0.08);
@@ -71,10 +59,4 @@
   background: rgba(0, 0, 0, 0.04);
   color: #3a3f5c;
   border-color: rgba(0, 0, 0, 0.08);
-}
-
-@media (max-width: 640px) {
-  .donate-columns {
-    grid-template-columns: 1fr;
-  }
 }
