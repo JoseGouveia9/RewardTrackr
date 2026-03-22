@@ -70,10 +70,6 @@ function App() {
             Connect your GoMining session and generate a complete all-rewards Excel report in one
             click. Your token never leaves your browser.
           </p>
-          <p className="unofficial-notice">
-            This is an unofficial tool and is not affiliated with, endorsed by, or associated with
-            the GoMining team.
-          </p>
         </header>
 
         {!user ? (
@@ -146,6 +142,11 @@ function App() {
           This app runs on free-tier services (Cloudflare, CoinGecko, FX Rates API). If a request
           fails due to rate limits, wait a moment and try again, or try again tomorrow.
         </div>
+
+        <p className="unofficial-notice">
+          This is an unofficial tool and is not affiliated with, endorsed by, or associated with the
+          GoMining team.
+        </p>
 
         <DonateSection />
       </main>

@@ -19,21 +19,11 @@
   color: #8a8faa;
 }
 
-.kofi-btn {
-  display: inline-block;
-  margin-bottom: 16px;
-  padding: 8px 20px;
-  background: #ff5e5b;
-  color: #fff;
-  font-size: 0.82rem;
-  font-weight: 600;
-  border-radius: 8px;
-  text-decoration: none;
-  transition: opacity 0.15s;
-}
-
-.kofi-btn:hover {
-  opacity: 0.85;
+.donate-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: start;
 }
 
 .donate-addresses {
@@ -67,6 +57,11 @@
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+.donate-kofi {
+  border-radius: 10px;
+  overflow: hidden;
+}
+
 .page.theme-light .donate-section {
   background: rgba(0, 0, 0, 0.03);
   border-color: rgba(0, 0, 0, 0.08);
@@ -76,4 +71,10 @@
   background: rgba(0, 0, 0, 0.04);
   color: #3a3f5c;
   border-color: rgba(0, 0, 0, 0.08);
+}
+
+@media (max-width: 640px) {
+  .donate-columns {
+    grid-template-columns: 1fr;
+  }
 }
