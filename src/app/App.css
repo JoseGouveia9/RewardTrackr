@@ -70,7 +70,7 @@
 }
 
 .hero h1 {
-  margin: 0 0 8px;
+  margin: 0;
 }
 
 .hero h1,
@@ -116,6 +116,7 @@ h3,
 }
 
 .hero-subtitle {
+  margin: 0;
   font-family: inherit;
   font-size: inherit;
   font-weight: inherit;
