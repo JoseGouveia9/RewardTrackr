@@ -4,6 +4,7 @@ import { AuthPanel, UserPanel, useAuth } from "@/features/auth";
 import { SheetSelector, ExportOptions, useExport, useExportConfig } from "@/features/export";
 import type { CacheState } from "@/features/export";
 import { DonateSection } from "@/components/donate-section";
+import { ReferralBanner } from "@/components/referral-banner";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { useTheme } from "./theme-context";
 import logo from "/logo.png";
@@ -82,6 +83,8 @@ function App() {
           <br /> This is an unofficial tool and is not affiliated with, endorsed by, or associated
           with the GoMining team.
         </div>
+
+        <ReferralBanner />
 
         {!user ? (
           <AuthPanel onSync={handleCheckSync} />
