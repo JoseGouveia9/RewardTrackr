@@ -30,7 +30,7 @@ Your GoMining session token is used only inside your browser to fetch your data 
 1. Install the GoMining Exporter browser extension
 2. Open GoMining in your browser and make sure you're logged in
 3. Click the extension icon to sync your session
-4. Open the [GoMining Exporter app](https://josefgouveia9.github.io/GoMiningExporter/)
+4. Open the [GoMining Exporter app](https://josegouveia9.github.io/GoMiningExporter/)
 5. Select the sheets you want and click **Build Excel**
 
 That's it, your file will download automatically.
