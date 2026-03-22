@@ -12,10 +12,10 @@ body {
 /* Ko-fi overlay widget width override */
 .floatingchat-container-wrap,
 .floatingchat-container-wrap-mobi {
-  width: 220px !important;
+  width: 280px !important;
 }
 
 .floatingchat-container,
 .floatingchat-container-mobi {
-  width: 220px !important;
+  width: 280px !important;
 }
