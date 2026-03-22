@@ -8,7 +8,10 @@ Sentry.init({
   dsn: import.meta.env.VITE_SENTRY_DSN as string | undefined,
   enabled: import.meta.env.PROD,
   environment: import.meta.env.MODE,
-  integrations: [Sentry.browserTracingIntegration()],
+  integrations: [
+    Sentry.browserTracingIntegration(),
+    Sentry.consoleLoggingIntegration({ levels: ["log", "warn", "error"] }),
+  ],
   tracesSampleRate: 0.1,
   sendDefaultPii: true,
   enableLogs: true,

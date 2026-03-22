@@ -1,5 +1,4 @@
 import { useCallback, useState } from "react";
-import * as Sentry from "@sentry/react";
 import { decodeJwt } from "@/lib/http";
 import { ALL_REWARD_KEYS } from "../config/reward-configs";
 import { clearAllCacheEntries } from "../utils/cache";
@@ -55,7 +54,7 @@ export function useExport({
     setLoading(true);
     onMessage("");
 
-    Sentry.logger.info("Export started", { sheets: selectedKeys, currency: excelFiatCurrency });
+    console.log("Export started", { sheets: selectedKeys, currency: excelFiatCurrency });
 
     try {
       const successMessage = await executeExportFlow({
@@ -69,7 +68,7 @@ export function useExport({
         onMessage,
         onCacheUpdate,
       });
-      Sentry.logger.info("Export completed", { sheets: selectedKeys.length });
+      console.log("Export completed", { sheets: selectedKeys.length });
       onMessage(successMessage);
     } catch (error: unknown) {
       const msg = error instanceof Error ? error.message : "Export failed";
@@ -84,7 +83,10 @@ export function useExport({
         msgLower.includes("expired") ||
         msgLower.includes("jwt") ||
         msgLower.includes("forbidden");
-      Sentry.logger.error("Export failed", { reason: isCors ? "cors" : isAuth ? "auth" : "unknown", message: msg });
+      console.error("Export failed", {
+        reason: isCors ? "cors" : isAuth ? "auth" : "unknown",
+        message: msg,
+      });
       onMessage(
         isCors
           ? "Network error: GoMining API blocked the request (CORS). Try using the browser extension to sync your token, or run the app locally with the v2 server."

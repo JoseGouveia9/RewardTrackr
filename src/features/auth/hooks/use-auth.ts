@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from "react";
-import * as Sentry from "@sentry/react";
 import { decodeJwt } from "@/lib/http";
 import type { AuthUser } from "../types";
 
@@ -77,10 +76,10 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
         localStorage.setItem(EXTENSION_SYNC_TOKEN_STORE_KEY, syncToken);
         setStoredToken(syncToken);
         setUser(userData);
-        Sentry.logger.info("User synced via extension hash");
+        console.log("User synced via extension hash");
         onMessage("Synced successfully. Welcome!");
       } else {
-        Sentry.logger.warn("Extension token invalid or expired on hash sync");
+        console.warn("Extension token invalid or expired on hash sync");
         onMessage("Extension token is invalid or expired.");
       }
       clearSyncHash();
@@ -136,10 +135,10 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
         localStorage.setItem(EXTENSION_SYNC_TOKEN_STORE_KEY, syncToken);
         setStoredToken(syncToken);
         setUser(userData);
-        Sentry.logger.info("User synced via manual check");
+        console.log("User synced via manual check");
         onMessage("Synced successfully. Welcome!");
       } else {
-        Sentry.logger.warn("Extension token invalid or expired on manual check");
+        console.warn("Extension token invalid or expired on manual check");
         onMessage("Extension token is invalid or expired.");
       }
       if (hashToken) clearSyncHash();
@@ -152,7 +151,7 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
     localStorage.removeItem(EXTENSION_SYNC_TOKEN_STORE_KEY);
     setUser(null);
     setStoredToken("");
-    Sentry.logger.info("User logged out");
+    console.log("User logged out");
     onMessage("Logged out.");
   }, [onMessage]);
 
