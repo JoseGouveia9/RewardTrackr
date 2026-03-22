@@ -32,8 +32,9 @@ export const DonateSection = memo(function DonateSection() {
     <section className="donate-section">
       <p className="donate-title">Support the project</p>
       <p className="donate-sub">
-        Donations help cover API costs and keep this tool free and unrestricted. You can donate via
-        crypto below or use the button in the corner to support with fiat.
+        Donations help cover API costs and keep this tool free and unrestricted.
+        <br />
+        You can donate via crypto below or use the button in the corner to support with fiat.
       </p>
       <div className="donate-addresses">
         <div className="donate-group">

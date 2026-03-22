@@ -8,3 +8,9 @@ body {
   margin: 0;
   padding: 0;
 }
+
+/* Ko-fi overlay widget width override */
+.floatingchat-container-wrap-mobi {
+  width: auto !important;
+  min-width: 200px !important;
+}
