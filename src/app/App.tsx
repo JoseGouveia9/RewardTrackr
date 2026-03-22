@@ -84,7 +84,7 @@ function App() {
           with the GoMining team.
         </div>
 
-        <ReferralBanner />
+        {!user && <ReferralBanner />}
 
         {!user ? (
           <AuthPanel onSync={handleCheckSync} />
