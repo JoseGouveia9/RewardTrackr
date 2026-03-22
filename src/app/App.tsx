@@ -78,8 +78,8 @@ function App() {
         </header>
 
         <div className="app-notice">
-          This app runs on free-tier services (Cloudflare, CoinGecko, FX Rates API). If a request
-          fails due to rate limits, wait a moment and try again, or try again tomorrow.
+          This app currently runs on free-tier services (Cloudflare, CoinGecko, FX Rates API). If a
+          request fails due to rate limits, wait a moment and try again, or try again tomorrow.
           <br /> This is an unofficial tool and is not affiliated with, endorsed by, or associated
           with the GoMining team.
         </div>
