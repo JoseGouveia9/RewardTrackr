@@ -21,6 +21,21 @@ export const DonateSection = memo(function DonateSection() {
         "floating-chat.donateButton.background-color": "#7a4df6",
         "floating-chat.donateButton.text-color": "#fff",
       });
+
+      const attachPopupObserver = (): void => {
+        const popup = document.querySelector(".floating-chat-kofi-popup-iframe");
+        if (!popup) return;
+        const observer = new MutationObserver(() => {
+          const el = popup as HTMLElement;
+          if (el.style.opacity === "1") {
+            document.getElementById("donate-section")?.scrollIntoView({ behavior: "smooth" });
+          }
+        });
+        observer.observe(popup, { attributes: true, attributeFilter: ["style"] });
+      };
+
+      setTimeout(attachPopupObserver, 1000);
+      setTimeout(attachPopupObserver, 3000);
     };
     document.body.appendChild(script);
     return () => {
@@ -29,7 +44,7 @@ export const DonateSection = memo(function DonateSection() {
   }, []);
 
   return (
-    <section className="donate-section">
+    <section id="donate-section" className="donate-section">
       <p className="donate-title">Support the project</p>
       <p className="donate-sub">
         Tips help cover API costs and keep this tool free and unrestricted.
