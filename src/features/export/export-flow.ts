@@ -66,6 +66,7 @@ function triggerFileDownload(buffer: ArrayBuffer, fileName: string): void {
 const MAX_RETRIES = 5;
 const RETRY_DELAY_MS = 60_000;
 
+// Wraps an async fetch call with retry logic, retrying up to MAX_RETRIES times on timeout.
 async function fetchWithRetry<T>(
   fn: () => Promise<T>,
   onProgress?: (msg: string) => void,
