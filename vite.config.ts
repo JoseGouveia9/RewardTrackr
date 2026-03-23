@@ -1,10 +1,12 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { sentryVitePlugin } from "@sentry/vite-plugin";
+import tailwindcss from "@tailwindcss/vite";
 import { fileURLToPath, URL } from "node:url";
 
 export default defineConfig({
   plugins: [
+    tailwindcss(),
     react(),
     // Only active in CI when SENTRY_AUTH_TOKEN is set; no-ops locally.
     sentryVitePlugin({
