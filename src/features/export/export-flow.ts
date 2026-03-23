@@ -63,6 +63,26 @@ function triggerFileDownload(buffer: ArrayBuffer, fileName: string): void {
   URL.revokeObjectURL(url);
 }
 
+const MAX_RETRIES = 5;
+const RETRY_DELAY_MS = 60_000;
+
+async function fetchWithRetry<T>(
+  fn: () => Promise<T>,
+  onProgress?: (msg: string) => void,
+): Promise<T> {
+  for (let attempt = 1; attempt <= MAX_RETRIES + 1; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      const isTimeout = err instanceof Error && err.name === "AbortError";
+      if (!isTimeout || attempt > MAX_RETRIES) throw err;
+      onProgress?.(`Request timed out. Retrying in 60s... (attempt ${attempt}/${MAX_RETRIES})`);
+      await new Promise<void>((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
+    }
+  }
+  throw new Error("Max retries exceeded");
+}
+
 // Fetches all paginated records for a sheet config, supporting incremental (new-only) mode.
 async function fetchAllPages(
   config: RewardConfig,
@@ -87,10 +107,9 @@ async function fetchAllPages(
 
   while (guard < 1000) {
     guard += 1;
-    const payload = await postJson<GoMiningApiResponse>(
-      config.apiUrl,
-      headers,
-      config.buildBody(pointer),
+    const payload = await fetchWithRetry(
+      () => postJson<GoMiningApiResponse>(config.apiUrl, headers, config.buildBody(pointer)),
+      onProgress,
     );
     const page = payload?.data?.array || [];
 
@@ -233,197 +252,197 @@ export async function executeExportFlow({
   await checkExportRateLimit(accessToken);
 
   try {
-  const cachedKeys = selectedKeys.filter((k) => cache[k]);
-  const uncachedKeys = selectedKeys.filter((k) => !cache[k]);
+    const cachedKeys = selectedKeys.filter((k) => cache[k]);
+    const uncachedKeys = selectedKeys.filter((k) => !cache[k]);
 
-  let updatedCache: CacheState = { ...cache };
-  let staleKeys: RewardKey[] = [];
-  const incrementalKeys = new Set<RewardKey>();
-  const currencyChangeKeys = new Set<RewardKey>();
+    let updatedCache: CacheState = { ...cache };
+    let staleKeys: RewardKey[] = [];
+    const incrementalKeys = new Set<RewardKey>();
+    const currencyChangeKeys = new Set<RewardKey>();
 
-  if (cachedKeys.length > 0) {
-    onMessage(`Checking ${cachedKeys.length} cached sheet(s) for updates...`);
-    const counts = await fetchLiveCounts(accessToken, cachedKeys);
+    if (cachedKeys.length > 0) {
+      onMessage(`Checking ${cachedKeys.length} cached sheet(s) for updates...`);
+      const counts = await fetchLiveCounts(accessToken, cachedKeys);
 
-    staleKeys = cachedKeys.filter((k) => {
-      const entry = updatedCache[k];
-      if (!entry) return true;
+      staleKeys = cachedKeys.filter((k) => {
+        const entry = updatedCache[k];
+        if (!entry) return true;
 
-      if (WALLET_TX_KEYS.has(k)) {
-        const desiredMode = includeWalletFiat ? "fiat-on" : "fiat-off";
-        if ((entry.pricingMode || "fiat-on") !== desiredMode) return true;
-        if (hasMissingPrices(entry, k, includeWalletFiat)) return true;
+        if (WALLET_TX_KEYS.has(k)) {
+          const desiredMode = includeWalletFiat ? "fiat-on" : "fiat-off";
+          if ((entry.pricingMode || "fiat-on") !== desiredMode) return true;
+          if (hasMissingPrices(entry, k, includeWalletFiat)) return true;
+        }
+
+        const liveCount = counts[k];
+        if (liveCount == null) return true;
+        if (liveCount > entry.totalCount) {
+          incrementalKeys.add(k);
+          return true;
+        }
+        if (liveCount !== entry.totalCount) return true;
+
+        // Count matches — if only the currency changed, re-enrich in place (no GoMining fetch).
+        if (entry.extraFiatCurrency !== excelFiatCurrency) currencyChangeKeys.add(k);
+        return false;
+      });
+    }
+
+    const order = Object.fromEntries(ALL_REWARD_KEYS.map((k, i) => [k, i]));
+    const keysToFetch = [...uncachedKeys, ...staleKeys].sort(
+      (a, b) => (order[a] ?? 999) - (order[b] ?? 999),
+    );
+
+    const priceCache = getSessionPriceCache();
+
+    // Phase 1: Fetch all raw records from GoMining API before any CoinGecko work,
+    // so the auth token is not at risk of expiring during long enrichment waits.
+    type RawFetch = {
+      config: RewardConfig;
+      rawRecords: unknown[];
+      totalCount: number | null;
+      useIncremental: boolean;
+    };
+    const fetched: RawFetch[] = [];
+
+    for (let i = 0; i < keysToFetch.length; i++) {
+      const key = keysToFetch[i];
+      const config = REWARD_CONFIG_MAP[key];
+      if (!config) continue;
+
+      onMessage(`Fetching ${config.sheetName} (${i + 1} of ${keysToFetch.length})...`);
+
+      const currentEntry = updatedCache[key];
+      const useIncremental = Boolean(currentEntry && incrementalKeys.has(key));
+      const incrementalOptions: IncrementalFetchOptions | undefined =
+        useIncremental && currentEntry
+          ? {
+              knownCreatedAt: currentEntry.records
+                .map((r) => (typeof r?.createdAt === "string" ? r.createdAt : ""))
+                .filter(Boolean),
+              knownTotalCount: currentEntry.totalCount,
+            }
+          : undefined;
+
+      const { records: rawRecords, totalCount } = await fetchAllPages(
+        config,
+        accessToken,
+        incrementalOptions,
+        onMessage,
+      );
+      fetched.push({ config, rawRecords, totalCount, useIncremental });
+    }
+
+    // Phase 1.5: Re-enrich currency-change-only keys using existing cached USD values.
+    // Count is unchanged so no GoMining fetch is needed — just recompute fiat fields.
+    for (const key of currencyChangeKeys) {
+      const currentEntry = updatedCache[key];
+      if (!currentEntry) continue;
+      const config = REWARD_CONFIG_MAP[key];
+      if (!config) continue;
+
+      onMessage(`Applying ${excelFiatCurrency} rates to ${config.sheetName}...`);
+      const reEnriched = await reenrichFiatValues(config, currentEntry.records, excelFiatCurrency);
+      const extras = cacheExtras(key, includeWalletFiat, excelFiatCurrency);
+
+      saveCacheEntry(key, currentEntry.sheetName, reEnriched, currentEntry.totalCount, extras);
+      persistPriceCache(key, reEnriched);
+
+      updatedCache = {
+        ...updatedCache,
+        [key]: { ...currentEntry, records: reEnriched, fetchedAt: Date.now(), ...extras },
+      };
+      onCacheUpdate(updatedCache);
+    }
+
+    // Phase 2: Enrich all fetched records (CoinGecko + EUR rates).
+    for (let i = 0; i < fetched.length; i++) {
+      const { config, rawRecords, totalCount, useIncremental } = fetched[i];
+      const key = config.key;
+
+      onMessage(`Enriching ${config.sheetName} (${i + 1} of ${fetched.length})...`);
+      const enriched = await enrichRecords(
+        config,
+        rawRecords,
+        priceCache,
+        includeWalletFiat,
+        excelFiatCurrency,
+        onMessage,
+      );
+      const prepared = filterCacheableRecords(key, enriched as RewardRecord[], totalCount ?? 0);
+
+      if (prepared.removedCreated > 0) {
+        onMessage(
+          `${config.sheetName}: Skipped ${prepared.removedCreated} pending reinvestment ${prepared.removedCreated === 1 ? "entry" : "entries"}, will retry on next export.`,
+        );
       }
 
-      const liveCount = counts[k];
-      if (liveCount == null) return true;
-      if (liveCount > entry.totalCount) {
-        incrementalKeys.add(k);
-        return true;
-      }
-      if (liveCount !== entry.totalCount) return true;
+      const extras = cacheExtras(key, includeWalletFiat, excelFiatCurrency);
+      const currentEntry = updatedCache[key];
+      const recordsForCache =
+        useIncremental && currentEntry
+          ? mergeRecords(currentEntry.records, prepared.records)
+          : prepared.records;
+      const totalCountForCache =
+        typeof totalCount === "number"
+          ? totalCount
+          : useIncremental && currentEntry
+            ? currentEntry.totalCount
+            : prepared.totalCount;
 
-      // Count matches — if only the currency changed, re-enrich in place (no GoMining fetch).
-      if (entry.extraFiatCurrency !== excelFiatCurrency) currencyChangeKeys.add(k);
-      return false;
+      saveCacheEntry(key, config.sheetName, recordsForCache, totalCountForCache, extras);
+      persistPriceCache(key, recordsForCache);
+
+      updatedCache = {
+        ...updatedCache,
+        [key]: {
+          sheetName: config.sheetName,
+          records: recordsForCache,
+          totalCount: totalCountForCache,
+          fetchedAt: Date.now(),
+          ...extras,
+        },
+      };
+      onCacheUpdate(updatedCache);
+    }
+
+    onMessage("Building Excel file...");
+    const sheetsPayload: RewardSheetPayload[] = selectedKeys.flatMap((key) => {
+      const cached = updatedCache[key];
+      if (!cached) return [];
+      const config = REWARD_CONFIG_MAP[key];
+      let records = cached.records as RewardSheetPayload["records"];
+      if (key === "transactions" && txFromTypeFilter && txFromTypeFilter.length > 0) {
+        records = records.filter((r) =>
+          txFromTypeFilter.includes((r as { fromType?: string }).fromType ?? ""),
+        );
+      }
+      return [
+        {
+          key,
+          sheetName: cached.sheetName,
+          sheetType: config?.sheetType ?? "standard",
+          records,
+          totalCount: cached.totalCount,
+        } as RewardSheetPayload,
+      ];
     });
-  }
 
-  const order = Object.fromEntries(ALL_REWARD_KEYS.map((k, i) => [k, i]));
-  const keysToFetch = [...uncachedKeys, ...staleKeys].sort(
-    (a, b) => (order[a] ?? 999) - (order[b] ?? 999),
-  );
-
-  const priceCache = getSessionPriceCache();
-
-  // Phase 1: Fetch all raw records from GoMining API before any CoinGecko work,
-  // so the auth token is not at risk of expiring during long enrichment waits.
-  type RawFetch = {
-    config: RewardConfig;
-    rawRecords: unknown[];
-    totalCount: number | null;
-    useIncremental: boolean;
-  };
-  const fetched: RawFetch[] = [];
-
-  for (let i = 0; i < keysToFetch.length; i++) {
-    const key = keysToFetch[i];
-    const config = REWARD_CONFIG_MAP[key];
-    if (!config) continue;
-
-    onMessage(`Fetching ${config.sheetName} (${i + 1} of ${keysToFetch.length})...`);
-
-    const currentEntry = updatedCache[key];
-    const useIncremental = Boolean(currentEntry && incrementalKeys.has(key));
-    const incrementalOptions: IncrementalFetchOptions | undefined =
-      useIncremental && currentEntry
-        ? {
-            knownCreatedAt: currentEntry.records
-              .map((r) => (typeof r?.createdAt === "string" ? r.createdAt : ""))
-              .filter(Boolean),
-            knownTotalCount: currentEntry.totalCount,
-          }
-        : undefined;
-
-    const { records: rawRecords, totalCount } = await fetchAllPages(
-      config,
-      accessToken,
-      incrementalOptions,
-      onMessage,
-    );
-    fetched.push({ config, rawRecords, totalCount, useIncremental });
-  }
-
-  // Phase 1.5: Re-enrich currency-change-only keys using existing cached USD values.
-  // Count is unchanged so no GoMining fetch is needed — just recompute fiat fields.
-  for (const key of currencyChangeKeys) {
-    const currentEntry = updatedCache[key];
-    if (!currentEntry) continue;
-    const config = REWARD_CONFIG_MAP[key];
-    if (!config) continue;
-
-    onMessage(`Applying ${excelFiatCurrency} rates to ${config.sheetName}...`);
-    const reEnriched = await reenrichFiatValues(config, currentEntry.records, excelFiatCurrency);
-    const extras = cacheExtras(key, includeWalletFiat, excelFiatCurrency);
-
-    saveCacheEntry(key, currentEntry.sheetName, reEnriched, currentEntry.totalCount, extras);
-    persistPriceCache(key, reEnriched);
-
-    updatedCache = {
-      ...updatedCache,
-      [key]: { ...currentEntry, records: reEnriched, fetchedAt: Date.now(), ...extras },
+    const options: FetchRewardsOptions = {
+      walletTx: { includeFiat: includeWalletFiat },
+      excel: { includeFiat: includeExcelFiat, fiatCurrency: excelFiatCurrency },
     };
-    onCacheUpdate(updatedCache);
-  }
 
-  // Phase 2: Enrich all fetched records (CoinGecko + EUR rates).
-  for (let i = 0; i < fetched.length; i++) {
-    const { config, rawRecords, totalCount, useIncremental } = fetched[i];
-    const key = config.key;
+    const buffer = await buildExcelFromSheets(sheetsPayload, options);
+    triggerFileDownload(buffer, `rewards-${new Date().toISOString().slice(0, 10)}.xlsx`);
 
-    onMessage(`Enriching ${config.sheetName} (${i + 1} of ${fetched.length})...`);
-    const enriched = await enrichRecords(
-      config,
-      rawRecords,
-      priceCache,
-      includeWalletFiat,
-      excelFiatCurrency,
-      onMessage,
-    );
-    const prepared = filterCacheableRecords(key, enriched as RewardRecord[], totalCount ?? 0);
-
-    if (prepared.removedCreated > 0) {
-      onMessage(
-        `${config.sheetName}: Skipped ${prepared.removedCreated} pending reinvestment ${prepared.removedCreated === 1 ? "entry" : "entries"}, will retry on next export.`,
-      );
-    }
-
-    const extras = cacheExtras(key, includeWalletFiat, excelFiatCurrency);
-    const currentEntry = updatedCache[key];
-    const recordsForCache =
-      useIncremental && currentEntry
-        ? mergeRecords(currentEntry.records, prepared.records)
-        : prepared.records;
-    const totalCountForCache =
-      typeof totalCount === "number"
-        ? totalCount
-        : useIncremental && currentEntry
-          ? currentEntry.totalCount
-          : prepared.totalCount;
-
-    saveCacheEntry(key, config.sheetName, recordsForCache, totalCountForCache, extras);
-    persistPriceCache(key, recordsForCache);
-
-    updatedCache = {
-      ...updatedCache,
-      [key]: {
-        sheetName: config.sheetName,
-        records: recordsForCache,
-        totalCount: totalCountForCache,
-        fetchedAt: Date.now(),
-        ...extras,
-      },
-    };
-    onCacheUpdate(updatedCache);
-  }
-
-  onMessage("Building Excel file...");
-  const sheetsPayload: RewardSheetPayload[] = selectedKeys.flatMap((key) => {
-    const cached = updatedCache[key];
-    if (!cached) return [];
-    const config = REWARD_CONFIG_MAP[key];
-    let records = cached.records as RewardSheetPayload["records"];
-    if (key === "transactions" && txFromTypeFilter && txFromTypeFilter.length > 0) {
-      records = records.filter((r) =>
-        txFromTypeFilter.includes((r as { fromType?: string }).fromType ?? ""),
-      );
-    }
-    return [
-      {
-        key,
-        sheetName: cached.sheetName,
-        sheetType: config?.sheetType ?? "standard",
-        records,
-        totalCount: cached.totalCount,
-      } as RewardSheetPayload,
-    ];
-  });
-
-  const options: FetchRewardsOptions = {
-    walletTx: { includeFiat: includeWalletFiat },
-    excel: { includeFiat: includeExcelFiat, fiatCurrency: excelFiatCurrency },
-  };
-
-  const buffer = await buildExcelFromSheets(sheetsPayload, options);
-  triggerFileDownload(buffer, `rewards-${new Date().toISOString().slice(0, 10)}.xlsx`);
-
-  const freshCount = cachedKeys.length - staleKeys.length - currencyChangeKeys.size;
-  const parts: string[] = [];
-  if (uncachedKeys.length > 0) parts.push(`${uncachedKeys.length} fetched`);
-  if (staleKeys.length > 0) parts.push(`${staleKeys.length} updated`);
-  if (currencyChangeKeys.size > 0) parts.push(`${currencyChangeKeys.size} re-enriched`);
-  if (freshCount > 0) parts.push(`${freshCount} from cache`);
-  return `Excel file downloaded! (${parts.join(", ") || "all from cache"})`;
+    const freshCount = cachedKeys.length - staleKeys.length - currencyChangeKeys.size;
+    const parts: string[] = [];
+    if (uncachedKeys.length > 0) parts.push(`${uncachedKeys.length} fetched`);
+    if (staleKeys.length > 0) parts.push(`${staleKeys.length} updated`);
+    if (currencyChangeKeys.size > 0) parts.push(`${currencyChangeKeys.size} re-enriched`);
+    if (freshCount > 0) parts.push(`${freshCount} from cache`);
+    return `Excel file downloaded! (${parts.join(", ") || "all from cache"})`;
   } catch (err) {
     await rollbackExportRateLimit(accessToken);
     throw err;
