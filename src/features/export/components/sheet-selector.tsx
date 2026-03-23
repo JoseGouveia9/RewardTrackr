@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useEffect, useState } from "react";
 import { REWARD_GROUPS } from "../config/reward-configs";
 import "./sheet-selector.css";
 import { formatAge } from "../utils/cache";
@@ -17,6 +17,12 @@ export const SheetSelector = memo(function SheetSelector({
   onToggleAll,
   isGroupSelected,
 }: SheetSelectorProps) {
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const interval = setInterval(() => setTick((t) => t + 1), 60_000);
+    return () => clearInterval(interval);
+  }, []);
+
   const totalGroupCount = REWARD_GROUPS.length;
   const selectedGroupCount = REWARD_GROUPS.filter((g) => isGroupSelected(g)).length;
 

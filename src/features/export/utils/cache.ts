@@ -174,7 +174,7 @@ export function filterCacheableRecords(
 // Formats a timestamp as a human-readable age string (e.g. "5m ago").
 export function formatAge(fetchedAt: number): string {
   const seconds = Math.floor((Date.now() - fetchedAt) / 1000);
-  if (seconds < 60) return `${seconds}s ago`;
+  if (seconds < 60) return `<1m ago`;
   const minutes = Math.floor(seconds / 60);
   if (minutes < 60) return `${minutes}m ago`;
   return `${Math.floor(minutes / 60)}h ago`;
