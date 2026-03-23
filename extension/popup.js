@@ -6,23 +6,67 @@
   const EXPORTER_SYNC_ALIAS_HASH_KEY = "gm_sync_alias";
   const INTRO_SEEN_KEY = "gm_intro_seen";
 
-  const syncBtn = document.getElementById("syncBtn");
-  const statusEl = document.getElementById("status");
-  const welcomeEl = document.getElementById("welcome");
+  // ── Theme ────────────────────────────────────────────────────
+  const THEME_KEY = "gm_theme";
 
-  function setStatus(text) {
-    if (statusEl) statusEl.textContent = text;
+  function applyTheme(theme) {
+    document.body.classList.toggle("theme-dark", theme === "dark");
+    document.body.classList.toggle("theme-light", theme === "light");
   }
 
-  function setWelcome(text) {
-    if (!welcomeEl) return;
-    if (!text) {
-      welcomeEl.textContent = "";
-      welcomeEl.classList.add("hidden");
+  async function loadTheme() {
+    try {
+      const exporterTabs = await chrome.tabs.query({ url: `${EXPORTER_URL}*` });
+      if (exporterTabs.length > 0 && exporterTabs[0].id != null) {
+        const results = await chrome.scripting.executeScript({
+          target: { tabId: exporterTabs[0].id },
+          func: (key) => localStorage.getItem(key),
+          args: [THEME_KEY],
+        });
+        const theme = results?.[0]?.result;
+        if (theme === "light" || theme === "dark") {
+          localStorage.setItem(THEME_KEY, theme);
+          applyTheme(theme);
+          return;
+        }
+      }
+    } catch { /* ignore — tab not accessible */ }
+    applyTheme(localStorage.getItem(THEME_KEY) || "dark");
+  }
+
+  void loadTheme();
+
+  // ─────────────────────────────────────────────────────────────
+
+  const syncBtn = document.getElementById("syncBtn");
+  const statusEl = document.getElementById("status");
+  const greetingEl = document.getElementById("greeting");
+
+  const STATUS_ICONS = {
+    ready: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg>`,
+    loading: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+    success: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`,
+    error: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`,
+  };
+
+  function setStatus(text, type = "loading") {
+    if (!statusEl) return;
+    statusEl.className = `status status-${type}`;
+    statusEl.innerHTML = `${STATUS_ICONS[type]}<span>${text}</span>`;
+  }
+
+  function setWelcome(alias) {
+    const titleRow = document.querySelector("#syncScreen .hero-title-row");
+    if (!greetingEl) return;
+    if (!alias) {
+      greetingEl.textContent = "";
+      greetingEl.classList.remove("visible");
+      titleRow?.classList.remove("synced");
       return;
     }
-    welcomeEl.textContent = text;
-    welcomeEl.classList.remove("hidden");
+    greetingEl.textContent = `Hello ${alias} 👋`;
+    titleRow?.classList.add("synced");
+    requestAnimationFrame(() => greetingEl.classList.add("visible"));
   }
 
   function setButtonState(label, onClick, options = {}) {
@@ -91,23 +135,23 @@
         : true;
 
       if (onCorrectSite && hasToken && !tokenExpired) {
-        setStatus("Ready to sync.");
+        setStatus("Ready to sync.", "ready");
         setButtonState("Sync to Exporter", syncProfile, { disabled: false, notReady: false });
       } else if (!onCorrectSite) {
-        setStatus("Open app.gomining.com to continue.");
+        setStatus("Open app.gomining.com to continue.", "error");
         setButtonState("Not Ready", syncProfile, { disabled: true, notReady: true });
       } else if (!hasToken) {
-        setStatus("Login required on app.gomining.com.");
+        setStatus("Login required on app.gomining.com.", "error");
         setButtonState("Not Ready", syncProfile, { disabled: true, notReady: true });
       } else if (tokenExpired) {
-        setStatus("Token expired. Refresh login on app.gomining.com.");
+        setStatus("Token expired. Refresh login on app.gomining.com.", "error");
         setButtonState("Not Ready", syncProfile, { disabled: true, notReady: true });
       } else {
-        setStatus("Not ready to sync.");
+        setStatus("Not ready to sync.", "error");
         setButtonState("Not Ready", syncProfile, { disabled: true, notReady: true });
       }
     } catch {
-      setStatus("Not ready to sync.");
+      setStatus("Not ready to sync.", "error");
       setButtonState("Not Ready", syncProfile, { disabled: true, notReady: true });
     }
   }
@@ -115,7 +159,7 @@
   async function syncProfile() {
     setWelcome(null);
     setButtonState("Syncing...", syncProfile, { disabled: true });
-    setStatus("Reading cookie...");
+    setStatus("Reading cookie...", "loading");
 
     try {
       const cookie = await chrome.cookies.get({
@@ -132,12 +176,12 @@
         throw new Error("Token is expired. Refresh app.gomining.com and try again.");
       }
 
-      setStatus("Fetching profile...");
+      setStatus("Fetching profile...", "loading");
       const profile = await fetchGoMiningProfile(cookie.value);
       const alias = resolveAlias(profile) || "there";
 
-      setWelcome(`Welcome ${alias}!`);
-      setStatus("Profile synced. Click below to open the exporter.");
+      setWelcome(alias);
+      setStatus("Profile synced. Click below to open the exporter.", "success");
 
       // Push token directly into any already-open exporter tabs so they update immediately.
       const exporterTabs = await chrome.tabs.query({ url: `${EXPORTER_URL}*` });
@@ -164,7 +208,7 @@
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unexpected error";
-      setStatus(`Error: ${message}`);
+      setStatus(`Error: ${message}`, "error");
       setButtonState("Sync to Exporter", syncProfile);
     }
   }

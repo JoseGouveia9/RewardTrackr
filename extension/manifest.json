@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "GoMining Exporter",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Export your full GoMining rewards history to Excel for tax reporting and personal record keeping.",
   "permissions": ["cookies", "tabs", "scripting"],
   "host_permissions": [

@@ -4,23 +4,34 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>GoMining Exporter</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
-    <div id="introScreen" class="wrap">
-      <h1>GoMining Exporter</h1>
-      <p class="sub">Your GoMining rewards, beautifully exported.</p>
-      <p class="unofficial-notice">Unofficial tool. Not affiliated with the GoMining team.</p>
+    <div id="introScreen" class="popup-card">
+      <div class="hero-title-row">
+        <img src="logo.png" alt="GoMining Exporter logo" class="hero-logo" />
+        <span class="hero-label">
+          <span class="hero-label-main">GOMINING</span> <span class="hero-label-accent">EXPORTER</span>
+        </span>
+      </div>
+      <p class="screen-subtitle">Your GoMining rewards, beautifully exported.</p>
+      <p class="unofficial-notice">
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+        <span>Unofficial tool. Not affiliated with the GoMining team.</span>
+      </p>
       <div class="intro-card">
-        <p class="intro-label">This extension</p>
-        <p class="intro-text">
+        <p class="intro-card-label">This extension</p>
+        <p class="intro-card-text">
           Reads your active GoMining session and securely syncs it to the
           exporter app.
         </p>
       </div>
       <div class="intro-card">
-        <p class="intro-label">The exporter</p>
-        <p class="intro-text">
+        <p class="intro-card-label">The exporter</p>
+        <p class="intro-card-text">
           Generates a complete Excel report of all your rewards: Solo Mining,
           MinerWars, Referrals, Bounties, Deposits, Withdrawals, and more.
         </p>
@@ -29,13 +40,17 @@
       <p class="copyright">© 2026 José Gouveia · Moustachio</p>
     </div>
 
-    <div id="syncScreen" class="wrap hidden">
-      <h1>GoMining Exporter</h1>
-      <p class="sub">
-        Connect your GoMining session and sync your exporter access in one
-        click.
-      </p>
-      <div id="welcome" class="welcome hidden"></div>
+    <div id="syncScreen" class="popup-card hidden">
+      <div class="hero-title-row">
+        <img src="logo.png" alt="GoMining Exporter logo" class="hero-logo" />
+        <div>
+          <span class="hero-label">
+            <span class="hero-label-main">GOMINING</span> <span class="hero-label-accent">EXPORTER</span>
+          </span>
+          <p id="greeting" class="hero-greeting"></p>
+        </div>
+      </div>
+      <p class="screen-subtitle">Connect your GoMining session and sync your exporter access in one click.</p>
       <button id="syncBtn">Sync to Exporter</button>
       <div id="status" class="status"></div>
       <p class="copyright">© 2026 José Gouveia · Moustachio</p>

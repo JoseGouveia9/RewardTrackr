@@ -1,85 +1,177 @@
+/* ── Base ────────────────────────────────────────────────────── */
+
 body {
   margin: 0;
   min-width: 340px;
-  font-family: Inter, Roboto, -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica Neue, Arial, Noto Sans, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
+  font-family: "Inter", sans-serif;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.5;
   background: #f3f4f8;
   color: #2f3647;
 }
 
-.wrap {
+h1, h2, h3 {
+  font-family: "Space Grotesk", sans-serif;
+}
+
+/* ── Popup card ──────────────────────────────────────────────── */
+
+.popup-card {
   padding: 16px;
   margin: 12px;
-  background: #ffffff;
-  border: 1px solid #e6e9f2;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(0, 0, 0, 0.07);
   border-radius: 20px;
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
 }
 
-h1 {
-  margin: 0;
+/* ── Hero title ──────────────────────────────────────────────── */
+
+.hero-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.hero-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.hero-label {
+  display: block;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  margin-bottom: 2px;
+  transition: font-size 0.3s ease, letter-spacing 0.3s ease;
+}
+
+.hero-label-main {
+  color: #22283a;
+  transition: color 0.3s ease;
+}
+
+.hero-label-accent {
+  color: #7a4df6;
+}
+
+.hero-title-row.synced .hero-label {
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+}
+
+.hero-title-row.synced .hero-label-main,
+body.theme-dark .hero-title-row.synced .hero-label-main {
+  color: #6d7589;
+}
+
+/* ── Greeting ────────────────────────────────────────────────── */
+
+.hero-greeting {
+  margin: 2px 0 0;
+  font-family: "Space Grotesk", sans-serif;
   font-size: 1.25rem;
   font-weight: 700;
-  font-family: AtypDisplay, Inter, Roboto, -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica Neue, Arial, Noto Sans, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", Segoe UI Symbol, "Noto Color Emoji";
   color: #22283a;
+  opacity: 0;
+  transform: translateY(6px);
+  max-height: 0;
+  overflow: hidden;
+  transition: opacity 0.25s ease, transform 0.25s ease, max-height 0.25s ease;
 }
 
-.copyright {
-  margin: 10px 0 0;
-  font-size: 0.7rem;
-  color: #9fa5be;
-  text-align: center;
+.hero-greeting.visible {
+  opacity: 1;
+  transform: translateY(0);
+  max-height: 2rem;
 }
 
-.unofficial-notice {
-  margin: 6px 0 8px;
-  padding: 6px 10px;
-  border: 1px solid #f2c57b;
-  background: #fff6e8;
-  color: #7a4d0b;
-  border-radius: 8px;
-  font-size: 0.72rem;
-  font-weight: 500;
-}
+/* ── Screen subtitle ─────────────────────────────────────────── */
 
-.sub {
-  margin: 6px 0 10px;
-  font-size: 0.875rem;
+.screen-subtitle {
+  margin: 0 0 12px;
+  font-size: 0.8rem;
   font-weight: 500;
   line-height: 1.5;
   color: #6f758b;
 }
 
-.welcome {
-  margin: 0 0 8px;
-  padding: 10px 12px;
-  border-radius: 12px;
-  background: #f2ecff;
-  border: 1px solid #d7c8fb;
-  color: #6b40ea;
-  font-size: 0.875rem;
-  font-weight: 700;
-  line-height: 1.5;
+/* ── Unofficial notice ───────────────────────────────────────── */
+
+.unofficial-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0 0 10px;
+  padding: 12px 16px;
+  border: 1px solid rgba(242, 197, 123, 0.5);
+  background: rgba(255, 246, 232, 0.6);
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  color: #7a4d0b;
+  border-radius: 14px;
+  font-size: 0.78rem;
+  font-weight: 500;
 }
 
-.welcome.hidden {
-  display: none;
+.unofficial-notice svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: #c97d10;
 }
+
+/* ── Intro cards ─────────────────────────────────────────────── */
+
+.intro-card {
+  background: rgba(122, 77, 246, 0.06);
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+
+.intro-card-label {
+  margin: 0 0 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: "Space Grotesk", sans-serif;
+  color: #7a4df6;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.intro-card-text {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 1.5;
+  color: #2b3150;
+}
+
+/* ── Button ──────────────────────────────────────────────────── */
 
 button {
   width: 100%;
   border: 1px solid transparent;
   border-radius: 12px;
-  margin-top: 12px;
+  margin-top: 10px;
   padding: 12px 16px;
-  font-family: Inter, Roboto, -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica Neue, Arial, Noto Sans, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
-  font-size: 0.875rem !important;
-  font-weight: 500 !important;
-  line-height: 1.5 !important;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.5;
   cursor: pointer;
   background: linear-gradient(90deg, #7a4df6 0%, #6b40ea 100%);
   border-color: #6b40ea;
   color: #fff;
   box-shadow: 0 4px 10px rgba(107, 64, 234, 0.22);
-  transition: background-color 0.14s ease, border-color 0.14s ease, transform 0.14s ease, box-shadow 0.14s ease;
+  transition: background 0.14s ease, border-color 0.14s ease, transform 0.14s ease;
 }
 
 button:hover:not(:disabled) {
@@ -92,56 +184,168 @@ button:active:not(:disabled) {
 }
 
 button:disabled {
-  opacity: 0.65;
+  opacity: 0.55;
   cursor: not-allowed;
 }
 
 button.not-ready {
-  background: #fff8fa;
-  border-color: #ffd6e1;
-  color: #ff3d71;
+  background: #fff0f3;
+  border-color: transparent;
+  color: #d0183e;
   box-shadow: none;
   opacity: 1;
 }
 
+button.not-ready:hover:not(:disabled) {
+  background: #ffe0e8;
+  border-color: transparent;
+}
+
+/* ── Status banner ───────────────────────────────────────────── */
+
 .status {
-  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
   border-radius: 12px;
   padding: 10px 12px;
-  background: #f2ecff;
-  color: #2b3150;
-  border: 1px solid #d7c8fb;
+  font-family: "Inter", sans-serif;
   font-size: 0.875rem;
   font-weight: 500;
   line-height: 1.5;
-  white-space: pre-wrap;
+  border: 1px solid transparent;
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
 }
+
+.status svg {
+  flex-shrink: 0;
+}
+
+.status-ready {
+  background: rgba(122, 77, 246, 0.08);
+  color: #5b35d4;
+  border-color: rgba(122, 77, 246, 0.2);
+}
+
+.status-loading {
+  background: rgba(248, 250, 252, 0.65);
+  color: #334155;
+  border-color: rgba(203, 213, 225, 0.45);
+}
+
+.status-success {
+  background: rgba(220, 252, 231, 0.65);
+  color: #166534;
+  border-color: rgba(134, 239, 172, 0.45);
+}
+
+.status-error {
+  background: rgba(254, 226, 226, 0.65);
+  color: #e0192a;
+  border-color: rgba(252, 165, 165, 0.45);
+}
+
+/* ── Footer ──────────────────────────────────────────────────── */
+
+.copyright {
+  margin: 10px 0 0;
+  font-size: 0.7rem;
+  color: #9fa5be;
+  text-align: center;
+}
+
+/* ── Utility ─────────────────────────────────────────────────── */
 
 .hidden {
   display: none;
 }
 
-.intro-card {
-  background: #f7f5ff;
-  border: 1px solid #d7c8fb;
-  border-radius: 12px;
-  padding: 10px 12px;
-  margin-bottom: 8px;
+/* ── Dark mode ───────────────────────────────────────────────── */
+
+body.theme-dark {
+  background: #0e0f1f;
+  color: #ffffff;
 }
 
-.intro-label {
-  margin: 0 0 4px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #7a4df6;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+body.theme-dark .popup-card {
+  background: rgba(22, 24, 42, 0.65);
+  border-color: rgba(255, 255, 255, 0.07);
 }
 
-.intro-text {
-  margin: 0;
-  font-size: 0.875rem;
-  font-weight: 500;
-  line-height: 1.5;
-  color: #2b3150;
+body.theme-dark .hero-label-main {
+  color: #ffffff;
+}
+
+body.theme-dark .hero-greeting {
+  color: #f0f4ff;
+}
+
+body.theme-dark .screen-subtitle {
+  color: rgba(255, 255, 255, 0.65);
+}
+
+body.theme-dark .unofficial-notice {
+  border-color: rgba(125, 100, 41, 0.5);
+  background: rgba(42, 34, 15, 0.65);
+  color: #ffd789;
+}
+
+body.theme-dark .unofficial-notice svg {
+  color: #ffc94d;
+}
+
+body.theme-dark .intro-card {
+  background: rgba(122, 77, 246, 0.1);
+}
+
+body.theme-dark .intro-card-text {
+  color: rgba(255, 255, 255, 0.84);
+}
+
+body.theme-dark button {
+  background: linear-gradient(90deg, #8b59ff 0%, #6b40ea 100%);
+  border-color: #6b40ea;
+  box-shadow: 0 4px 12px rgba(107, 64, 234, 0.34);
+}
+
+body.theme-dark button:hover:not(:disabled) {
+  background: linear-gradient(90deg, #7f4ff2 0%, #5f36d7 100%);
+  border-color: #5f36d7;
+}
+
+body.theme-dark button.not-ready {
+  background: rgba(255, 40, 70, 0.14);
+  border-color: transparent;
+  color: #ff3355;
+  box-shadow: none;
+}
+
+body.theme-dark button.not-ready:hover:not(:disabled) {
+  background: rgba(255, 40, 70, 0.22);
+}
+
+body.theme-dark .status-ready {
+  background: rgba(122, 77, 246, 0.15);
+  color: #a988f3;
+  border-color: rgba(122, 77, 246, 0.3);
+}
+
+body.theme-dark .status-loading {
+  background: rgba(30, 41, 59, 0.65);
+  color: #cbd5e1;
+  border-color: rgba(203, 213, 225, 0.15);
+}
+
+body.theme-dark .status-success {
+  background: rgba(20, 83, 45, 0.55);
+  color: #86efac;
+  border-color: rgba(134, 239, 172, 0.2);
+}
+
+body.theme-dark .status-error {
+  background: rgba(127, 29, 29, 0.55);
+  color: #ff6b8a;
+  border-color: rgba(252, 165, 165, 0.2);
 }
