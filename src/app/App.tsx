@@ -56,7 +56,7 @@ function MessageBanner({ message }: { message: string }) {
         strokeLinecap="round"
         strokeLinejoin="round"
         aria-hidden="true"
-        style={{ flexShrink: 0 }}
+        className="message-icon"
       >
         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
         <polyline points="22 4 12 14.01 9 11.01" />
@@ -73,7 +73,7 @@ function MessageBanner({ message }: { message: string }) {
         strokeLinecap="round"
         strokeLinejoin="round"
         aria-hidden="true"
-        style={{ flexShrink: 0 }}
+        className="message-icon"
       >
         <circle cx="12" cy="12" r="10" />
         <line x1="15" y1="9" x2="9" y2="15" />
@@ -91,7 +91,7 @@ function MessageBanner({ message }: { message: string }) {
         strokeLinecap="round"
         strokeLinejoin="round"
         aria-hidden="true"
-        style={{ flexShrink: 0 }}
+        className="message-icon"
       >
         <circle cx="12" cy="12" r="10" />
         <polyline points="12 6 12 12 16 14" />
@@ -213,8 +213,8 @@ function App() {
                 >
                   <motion.span
                     className="hero-label-main"
-                    initial={{ color: user ? "#6d7589" : "#ffffff" }}
-                    animate={{ color: user ? "#6d7589" : "#ffffff" }}
+                    initial={{ color: user ? "#6d7589" : theme === "dark" ? "#ffffff" : "#22283a" }}
+                    animate={{ color: user ? "#6d7589" : theme === "dark" ? "#ffffff" : "#22283a" }}
                     transition={{ duration: 0.3, ease: "easeOut" }}
                   >
                     GOMINING
@@ -301,18 +301,19 @@ function App() {
             <ErrorBoundary>
               <section className="panel-glass">
                 <div className="actions-header">
-                  <h3 style={{ display: "flex", alignItems: "center", gap: "8px", margin: 0 }}>
+                  <h3>
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width="16"
                       height="16"
                       viewBox="0 0 24 24"
                       fill="none"
-                      stroke="#7a4df6"
+                      stroke="currentColor"
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       aria-hidden="true"
+                      className="section-icon"
                     >
                       <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18" />
                     </svg>
@@ -397,7 +398,7 @@ function App() {
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           aria-hidden="true"
-                          style={{ flexShrink: 0 }}
+                          className="btn-icon"
                         >
                           <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
                           <path d="M14 2v4a2 2 0 0 0 2 2h4" />

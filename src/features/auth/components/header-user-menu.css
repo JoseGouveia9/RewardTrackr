@@ -136,6 +136,7 @@
 .user-menu-logout {
   color: #ff3355;
   background: rgba(255, 40, 70, 0.14);
+  margin-top: 16px;
 }
 
 .user-menu-logout .user-menu-action-icon {

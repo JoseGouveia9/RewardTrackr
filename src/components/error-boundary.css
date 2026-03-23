@@ -1,0 +1,13 @@
+.error-boundary-fallback {
+  padding: 2rem;
+  text-align: center;
+}
+
+.error-boundary-message {
+  color: #888;
+  margin-top: 0.5rem;
+}
+
+.error-boundary-retry {
+  margin-top: 1rem;
+}

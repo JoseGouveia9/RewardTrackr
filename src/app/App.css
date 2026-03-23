@@ -367,6 +367,26 @@ button:disabled {
   margin-bottom: 16px;
 }
 
+.actions-header h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.section-icon {
+  color: #7a4df6;
+  flex-shrink: 0;
+}
+
+.message-icon {
+  flex-shrink: 0;
+}
+
+.btn-icon {
+  flex-shrink: 0;
+}
+
 .message {
   display: flex;
   align-items: center;

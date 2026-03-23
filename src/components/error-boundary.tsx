@@ -1,6 +1,7 @@
 import { Component } from "react";
 import type { ErrorInfo, ReactNode } from "react";
 import * as Sentry from "@sentry/react";
+import "./error-boundary.css";
 
 interface Props {
   children: ReactNode;
@@ -28,11 +29,11 @@ export class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       if (this.props.fallback) return this.props.fallback;
       return (
-        <div style={{ padding: "2rem", textAlign: "center" }}>
+        <div className="error-boundary-fallback">
           <h2>Something went wrong</h2>
-          <p style={{ color: "#888", marginTop: "0.5rem" }}>{this.state.message}</p>
+          <p className="error-boundary-message">{this.state.message}</p>
           <button
-            style={{ marginTop: "1rem" }}
+            className="error-boundary-retry"
             onClick={() => this.setState({ hasError: false, message: "" })}
           >
             Try again

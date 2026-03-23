@@ -33,7 +33,7 @@ export const WalletPricingOptions = memo(function WalletPricingOptions({
         Applies only to Bounty, Deposits, Withdrawals and Transactions. GoMining API does not return
         fiat pricing for these sheets, so we enrich them using CoinGecko during export.
       </p>
-      <label className="wallet-option-row" style={{ marginTop: "8px" }}>
+      <label className="wallet-option-row">
         Include fiat pricing (USD). Extra fiat is configured below.
         <input
           type="checkbox"
@@ -55,7 +55,7 @@ export const WalletPricingOptions = memo(function WalletPricingOptions({
             strokeLinecap="round"
             strokeLinejoin="round"
             aria-hidden="true"
-            style={{ flexShrink: 0, marginTop: "1px" }}
+            className="warning-icon"
           >
             <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" />
             <path d="M12 9v4" />

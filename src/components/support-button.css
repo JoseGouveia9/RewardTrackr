@@ -190,6 +190,10 @@
 }
 
 /* ── Light mode ─────────────────────────────────────────────── */
+.page.theme-light .support-overlay {
+  background: transparent;
+}
+
 .page.theme-light .support-modal {
   background: rgba(255, 255, 255, 0.6);
   border-color: rgba(0, 0, 0, 0.08);

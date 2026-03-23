@@ -167,7 +167,6 @@ export const HeaderUserMenu = memo(function HeaderUserMenu({
           <button
             type="button"
             className="user-menu-action user-menu-logout"
-            style={{ marginTop: "16px" }}
             role="menuitem"
             onClick={() => {
               onLogout();

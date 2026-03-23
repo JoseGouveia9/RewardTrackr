@@ -30,6 +30,15 @@
   margin-bottom: 8px;
 }
 
+.wallet-note + .wallet-option-row {
+  margin-top: 8px;
+}
+
+.warning-icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
 /* Option rows */
 
 .wallet-option-row {
