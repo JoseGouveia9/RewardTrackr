@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { loadAllCacheEntries } from "@/features/export/utils/cache";
-import { AuthPanel, UserPanel, useAuth } from "@/features/auth";
+import { AuthPanel, HeaderUserMenu, useAuth } from "@/features/auth";
+import { SupportButton } from "@/components/support-button";
 import { SheetSelector, ExportOptions, useExport, useExportConfig } from "@/features/export";
 import type { CacheState } from "@/features/export";
 import { DonateSection } from "@/components/donate-section";
@@ -65,16 +66,33 @@ function App() {
           <div className="hero-top">
             <div className="hero-title-row">
               <img src={logo} alt="GoMining Exporter logo" className="hero-logo" />
-              <h1>GoMining Exporter</h1>
+              <div>
+                <span className="hero-label">
+                  <span className="hero-label-main">GOMINING</span>{" "}
+                  <span className="hero-label-accent">EXPORTER</span>
+                </span>
+                <h1>{user ? `Hello ${displayAlias} 👋` : "GoMining Exporter"}</h1>
+              </div>
             </div>
-            <button type="button" className="btn-theme" onClick={toggleTheme}>
-              {theme === "dark" ? "Light mode" : "Dark mode"}
-            </button>
+            <div className="hero-actions">
+              <SupportButton />
+              {user && (
+                <HeaderUserMenu
+                  user={user}
+                  displayAlias={displayAlias}
+                  theme={theme}
+                  onToggleTheme={toggleTheme}
+                  onLogout={handleLogout}
+                />
+              )}
+            </div>
           </div>
-          <p className="hero-subtitle">
-            Connect your GoMining session and generate a complete all-rewards Excel report in one
-            click. Your token never leaves your browser.
-          </p>
+          {!user && (
+            <p className="hero-subtitle">
+              Connect your GoMining session and generate a complete all-rewards Excel report in one
+              click. Your token never leaves your browser.
+            </p>
+          )}
         </header>
 
         <div className="app-notice">
@@ -90,8 +108,6 @@ function App() {
           <AuthPanel onSync={handleCheckSync} />
         ) : (
           <>
-            <UserPanel user={user} displayAlias={displayAlias} onLogout={handleLogout} />
-
             <ErrorBoundary>
               <section className="panel panel-actions">
                 <div className="actions-header">
