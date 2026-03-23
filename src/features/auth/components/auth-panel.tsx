@@ -9,7 +9,7 @@ interface AuthPanelProps {
 
 export const AuthPanel = memo(function AuthPanel({ onSync }: AuthPanelProps) {
   return (
-    <section className="panel panel-auth">
+    <section className="panel-glass panel-auth">
       <h2>Connect via Browser Extension</h2>
 
       <div className="auth-steps">

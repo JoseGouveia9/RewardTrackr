@@ -15,7 +15,7 @@
   font-size: 0.95rem;
 }
 
-.donate-sub {
+.donate-subtitle {
   margin: 0 0 16px;
   font-size: 0.8rem;
   color: #8a8faa;
@@ -42,7 +42,7 @@
   letter-spacing: 0.04em;
 }
 
-.donate-addr {
+.donate-address {
   font-size: 0.78rem;
   word-break: break-all;
   background: rgba(255, 255, 255, 0.06);
@@ -57,7 +57,7 @@
   border-color: rgba(0, 0, 0, 0.08);
 }
 
-.page.theme-light .donate-addr {
+.page.theme-light .donate-address {
   background: rgba(0, 0, 0, 0.04);
   color: #3a3f5c;
   border-color: rgba(0, 0, 0, 0.08);

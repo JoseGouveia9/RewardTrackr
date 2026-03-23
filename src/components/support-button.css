@@ -1,5 +1,5 @@
 /* ── Trigger button ─────────────────────────────────────────── */
-.spb-btn {
+.support-button {
   display: flex;
   align-items: center;
   gap: 0;
@@ -18,28 +18,28 @@
   white-space: nowrap;
 }
 
-.spb-btn:hover {
+.support-button:hover {
   max-width: 220px;
   gap: 7px;
   padding: 8px 14px;
-  background: rgba(224, 82, 82, 0.1);
+  background: rgba(224, 25, 42, 0.1);
 }
 
-.spb-heart {
+.support-heart-icon {
   flex-shrink: 0;
-  stroke: #e05252;
+  stroke: #e0192a;
   fill: none;
   transition: fill 0.18s ease;
 }
 
-.spb-btn:hover .spb-heart {
-  fill: #e05252;
+.support-button:hover .support-heart-icon {
+  fill: #e0192a;
 }
 
-.spb-label {
+.support-button-label {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #e05252;
+  color: #e0192a;
   opacity: 0;
   transform: translateX(-6px);
   transition:
@@ -49,13 +49,13 @@
   white-space: nowrap;
 }
 
-.spb-btn:hover .spb-label {
+.support-button:hover .support-button-label {
   opacity: 1;
   transform: translateX(0);
 }
 
 /* ── Overlay ────────────────────────────────────────────────── */
-.spb-overlay {
+.support-overlay {
   position: fixed;
   inset: 0;
   z-index: 200;
@@ -69,9 +69,9 @@
 }
 
 /* ── Modal card ─────────────────────────────────────────────── */
-.spb-modal {
+.support-modal {
   width: 100%;
-  max-width: 460px;
+  max-width: 600px;
   background: rgba(22, 24, 40, 0.55);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 20px;
@@ -81,26 +81,27 @@
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 }
 
-.spb-modal-header {
+.support-modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 10px;
+  margin-bottom: 16px;
 }
 
-.spb-modal-title-row {
+.support-modal-title-row {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.spb-modal-title {
+.support-modal-title {
   font-size: 1.05rem;
   font-weight: 700;
   color: #ffffff;
+  font-family: "Space Grotesk", sans-serif;
 }
 
-.spb-close {
+.support-modal-close {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -116,32 +117,32 @@
   flex-shrink: 0;
 }
 
-.spb-close:hover {
+.support-modal-close:hover {
   background: rgba(255, 255, 255, 0.14);
   color: #ffffff;
 }
 
-.spb-modal-sub {
-  margin: 0 0 18px;
+.support-modal-subtitle {
+  margin: 0 0 16px !important;
   font-size: 0.82rem;
   color: rgba(255, 255, 255, 0.55);
   line-height: 1.5;
 }
 
 /* ── Addresses ──────────────────────────────────────────────── */
-.spb-addresses {
+.support-addresses {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.spb-addr-group {
+.support-address-group {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.spb-addr-label {
+.support-address-label {
   font-size: 0.68rem;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.38);
@@ -149,7 +150,7 @@
   letter-spacing: 0.05em;
 }
 
-.spb-addr-row {
+.support-address-row {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -159,14 +160,15 @@
   padding: 8px 8px 8px 12px;
 }
 
-.spb-addr-val {
+.support-address-value {
   flex: 1;
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   color: rgba(255, 255, 255, 0.8);
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  word-break: break-all;
 }
 
-.spb-copy-btn {
+.support-copy-button {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -182,55 +184,55 @@
   padding: 0;
 }
 
-.spb-copy-btn:hover {
+.support-copy-button:hover {
   background: rgba(255, 255, 255, 0.14);
   color: #ffffff;
 }
 
 /* ── Light mode ─────────────────────────────────────────────── */
-.page.theme-light .spb-modal {
+.page.theme-light .support-modal {
   background: rgba(255, 255, 255, 0.6);
   border-color: rgba(0, 0, 0, 0.08);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
 }
 
-.page.theme-light .spb-modal-title {
+.page.theme-light .support-modal-title {
   color: #22283a;
 }
 
-.page.theme-light .spb-close {
+.page.theme-light .support-modal-close {
   background: rgba(0, 0, 0, 0.06);
   color: #6d7589;
 }
 
-.page.theme-light .spb-close:hover {
+.page.theme-light .support-modal-close:hover {
   background: rgba(0, 0, 0, 0.1);
   color: #22283a;
 }
 
-.page.theme-light .spb-modal-sub {
+.page.theme-light .support-modal-subtitle {
   color: #6d7589;
 }
 
-.page.theme-light .spb-addr-label {
+.page.theme-light .support-address-label {
   color: #8a8faa;
 }
 
-.page.theme-light .spb-addr-row {
+.page.theme-light .support-address-row {
   background: rgba(0, 0, 0, 0.04);
   border-color: rgba(0, 0, 0, 0.08);
 }
 
-.page.theme-light .spb-addr-val {
+.page.theme-light .support-address-value {
   color: #22283a;
 }
 
-.page.theme-light .spb-copy-btn {
+.page.theme-light .support-copy-button {
   background: rgba(0, 0, 0, 0.06);
   color: #6d7589;
 }
 
-.page.theme-light .spb-copy-btn:hover {
+.page.theme-light .support-copy-button:hover {
   background: rgba(0, 0, 0, 0.1);
   color: #22283a;
 }

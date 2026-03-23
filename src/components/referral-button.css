@@ -1,0 +1,197 @@
+/* ── Trigger button ─────────────────────────────────────────── */
+.referral-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 1px solid rgba(30, 166, 114, 0.35);
+  border-radius: 12px;
+  padding: 7px 12px;
+  color: #1ea672;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.14s ease, border-color 0.14s ease;
+}
+
+.referral-btn:hover {
+  background: rgba(30, 166, 114, 0.08);
+  border-color: rgba(30, 166, 114, 0.6);
+}
+
+.referral-btn-icon {
+  flex-shrink: 0;
+}
+
+/* ── Overlay ────────────────────────────────────────────────── */
+.referral-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 20px;
+}
+
+/* ── Modal card ─────────────────────────────────────────────── */
+.referral-modal {
+  width: 100%;
+  max-width: 480px;
+  background: rgba(22, 24, 40, 0.6);
+  border: 1px solid rgba(30, 166, 114, 0.25);
+  border-radius: 20px;
+  padding: 22px 22px 20px;
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.referral-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.referral-modal-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  font-family: "Space Grotesk", sans-serif;
+  color: #6ee0ae;
+}
+
+.referral-modal-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: background 0.14s ease, color 0.14s ease;
+}
+
+.referral-modal-close:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+}
+
+.referral-modal-intro {
+  margin: 0;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* ── Perks list ─────────────────────────────────────────────── */
+.referral-modal-perks {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.referral-modal-perks li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  background: rgba(30, 166, 114, 0.1);
+  border: 1px solid rgba(30, 166, 114, 0.15);
+  border-radius: 10px;
+}
+
+.referral-perk-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #6ee0ae;
+}
+
+.referral-perk-condition {
+  font-size: 0.72rem;
+  color: rgba(110, 224, 174, 0.6);
+}
+
+/* ── CTA ────────────────────────────────────────────────────── */
+.referral-modal-cta {
+  display: block;
+  text-align: center;
+  padding: 11px;
+  background: #1ea672;
+  color: #fff;
+  font-size: 0.88rem;
+  font-weight: 700;
+  font-family: "Space Grotesk", sans-serif;
+  border-radius: 12px;
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+}
+
+.referral-modal-cta:hover {
+  opacity: 0.88;
+}
+
+.referral-modal-code {
+  margin: 0;
+  font-size: 0.76rem;
+  color: rgba(255, 255, 255, 0.45);
+  text-align: center;
+}
+
+.referral-modal-code strong {
+  color: #6ee0ae;
+}
+
+/* ── Light mode ─────────────────────────────────────────────── */
+.page.theme-light .referral-modal {
+  background: rgba(237, 250, 244, 0.75);
+  border-color: rgba(30, 166, 114, 0.3);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
+}
+
+.page.theme-light .referral-modal-title {
+  color: #0e5c3e;
+}
+
+.page.theme-light .referral-modal-intro {
+  color: #2a8a60;
+}
+
+.page.theme-light .referral-perk-title {
+  color: #0e5c3e;
+}
+
+.page.theme-light .referral-perk-condition {
+  color: #2a8a60;
+}
+
+.page.theme-light .referral-modal-close {
+  background: rgba(0, 0, 0, 0.06);
+  color: #6d7589;
+}
+
+.page.theme-light .referral-modal-close:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: #22283a;
+}
+
+.page.theme-light .referral-modal-code {
+  color: #2a8a60;
+}
+
+.page.theme-light .referral-modal-code strong {
+  color: #0e5c3e;
+}

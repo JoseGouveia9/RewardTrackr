@@ -41,8 +41,9 @@ export const ExportOptions = memo(function ExportOptions({
     <>
       <AnimatePresence>
         {selectedKeys.includes("transactions") && (
-          <motion.div
+          <motion.section
             key="tx-filter"
+            className="panel-glass"
             variants={popVariants}
             initial="initial"
             animate="animate"
@@ -52,13 +53,14 @@ export const ExportOptions = memo(function ExportOptions({
               selectedTxFromTypes={selectedTxFromTypes}
               onToggleTxType={onToggleTxType}
             />
-          </motion.div>
+          </motion.section>
         )}
       </AnimatePresence>
       <AnimatePresence>
         {walletSheetsSelected && (
-          <motion.div
+          <motion.section
             key="wallet-pricing"
+            className="panel-glass"
             variants={popVariants}
             initial="initial"
             animate="animate"
@@ -68,15 +70,17 @@ export const ExportOptions = memo(function ExportOptions({
               includeWalletFiat={includeWalletFiat}
               onToggle={onToggleWalletFiat}
             />
-          </motion.div>
+          </motion.section>
         )}
       </AnimatePresence>
-      <ExtraFiatOptions
-        includeExcelFiat={includeExcelFiat}
-        onToggle={onToggleExcelFiat}
-        currency={excelFiatCurrency}
-        onChangeCurrency={onChangeFiatCurrency}
-      />
+      <section className="panel-glass">
+        <ExtraFiatOptions
+          includeExcelFiat={includeExcelFiat}
+          onToggle={onToggleExcelFiat}
+          currency={excelFiatCurrency}
+          onChangeCurrency={onChangeFiatCurrency}
+        />
+      </section>
     </>
   );
 });

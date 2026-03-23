@@ -1,40 +1,72 @@
 .wallet-options,
 .excel-options {
-  border: 1px solid #e2e7f1;
-  border-radius: 12px;
-  padding: 12px;
-  background: #fbfcff;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  background: none;
 }
 
-.wallet-options-title {
-  margin: 0 0 8px;
+.options-section-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 16px;
+  font-size: 1.25rem;
   font-weight: 700;
+  font-family: "Space Grotesk", sans-serif;
   color: #333c51;
+}
+
+.options-section-title svg {
+  width: 16px;
+  height: 16px;
+  color: #7a4df6;
+  flex-shrink: 0;
 }
 
 .wallet-note {
   font-size: 0.72rem;
   color: #a0a0b5;
+  margin-bottom: 8px;
 }
+
+/* Option rows */
 
 .wallet-option-row {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
   color: #3a445a;
-  margin-top: 6px;
+  background: rgba(122, 77, 246, 0.06);
+  border: none;
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 0.8rem;
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
 }
 
 .wallet-option-row input {
-  margin-top: 0;
+  flex-shrink: 0;
 }
 
 .wallet-currency-row {
-  margin-top: 8px;
-  align-items: center;
-  gap: 8px;
-  justify-content: flex-start;
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
+
+/* Fiat grid (1 row × 2 columns) */
+
+.fiat-grid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/* Toggle switch */
 
 .toggle-switch {
   appearance: none;
@@ -46,6 +78,7 @@
   cursor: pointer;
   position: relative;
   margin: 0;
+  flex-shrink: 0;
   transition: background-color 0.16s ease;
 }
 
@@ -75,30 +108,67 @@
   outline-offset: 2px;
 }
 
+/* Warning banner */
+
 .wallet-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
   margin: 10px 0 0;
-  border: 1px solid #f2c57b;
-  background: #fff6e8;
+  border: 1px solid rgba(242, 197, 123, 0.45);
+  background: rgba(255, 246, 232, 0.55);
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
   color: #7a4d0b;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 0.72rem !important;
+}
+
+/* Transaction filter grid (3 columns) */
+
+.transaction-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.transaction-filter-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: rgba(122, 77, 246, 0.06);
+  border: none;
   border-radius: 10px;
   padding: 8px 10px;
-  font-size: 0.65rem !important;
+  cursor: pointer;
+  color: #3a445a;
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+}
+
+.transaction-filter-label {
+  font-size: 0.8rem;
+  line-height: 1.3;
 }
 
 /* Dark mode */
 
-.page.theme-dark .wallet-options {
-  background: #181928;
+.page.theme-dark .wallet-options,
+.page.theme-dark .excel-options {
+  background: none;
   border-color: transparent;
 }
 
-.page.theme-dark .excel-options {
-  background: #181928;
-  border-color: transparent;
+.page.theme-dark .options-section-title {
+  color: #ffffff;
 }
 
 .page.theme-dark .wallet-option-row,
-.page.theme-dark .wallet-options-title {
+.page.theme-dark .transaction-filter-item {
+  background: rgba(122, 77, 246, 0.1);
   color: #ffffff;
 }
 
@@ -111,7 +181,7 @@
 }
 
 .page.theme-dark .wallet-warning {
-  border-color: #7d6429;
-  background: #2a220f;
+  border-color: rgba(125, 100, 41, 0.5);
+  background: rgba(42, 34, 15, 0.65);
   color: #ffd789;
 }

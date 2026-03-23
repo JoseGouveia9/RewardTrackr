@@ -15,11 +15,6 @@ const ADDRESSES = [
   { label: "Bitcoin · Lightning", value: "moustachio@blink.sv" },
 ];
 
-function truncate(addr: string): string {
-  if (addr.length <= 14) return addr;
-  return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
-}
-
 function CopyButton({ value }: { value: string }) {
   const [copied, setCopied] = useState(false);
 
@@ -34,7 +29,12 @@ function CopyButton({ value }: { value: string }) {
   };
 
   return (
-    <button type="button" className="spb-copy-btn" onClick={handleCopy} aria-label="Copy address">
+    <button
+      type="button"
+      className="support-copy-button"
+      onClick={handleCopy}
+      aria-label="Copy address"
+    >
       {copied ? (
         <svg
           width="14"
@@ -67,28 +67,36 @@ function CopyButton({ value }: { value: string }) {
   );
 }
 
-export const SupportButton = memo(function SupportButton() {
-  const [open, setOpen] = useState(false);
+interface SupportButtonProps {
+  open: boolean;
+  onOpen: () => void;
+  onClose: () => void;
+}
 
+export const SupportButton = memo(function SupportButton({
+  open,
+  onOpen,
+  onClose,
+}: SupportButtonProps) {
   useEffect(() => {
     if (!open) return;
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") onClose();
     }
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [open]);
+  }, [open, onClose]);
 
   return (
     <>
       <button
         type="button"
-        className="spb-btn"
-        onClick={() => setOpen(true)}
+        className="support-button"
+        onClick={onOpen}
         aria-label="Support the project"
       >
         <svg
-          className="spb-heart"
+          className="support-heart-icon"
           width="18"
           height="18"
           viewBox="0 0 24 24"
@@ -99,14 +107,14 @@ export const SupportButton = memo(function SupportButton() {
         >
           <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
         </svg>
-        <span className="spb-label">Support the project</span>
+        <span className="support-button-label">Support the project</span>
       </button>
 
       {open && (
-        <div className="spb-overlay" onClick={() => setOpen(false)} aria-modal="true" role="dialog">
-          <div className="spb-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="spb-modal-header">
-              <div className="spb-modal-title-row">
+        <div className="support-overlay" onClick={onClose} aria-modal="true" role="dialog">
+          <div className="support-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="support-modal-header">
+              <div className="support-modal-title-row">
                 <svg
                   width="20"
                   height="20"
@@ -120,12 +128,12 @@ export const SupportButton = memo(function SupportButton() {
                 >
                   <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                 </svg>
-                <span className="spb-modal-title">Support the project</span>
+                <span className="support-modal-title">Support the project</span>
               </div>
               <button
                 type="button"
-                className="spb-close"
-                onClick={() => setOpen(false)}
+                className="support-modal-close"
+                onClick={onClose}
                 aria-label="Close"
               >
                 <svg
@@ -143,17 +151,17 @@ export const SupportButton = memo(function SupportButton() {
               </button>
             </div>
 
-            <p className="spb-modal-sub">
+            <p className="support-modal-subtitle">
               Tips help cover API costs and keep this tool free and unrestricted. Tip via crypto
               below.
             </p>
 
-            <div className="spb-addresses">
+            <div className="support-addresses">
               {ADDRESSES.map(({ label, value }) => (
-                <div key={value} className="spb-addr-group">
-                  <span className="spb-addr-label">{label}</span>
-                  <div className="spb-addr-row">
-                    <code className="spb-addr-val">{truncate(value)}</code>
+                <div key={value} className="support-address-group">
+                  <span className="support-address-label">{label}</span>
+                  <div className="support-address-row">
+                    <code className="support-address-value">{value}</code>
                     <CopyButton value={value} />
                   </div>
                 </div>

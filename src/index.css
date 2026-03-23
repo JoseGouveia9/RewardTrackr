@@ -1,3 +1,9 @@
+@import "tailwindcss";
+
+:root {
+  --secondary: 228 16% 18%;
+}
+
 *,
 *::before,
 *::after {

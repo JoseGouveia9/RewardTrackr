@@ -32,14 +32,14 @@ export const HeaderUserMenu = memo(function HeaderUserMenu({
   }, [open]);
 
   return (
-    <div className="hum-wrap" ref={ref}>
+    <div className="user-menu-wrapper" ref={ref}>
       <button
         type="button"
-        className="hum-btn"
+        className="user-menu-button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
       >
-        <span className="hum-avatar" aria-hidden="true">
+        <span className="user-menu-avatar" aria-hidden="true">
           <svg
             width="16"
             height="16"
@@ -54,8 +54,8 @@ export const HeaderUserMenu = memo(function HeaderUserMenu({
             <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
           </svg>
         </span>
-        <span className="hum-alias">{displayAlias}</span>
-        <span className="hum-chevron" aria-hidden="true">
+        <span className="user-menu-alias">{displayAlias}</span>
+        <span className="user-menu-chevron" aria-hidden="true">
           <svg
             width="12"
             height="12"
@@ -72,9 +72,9 @@ export const HeaderUserMenu = memo(function HeaderUserMenu({
       </button>
 
       {open && (
-        <div className="hum-dropdown" role="menu">
-          <div className="hum-info-row">
-            <span className="hum-info-icon" aria-hidden="true">
+        <div className="user-menu-dropdown" role="menu">
+          <div className="user-menu-info-row">
+            <span className="user-menu-info-icon" aria-hidden="true">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="14"
@@ -92,11 +92,11 @@ export const HeaderUserMenu = memo(function HeaderUserMenu({
                 <line x1="16" x2="14" y1="3" y2="21" />
               </svg>
             </span>
-            <span className="hum-info-label">User ID:</span>
-            <span className="hum-info-value">{user.id || "n/a"}</span>
+            <span className="user-menu-info-label">User ID:</span>
+            <span className="user-menu-info-value">{user.id || "n/a"}</span>
           </div>
-          <div className="hum-info-row">
-            <span className="hum-info-icon" aria-hidden="true">
+          <div className="user-menu-info-row">
+            <span className="user-menu-info-icon" aria-hidden="true">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="14"
@@ -112,14 +112,19 @@ export const HeaderUserMenu = memo(function HeaderUserMenu({
                 <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
               </svg>
             </span>
-            <span className="hum-info-label">Email:</span>
-            <span className="hum-info-value">{user.email || "n/a"}</span>
+            <span className="user-menu-info-label">Email:</span>
+            <span className="user-menu-info-value">{user.email || "n/a"}</span>
           </div>
 
-          <div className="hum-divider" />
+          <div className="user-menu-divider" />
 
-          <button type="button" className="hum-action" role="menuitem" onClick={onToggleTheme}>
-            <span className="hum-action-icon" aria-hidden="true">
+          <button
+            type="button"
+            className="user-menu-action"
+            role="menuitem"
+            onClick={onToggleTheme}
+          >
+            <span className="user-menu-action-icon" aria-hidden="true">
               {theme === "dark" ? (
                 <svg
                   width="14"
@@ -161,7 +166,7 @@ export const HeaderUserMenu = memo(function HeaderUserMenu({
 
           <button
             type="button"
-            className="hum-action hum-logout"
+            className="user-menu-action user-menu-logout"
             style={{ marginTop: "16px" }}
             role="menuitem"
             onClick={() => {
@@ -169,7 +174,7 @@ export const HeaderUserMenu = memo(function HeaderUserMenu({
               setOpen(false);
             }}
           >
-            <span className="hum-action-icon" aria-hidden="true">
+            <span className="user-menu-action-icon" aria-hidden="true">
               <svg
                 width="14"
                 height="14"

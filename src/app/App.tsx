@@ -1,19 +1,149 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { loadAllCacheEntries } from "@/features/export/utils/cache";
 import { AuthPanel, HeaderUserMenu, useAuth } from "@/features/auth";
 import { SupportButton } from "@/components/support-button";
 import { SheetSelector, ExportOptions, useExport, useExportConfig } from "@/features/export";
 import type { CacheState } from "@/features/export";
-import { DonateSection } from "@/components/donate-section";
-import { ReferralBanner } from "@/components/referral-banner";
+import { ReferralButton } from "@/components/referral-button";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { useTheme } from "./theme-context";
 import logo from "/logo.png";
 import "./App.css";
 
+declare global {
+  interface Window {
+    kofiWidgetOverlay?: {
+      draw: (username: string, options: Record<string, string>) => void;
+    };
+  }
+}
+
+function getMessageType(msg: string): "success" | "error" | "loading" {
+  const lower = msg.toLowerCase();
+  if (
+    lower.includes("invalid") ||
+    lower.includes("expired") ||
+    lower.includes("no token") ||
+    lower.includes("error") ||
+    lower.includes("fail")
+  )
+    return "error";
+  if (
+    lower.includes("successfully") ||
+    lower.includes("synced") ||
+    lower.includes("cleared") ||
+    lower.includes("done") ||
+    lower.includes("welcome")
+  )
+    return "success";
+  return "loading";
+}
+
+function MessageBanner({ message }: { message: string }) {
+  const type = getMessageType(message);
+
+  const icon =
+    type === "success" ? (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="15"
+        height="15"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+        style={{ flexShrink: 0 }}
+      >
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+        <polyline points="22 4 12 14.01 9 11.01" />
+      </svg>
+    ) : type === "error" ? (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="15"
+        height="15"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+        style={{ flexShrink: 0 }}
+      >
+        <circle cx="12" cy="12" r="10" />
+        <line x1="15" y1="9" x2="9" y2="15" />
+        <line x1="9" y1="9" x2="15" y2="15" />
+      </svg>
+    ) : (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="15"
+        height="15"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+        style={{ flexShrink: 0 }}
+      >
+        <circle cx="12" cy="12" r="10" />
+        <polyline points="12 6 12 12 16 14" />
+      </svg>
+    );
+
+  return (
+    <div className={`message message-${type}`}>
+      {icon}
+      <span>{message}</span>
+    </div>
+  );
+}
+
 function App() {
   const [message, setMessage] = useState<string>("");
   const [cache, setCache] = useState<CacheState>(() => loadAllCacheEntries());
+  const [supportOpen, setSupportOpen] = useState(false);
+  const [referralOpen, setReferralOpen] = useState(false);
+
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://storage.ko-fi.com/cdn/scripts/overlay-widget.js";
+    script.async = true;
+    script.onload = () => {
+      window.kofiWidgetOverlay?.draw("moustachio", {
+        type: "floating-chat",
+        "floating-chat.donateButton.text": "Support the project",
+        "floating-chat.donateButton.background-color": "#7a4df6",
+        "floating-chat.donateButton.text-color": "#fff",
+      });
+
+      const attachPopupObserver = (): void => {
+        const popup = document.querySelector(".floating-chat-kofi-popup-iframe");
+        if (!popup) return;
+        const observer = new MutationObserver(() => {
+          const el = popup as HTMLElement;
+          if (el.style.opacity === "1") {
+            setSupportOpen(true);
+          }
+        });
+        observer.observe(popup, { attributes: true, attributeFilter: ["style"] });
+      };
+
+      setTimeout(attachPopupObserver, 1000);
+      setTimeout(attachPopupObserver, 3000);
+    };
+    document.body.appendChild(script);
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
 
   const { theme, toggleTheme } = useTheme();
 
@@ -58,8 +188,8 @@ function App() {
 
   return (
     <div className={`page ${theme === "dark" ? "theme-dark" : "theme-light"}`}>
-      <div className="bg-shape shape-a" />
-      <div className="bg-shape shape-b" />
+      <div className="background-shape background-shape-top" />
+      <div className="background-shape background-shape-bottom" />
 
       <main className="container">
         <header className="hero">
@@ -67,15 +197,58 @@ function App() {
             <div className="hero-title-row">
               <img src={logo} alt="GoMining Exporter logo" className="hero-logo" />
               <div>
-                <span className="hero-label">
-                  <span className="hero-label-main">GOMINING</span>{" "}
+                <motion.span
+                  className="hero-label"
+                  initial={
+                    user
+                      ? { fontSize: "0.65rem", letterSpacing: "0.08em", marginBottom: "2px" }
+                      : { fontSize: "1.35rem", letterSpacing: "0.06em", marginBottom: "0px" }
+                  }
+                  animate={
+                    user
+                      ? { fontSize: "0.65rem", letterSpacing: "0.08em", marginBottom: "2px" }
+                      : { fontSize: "1.35rem", letterSpacing: "0.06em", marginBottom: "0px" }
+                  }
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                >
+                  <motion.span
+                    className="hero-label-main"
+                    initial={{ color: user ? "#6d7589" : "#ffffff" }}
+                    animate={{ color: user ? "#6d7589" : "#ffffff" }}
+                    transition={{ duration: 0.3, ease: "easeOut" }}
+                  >
+                    GOMINING
+                  </motion.span>{" "}
                   <span className="hero-label-accent">EXPORTER</span>
-                </span>
-                <h1>{user ? `Hello ${displayAlias} 👋` : "GoMining Exporter"}</h1>
+                </motion.span>
+                <AnimatePresence>
+                  {user && (
+                    <motion.h1
+                      key="greeting"
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 6 }}
+                      transition={{ duration: 0.25, ease: "easeOut" }}
+                    >
+                      {`Hello ${displayAlias} 👋`}
+                    </motion.h1>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
             <div className="hero-actions">
-              <SupportButton />
+              <SupportButton
+                open={supportOpen}
+                onOpen={() => setSupportOpen(true)}
+                onClose={() => setSupportOpen(false)}
+              />
+              {!user && (
+                <ReferralButton
+                  open={referralOpen}
+                  onOpen={() => setReferralOpen(true)}
+                  onClose={() => setReferralOpen(false)}
+                />
+              )}
               {user && (
                 <HeaderUserMenu
                   user={user}
@@ -96,79 +269,153 @@ function App() {
         </header>
 
         <div className="app-notice">
-          This app currently runs on free-tier services (Cloudflare, CoinGecko, FX Rates API). If a
-          request fails due to rate limits, wait a moment and try again, or try again tomorrow.
-          <br /> This is an unofficial tool and is not affiliated with, endorsed by, or associated
-          with the GoMining team.
+          <svg
+            className="app-notice-icon"
+            xmlns="http://www.w3.org/2000/svg"
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" />
+            <path d="M12 9v4" />
+            <path d="M12 17h.01" />
+          </svg>
+          <span>
+            This app currently runs on free-tier services (Cloudflare, CoinGecko, FX Rates API). If
+            a request fails due to rate limits, wait a moment and try again, or try again tomorrow.{" "}
+            This is an unofficial tool and is not affiliated with, endorsed by, or associated with
+            the GoMining team.
+          </span>
         </div>
-
-        {!user && <ReferralBanner />}
 
         {!user ? (
           <AuthPanel onSync={handleCheckSync} />
         ) : (
           <>
             <ErrorBoundary>
-              <section className="panel panel-actions">
+              <section className="panel-glass">
                 <div className="actions-header">
-                  <h2>Select Sheets</h2>
+                  <h3 style={{ display: "flex", alignItems: "center", gap: "8px", margin: 0 }}>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#7a4df6"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18" />
+                    </svg>
+                    Select Sheets
+                  </h3>
                   {hasCachedSheets && (
                     <button className="btn-danger btn-danger-small" onClick={handleClearCache}>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="13"
+                        height="13"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
+                        <path d="M3 6h18" />
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                        <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                      </svg>
                       Clear Cache
                     </button>
                   )}
                 </div>
-
                 <SheetSelector
                   cache={cache}
                   onToggleGroup={toggleGroup}
                   onToggleAll={toggleAll}
                   isGroupSelected={isGroupSelected}
                 />
+              </section>
 
-                <ExportOptions
-                  selectedKeys={selectedKeys}
-                  walletSheetsSelected={walletSheetsSelected}
-                  selectedTxFromTypes={selectedTxFromTypes}
-                  onToggleTxType={toggleTxType}
-                  includeWalletFiat={includeWalletFiat}
-                  onToggleWalletFiat={setIncludeWalletFiat}
-                  includeExcelFiat={includeExcelFiat}
-                  onToggleExcelFiat={setIncludeExcelFiat}
-                  excelFiatCurrency={excelFiatCurrency}
-                  onChangeFiatCurrency={setFiatCurrency}
-                />
+              <ExportOptions
+                selectedKeys={selectedKeys}
+                walletSheetsSelected={walletSheetsSelected}
+                selectedTxFromTypes={selectedTxFromTypes}
+                onToggleTxType={toggleTxType}
+                includeWalletFiat={includeWalletFiat}
+                onToggleWalletFiat={setIncludeWalletFiat}
+                includeExcelFiat={includeExcelFiat}
+                onToggleExcelFiat={setIncludeExcelFiat}
+                excelFiatCurrency={excelFiatCurrency}
+                onChangeFiatCurrency={setFiatCurrency}
+              />
 
-                {cachedCount > 0 && cachedCount < selectedKeys.length && (
-                  <p className="subtle">
-                    {selectedKeys.length - cachedCount} sheet(s) will be fetched. {cachedCount}{" "}
-                    stored, will be probed for updates first.
-                  </p>
-                )}
-                {cachedCount === selectedKeys.length && selectedKeys.length > 0 && (
-                  <p className="subtle">
-                    All sheets stored. Will probe for updates before building.
-                  </p>
-                )}
-
+              <div className="export-section panel-glass">
+                <div className="export-meta-row">
+                  {cachedCount > 0 && cachedCount < selectedKeys.length && (
+                    <p className="subtle">
+                      {selectedKeys.length - cachedCount} sheet(s) will be fetched. {cachedCount}{" "}
+                      stored, will be probed for updates first.
+                    </p>
+                  )}
+                  {cachedCount === selectedKeys.length && selectedKeys.length > 0 && (
+                    <p className="subtle">
+                      All sheets stored. Will probe for updates before building.
+                    </p>
+                  )}
+                  <p className="export-limit-notice">Max 1 export per day.</p>
+                </div>
                 <div className="export-btn-wrapper">
-                  <span className="export-limit-notice">Max 1 export per day.</span>
                   <button
                     className="btn-primary btn-primary-large"
                     disabled={loading || selectedKeys.length === 0}
                     onClick={handleExport}
                   >
-                    {loading ? "Processing..." : "Build Excel"}
+                    {loading ? (
+                      "Processing..."
+                    ) : (
+                      <>
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          aria-hidden="true"
+                          style={{ flexShrink: 0 }}
+                        >
+                          <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+                          <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+                          <path d="M8 18v-2" />
+                          <path d="M12 18v-4" />
+                          <path d="M16 18v-6" />
+                        </svg>
+                        Build Report
+                      </>
+                    )}
                   </button>
                 </div>
-              </section>
+              </div>
             </ErrorBoundary>
           </>
         )}
 
-        {message ? <div className="message">{message}</div> : null}
-
-        <DonateSection />
+        {message ? <MessageBanner message={message} /> : null}
 
         <p className="copyright">© 2026 José Gouveia · Moustachio</p>
       </main>

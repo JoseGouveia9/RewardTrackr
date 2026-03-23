@@ -112,7 +112,7 @@ export const FiatDropdown = memo(function FiatDropdown({ value, onChange }: Fiat
               onMouseEnter={() => setFocusedIndex(idx)}
             >
               <span className="fiat-option-title">{currency}</span>
-              <span className="fiat-option-sub">{label}</span>
+              <span className="fiat-option-subtitle">{label}</span>
               {value === currency && <span className="fiat-option-check">✓</span>}
             </div>
           ))}

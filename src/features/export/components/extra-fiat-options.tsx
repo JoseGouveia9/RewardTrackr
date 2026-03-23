@@ -17,22 +17,42 @@ export const ExtraFiatOptions = memo(function ExtraFiatOptions({
 }: ExtraFiatOptionsProps) {
   return (
     <div className="excel-options">
-      <p className="wallet-options-title">Extra Fiat Conversion</p>
-      <label className="wallet-option-row">
-        <input
-          type="checkbox"
-          className="toggle-switch"
-          checked={includeExcelFiat}
-          onChange={(e) => onToggle(e.target.checked)}
-        />
-        Include extra conversion column (USD is always included)
-      </label>
-      {includeExcelFiat && (
-        <label className="wallet-option-row wallet-currency-row">
-          Currency
-          <FiatDropdown value={currency} onChange={onChangeCurrency} />
+      <p className="options-section-title">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+          <path d="M2 12h20" />
+        </svg>
+        Extra Fiat Conversion
+      </p>
+      <div className="fiat-grid">
+        <label className="wallet-option-row">
+          Include extra conversion column (USD is always included)
+          <input
+            type="checkbox"
+            className="toggle-switch"
+            checked={includeExcelFiat}
+            onChange={(e) => onToggle(e.target.checked)}
+          />
         </label>
-      )}
+        {includeExcelFiat && (
+          <label className="wallet-option-row wallet-currency-row">
+            Currency
+            <FiatDropdown value={currency} onChange={onChangeCurrency} />
+          </label>
+        )}
+      </div>
     </div>
   );
 });

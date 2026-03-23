@@ -34,7 +34,25 @@ export const SheetSelector = memo(function SheetSelector({
         onClick={onToggleAll}
         aria-pressed={selectedGroupCount === totalGroupCount}
       >
-        <span className="sheet-title">Select All</span>
+        <div className="sheet-card-top">
+          <span className="sheet-title">Select All</span>
+          {selectedGroupCount === totalGroupCount && (
+            <span className="sheet-check-icon" aria-hidden="true">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </span>
+          )}
+        </div>
         <span className="sheet-meta">
           {selectedGroupCount}/{totalGroupCount} selected
         </span>
@@ -52,19 +70,65 @@ export const SheetSelector = memo(function SheetSelector({
             onClick={() => onToggleGroup(group)}
             aria-pressed={selected}
           >
-            <span className="sheet-title">{group.label}</span>
+            <div className="sheet-card-top">
+              <span className="sheet-title">{group.label}</span>
+              {selected && (
+                <span className="sheet-check-icon" aria-hidden="true">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </span>
+              )}
+            </div>
             <span className="sheet-meta">
               {allCached ? (
-                <span className="cache-badge">
+                <>
+                  <svg
+                    width="11"
+                    height="11"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                  </svg>{" "}
                   Stored{" "}
                   {group.keys.length === 1
                     ? formatAge(cache[group.keys[0]]!.fetchedAt)
                     : `${group.keys.length}/${group.keys.length}`}
-                </span>
+                </>
               ) : cachedGroupCount > 0 ? (
-                <span className="cache-badge">
+                <>
+                  <svg
+                    width="11"
+                    height="11"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                  </svg>{" "}
                   Stored {cachedGroupCount}/{group.keys.length}
-                </span>
+                </>
               ) : (
                 "Not stored"
               )}

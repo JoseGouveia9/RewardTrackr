@@ -1,8 +1,8 @@
-.hum-wrap {
+.user-menu-wrapper {
   position: relative;
 }
 
-.hum-btn {
+.user-menu-button {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -18,12 +18,12 @@
   white-space: nowrap;
 }
 
-.hum-btn:hover {
+.user-menu-button:hover {
   background: #21243a;
   border-color: #3e4570;
 }
 
-.hum-avatar {
+.user-menu-avatar {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -34,14 +34,14 @@
   flex-shrink: 0;
 }
 
-.hum-alias {
+.user-menu-alias {
   max-width: 120px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.hum-chevron {
+.user-menu-chevron {
   display: flex;
   align-items: center;
   opacity: 0.6;
@@ -49,7 +49,7 @@
 }
 
 /* Dropdown */
-.hum-dropdown {
+.user-menu-dropdown {
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
@@ -64,7 +64,7 @@
   -webkit-backdrop-filter: blur(20px) saturate(160%);
 }
 
-.hum-info-row {
+.user-menu-info-row {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -73,11 +73,11 @@
   font-size: 0.82rem;
 }
 
-.hum-info-row + .hum-info-row {
+.user-menu-info-row + .user-menu-info-row {
   margin-top: 10px;
 }
 
-.hum-info-icon {
+.user-menu-info-icon {
   display: flex;
   align-items: center;
   width: 16px;
@@ -85,26 +85,26 @@
   color: rgba(255, 255, 255, 0.4);
 }
 
-.hum-info-label {
+.user-menu-info-label {
   font-weight: 400;
   color: rgba(255, 255, 255, 0.5);
   flex-shrink: 0;
 }
 
-.hum-info-value {
+.user-menu-info-value {
   color: rgba(255, 255, 255, 0.85);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.hum-divider {
+.user-menu-divider {
   height: 1px;
   background: rgba(255, 255, 255, 0.07);
   margin: 16px 0;
 }
 
-.hum-action {
+.user-menu-action {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -121,11 +121,11 @@
   transition: background 0.12s ease;
 }
 
-.hum-action:hover {
+.user-menu-action:hover {
   background: rgba(255, 255, 255, 0.1);
 }
 
-.hum-action-icon {
+.user-menu-action-icon {
   display: flex;
   align-items: center;
   width: 16px;
@@ -133,79 +133,79 @@
   color: rgba(255, 255, 255, 0.45);
 }
 
-.hum-logout {
+.user-menu-logout {
   color: #ff3355;
   background: rgba(255, 40, 70, 0.14);
 }
 
-.hum-logout .hum-action-icon {
+.user-menu-logout .user-menu-action-icon {
   color: #ff3355;
 }
 
-.hum-logout:hover {
+.user-menu-logout:hover {
   background: rgba(255, 40, 70, 0.22);
 }
 
 /* Light mode */
-.page.theme-light .hum-btn {
+.page.theme-light .user-menu-button {
   background: #f4f5f9;
   color: #22283a;
   border-color: #e1e6f1;
 }
 
-.page.theme-light .hum-btn:hover {
+.page.theme-light .user-menu-button:hover {
   background: #ebeff6;
   border-color: #d6deeb;
 }
 
-.page.theme-light .hum-dropdown {
+.page.theme-light .user-menu-dropdown {
   background: rgba(255, 255, 255, 0.75);
   border-color: rgba(0, 0, 0, 0.07);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 }
 
-.page.theme-light .hum-info-row {
+.page.theme-light .user-menu-info-row {
   color: #4a5068;
 }
 
-.page.theme-light .hum-info-icon {
+.page.theme-light .user-menu-info-icon {
   color: #9fa5be;
 }
 
-.page.theme-light .hum-info-label {
+.page.theme-light .user-menu-info-label {
   color: #6d7589;
 }
 
-.page.theme-light .hum-info-value {
+.page.theme-light .user-menu-info-value {
   color: #22283a;
 }
 
-.page.theme-light .hum-divider {
+.page.theme-light .user-menu-divider {
   background: #e6e9f2;
 }
 
-.page.theme-light .hum-action {
+.page.theme-light .user-menu-action {
   color: #22283a;
   background: rgba(0, 0, 0, 0.04);
 }
 
-.page.theme-light .hum-action:hover {
+.page.theme-light .user-menu-action:hover {
   background: rgba(0, 0, 0, 0.08);
 }
 
-.page.theme-light .hum-action-icon {
+.page.theme-light .user-menu-action-icon {
   color: #9fa5be;
 }
 
-.page.theme-light .hum-logout {
+.page.theme-light .user-menu-logout {
   color: #d0183e;
   background: #fff0f3;
 }
 
-.page.theme-light .hum-logout .hum-action-icon {
+.page.theme-light .user-menu-logout .user-menu-action-icon {
   color: #d0183e;
 }
 
-.page.theme-light .hum-logout:hover {
+.page.theme-light .user-menu-logout:hover {
   background: #ffe0e8;
 }
