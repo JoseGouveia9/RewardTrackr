@@ -6,7 +6,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #1a1c2e;
+  background: rgba(22, 24, 42, 0.65);
   color: #ffffff;
   border: 1px solid #2e3350;
   border-radius: 12px;
@@ -32,6 +32,7 @@
   background: #7a4df6;
   border-radius: 50%;
   flex-shrink: 0;
+  color: #ffffff;
 }
 
 .user-menu-alias {
@@ -149,14 +150,14 @@
 
 /* Light mode */
 .page.theme-light .user-menu-button {
-  background: #f4f5f9;
+  background: rgba(255, 255, 255, 0.72);
   color: #22283a;
-  border-color: #e1e6f1;
+  border-color: rgba(0, 0, 0, 0.07);
 }
 
 .page.theme-light .user-menu-button:hover {
-  background: #ebeff6;
-  border-color: #d6deeb;
+  background: rgba(255, 255, 255, 0.88);
+  border-color: rgba(0, 0, 0, 0.12);
 }
 
 .page.theme-light .user-menu-dropdown {
