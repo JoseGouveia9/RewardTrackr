@@ -114,6 +114,40 @@
   font-size: 1.1rem;
 }
 
+/* Light mode */
+
+.page.theme-light .fiat-dropdown-menu {
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.12);
+  scrollbar-color: #6f56f5 #e8eaf2;
+}
+
+.page.theme-light .fiat-dropdown-menu::-webkit-scrollbar-track {
+  background: #e8eaf2;
+}
+
+.page.theme-light .fiat-dropdown-menu::-webkit-scrollbar-thumb {
+  border-color: #e8eaf2;
+}
+
+.page.theme-light .fiat-dropdown-search {
+  border-bottom-color: rgba(0, 0, 0, 0.08);
+  color: #22283a;
+}
+
+.page.theme-light .fiat-dropdown-option {
+  color: #22283a;
+}
+
+.page.theme-light .fiat-dropdown-option:hover,
+.page.theme-light .fiat-dropdown-option.focused {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.page.theme-light .fiat-option-subtitle {
+  color: rgba(0, 0, 0, 0.45);
+}
+
 /* Dark mode */
 
 .page.theme-dark .fiat-dropdown-trigger {
