@@ -2,7 +2,7 @@
 
 body {
   margin: 0;
-  min-width: 340px;
+  min-width: 500px;
   font-family: "Inter", sans-serif;
   font-size: 0.875rem;
   font-weight: 500;
@@ -84,6 +84,8 @@ body.theme-dark .hero-title-row.synced .hero-label-main {
   transform: translateY(6px);
   max-height: 0;
   overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   transition: opacity 0.25s ease, transform 0.25s ease, max-height 0.25s ease;
 }
 
