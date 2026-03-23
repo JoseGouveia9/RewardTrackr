@@ -13,13 +13,15 @@
   },
   "dependencies": {
     "@sentry/react": "^10.45.0",
-    "@tailwindcss/oxide-win32-x64-msvc": "^4.2.2",
     "@tailwindcss/vite": "^4.2.2",
     "exceljs": "^4.4.0",
     "framer-motion": "^12.38.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "tailwindcss": "^4.2.2"
+  },
+  "optionalDependencies": {
+    "@tailwindcss/oxide-win32-x64-msvc": "^4.2.2"
   },
   "lint-staged": {
     "src/**/*.{ts,tsx}": [
