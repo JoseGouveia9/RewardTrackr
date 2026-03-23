@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useReducer } from "react";
+import { useCallback, useEffect, useMemo, useReducer } from "react";
 import { ALL_REWARD_KEYS } from "../config/reward-configs";
 import { WALLET_TX_KEYS } from "../config/wallet-types";
 import type { ExtraFiatCurrency, RewardGroup, RewardKey } from "../types";
@@ -19,6 +19,8 @@ type ExportConfigAction =
   | { type: "SET_INCLUDE_EXCEL_FIAT"; checked: boolean }
   | { type: "SET_FIAT_CURRENCY"; currency: ExtraFiatCurrency };
 
+const LS_KEY_EXPORT_CONFIG = "gm_export_config";
+
 const initialState: ExportConfigState = {
   selectedKeys: [],
   selectedTxFromTypes: [],
@@ -26,6 +28,30 @@ const initialState: ExportConfigState = {
   includeExcelFiat: false,
   excelFiatCurrency: "EUR",
 };
+
+function loadSavedConfig(): ExportConfigState {
+  try {
+    const raw = localStorage.getItem(LS_KEY_EXPORT_CONFIG);
+    if (!raw) return initialState;
+    const parsed = JSON.parse(raw) as Partial<ExportConfigState>;
+    return {
+      selectedKeys: Array.isArray(parsed.selectedKeys) ? (parsed.selectedKeys as RewardKey[]) : [],
+      selectedTxFromTypes: Array.isArray(parsed.selectedTxFromTypes)
+        ? parsed.selectedTxFromTypes
+        : [],
+      includeWalletFiat:
+        typeof parsed.includeWalletFiat === "boolean" ? parsed.includeWalletFiat : false,
+      includeExcelFiat:
+        typeof parsed.includeExcelFiat === "boolean" ? parsed.includeExcelFiat : false,
+      excelFiatCurrency:
+        typeof parsed.excelFiatCurrency === "string"
+          ? (parsed.excelFiatCurrency as ExtraFiatCurrency)
+          : "EUR",
+    };
+  } catch {
+    return initialState;
+  }
+}
 
 function exportConfigReducer(
   state: ExportConfigState,
@@ -64,7 +90,15 @@ function exportConfigReducer(
 }
 
 export function useExportConfig() {
-  const [state, dispatch] = useReducer(exportConfigReducer, initialState);
+  const [state, dispatch] = useReducer(exportConfigReducer, undefined, loadSavedConfig);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(LS_KEY_EXPORT_CONFIG, JSON.stringify(state));
+    } catch {
+      /* QuotaExceededError, skip silently */
+    }
+  }, [state]);
 
   const isGroupSelected = useCallback(
     (group: RewardGroup): boolean => group.keys.every((k) => state.selectedKeys.includes(k)),
