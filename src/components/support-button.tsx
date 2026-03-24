@@ -1,4 +1,5 @@
 import { memo, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import "./support-button.css";
 
 function KofiMobileButton() {
@@ -16,37 +17,39 @@ function KofiMobileButton() {
         Support the project
       </button>
 
-      {open && (
-        <div className="support-kofi-overlay" onClick={() => setOpen(false)}>
-          <div className="support-kofi-popup" onClick={(e) => e.stopPropagation()}>
-            <button
-              type="button"
-              className="support-kofi-close"
-              onClick={() => setOpen(false)}
-              aria-label="Close"
-            >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
+      {open &&
+        createPortal(
+          <div className="support-kofi-overlay" onClick={() => setOpen(false)}>
+            <div className="support-kofi-popup" onClick={(e) => e.stopPropagation()}>
+              <button
+                type="button"
+                className="support-kofi-close"
+                onClick={() => setOpen(false)}
+                aria-label="Close"
               >
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </button>
-            <iframe
-              src="https://ko-fi.com/moustachio/?hidefeed=true&widget=true&embed=true&preview=true"
-              style={{ border: "none", width: "100%", background: "#f9f9f9" }}
-              height="712"
-              title="moustachio"
-            />
-          </div>
-        </div>
-      )}
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+              <iframe
+                src="https://ko-fi.com/moustachio/?hidefeed=true&widget=true&embed=true&preview=true"
+                style={{ border: "none", width: "100%", background: "#f9f9f9" }}
+                height="712"
+                title="moustachio"
+              />
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
