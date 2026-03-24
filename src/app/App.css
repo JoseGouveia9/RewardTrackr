@@ -579,4 +579,16 @@ button:disabled {
     flex-direction: column;
     align-items: flex-start;
   }
+
+  .hero-title-row {
+    padding: 0 16px;
+  }
+
+  .hero-actions {
+    width: 100%;
+  }
+
+  .hero-actions > * {
+    flex: 1;
+  }
 }

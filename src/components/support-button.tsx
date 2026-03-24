@@ -1,6 +1,56 @@
 import { memo, useEffect, useState } from "react";
 import "./support-button.css";
 
+function KofiMobileButton() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="support-kofi-widget">
+      <button type="button" className="support-kofi-img-btn" onClick={() => setOpen(true)}>
+        <img
+          src="https://storage.ko-fi.com/cdn/logomarkLogo.png"
+          alt=""
+          aria-hidden="true"
+          className="support-kofi-icon"
+        />
+        Support the project
+      </button>
+
+      {open && (
+        <div className="support-kofi-overlay" onClick={() => setOpen(false)}>
+          <div className="support-kofi-popup" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              className="support-kofi-close"
+              onClick={() => setOpen(false)}
+              aria-label="Close"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+              >
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+            <iframe
+              src="https://ko-fi.com/moustachio/?hidefeed=true&widget=true&embed=true&preview=true"
+              style={{ border: "none", width: "100%", background: "#f9f9f9" }}
+              height="712"
+              title="moustachio"
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 const ADDRESSES = [
   {
     label: "GOMINING TOKEN / GMT · BEP-20 / ERC-20",
@@ -166,6 +216,11 @@ export const SupportButton = memo(function SupportButton({
                   </div>
                 </div>
               ))}
+            </div>
+
+            <div className="support-kofi-section">
+              <p className="support-kofi-label">Or tip via Ko-fi</p>
+              <KofiMobileButton />
             </div>
           </div>
         </div>

@@ -126,6 +126,7 @@ function App() {
   const [referralOpen, setReferralOpen] = useState(false);
 
   useEffect(() => {
+    if (window.innerWidth <= 640) return;
     const script = document.createElement("script");
     script.src = "https://storage.ko-fi.com/cdn/scripts/overlay-widget.js";
     script.async = true;

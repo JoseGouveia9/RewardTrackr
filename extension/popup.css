@@ -351,3 +351,11 @@ body.theme-dark .status-error {
   color: #ff6b8a;
   border-color: rgba(252, 165, 165, 0.2);
 }
+
+/* ── Mobile viewport (e.g. iOS Orion) ────────────────────────── */
+
+@media (pointer: coarse) {
+  body {
+    min-width: 100vw;
+  }
+}

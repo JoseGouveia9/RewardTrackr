@@ -189,6 +189,126 @@
   color: #ffffff;
 }
 
+/* ── Ko-fi section inside modal (mobile only) ───────────────── */
+
+.support-kofi-section {
+  display: none;
+  margin-top: 16px;
+}
+
+.support-kofi-label {
+  margin: 0 0 10px !important;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 1.5;
+  text-align: center;
+}
+
+.support-kofi-widget {
+  width: 100%;
+}
+
+.support-kofi-img-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  background: #7a4df6;
+  border: none;
+  border-radius: 12px;
+  padding: 11px 16px;
+  color: #ffffff;
+  font-size: 0.875rem;
+  font-weight: 700;
+  font-family: "Space Grotesk", sans-serif;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(122, 77, 246, 0.4);
+  transition: background 0.14s ease;
+}
+
+.support-kofi-img-btn:hover {
+  background: #6b40ea;
+}
+
+.support-kofi-icon {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .support-kofi-section {
+    display: block;
+  }
+}
+
+.support-kofi-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 20px;
+}
+
+.support-kofi-popup {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.support-kofi-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  background: rgba(0, 0, 0, 0.25);
+  border: none;
+  border-radius: 50%;
+  color: #ffffff;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* ── Mobile: show expanded by default (no hover available) ─── */
+
+@media (max-width: 640px) {
+  .support-button {
+    max-width: unset;
+    width: 100%;
+    gap: 7px;
+    padding: 8px 14px;
+    background: rgba(224, 25, 42, 0.1);
+    justify-content: center;
+    transition: none;
+  }
+
+  .support-heart-icon {
+    fill: #e0192a;
+  }
+
+  .support-button-label {
+    opacity: 1;
+    transform: translateX(0);
+    transition: none;
+  }
+}
+
 /* ── Light mode ─────────────────────────────────────────────── */
 .page.theme-light .support-overlay {
   background: transparent;

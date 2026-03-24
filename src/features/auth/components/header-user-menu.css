@@ -148,6 +148,19 @@
   background: rgba(255, 40, 70, 0.22);
 }
 
+/* Mobile */
+
+@media (max-width: 640px) {
+  .user-menu-wrapper {
+    width: 100%;
+  }
+
+  .user-menu-button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
 /* Light mode */
 .page.theme-light .user-menu-button {
   background: rgba(255, 255, 255, 0.72);

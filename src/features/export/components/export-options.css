@@ -163,6 +163,18 @@
   line-height: 1.3;
 }
 
+/* Responsive */
+
+@media (max-width: 640px) {
+  .transaction-filter-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .fiat-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Dark mode */
 
 .page.theme-dark .wallet-options,

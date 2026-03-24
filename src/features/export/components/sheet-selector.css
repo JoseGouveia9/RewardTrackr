@@ -108,6 +108,14 @@
   color: #6b40ea;
 }
 
+/* Responsive */
+
+@media (max-width: 640px) {
+  .sheet-selector {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 /* Dark mode */
 
 .page.theme-dark .sheet-card {
