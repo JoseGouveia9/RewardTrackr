@@ -11,3 +11,9 @@
 .error-boundary-retry {
   margin-top: 1rem;
 }
+
+/* Dark mode */
+
+.page.theme-dark .error-boundary-message {
+  color: rgba(255, 255, 255, 0.5);
+}

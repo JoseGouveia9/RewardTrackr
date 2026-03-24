@@ -85,29 +85,6 @@
   color: #7a62c8;
 }
 
-.cache-badge {
-  display: inline-block;
-  font-size: 0.65rem !important;
-  color: #6b40ea;
-  background: #f2ecff;
-  border: 1px solid #d7c8fb;
-  border-radius: 10px;
-  padding: 2px 8px;
-  font-weight: 500;
-  white-space: nowrap;
-}
-
-.sheet-card:not(.selected) .cache-badge {
-  color: #f2ecff;
-  background: #6b40ea;
-  border-color: #6b40ea;
-}
-
-.sheet-card.selected .cache-badge {
-  background: #f2ecff;
-  color: #6b40ea;
-}
-
 /* Responsive */
 
 @media (max-width: 640px) {
@@ -145,20 +122,3 @@
   color: rgba(255, 255, 255, 0.74);
 }
 
-.page.theme-dark .cache-badge {
-  background: #181928;
-  color: rgba(255, 255, 255, 0.8);
-  border-color: transparent;
-}
-
-.page.theme-dark .sheet-card:not(.selected) .cache-badge {
-  background: #181928;
-  color: rgba(255, 255, 255, 0.8);
-  border-color: transparent;
-}
-
-.page.theme-dark .sheet-card.selected .cache-badge {
-  background: #f2ecff;
-  color: #6b40ea;
-  border-color: #d7c8fb;
-}

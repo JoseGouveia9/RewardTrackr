@@ -383,11 +383,16 @@ export async function executeExportFlow({
     }
 
     // Phase 2: Enrich all fetched records (CoinGecko + EUR rates).
-    for (let i = 0; i < fetched.length; i++) {
-      const { config, rawRecords, totalCount, useIncremental } = fetched[i];
+    // Process non-CoinGecko sheets first so they are cached before any CoinGecko rate limiting.
+    const fetchedOrdered = [
+      ...fetched.filter((f) => f.config.enrichType !== "wallet-tx-coingecko"),
+      ...fetched.filter((f) => f.config.enrichType === "wallet-tx-coingecko"),
+    ];
+    for (let i = 0; i < fetchedOrdered.length; i++) {
+      const { config, rawRecords, totalCount, useIncremental } = fetchedOrdered[i];
       const key = config.key;
 
-      onMessage(`Enriching ${config.sheetName} (${i + 1} of ${fetched.length})...`);
+      onMessage(`Enriching ${config.sheetName} (${i + 1} of ${fetchedOrdered.length})...`);
       const enriched = await enrichRecords(
         config,
         rawRecords,

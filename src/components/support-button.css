@@ -267,6 +267,12 @@
   overflow: hidden;
 }
 
+.support-kofi-iframe {
+  border: none;
+  width: 100%;
+  background: #f9f9f9;
+}
+
 .support-kofi-close {
   position: absolute;
   top: 10px;

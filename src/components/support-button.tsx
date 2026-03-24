@@ -42,7 +42,7 @@ function KofiMobileButton() {
               </button>
               <iframe
                 src="https://ko-fi.com/moustachio/?hidefeed=true&widget=true&embed=true&preview=true"
-                style={{ border: "none", width: "100%", background: "#f9f9f9" }}
+                className="support-kofi-iframe"
                 height="712"
                 title="moustachio"
               />
