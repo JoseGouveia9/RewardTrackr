@@ -98,10 +98,23 @@ function MessageBanner({ message }: { message: string }) {
       </svg>
     );
 
+  const parts = message.split(/(\[[^\]]+\]\([^)]+\))/g);
+  const content = parts.map((part, i) => {
+    const match = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+    if (match) {
+      return (
+        <a key={i} href={match[2]} target="_blank" rel="noopener noreferrer">
+          {match[1]}
+        </a>
+      );
+    }
+    return part;
+  });
+
   return (
     <div className={`message message-${type}`}>
       {icon}
-      <span>{message}</span>
+      <span>{content}</span>
     </div>
   );
 }

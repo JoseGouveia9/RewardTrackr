@@ -96,7 +96,7 @@ export function useExport({
       });
       onMessage(
         isCors
-          ? "Network error: failed to reach the GoMining API. Please try again later or report the issue at https://github.com/JoseGouveia9/GoMiningExporter/issues"
+          ? "Network error: Failed to reach the GoMining API. Please try again later or report the issue [here](https://github.com/JoseGouveia9/GoMiningExporter/issues)."
           : isAuth
             ? "Session expired. Please re-sync via the GoMining Exporter extension."
             : `Export failed: ${msg}`,
