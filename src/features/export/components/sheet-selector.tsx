@@ -106,10 +106,7 @@ export const SheetSelector = memo(function SheetSelector({
                     <circle cx="12" cy="12" r="10" />
                     <polyline points="12 6 12 12 16 14" />
                   </svg>{" "}
-                  Stored{" "}
-                  {group.keys.length === 1
-                    ? formatAge(cache[group.keys[0]]!.fetchedAt)
-                    : `${group.keys.length}/${group.keys.length}`}
+                  Stored {formatAge(Math.min(...group.keys.map((k) => cache[k]!.fetchedAt)))}
                 </>
               ) : cachedGroupCount > 0 ? (
                 <>

@@ -7,11 +7,8 @@ import type {
 
 const COINGECKO_MAX_RETRIES = 10;
 const COINGECKO_RETRY_WAIT_MS = 60_000;
-const COINGECKO_MIN_INTERVAL_MS = 1_500;
-const COINGECKO_POST_RECOVERY_COOLDOWN_MS = 5_000;
 
 const SHARED_PRICE_CACHE = new Map<string, CoinGeckoPriceCacheValue>();
-let nextRequestAt = 0;
 let priceCacheSeeded = false;
 
 export const LS_KEY_PRICE_CACHE = "gomining_pricecache";
@@ -45,15 +42,6 @@ async function sleepWithCountdown(ms: number, onTick: (seconds: number) => void)
     onTick(Math.ceil(remaining / 1000));
     await sleep(Math.min(1000, remaining));
   }
-}
-
-// Waits until the CoinGecko rate-limit window has passed, ticking a countdown each second.
-async function enforceRateLimit(onTick?: (seconds: number) => void) {
-  const wait = nextRequestAt - Date.now();
-  if (wait > 0)
-    await sleepWithCountdown(wait, (s) => {
-      if (s > 0) onTick?.(s);
-    });
 }
 
 // Returns the price tuple from `prices` whose timestamp is closest to `targetMs`.
@@ -107,10 +95,6 @@ export async function fetchCoinGeckoPrice(
 
   for (let attempt = 1; attempt <= COINGECKO_MAX_RETRIES; attempt++) {
     try {
-      await enforceRateLimit((seconds) => {
-        onWait?.(`CoinGecko rate limit reached, waiting ${seconds}s...`);
-      });
-
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 15_000);
       let response: Response;
@@ -130,7 +114,6 @@ export async function fetchCoinGeckoPrice(
 
       const isRateLimited = data?.status?.error_code === 429 || response.status === 429;
       if (!response.ok || isRateLimited) {
-        nextRequestAt = Date.now() + COINGECKO_RETRY_WAIT_MS;
         if (attempt < COINGECKO_MAX_RETRIES) {
           await sleepWithCountdown(COINGECKO_RETRY_WAIT_MS, (s) => {
             onWait?.(
@@ -159,13 +142,9 @@ export async function fetchCoinGeckoPrice(
       };
 
       priceCache.set(cacheKey, result);
-      nextRequestAt =
-        Date.now() +
-        (attempt > 1 ? COINGECKO_POST_RECOVERY_COOLDOWN_MS : COINGECKO_MIN_INTERVAL_MS);
       return result;
     } catch {
       if (attempt < COINGECKO_MAX_RETRIES) {
-        nextRequestAt = Date.now() + COINGECKO_RETRY_WAIT_MS;
         await sleepWithCountdown(COINGECKO_RETRY_WAIT_MS, (s) => {
           onWait?.(
             `CoinGecko rate limit hit. Retrying in ${s}s (attempt ${attempt} of ${COINGECKO_MAX_RETRIES})...`,
