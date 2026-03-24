@@ -202,7 +202,7 @@ function transformSimpleEarn(
       createdAt: raw.createdAt,
       asset: a.asset ?? "BTC",
       apr,
-      currency: a.asset ?? "BTC",
+      currency: raw.asset ?? "BTC",
       reward,
       priceAtTime: reward > 0 ? rewardInUSD / reward : 0,
       rewardInUSD,
