@@ -544,8 +544,8 @@ function buildTransactionsSheet(
   const ws = workbook.addWorksheet(sheetName);
   const headers = [
     "Date",
-    "Currency",
     "Type",
+    "Currency",
     "Reward",
     ...getFiatHeaders(extraCurrency, includeUsd),
   ];
@@ -556,8 +556,8 @@ function buildTransactionsSheet(
     const date = new Date(r.createdAt);
     ws.addRow([
       Number.isNaN(date.getTime()) ? "" : date,
-      r.currency || "",
       r.txType || r.fromType || "",
+      r.currency || "",
       r.reward ?? 0,
       ...getFiatValues(r.rewardInUSD ?? 0, r.rewardInFiat ?? 0, extraCurrency, includeUsd),
     ]);
@@ -566,7 +566,7 @@ function buildTransactionsSheet(
   const lastDataRow = ws.rowCount;
   for (let row = 2; row <= lastDataRow; row++) {
     ws.getCell(`A${row}`).numFmt = FMT_DATE;
-    const cur = ws.getCell(`B${row}`).value;
+    const cur = ws.getCell(`C${row}`).value;
     ws.getCell(`D${row}`).numFmt = cur === "BTC" ? FMT_BTC : FMT_OTHER;
     const fmts = getFiatFormats(extraCurrency, includeUsd);
     fmts.forEach((fmt, i) => {
