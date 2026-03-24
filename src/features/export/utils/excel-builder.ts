@@ -15,6 +15,7 @@ import type {
   PurchaseEnrichedRecord,
   RewardSheetPayload,
   SheetType,
+  SimpleEarnEnrichedRecord,
   StandardEnrichedRecord,
   WalletTxEnrichedRecord,
 } from "../types";
@@ -597,6 +598,76 @@ function buildTransactionsSheet(
   autoFitColumns(ws);
 }
 
+function buildSimpleEarnSheet(
+  workbook: Workbook,
+  sheetName: string,
+  records: SimpleEarnEnrichedRecord[],
+  extraCurrency: ExtraFiatCurrency | null,
+  includeUsd = true,
+): void {
+  const ws = workbook.addWorksheet(sheetName);
+  const headers = [
+    "Date",
+    "Asset",
+    "APR",
+    "Currency",
+    "Reward",
+    ...getFiatHeaders(extraCurrency, includeUsd),
+  ];
+  const COLS = headers.length;
+
+  ws.addRow(headers);
+  for (const r of records) {
+    const date = new Date(r.createdAt);
+    ws.addRow([
+      Number.isNaN(date.getTime()) ? "" : date,
+      r.asset || "",
+      r.apr ?? 0,
+      r.currency || "",
+      r.reward ?? 0,
+      ...getFiatValues(r.rewardInUSD ?? 0, r.rewardInFiat ?? 0, extraCurrency, includeUsd),
+    ]);
+  }
+
+  const lastDataRow = ws.rowCount;
+  for (let row = 2; row <= lastDataRow; row++) {
+    let col = 1;
+    ws.getCell(row, col++).numFmt = FMT_DATE; // A: Date
+    col++; // B: Asset (text)
+    ws.getCell(row, col++).numFmt = "0.00%"; // C: APR
+    col++; // D: Currency (text)
+    ws.getCell(row, col++).numFmt = FMT_BTC; // E: Reward (always BTC)
+    const fmts = getFiatFormats(extraCurrency, includeUsd);
+    fmts.forEach((fmt) => {
+      ws.getCell(row, col++).numFmt = fmt;
+    });
+  }
+
+  ws.spliceRows(1, 0, new Array(COLS).fill(""));
+  const headerRow = 2;
+  const dataFrom = 3;
+  const dataTo = lastDataRow + 1;
+
+  ws.getRow(headerRow).values = headers;
+  styleHeader(ws, headerRow, COLS);
+
+  ws.getCell("A1").value = "TOTAL";
+  // E = Reward (col 5), fiat starts at F (col 6)
+  ws.getCell("E1").value = subtotal("E", dataFrom, dataTo);
+  ws.getCell("E1").numFmt = FMT_BTC;
+  const fiatFormats = getFiatFormats(extraCurrency, includeUsd);
+  fiatFormats.forEach((fmt, i) => {
+    const l = String.fromCharCode(70 + i); // F, G, ...
+    ws.getCell(`${l}1`).value = subtotal(l, dataFrom, dataTo);
+    ws.getCell(`${l}1`).numFmt = fmt;
+  });
+  styleTotal(ws, 1, COLS);
+
+  ws.views = [{ state: "frozen", ySplit: 2, showGridLines: true }];
+  ws.autoFilter = { from: { row: headerRow, column: 1 }, to: { row: dataTo, column: COLS } };
+  autoFitColumns(ws);
+}
+
 // Main builder
 
 export async function buildExcelFromSheets(
@@ -657,6 +728,15 @@ export async function buildExcelFromSheets(
           sheet.sheetName,
           records as WalletTxEnrichedRecord[],
           walletExtraCurrency,
+          includeUsd,
+        );
+        break;
+      case "simple-earn":
+        buildSimpleEarnSheet(
+          workbook,
+          sheet.sheetName,
+          records as SimpleEarnEnrichedRecord[],
+          extraFiatCurrency,
           includeUsd,
         );
         break;

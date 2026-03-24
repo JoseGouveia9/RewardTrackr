@@ -31,6 +31,7 @@ import { getSessionPriceCache } from "./api/coingecko";
 import { buildExcelFromSheets } from "./utils/excel-builder";
 import type {
   CacheState,
+  CursorPaginationItem,
   ExtraFiatCurrency,
   FetchRewardsOptions,
   GoMiningApiResponse,
@@ -93,7 +94,12 @@ async function fetchAllPages(
 ): Promise<{ records: unknown[]; totalCount: number | null }> {
   const headers = buildApiHeaders(accessToken);
   const all: unknown[] = [];
-  let pointer = config.pagination === "cursor" ? Date.now() : 0;
+  let pointer: number | string =
+    config.pagination === "cursor"
+      ? Date.now()
+      : config.pagination === "date-cursor"
+        ? new Date().toISOString()
+        : 0;
   let guard = 0;
   let totalCount: number | null = null;
 
@@ -109,7 +115,12 @@ async function fetchAllPages(
   while (guard < 1000) {
     guard += 1;
     const payload = await fetchWithRetry(
-      () => postJson<GoMiningApiResponse>(config.apiUrl, headers, config.buildBody(pointer)),
+      () =>
+        postJson<GoMiningApiResponse>(
+          config.apiUrl,
+          headers,
+          (config.buildBody as (p: number | string) => RewardRequestBody)(pointer),
+        ),
       onProgress,
     );
     const page = payload?.data?.array || [];
@@ -159,7 +170,15 @@ async function fetchAllPages(
       continue;
     }
 
-    pointer += config.pageSize;
+    if (config.pagination === "date-cursor") {
+      const last = page[page.length - 1] as Record<string, unknown>;
+      const next = config.getNextCursor(last as CursorPaginationItem);
+      if (!next || next === pointer) break;
+      pointer = next;
+      continue;
+    }
+
+    pointer = (pointer as number) + config.pageSize;
   }
 
   return { records: all, totalCount };
@@ -185,8 +204,15 @@ async function fetchLiveCounts(
 
   const entries = await Promise.all(
     configs.map(async (config) => {
-      const initial = config.pagination === "cursor" ? Date.now() : 0;
-      const probeBody: RewardRequestBody = { ...config.buildBody(initial) };
+      const initial: number | string =
+        config.pagination === "cursor"
+          ? Date.now()
+          : config.pagination === "date-cursor"
+            ? new Date().toISOString()
+            : 0;
+      const probeBody: RewardRequestBody = {
+        ...(config.buildBody as (p: number | string) => RewardRequestBody)(initial),
+      };
       if (probeBody.pagination) {
         probeBody.pagination = { ...probeBody.pagination, limit: 1 };
       } else if (probeBody.limit !== undefined) {

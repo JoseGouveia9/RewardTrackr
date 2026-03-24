@@ -11,6 +11,8 @@ import type {
   PurchaseRawRecord,
   RewardConfig,
   RewardRecord,
+  SimpleEarnEnrichedRecord,
+  SimpleEarnRawRecord,
   SoloMiningRawRecord,
   StandardEnrichedRecord,
   UpgradeRawRecord,
@@ -188,6 +190,27 @@ function transformPurchase(raw: PurchaseRawRecord, fiatRate: number): PurchaseEn
   };
 }
 
+function transformSimpleEarn(
+  raw: SimpleEarnRawRecord,
+  fiatRate: number,
+): SimpleEarnEnrichedRecord[] {
+  return (raw.assets ?? []).map((a) => {
+    const reward = Number(a.reward) / 1e18;
+    const rewardInUSD = Number(a.rewardInUsd) / 1e18;
+    const apr = (a.apr ?? 0) * (a.vipLevelMultiplier ?? 1);
+    return {
+      createdAt: raw.createdAt,
+      asset: a.asset ?? "BTC",
+      apr,
+      currency: a.asset ?? "BTC",
+      reward,
+      priceAtTime: reward > 0 ? rewardInUSD / reward : 0,
+      rewardInUSD,
+      rewardInFiat: rewardInUSD * fiatRate,
+    };
+  });
+}
+
 function transformUpgrade(raw: UpgradeRawRecord, fiatRate: number): PurchaseEnrichedRecord {
   const valueUsd = raw.usdtValue ?? 0;
   const kind = raw.upgradeType || raw.dataType || "";
@@ -263,6 +286,12 @@ export async function enrichRecords(
 
     try {
       const fiatRate = includeFiat ? await getRate(raw?.createdAt as string, extraFiatCurrency) : 0;
+
+      if (config.enrichType === "simple-earn") {
+        enriched.push(...transformSimpleEarn(raw as unknown as SimpleEarnRawRecord, fiatRate));
+        continue;
+      }
+
       let record: EnrichedRecord;
 
       switch (config.enrichType) {

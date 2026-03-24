@@ -5,6 +5,10 @@ const API =
   (import.meta.env.VITE_API_BASE as string | undefined)?.replace(/\/$/, "") ??
   "https://api.gomining.com";
 
+const API_SE =
+  (import.meta.env.VITE_API_SE_BASE as string | undefined)?.replace(/\/$/, "") ??
+  "https://api.se.gomining.com";
+
 export const REWARD_GROUPS: RewardGroup[] = [
   { id: "solo-mining", label: "Solo Mining", keys: ["solo-mining"] },
   { id: "minerwars", label: "MinerWars", keys: ["minerwars"] },
@@ -13,9 +17,9 @@ export const REWARD_GROUPS: RewardGroup[] = [
   { id: "ambassador", label: "Ambassador", keys: ["ambassador"] },
   { id: "deposits", label: "Deposits", keys: ["deposits"] },
   { id: "withdrawals", label: "Withdrawals", keys: ["withdrawals"] },
-  { id: "purchases", label: "Purchases", keys: ["purchases"] },
-  { id: "upgrades", label: "Upgrades", keys: ["upgrades"] },
+  { id: "purchases-upgrades", label: "Purchases & Upgrades", keys: ["purchases", "upgrades"] },
   { id: "transactions", label: "Transactions", keys: ["transactions"] },
+  { id: "simple-earn", label: "Simple Earn", keys: ["simple-earn"] },
 ];
 
 export const ALL_REWARD_KEYS: RewardKey[] = [...new Set(REWARD_GROUPS.flatMap((g) => g.keys))];
@@ -229,6 +233,22 @@ export const REWARD_CONFIGS: RewardConfig[] = [
         range: null,
       },
       pagination: { cursor, limit: 100 },
+    }),
+  },
+  {
+    key: "simple-earn",
+    sheetName: "Simple Earn",
+    sheetType: "simple-earn",
+    enrichType: "simple-earn",
+    apiUrl: `${API_SE}/api/simple-earn/user-cycle-reward/index`,
+    pageSize: 10,
+    pagination: "date-cursor",
+    getNextCursor: (item: CursorPaginationItem) => {
+      const d = new Date(item.createdAt);
+      return Number.isNaN(d.getTime()) ? "" : d.toISOString();
+    },
+    buildBody: (cursor: string) => ({
+      pagination: { limit: 10, cursorCreatedAt: cursor },
     }),
   },
 ];

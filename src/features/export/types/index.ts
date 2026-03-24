@@ -10,9 +10,16 @@ export type RewardKey =
   | "withdrawals"
   | "purchases"
   | "upgrades"
-  | "transactions";
+  | "transactions"
+  | "simple-earn";
 
-export type SheetType = "mining" | "standard" | "multi-currency" | "purchases" | "transactions";
+export type SheetType =
+  | "mining"
+  | "standard"
+  | "multi-currency"
+  | "purchases"
+  | "transactions"
+  | "simple-earn";
 
 export type EnrichType =
   | "solo-mining"
@@ -20,12 +27,13 @@ export type EnrichType =
   | "wallet-tx-coingecko"
   | "existing-price"
   | "purchase"
-  | "upgrade";
+  | "upgrade"
+  | "simple-earn";
 
 // API pagination and request bodies
 
 export interface RewardRequestBody {
-  pagination?: { cursor?: number; skip?: number; limit?: number };
+  pagination?: { cursor?: number; skip?: number; limit?: number; cursorCreatedAt?: string };
   limit?: number;
   [key: string]: unknown;
 }
@@ -58,7 +66,13 @@ export interface CursorRewardConfig extends RewardConfigBase {
   getNextCursor: (item: CursorPaginationItem) => number;
 }
 
-export type RewardConfig = SkipRewardConfig | CursorRewardConfig;
+export interface DateCursorRewardConfig extends RewardConfigBase {
+  pagination: "date-cursor";
+  buildBody: (cursor: string) => RewardRequestBody;
+  getNextCursor: (item: CursorPaginationItem) => string;
+}
+
+export type RewardConfig = SkipRewardConfig | CursorRewardConfig | DateCursorRewardConfig;
 
 // Options
 
@@ -166,6 +180,20 @@ export interface ExistingPriceRawRecord {
   rewardInUSD?: number;
 }
 
+export interface SimpleEarnAsset {
+  asset: string;
+  apr?: number;
+  vipLevelMultiplier?: number;
+  reward: string;
+  rewardInUsd: string;
+}
+
+export interface SimpleEarnRawRecord {
+  createdAt: string;
+  asset?: string;
+  assets?: SimpleEarnAsset[];
+}
+
 export interface PurchaseRawRecord {
   createdAt: string;
   currency?: string;
@@ -229,11 +257,23 @@ export interface PurchaseEnrichedRecord {
   valueFiat: number;
 }
 
+export interface SimpleEarnEnrichedRecord {
+  createdAt: string;
+  asset: string;
+  apr: number;
+  currency: string;
+  reward: number;
+  priceAtTime: number;
+  rewardInUSD: number;
+  rewardInFiat: number;
+}
+
 export type EnrichedRecord =
   | MiningEnrichedRecord
   | WalletTxEnrichedRecord
   | StandardEnrichedRecord
   | PurchaseEnrichedRecord
+  | SimpleEarnEnrichedRecord
   | Record<string, unknown>;
 
 // Sheet payload
