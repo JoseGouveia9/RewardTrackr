@@ -285,12 +285,24 @@ export async function enrichRecords(
     const raw = rawRecords[i] as Record<string, unknown>;
 
     try {
-      const fiatRate = includeFiat ? await getRate(raw?.createdAt as string, extraFiatCurrency) : 0;
-
       if (config.enrichType === "simple-earn") {
-        enriched.push(...transformSimpleEarn(raw as unknown as SimpleEarnRawRecord, fiatRate));
+        // Postgres timestamps ("2026-03-24 08:00:36.530083+00") must be normalised to ISO 8601
+        // before getRate, which splits on "T" to extract the date portion.
+        const normalizedCreatedAt = String(raw?.createdAt ?? "")
+          .replace(" ", "T")
+          .replace(/(\.\d{3})\d+/, "$1")
+          .replace(/\+00$/, "Z");
+        const fiatRate = includeFiat ? await getRate(normalizedCreatedAt, extraFiatCurrency) : 0;
+        enriched.push(
+          ...transformSimpleEarn(
+            { ...raw, createdAt: normalizedCreatedAt } as unknown as SimpleEarnRawRecord,
+            fiatRate,
+          ),
+        );
         continue;
       }
+
+      const fiatRate = includeFiat ? await getRate(raw?.createdAt as string, extraFiatCurrency) : 0;
 
       let record: EnrichedRecord;
 

@@ -20,8 +20,8 @@ export const REWARD_GROUPS: RewardGroup[] = [
   { id: "deposits", label: "Deposits", keys: ["deposits"] },
   { id: "withdrawals", label: "Withdrawals", keys: ["withdrawals"] },
   { id: "purchases-upgrades", label: "Purchases & Upgrades", keys: ["purchases", "upgrades"] },
-  { id: "transactions", label: "Transactions", keys: ["transactions"] },
   { id: "simple-earn", label: "Simple Earn", keys: ["simple-earn"] },
+  { id: "transactions", label: "Transactions", keys: ["transactions"] },
 ];
 
 export const ALL_REWARD_KEYS: RewardKey[] = [...new Set(REWARD_GROUPS.flatMap((g) => g.keys))];
@@ -243,14 +243,18 @@ export const REWARD_CONFIGS: RewardConfig[] = [
     sheetType: "simple-earn",
     enrichType: "simple-earn",
     apiUrl: `${API_SE}/api/simple-earn/user-cycle-reward/index`,
-    pageSize: 10,
+    pageSize: 50,
     pagination: "date-cursor",
     getNextCursor: (item: CursorPaginationItem) => {
-      const d = new Date(item.createdAt);
+      const normalized = item.createdAt
+        .replace(" ", "T")
+        .replace(/(\.\d{3})\d+/, "$1")
+        .replace(/\+00$/, "Z");
+      const d = new Date(normalized);
       return Number.isNaN(d.getTime()) ? "" : d.toISOString();
     },
     buildBody: (cursor: string) => ({
-      pagination: { limit: 10, cursorCreatedAt: cursor },
+      pagination: { limit: 50, cursorCreatedAt: cursor },
     }),
   },
 ];
