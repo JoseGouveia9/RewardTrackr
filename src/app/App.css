@@ -162,52 +162,42 @@ h3,
   color: #c97d10;
 }
 
-.app-notice-opensource {
+.app-notice.app-notice-opensource {
   border-color: rgba(22, 163, 74, 0.25);
   background: rgba(220, 252, 231, 0.6);
   color: #166534;
 }
 
-.app-notice-opensource .app-notice-icon {
+.app-notice.app-notice-opensource .app-notice-icon {
   color: #16a34a;
 }
 
-.app-notice-opensource a {
+.app-notice.app-notice-opensource a {
   color: #15803d;
   font-weight: 600;
   text-underline-offset: 2px;
 }
 
-.app-notice-opensource a:hover {
+.app-notice.app-notice-opensource a:hover {
   color: #166534;
 }
 
-.page.theme-dark .app-notice-opensource {
+.page.theme-dark .app-notice.app-notice-opensource {
   border-color: rgba(22, 163, 74, 0.3);
   background: rgba(5, 46, 22, 0.65);
   color: #86efac;
 }
 
-.page.theme-dark .app-notice-opensource .app-notice-icon {
+.page.theme-dark .app-notice.app-notice-opensource .app-notice-icon {
   color: #4ade80;
 }
 
-.page.theme-dark .app-notice-opensource a {
+.page.theme-dark .app-notice.app-notice-opensource a {
   color: #4ade80;
 }
 
-.page.theme-dark .app-notice-opensource a:hover {
+.page.theme-dark .app-notice.app-notice-opensource a:hover {
   color: #86efac;
-}
-
-.app-notice-unofficial {
-  border-color: rgba(122, 77, 246, 0.25);
-  background: rgba(240, 236, 255, 0.6);
-  color: #4a2d99;
-}
-
-.app-notice-unofficial .app-notice-icon {
-  color: #7a4df6;
 }
 
 .page.theme-dark .app-notice {
@@ -220,15 +210,6 @@ h3,
   color: #ffc94d;
 }
 
-.page.theme-dark .app-notice-unofficial {
-  border-color: rgba(122, 77, 246, 0.3);
-  background: rgba(30, 20, 60, 0.65);
-  color: #c4b0ff;
-}
-
-.page.theme-dark .app-notice-unofficial .app-notice-icon {
-  color: #a988f3;
-}
 
 .panel {
   background: #ffffff;
