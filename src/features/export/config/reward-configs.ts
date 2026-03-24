@@ -7,7 +7,9 @@ const API =
 
 const API_SE =
   (import.meta.env.VITE_API_SE_BASE as string | undefined)?.replace(/\/$/, "") ??
-  "https://api.se.gomining.com";
+  (import.meta.env.VITE_API_BASE
+    ? `${(import.meta.env.VITE_API_BASE as string).replace(/\/$/, "")}/se`
+    : "https://api.se.gomining.com");
 
 export const REWARD_GROUPS: RewardGroup[] = [
   { id: "solo-mining", label: "Solo Mining", keys: ["solo-mining"] },
