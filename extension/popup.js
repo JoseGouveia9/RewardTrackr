@@ -142,8 +142,8 @@
         setStatus("Login required on app.gomining.com.", "error");
         setButtonState("Not Ready", syncProfile, { disabled: true, notReady: true });
       } else if (tokenExpired) {
-        setStatus("Token expired. Refresh login on app.gomining.com.", "error");
-        setButtonState("Not Ready", syncProfile, { disabled: true, notReady: true });
+        setStatus("Session expired. Click below to refresh and sync.", "error");
+        setButtonState("Refresh & Sync", refreshAndSync);
       } else {
         setStatus("Not ready to sync.", "error");
         setButtonState("Not Ready", syncProfile, { disabled: true, notReady: true });
@@ -151,6 +151,53 @@
     } catch {
       setStatus("Not ready to sync.", "error");
       setButtonState("Not Ready", syncProfile, { disabled: true, notReady: true });
+    }
+  }
+
+  async function refreshAndSync() {
+    setButtonState("Refreshing…", null, { disabled: true });
+    setStatus("Refreshing session…", "loading");
+    try {
+      const refreshCookie = await chrome.cookies.get({
+        url: "https://app.gomining.com",
+        name: "refresh_token",
+      });
+      if (!refreshCookie?.value) {
+        throw new Error("No refresh token found. Please log in to app.gomining.com.");
+      }
+
+      const response = await fetch("https://api.gomining.com/api/auth/refresh", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "ngsw-bypass": "true",
+          "x-device-type": "desktop",
+        },
+        body: JSON.stringify({ refreshToken: refreshCookie.value }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error("Failed to refresh session. Please log in again.");
+      }
+
+      const newAccessToken = data?.data?.accessToken ?? data?.accessToken;
+      if (!newAccessToken) {
+        throw new Error("Unexpected refresh response.");
+      }
+
+      await chrome.cookies.set({
+        url: "https://app.gomining.com",
+        name: "access_token",
+        value: newAccessToken,
+        path: "/",
+        secure: true,
+      });
+
+      await syncProfile();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unexpected error";
+      setStatus(`Error: ${message}`, "error");
+      setButtonState("Refresh & Sync", refreshAndSync);
     }
   }
 
@@ -171,7 +218,9 @@
 
       const exp = getJwtExpiry(cookie.value);
       if (exp !== null && exp * 1000 < Date.now()) {
-        throw new Error("Token is expired. Refresh app.gomining.com and try again.");
+        setStatus("Session expired. Click below to refresh and sync.", "error");
+        setButtonState("Refresh & Sync", refreshAndSync);
+        return;
       }
 
       setStatus("Fetching profile...", "loading");
