@@ -17,8 +17,10 @@ function getUserId(request) {
   }
 }
 
+const ALLOWED_ORIGIN = "https://josegouveia9.github.io";
+
 const CORS_HEADERS = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   "Access-Control-Allow-Headers": "*",
   "Access-Control-Max-Age": "86400",

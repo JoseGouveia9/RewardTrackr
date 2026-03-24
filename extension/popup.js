@@ -2,8 +2,6 @@
 
 (() => {
   const EXPORTER_URL = "https://josegouveia9.github.io/GoMiningExporter/";
-  const EXPORTER_SYNC_HASH_KEY = "gm_sync_token";
-  const EXPORTER_SYNC_ALIAS_HASH_KEY = "gm_sync_alias";
   const INTRO_SEEN_KEY = "gm_intro_seen";
 
   // ── Theme ────────────────────────────────────────────────────
@@ -200,11 +198,26 @@
       }
 
       setButtonState("Open Exporter", () => {
-        const hash =
-          `#${EXPORTER_SYNC_HASH_KEY}=${encodeURIComponent(cookie.value)}` +
-          `&${EXPORTER_SYNC_ALIAS_HASH_KEY}=${encodeURIComponent(alias)}`;
-        const url = EXPORTER_URL.replace(/\/?$/, "/") + hash;
-        void chrome.tabs.create({ url });
+        chrome.tabs.create({ url: EXPORTER_URL }, (tab) => {
+          const listener = (tabId, changeInfo) => {
+            if (tabId !== tab.id || changeInfo.status !== "complete") return;
+            chrome.tabs.onUpdated.removeListener(listener);
+            chrome.scripting.executeScript({
+              target: { tabId },
+              func: (token, syncedAlias, tokenKey, aliasKey) => {
+                localStorage.setItem(tokenKey, token);
+                if (syncedAlias) localStorage.setItem(aliasKey, syncedAlias);
+                window.dispatchEvent(new StorageEvent("storage", {
+                  key: tokenKey,
+                  newValue: token,
+                  storageArea: localStorage,
+                }));
+              },
+              args: [cookie.value, alias, "gm_sync_token_stored", "gm_sync_alias"],
+            }).catch(() => {});
+          };
+          chrome.tabs.onUpdated.addListener(listener);
+        });
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unexpected error";

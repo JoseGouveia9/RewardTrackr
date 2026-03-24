@@ -13,7 +13,7 @@ Sentry.init({
     Sentry.consoleLoggingIntegration({ levels: ["log", "warn", "error"] }),
   ],
   tracesSampleRate: 0.1,
-  sendDefaultPii: true,
+  sendDefaultPii: false,
   enableLogs: true,
   _experiments: { enableLogs: true },
 });

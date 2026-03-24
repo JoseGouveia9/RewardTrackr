@@ -1,29 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import * as Sentry from "@sentry/react";
 import { decodeJwt } from "@/lib/http";
 import type { AuthUser } from "../types";
 
-const EXTENSION_SYNC_HASH_KEY = "gm_sync_token";
-const EXTENSION_SYNC_ALIAS_HASH_KEY = "gm_sync_alias";
 const EXTENSION_SYNC_ALIAS_STORE_KEY = "gm_sync_alias";
 const EXTENSION_SYNC_TOKEN_STORE_KEY = "gm_sync_token_stored";
-
-function getSyncPayloadFromHash(): { token: string | null; alias: string | null } {
-  const rawHash = window.location.hash || "";
-  if (!rawHash.startsWith("#")) return { token: null, alias: null };
-  const params = new URLSearchParams(rawHash.slice(1));
-  const token = params.get(EXTENSION_SYNC_HASH_KEY);
-  const alias = params.get(EXTENSION_SYNC_ALIAS_HASH_KEY);
-  return {
-    token: token && token.trim() ? token : null,
-    alias: alias && alias.trim() ? alias.trim() : null,
-  };
-}
-
-function clearSyncHash(): void {
-  if (!window.location.hash) return;
-  window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
-}
 
 function loginWithToken(token: string): AuthUser | null {
   const decoded = decodeJwt(token);
@@ -60,126 +41,100 @@ interface UseAuthReturn {
 export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
   const [storedToken, setStoredToken] = useState<string>("");
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [syncedAlias, setSyncedAlias] = useState<string>(() =>
+  const [syncedAlias] = useState<string>(() =>
     (localStorage.getItem(EXTENSION_SYNC_ALIAS_STORE_KEY) || "").trim(),
   );
+  const expiryTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const clearExpiryTimer = useCallback(() => {
+    if (expiryTimer.current) {
+      clearTimeout(expiryTimer.current);
+      expiryTimer.current = null;
+    }
+  }, []);
+
+  const scheduleExpiry = useCallback(
+    (exp: number | null) => {
+      clearExpiryTimer();
+      if (!exp) return;
+      const msUntilExpiry = exp * 1000 - Date.now();
+      if (msUntilExpiry <= 0) return;
+      expiryTimer.current = setTimeout(() => {
+        localStorage.removeItem(EXTENSION_SYNC_TOKEN_STORE_KEY);
+        setUser(null);
+        setStoredToken("");
+      }, msUntilExpiry);
+    },
+    [clearExpiryTimer],
+  );
+
+  const applyToken = useCallback(
+    (token: string, message?: string): boolean => {
+      const userData = loginWithToken(token);
+      if (!userData) return false;
+      const storedAlias = localStorage.getItem(EXTENSION_SYNC_ALIAS_STORE_KEY)?.trim() ?? null;
+      if (storedAlias) userData.alias = storedAlias;
+      localStorage.setItem(EXTENSION_SYNC_TOKEN_STORE_KEY, token);
+      setStoredToken(token);
+      setUser(userData);
+      scheduleExpiry(userData.exp ?? null);
+      if (message) onMessage(message);
+      return true;
+    },
+    [scheduleExpiry, onMessage],
+  );
+
+  // On mount: restore session from localStorage
   useEffect(() => {
-    const { token: syncToken, alias } = getSyncPayloadFromHash();
-    if (alias) {
-      setSyncedAlias(alias);
-      localStorage.setItem(EXTENSION_SYNC_ALIAS_STORE_KEY, alias);
-    }
-    if (syncToken) {
-      const userData = loginWithToken(syncToken);
-      if (userData) {
-        if (alias) userData.alias = alias;
-        localStorage.setItem(EXTENSION_SYNC_TOKEN_STORE_KEY, syncToken);
-        setStoredToken(syncToken);
-        setUser(userData);
-        Sentry.logger.info("User synced via extension hash");
-        onMessage("Synced successfully. Welcome!");
-      } else {
-        Sentry.logger.warn("Extension token invalid or expired on hash sync");
-        onMessage("Extension token is invalid or expired.");
-      }
-      clearSyncHash();
-    }
+    const token = localStorage.getItem(EXTENSION_SYNC_TOKEN_STORE_KEY);
+    if (token) applyToken(token);
+    return clearExpiryTimer;
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Storage event: extension injected a new token into this tab
   useEffect(() => {
     const handleStorage = (e: StorageEvent): void => {
       if (e.key !== EXTENSION_SYNC_TOKEN_STORE_KEY || !e.newValue) return;
-      const userData = loginWithToken(e.newValue);
-      if (!userData) return;
-      const storedAlias = localStorage.getItem(EXTENSION_SYNC_ALIAS_STORE_KEY)?.trim() ?? null;
-      if (storedAlias) userData.alias = storedAlias;
-      setStoredToken(e.newValue);
-      setUser(userData);
-      onMessage("Session refreshed from extension.");
+      applyToken(e.newValue, "Session refreshed from extension.");
     };
     window.addEventListener("storage", handleStorage);
     return () => window.removeEventListener("storage", handleStorage);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [applyToken]);
 
-  // Poll for new token when logged out (picks up extension re-sync)
+  // Poll when logged out — fallback to pick up extension re-sync
   useEffect(() => {
     if (user) return;
     const interval = setInterval(() => {
       const token = localStorage.getItem(EXTENSION_SYNC_TOKEN_STORE_KEY);
-      if (!token) return;
-      const userData = loginWithToken(token);
-      if (!userData) return;
-      const storedAlias = localStorage.getItem(EXTENSION_SYNC_ALIAS_STORE_KEY)?.trim() ?? null;
-      if (storedAlias) userData.alias = storedAlias;
-      setStoredToken(token);
-      setUser(userData);
-      onMessage("Session synced from extension.");
+      if (token) applyToken(token, "Session synced from extension.");
     }, 1000);
     return () => clearInterval(interval);
-  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Detect token expiry or re-sync while user is logged in
-  useEffect(() => {
-    if (!user) return;
-    const interval = setInterval(() => {
-      const token = localStorage.getItem(EXTENSION_SYNC_TOKEN_STORE_KEY);
-      if (!token || !loginWithToken(token)) {
-        // Token expired or removed — clear user so polling above restarts
-        setUser(null);
-        setStoredToken("");
-      } else if (token !== storedToken) {
-        // Extension wrote a new token into this tab — pick it up immediately
-        const userData = loginWithToken(token);
-        if (userData) {
-          const alias = localStorage.getItem(EXTENSION_SYNC_ALIAS_STORE_KEY)?.trim() ?? null;
-          if (alias) userData.alias = alias;
-          setStoredToken(token);
-          setUser(userData);
-          onMessage("Session refreshed from extension.");
-        }
-      }
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [user, storedToken, onMessage]);
+  }, [user, applyToken]);
 
   const handleCheckSync = useCallback((): void => {
-    const { token: hashToken, alias } = getSyncPayloadFromHash();
-    const syncToken = hashToken ?? localStorage.getItem(EXTENSION_SYNC_TOKEN_STORE_KEY);
-
-    if (alias) {
-      setSyncedAlias(alias);
-      localStorage.setItem(EXTENSION_SYNC_ALIAS_STORE_KEY, alias);
-    }
-
+    const syncToken = localStorage.getItem(EXTENSION_SYNC_TOKEN_STORE_KEY);
     if (syncToken) {
-      const userData = loginWithToken(syncToken);
-      if (userData) {
-        const storedAlias =
-          alias ?? localStorage.getItem(EXTENSION_SYNC_ALIAS_STORE_KEY)?.trim() ?? null;
-        if (storedAlias) userData.alias = storedAlias;
-        localStorage.setItem(EXTENSION_SYNC_TOKEN_STORE_KEY, syncToken);
-        setStoredToken(syncToken);
-        setUser(userData);
+      const success = applyToken(syncToken);
+      if (success) {
         Sentry.logger.info("User synced via manual check");
         onMessage("Synced successfully. Welcome!");
       } else {
         Sentry.logger.warn("Extension token invalid or expired on manual check");
         onMessage("Extension token is invalid or expired.");
       }
-      if (hashToken) clearSyncHash();
     } else {
       onMessage("No token found. Please sync via the GoMining extension first.");
     }
-  }, [onMessage]);
+  }, [applyToken, onMessage]);
 
   const handleLogout = useCallback((): void => {
+    clearExpiryTimer();
     localStorage.removeItem(EXTENSION_SYNC_TOKEN_STORE_KEY);
     setUser(null);
     setStoredToken("");
     Sentry.logger.info("User logged out");
     onMessage("Logged out.");
-  }, [onMessage]);
+  }, [clearExpiryTimer, onMessage]);
 
   return { storedToken, user, syncedAlias, handleCheckSync, handleLogout };
 }

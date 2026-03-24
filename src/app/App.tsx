@@ -302,11 +302,65 @@ function App() {
           </svg>
           <span>
             This app currently runs on free-tier services (Cloudflare, CoinGecko, FX Rates API). If
-            a request fails due to rate limits, wait a moment and try again, or try again tomorrow.{" "}
+            a request fails due to rate limits, wait a moment and try again, or try again tomorrow.
+          </span>
+        </div>
+
+        <div className="app-notice app-notice-unofficial">
+          <svg
+            className="app-notice-icon"
+            xmlns="http://www.w3.org/2000/svg"
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 8v4" />
+            <path d="M12 16h.01" />
+          </svg>
+          <span>
             This is an unofficial tool and is not affiliated with, endorsed by, or associated with
             the GoMining team.
           </span>
         </div>
+
+        {!user && (
+          <div className="app-notice app-notice-opensource">
+            <svg
+              className="app-notice-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+            <span>
+              This app and extension were built with security and transparency in mind. The full
+              source code is open source and accessible to anyone who wants to inspect it before
+              using it.{" "}
+              <a
+                href="https://github.com/JoseGouveia9/GoMiningExporter"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Check it here.
+              </a>
+            </span>
+          </div>
+        )}
 
         {!user ? (
           <AuthPanel onSync={handleCheckSync} />
