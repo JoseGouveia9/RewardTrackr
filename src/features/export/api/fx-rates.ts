@@ -3,7 +3,7 @@ import type { ExtraFiatCurrency, FxLatestResponse, FxTimeseriesResponse } from "
 
 const FX_TIMESERIES_API = "https://api.fxratesapi.com/timeseries";
 const FX_LATEST_API = "https://api.exchangerate-api.com/v4/latest/USD";
-const LS_KEY_FX = "gomining_fxcache";
+const LS_KEY_FX = "rt_fxcache";
 
 // Cache key format: "YYYY-MM-DD_CURRENCY" (e.g. "2024-01-15_GBP")
 const rateCache = new Map<string, number>();

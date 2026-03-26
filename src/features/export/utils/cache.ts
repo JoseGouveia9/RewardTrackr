@@ -4,7 +4,7 @@ import { ALL_REWARD_KEYS } from "../config/reward-configs";
 import { LS_KEY_PRICE_CACHE } from "../api/coingecko";
 import type { CacheEntry, CacheState, RewardKey, RewardRecord } from "../types";
 
-const CACHE_PREFIX = "gomining_reward_";
+const CACHE_PREFIX = "rt_reward_";
 
 type PriceCacheValue = {
   price: number;

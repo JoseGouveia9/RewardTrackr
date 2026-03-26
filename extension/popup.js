@@ -1,11 +1,18 @@
 "use strict";
 
 (() => {
-  const EXPORTER_URL = "https://josegouveia9.github.io/GoMiningExporter/";
-  const INTRO_SEEN_KEY = "gm_intro_seen";
+  const DEV_MODE = !chrome.runtime.getManifest().update_url;
+  const EXPORTER_URL = DEV_MODE
+    ? "http://localhost:5173/"
+    : "https://josegouveia9.github.io/GoMiningExporter/";
+
+  function resolveExporterUrl() {
+    return Promise.resolve(EXPORTER_URL);
+  }
+  const INTRO_SEEN_KEY = "rt_intro_seen";
 
   // ── Theme ────────────────────────────────────────────────────
-  const THEME_KEY = "gm_theme";
+  const THEME_KEY = "rt_theme";
 
   function applyTheme(theme) {
     document.body.classList.toggle("theme-dark", theme === "dark");
@@ -14,7 +21,8 @@
 
   async function loadTheme() {
     try {
-      const exporterTabs = await chrome.tabs.query({ url: `${EXPORTER_URL}*` });
+      const exporterUrl = await resolveExporterUrl();
+      const exporterTabs = await chrome.tabs.query({ url: `${exporterUrl}*` });
       if (exporterTabs.length > 0 && exporterTabs[0].id != null) {
         const results = await chrome.scripting.executeScript({
           target: { tabId: exporterTabs[0].id },
@@ -28,7 +36,9 @@
           return;
         }
       }
-    } catch { /* ignore — tab not accessible */ }
+    } catch {
+      /* ignore — tab not accessible */
+    }
     applyTheme(localStorage.getItem(THEME_KEY) || "dark");
   }
 
@@ -134,7 +144,7 @@
 
       if (onCorrectSite && hasToken && !tokenExpired) {
         setStatus("Ready to sync.", "ready");
-        setButtonState("Sync to Exporter", syncProfile, { disabled: false, notReady: false });
+        setButtonState("Sync to RewardTrackr", syncProfile, { disabled: false, notReady: false });
       } else if (!onCorrectSite) {
         setStatus("Open app.gomining.com to continue.", "error");
         setButtonState("Not Ready", syncProfile, { disabled: true, notReady: true });
@@ -228,10 +238,11 @@
       const alias = resolveAlias(profile) || "there";
 
       setWelcome(alias);
-      setStatus("Profile synced. Click below to open the exporter.", "success");
+      setStatus("Profile synced.", "success");
 
       // Push token directly into any already-open exporter tabs so they update immediately.
-      const exporterTabs = await chrome.tabs.query({ url: `${EXPORTER_URL}*` });
+      const exporterUrl = await resolveExporterUrl();
+      const exporterTabs = await chrome.tabs.query({ url: `${exporterUrl}*` });
       for (const tab of exporterTabs) {
         if (tab.id == null) continue;
         try {
@@ -241,29 +252,36 @@
               localStorage.setItem(tokenKey, token);
               if (alias) localStorage.setItem(aliasKey, alias);
             },
-            args: [cookie.value, alias, "gm_sync_token_stored", "gm_sync_alias"],
+            args: [cookie.value, alias, "rt_sync_token_stored", "rt_sync_alias"],
           });
-        } catch { /* tab may have navigated away, ignore */ }
+        } catch {
+          /* tab may have navigated away, ignore */
+        }
       }
 
-      setButtonState("Open Exporter", () => {
-        chrome.tabs.create({ url: EXPORTER_URL }, (tab) => {
+      setButtonState("Open RewardTrackr", async () => {
+        const exporterUrl = await resolveExporterUrl();
+        chrome.tabs.create({ url: exporterUrl }, (tab) => {
           const listener = (tabId, changeInfo) => {
             if (tabId !== tab.id || changeInfo.status !== "complete") return;
             chrome.tabs.onUpdated.removeListener(listener);
-            chrome.scripting.executeScript({
-              target: { tabId },
-              func: (token, syncedAlias, tokenKey, aliasKey) => {
-                localStorage.setItem(tokenKey, token);
-                if (syncedAlias) localStorage.setItem(aliasKey, syncedAlias);
-                window.dispatchEvent(new StorageEvent("storage", {
-                  key: tokenKey,
-                  newValue: token,
-                  storageArea: localStorage,
-                }));
-              },
-              args: [cookie.value, alias, "gm_sync_token_stored", "gm_sync_alias"],
-            }).catch(() => {});
+            chrome.scripting
+              .executeScript({
+                target: { tabId },
+                func: (token, syncedAlias, tokenKey, aliasKey) => {
+                  localStorage.setItem(tokenKey, token);
+                  if (syncedAlias) localStorage.setItem(aliasKey, syncedAlias);
+                  window.dispatchEvent(
+                    new StorageEvent("storage", {
+                      key: tokenKey,
+                      newValue: token,
+                      storageArea: localStorage,
+                    }),
+                  );
+                },
+                args: [cookie.value, alias, "rt_sync_token_stored", "rt_sync_alias"],
+              })
+              .catch(() => {});
           };
           chrome.tabs.onUpdated.addListener(listener);
         });
@@ -271,7 +289,7 @@
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unexpected error";
       setStatus(`Error: ${message}`, "error");
-      setButtonState("Sync to Exporter", syncProfile);
+      setButtonState("Sync to RewardTrackr", syncProfile);
     }
   }
 

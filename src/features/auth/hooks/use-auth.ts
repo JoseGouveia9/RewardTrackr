@@ -3,8 +3,8 @@ import * as Sentry from "@sentry/react";
 import { decodeJwt } from "@/lib/http";
 import type { AuthUser } from "../types";
 
-const EXTENSION_SYNC_ALIAS_STORE_KEY = "gm_sync_alias";
-const EXTENSION_SYNC_TOKEN_STORE_KEY = "gm_sync_token_stored";
+const EXTENSION_SYNC_ALIAS_STORE_KEY = "rt_sync_alias";
+const EXTENSION_SYNC_TOKEN_STORE_KEY = "rt_sync_token_stored";
 
 function loginWithToken(token: string): AuthUser | null {
   const decoded = decodeJwt(token);
@@ -123,7 +123,7 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
         onMessage("Extension token is invalid or expired.");
       }
     } else {
-      onMessage("No token found. Please sync via the GoMining extension first.");
+      onMessage("No token found. Please sync via the RewardTrackr extension first.");
     }
   }, [applyToken, onMessage]);
 

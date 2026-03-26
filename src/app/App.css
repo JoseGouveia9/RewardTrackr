@@ -30,7 +30,7 @@ h6 {
 .background-shape-top {
   width: 420px;
   height: 420px;
-  background: radial-gradient(circle, rgba(147, 112, 255, 0.42), transparent 70%);
+  background: radial-gradient(circle, rgba(247, 147, 26, 0.38), transparent 70%);
   top: -140px;
   right: -80px;
 }
@@ -38,7 +38,7 @@ h6 {
 .background-shape-bottom {
   width: 480px;
   height: 480px;
-  background: radial-gradient(circle, rgba(122, 138, 255, 0.34), transparent 70%);
+  background: radial-gradient(circle, rgba(247, 147, 26, 0.28), transparent 70%);
   bottom: -220px;
   left: -120px;
 }
@@ -112,7 +112,7 @@ h3,
 }
 
 .hero-label-accent {
-  color: #7a4df6;
+  color: #F7931A;
 }
 
 .page.theme-dark .hero-label-main {
@@ -256,8 +256,8 @@ textarea {
 }
 
 textarea:focus {
-  outline: 2px solid rgba(169, 136, 243, 0.32);
-  border-color: #a988f3;
+  outline: 2px solid rgba(247, 147, 26, 0.28);
+  border-color: #FBB060;
 }
 
 button {
@@ -283,16 +283,16 @@ button:disabled {
 }
 
 .btn-primary {
-  background: linear-gradient(90deg, #7a4df6 0%, #6b40ea 100%);
-  border-color: #6b40ea;
+  background: linear-gradient(90deg, #F7931A 0%, #E07D10 100%);
+  border-color: #E07D10;
   color: white;
   border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(107, 64, 234, 0.22);
+  box-shadow: 0 4px 10px rgba(247, 147, 26, 0.22);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: linear-gradient(90deg, #7044ef 0%, #6238df 100%);
-  border-color: #6238df;
+  background: linear-gradient(90deg, #E8850F 0%, #CB7010 100%);
+  border-color: #CB7010;
 }
 
 .btn-primary:active:not(:disabled) {
@@ -414,7 +414,7 @@ button:disabled {
 }
 
 .section-icon {
-  color: #7a4df6;
+  color: #F7931A;
   flex-shrink: 0;
 }
 
@@ -469,7 +469,7 @@ button:disabled {
 }
 
 .page.theme-dark .message-loading {
-  background: rgba(30, 41, 59, 0.65);
+  background: rgba(30, 30, 32, 0.65);
   color: #cbd5e1;
   border-color: rgba(203, 213, 225, 0.15);
 }
@@ -491,25 +491,25 @@ button:disabled {
 /* Dark mode */
 
 .page.theme-dark {
-  background: #0e0f1f;
+  background: #121214;
   color: #ffffff;
 }
 
 .page.theme-dark .background-shape-top {
-  background: radial-gradient(circle, rgba(122, 96, 255, 0.36), transparent 70%);
+  background: radial-gradient(circle, rgba(247, 147, 26, 0.3), transparent 70%);
 }
 
 .page.theme-dark .background-shape-bottom {
-  background: radial-gradient(circle, rgba(88, 122, 255, 0.25), transparent 72%);
+  background: radial-gradient(circle, rgba(247, 147, 26, 0.2), transparent 72%);
 }
 
 .page.theme-dark .panel {
-  background: #242533;
+  background: #242424;
   border-color: transparent;
 }
 
 .page.theme-dark .panel-glass {
-  background: rgba(22, 24, 42, 0.65);
+  background: rgba(28, 28, 30, 0.65);
   border-color: rgba(255, 255, 255, 0.07);
 }
 
@@ -526,49 +526,49 @@ button:disabled {
 }
 
 .page.theme-dark textarea {
-  background: #161b2f;
-  border-color: #3a466d;
+  background: #1a1a1a;
+  border-color: #3a3a3d;
   color: #e6ecff;
 }
 
 .page.theme-dark textarea:focus {
-  outline: 2px solid rgba(140, 118, 255, 0.32);
-  border-color: #846bff;
+  outline: 2px solid rgba(247, 147, 26, 0.28);
+  border-color: #F7931A;
 }
 
 .page.theme-dark .btn-primary {
-  background: linear-gradient(90deg, #8b59ff 0%, #6b40ea 100%);
-  border-color: #6b40ea;
+  background: linear-gradient(90deg, #F7931A 0%, #E07D10 100%);
+  border-color: #E07D10;
   color: #ffffff;
-  box-shadow: 0 4px 12px rgba(107, 64, 234, 0.34);
+  box-shadow: 0 4px 12px rgba(247, 147, 26, 0.3);
 }
 
 .page.theme-dark .btn-primary:hover:not(:disabled) {
-  background: linear-gradient(90deg, #7f4ff2 0%, #5f36d7 100%);
-  border-color: #5f36d7;
+  background: linear-gradient(90deg, #E8850F 0%, #CB7010 100%);
+  border-color: #CB7010;
 }
 
 .page.theme-dark .btn-secondary,
 .page.theme-dark .btn-theme {
-  background: #191f35;
+  background: #1e1e1e;
   color: #ffffff;
-  border-color: #394667;
+  border-color: #3a3a3c;
 }
 
 .page.theme-dark .btn-theme {
-  background: #181928;
+  background: #1a1a1c;
   color: rgba(255, 255, 255, 0.8);
   border-color: transparent;
 }
 
 .page.theme-dark .btn-secondary:hover:not(:disabled),
 .page.theme-dark .btn-theme:hover:not(:disabled) {
-  background: #202942;
-  border-color: #4a5a83;
+  background: #222222;
+  border-color: #4a4a4c;
 }
 
 .page.theme-dark .btn-theme:hover:not(:disabled) {
-  background: #181928;
+  background: #1a1a1c;
   color: rgba(255, 255, 255, 0.8);
   border-color: #ffffff;
   border-width: 0.5px;
@@ -587,7 +587,7 @@ button:disabled {
 }
 
 .page.theme-dark .divider {
-  border-top-color: #313a5c;
+  border-top-color: #323234;
 }
 
 .page.theme-light .free-tier-notice {

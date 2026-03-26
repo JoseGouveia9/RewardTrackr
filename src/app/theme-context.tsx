@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 
-const THEME_STORAGE_KEY = "gm_theme";
+const THEME_STORAGE_KEY = "rt_theme";
 
 type ThemeMode = "light" | "dark";
 

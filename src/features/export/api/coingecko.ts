@@ -11,7 +11,7 @@ const COINGECKO_RETRY_WAIT_MS = 60_000;
 const SHARED_PRICE_CACHE = new Map<string, CoinGeckoPriceCacheValue>();
 let priceCacheSeeded = false;
 
-export const LS_KEY_PRICE_CACHE = "gomining_pricecache";
+export const LS_KEY_PRICE_CACHE = "rt_pricecache";
 
 // Loads previously saved CoinGecko prices from localStorage into the session cache (runs once per session).
 function seedPriceCache(): void {

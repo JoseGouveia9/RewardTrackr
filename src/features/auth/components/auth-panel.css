@@ -22,7 +22,7 @@
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: #7a4df6;
+  background: #F7931A;
   color: #fff;
   font-size: 0.75rem;
   font-weight: 700;
@@ -33,21 +33,16 @@
 }
 
 .auth-preview-img {
-  width: 100%;
-  max-width: 220px;
+  max-width: 50%;
   border-radius: 10px;
   border: 1px solid rgba(0, 0, 0, 0.1);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
   margin-left: 34px;
 }
 
-.auth-preview-img--wide {
-  max-width: 900px;
-}
-
-
 @media (max-width: 640px) {
-  .auth-preview-img--wide {
+  .auth-preview-img {
     max-width: 100%;
+    margin-left: 0;
   }
 }

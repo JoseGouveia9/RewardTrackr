@@ -8,7 +8,7 @@ import type { CacheState } from "@/features/export";
 import { ReferralButton } from "@/components/referral-button";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { useTheme } from "./theme-context";
-import logo from "/logo.png";
+import logo from "/logo.webp";
 import "./App.css";
 
 declare global {
@@ -134,7 +134,7 @@ function App() {
       window.kofiWidgetOverlay?.draw("moustachio", {
         type: "floating-chat",
         "floating-chat.donateButton.text": "Support the project",
-        "floating-chat.donateButton.background-color": "#7a4df6",
+        "floating-chat.donateButton.background-color": "#F7931A",
         "floating-chat.donateButton.text-color": "#fff",
       });
 
@@ -209,7 +209,7 @@ function App() {
         <header className="hero">
           <div className="hero-top">
             <div className="hero-title-row">
-              <img src={logo} alt="GoMining Exporter logo" className="hero-logo" />
+              <img src={logo} alt="RewardTrackr logo" className="hero-logo" />
               <div>
                 <motion.span
                   className="hero-label"
@@ -231,9 +231,9 @@ function App() {
                     animate={{ color: user ? "#6d7589" : theme === "dark" ? "#ffffff" : "#22283a" }}
                     transition={{ duration: 0.3, ease: "easeOut" }}
                   >
-                    GOMINING
-                  </motion.span>{" "}
-                  <span className="hero-label-accent">EXPORTER</span>
+                    REWARD
+                  </motion.span>
+                  <span className="hero-label-accent">TRACKR</span>
                 </motion.span>
                 <AnimatePresence>
                   {user && (
@@ -352,7 +352,7 @@ function App() {
               source code is open source and accessible to anyone who wants to inspect it before
               using it.{" "}
               <a
-                href="https://github.com/JoseGouveia9/GoMiningExporter"
+                href="https://github.com/JoseGouveia9/RewardTrackr"
                 target="_blank"
                 rel="noopener noreferrer"
               >

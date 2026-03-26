@@ -19,7 +19,7 @@ type ExportConfigAction =
   | { type: "SET_INCLUDE_EXCEL_FIAT"; checked: boolean }
   | { type: "SET_FIAT_CURRENCY"; currency: ExtraFiatCurrency };
 
-const LS_KEY_EXPORT_CONFIG = "gm_export_config";
+const LS_KEY_EXPORT_CONFIG = "rt_export_config";
 
 const initialState: ExportConfigState = {
   selectedKeys: [],

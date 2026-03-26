@@ -40,10 +40,10 @@
   overscroll-behavior: contain;
   border-radius: 18px;
   padding: 8px;
-  background: #25283b;
+  background: #252527;
   box-shadow: 0 14px 30px rgba(5, 8, 22, 0.45);
   scrollbar-width: thin;
-  scrollbar-color: #6f56f5 #1f2233;
+  scrollbar-color: #E07D10 #1e1e20;
 }
 
 .fiat-dropdown-menu::-webkit-scrollbar {
@@ -51,18 +51,18 @@
 }
 
 .fiat-dropdown-menu::-webkit-scrollbar-track {
-  background: #1f2233;
+  background: #1e1e20;
   border-radius: 999px;
 }
 
 .fiat-dropdown-menu::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #8a6dff 0%, #6f56f5 100%);
+  background: linear-gradient(180deg, #F7931A 0%, #E07D10 100%);
   border-radius: 999px;
-  border: 2px solid #1f2233;
+  border: 2px solid #1e1e20;
 }
 
 .fiat-dropdown-menu::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #9a80ff 0%, #7f66ff 100%);
+  background: linear-gradient(180deg, #E8850F 0%, #CB7010 100%);
 }
 
 .fiat-dropdown-search {
@@ -110,7 +110,7 @@
   right: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: #7a4df6;
+  color: #F7931A;
   font-size: 1.1rem;
 }
 
@@ -119,7 +119,7 @@
 .page.theme-light .fiat-dropdown-menu {
   background: rgba(255, 255, 255, 0.95);
   box-shadow: 0 14px 30px rgba(0, 0, 0, 0.12);
-  scrollbar-color: #6f56f5 #e8eaf2;
+  scrollbar-color: #E07D10 #e8eaf2;
 }
 
 .page.theme-light .fiat-dropdown-menu::-webkit-scrollbar-track {
@@ -151,10 +151,10 @@
 /* Dark mode */
 
 .page.theme-dark .fiat-dropdown-trigger {
-  background: #24273a;
+  background: #242424;
   color: #f0f2ff;
 }
 
 .page.theme-dark .fiat-dropdown-caret {
-  color: #9b86ff;
+  color: #FBB060;
 }

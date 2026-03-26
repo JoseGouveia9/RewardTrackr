@@ -1,13 +1,14 @@
 {
   "manifest_version": 3,
-  "name": "GoMining Exporter",
-  "version": "1.0.1",
-  "description": "Export your full GoMining rewards history to Excel for tax reporting and personal record keeping.",
+  "name": "RewardTrackr",
+  "version": "1.0.0",
+  "description": "Track and export your crypto mining rewards history to Excel for tax reporting and personal record keeping.",
   "permissions": ["cookies", "tabs", "scripting"],
   "host_permissions": [
     "https://app.gomining.com/*",
     "https://*.gomining.com/*",
-    "https://josegouveia9.github.io/*"
+    "https://josegouveia9.github.io/*",
+    "http://localhost/*"
   ],
   "icons": {
     "16": "logo.png",
@@ -16,7 +17,7 @@
   },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "GoMining Exporter",
+    "default_title": "RewardTrackr",
     "default_icon": {
       "16": "logo.png",
       "48": "logo.png",

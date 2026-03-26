@@ -16,7 +16,7 @@ export const AuthPanel = memo(function AuthPanel({ onSync }: AuthPanelProps) {
         <div className="auth-step">
           <span className="auth-step-num">1</span>
           <span>
-            Install the <strong>GoMining Exporter</strong> browser extension
+            Install the <strong>RewardTrackr</strong> browser extension
           </span>
         </div>
         <div className="auth-step">
@@ -39,7 +39,7 @@ export const AuthPanel = memo(function AuthPanel({ onSync }: AuthPanelProps) {
         <div className="auth-step">
           <span className="auth-step-num">4</span>
           <span>
-            Once synced, the extension shows <strong>"Welcome [name]!"</strong> and{" "}
+            Once synced, the extension shows <strong>"Hello [name] 👋"</strong> and{" "}
             <strong>"Profile synced."</strong>
           </span>
         </div>

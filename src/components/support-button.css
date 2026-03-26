@@ -72,7 +72,7 @@
 .support-modal {
   width: 100%;
   max-width: 600px;
-  background: rgba(22, 24, 40, 0.55);
+  background: rgba(28, 28, 30, 0.55);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 20px;
   padding: 22px 22px 20px;
@@ -214,7 +214,7 @@
   justify-content: center;
   gap: 8px;
   width: 100%;
-  background: #7a4df6;
+  background: #F7931A;
   border: none;
   border-radius: 12px;
   padding: 11px 16px;
@@ -223,12 +223,12 @@
   font-weight: 700;
   font-family: "Space Grotesk", sans-serif;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(122, 77, 246, 0.4);
+  box-shadow: 0 4px 14px rgba(247, 147, 26, 0.35);
   transition: background 0.14s ease;
 }
 
 .support-kofi-img-btn:hover {
-  background: #6b40ea;
+  background: #E07D10;
 }
 
 .support-kofi-icon {

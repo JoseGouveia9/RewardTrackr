@@ -48,7 +48,7 @@ export function useExport({
 
     const decoded = decodeJwt(storedToken);
     if (!decoded || (decoded.exp && Math.floor(Date.now() / 1000) >= decoded.exp)) {
-      onMessage("Session expired. Please re-sync via the GoMining Exporter extension.");
+      onMessage("Session expired. Please re-sync via the RewardTrackr extension.");
       return;
     }
 
@@ -96,9 +96,9 @@ export function useExport({
       });
       onMessage(
         isCors
-          ? "Network error: Failed to reach the GoMining API. Please try again later or report the issue [here](https://github.com/JoseGouveia9/GoMiningExporter/issues)."
+          ? "Network error: Failed to reach the GoMining API. Please try again later or report the issue [here](https://github.com/JoseGouveia9/RewardTrackr/issues)."
           : isAuth
-            ? "Session expired. Please re-sync via the GoMining Exporter extension."
+            ? "Session expired. Please re-sync via the RewardTrackr extension."
             : `Export failed: ${msg}`,
       );
     } finally {
