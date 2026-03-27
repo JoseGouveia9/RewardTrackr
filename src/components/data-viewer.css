@@ -1,0 +1,882 @@
+/* ── Trigger button ──────────────────────────────────────────── */
+
+.dv-trigger-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  padding: 7px 12px;
+  color: #4a5068;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.14s ease, border-color 0.14s ease, color 0.14s ease;
+}
+
+.dv-trigger-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.14);
+  color: #22283a;
+}
+
+.dv-trigger-btn--active {
+  background: rgba(247, 147, 26, 0.1);
+  border-color: rgba(247, 147, 26, 0.3);
+  color: #CB7010;
+}
+
+.page.theme-dark .dv-trigger-btn {
+  color: rgba(255, 255, 255, 0.65);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.page.theme-dark .dv-trigger-btn:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+.page.theme-dark .dv-trigger-btn--active {
+  background: rgba(247, 147, 26, 0.15);
+  border-color: rgba(247, 147, 26, 0.35);
+  color: #FBB060;
+}
+
+/* ── Page ────────────────────────────────────────────────────── */
+
+.dv-page {
+  display: flex;
+  flex-direction: column;
+  margin-top: 16px;
+}
+
+/* ── Header ──────────────────────────────────────────────────── */
+
+.dv-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.dv-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dv-back-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  padding: 6px 12px;
+  color: #6d7589;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  cursor: pointer;
+  transition: background 0.14s ease, color 0.14s ease;
+}
+
+.dv-back-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #22283a;
+}
+
+.page.theme-dark .dv-back-btn {
+  border-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.page.theme-dark .dv-back-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.dv-title {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #22283a;
+}
+
+.page.theme-dark .dv-title {
+  color: #f0f4ff;
+}
+
+/* ── Currency selector ───────────────────────────────────────── */
+
+.dv-currency-selector {
+  display: flex;
+  gap: 4px;
+}
+
+.dv-currency-btn {
+  padding: 5px 10px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  background: transparent;
+  color: #6d7589;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+  white-space: nowrap;
+}
+
+.dv-currency-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #22283a;
+}
+
+.dv-currency-btn--active {
+  background: #22283a;
+  border-color: #22283a;
+  color: #ffffff;
+}
+
+.page.theme-dark .dv-currency-btn {
+  color: rgba(255, 255, 255, 0.45);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.page.theme-dark .dv-currency-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.page.theme-dark .dv-currency-btn--active {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+/* ── Tabs ────────────────────────────────────────────────────── */
+
+.dv-tabs {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.dv-tab {
+  padding: 6px 14px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: #6d7589;
+  font-size: 0.82rem !important;
+  font-weight: 600 !important;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+  white-space: nowrap;
+}
+
+.dv-tab:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #22283a;
+}
+
+.dv-tab--active {
+  background: rgba(247, 147, 26, 0.1);
+  border-color: rgba(247, 147, 26, 0.25);
+  color: #CB7010;
+}
+
+.page.theme-dark .dv-tab {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.page.theme-dark .dv-tab:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.page.theme-dark .dv-tab--active {
+  background: rgba(247, 147, 26, 0.12);
+  border-color: rgba(247, 147, 26, 0.3);
+  color: #FBB060;
+}
+
+/* ── Totals row ──────────────────────────────────────────────── */
+
+
+.dv-totals-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: "Space Grotesk", sans-serif;
+  color: #CB7010 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.page.theme-dark .dv-totals-label {
+  color: #FBB060 !important;
+}
+
+.dv-total-cell-label {
+  display: block;
+  font-size: 0.68rem;
+  color: #9fa5be;
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+
+.dv-total-cell-value {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-family: "Space Grotesk", sans-serif;
+  color: #22283a;
+  font-variant-numeric: tabular-nums;
+}
+
+.page.theme-dark .dv-total-cell-value {
+  color: #f0f4ff;
+}
+
+.dv-total-cell-value--accent {
+  color: #CB7010;
+}
+
+.page.theme-dark .dv-total-cell-value--accent {
+  color: #FBB060;
+}
+
+.dv-table-data thead th {
+  padding: 10px 16px;
+  text-align: left;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: "Space Grotesk", sans-serif;
+  color: #9fa5be;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: rgba(0, 0, 0, 0.02);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  white-space: nowrap;
+}
+
+.page.theme-dark .dv-table-data thead th {
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+
+.dv-totals-label {
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  font-family: "Space Grotesk", sans-serif;
+  color: #CB7010 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.page.theme-dark .dv-totals-label {
+  color: #FBB060 !important;
+}
+
+/* ── Tables ──────────────────────────────────────────────────── */
+
+.dv-content {
+  flex: 1;
+}
+
+.dv-tables-wrap {
+  overflow-x: auto;
+}
+
+.dv-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  table-layout: fixed;
+}
+
+.dv-col-date { width: 22%; }
+.dv-col-value { width: 26%; }
+
+/* Totals table */
+.dv-table-totals {
+  border: 1px solid rgba(247, 147, 26, 0.2);
+  border-radius: 14px;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+
+.dv-table-totals td {
+  background: rgba(247, 147, 26, 0.07);
+}
+
+.page.theme-dark .dv-table-totals {
+  border-color: rgba(247, 147, 26, 0.25);
+}
+
+.page.theme-dark .dv-table-totals td {
+  background: rgba(247, 147, 26, 0.1);
+}
+
+/* Data table */
+.dv-table-data {
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.page.theme-dark .dv-table-data {
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+
+.dv-table td {
+  padding: 9px 16px;
+  color: #22283a;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  vertical-align: middle;
+}
+
+.dv-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.page.theme-dark .dv-table td {
+  color: rgba(255, 255, 255, 0.85);
+  border-bottom-color: rgba(255, 255, 255, 0.04);
+}
+
+.dv-table tbody tr:hover td {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.page.theme-dark .dv-table tbody tr:hover td {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.dv-td-date {
+  color: #6d7589 !important;
+  font-size: 0.78rem;
+}
+
+.dv-td-accent {
+  color: #CB7010 !important;
+  font-weight: 600;
+}
+
+.page.theme-dark .dv-td-accent {
+  color: #FBB060 !important;
+}
+
+/* ── Currency icons ──────────────────────────────────────────── */
+
+.dv-cell-with-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  vertical-align: middle;
+}
+
+.dv-currency-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+.dv-currency-icon-svg {
+  width: 18px;
+  height: 18px;
+}
+
+.dv-currency-icon--lg,
+.dv-currency-icon--lg.dv-currency-icon-svg {
+  width: 26px;
+  height: 26px;
+}
+
+.dv-totals-currency-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  vertical-align: middle;
+}
+
+.dv-totals-currency-cell .dv-currency-icon,
+.dv-totals-currency-cell .dv-currency-icon-svg {
+  width: 22px;
+  height: 22px;
+}
+
+.dv-totals-currency-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-family: "Space Grotesk", sans-serif;
+  color: #22283a;
+  line-height: 1;
+}
+
+.page.theme-dark .dv-totals-currency-label {
+  color: #f0f4ff;
+}
+
+
+/* ── Pagination ──────────────────────────────────────────────── */
+
+.dv-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.dv-pagination-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  background: transparent;
+  color: #6d7589;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+
+.dv-pagination-btn:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.05);
+  color: #22283a;
+}
+
+.dv-pagination-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.dv-pagination-info {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #6d7589;
+  font-variant-numeric: tabular-nums;
+  min-width: 60px;
+  text-align: center;
+}
+
+.page.theme-dark .dv-pagination-btn {
+  border-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.page.theme-dark .dv-pagination-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.page.theme-dark .dv-pagination-info {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+/* ── Column filters ──────────────────────────────────────────── */
+
+.dv-col-filter {
+  position: relative;
+  display: inline-block;
+}
+
+/* Matches thead th styling exactly */
+.dv-col-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: "Space Grotesk", sans-serif;
+  color: #9fa5be;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: color 0.12s ease;
+}
+
+.dv-col-filter-btn:hover {
+  color: #6d7589;
+}
+
+.dv-col-filter-btn--active {
+  color: #CB7010 !important;
+}
+
+.page.theme-dark .dv-col-filter-btn:hover {
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.page.theme-dark .dv-col-filter-btn--active {
+  color: #FBB060 !important;
+}
+
+/* Dropdown panel — matches app card style */
+.dv-col-filter-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 200;
+  background: #f4f5f7;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.06);
+  min-width: fit-content;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.page.theme-dark .dv-col-filter-dropdown {
+  background: #2a2c35;
+  border-color: rgba(255, 255, 255, 0.07);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Date two-column layout */
+.dv-filter-date-layout {
+  display: flex;
+  gap: 16px;
+}
+
+/* Left: presets + actions */
+.dv-filter-date-presets {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex-shrink: 0;
+  min-width: 130px;
+}
+
+.dv-filter-presets-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dv-filter-preset-btn {
+  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 7px 12px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-family: system-ui, sans-serif;
+  font-weight: 400;
+  color: #4a5068;
+  cursor: pointer;
+  text-align: left;
+  white-space: nowrap;
+  transition: background 0.1s ease, border-color 0.1s ease, color 0.1s ease;
+}
+
+.dv-filter-preset-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.18);
+  color: #22283a;
+}
+
+.dv-filter-preset-btn--active {
+  background: rgba(247, 147, 26, 0.1);
+  border-color: rgba(247, 147, 26, 0.35);
+  color: #CB7010;
+}
+
+.page.theme-dark .dv-filter-preset-btn {
+  border-color: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.page.theme-dark .dv-filter-preset-btn:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.22);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.page.theme-dark .dv-filter-preset-btn--active {
+  background: rgba(247, 147, 26, 0.15);
+  border-color: rgba(247, 147, 26, 0.4);
+  color: #FBB060;
+}
+
+/* Apply / Cancel actions */
+.dv-filter-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.dv-filter-apply-btn {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: none;
+  background: #F7931A;
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-family: "Space Grotesk", sans-serif;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.12s ease;
+}
+
+.dv-filter-apply-btn:hover {
+  opacity: 0.88;
+}
+
+.dv-filter-cancel-btn {
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: transparent;
+  color: #6d7589;
+  font-size: 0.8rem;
+  font-family: system-ui, sans-serif;
+  font-weight: 400;
+  cursor: pointer;
+  transition: background 0.1s ease, color 0.1s ease;
+}
+
+.dv-filter-cancel-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #22283a;
+}
+
+.page.theme-dark .dv-filter-cancel-btn {
+  border-color: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.page.theme-dark .dv-filter-cancel-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Right: calendar column */
+.dv-filter-cals {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Calendar month/year selects */
+.dv-cal-header {
+  display: flex;
+  gap: 6px;
+}
+
+.dv-cal-select {
+  flex: 1;
+  padding: 5px 8px;
+  border-radius: 7px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.6);
+  color: #22283a;
+  font-size: 0.78rem;
+  font-family: "Space Grotesk", sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+}
+
+.dv-cal-select:focus {
+  border-color: rgba(247, 147, 26, 0.45);
+}
+
+.page.theme-dark .dv-cal-select {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.85);
+  color-scheme: dark;
+}
+
+/* Calendar grid */
+.dv-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 30px);
+  gap: 2px;
+}
+
+.dv-cal-dow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.62rem;
+  font-weight: 600;
+  font-family: system-ui, sans-serif;
+  color: #9fa5be;
+  text-transform: uppercase;
+  height: 22px;
+}
+
+.page.theme-dark .dv-cal-dow {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.dv-cal-day {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  font-size: 0.72rem;
+  font-family: system-ui, sans-serif;
+  font-weight: 400;
+  color: #22283a;
+  cursor: pointer;
+  transition: background 0.1s ease, color 0.1s ease;
+}
+
+.dv-cal-day--out {
+  color: #b0b8cc;
+  cursor: default;
+}
+
+.dv-cal-day:hover:not(.dv-cal-day--out) {
+  background: rgba(0, 0, 0, 0.07);
+}
+
+.dv-cal-day--in-range {
+  background: rgba(247, 147, 26, 0.15);
+  border-radius: 0;
+  color: #22283a;
+}
+
+.dv-cal-day--sel {
+  background: #F7931A !important;
+  color: #ffffff !important;
+  border-radius: 6px !important;
+  font-weight: 600;
+}
+
+.page.theme-dark .dv-cal-day {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.page.theme-dark .dv-cal-day--out {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.page.theme-dark .dv-cal-day:hover:not(.dv-cal-day--out) {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.page.theme-dark .dv-cal-day--in-range {
+  background: rgba(247, 147, 26, 0.2);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.page.theme-dark .dv-cal-day--sel {
+  background: #F7931A !important;
+  color: #ffffff !important;
+}
+
+/* Checkbox list */
+.dv-filter-checks {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.dv-filter-check-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 6px;
+  border-radius: 7px;
+  font-size: 0.8rem;
+  font-family: "Space Grotesk", sans-serif;
+  font-weight: 500;
+  color: #3a445a;
+  cursor: pointer;
+  transition: background 0.1s ease;
+}
+
+.dv-filter-check-label:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.page.theme-dark .dv-filter-check-label {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.page.theme-dark .dv-filter-check-label:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.dv-filter-checkbox {
+  accent-color: #F7931A;
+  cursor: pointer;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+/* Clear button */
+.dv-filter-clear-btn {
+  align-self: flex-start;
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-family: "Space Grotesk", sans-serif;
+  color: #CB7010;
+  cursor: pointer;
+  margin-top: 2px;
+  transition: opacity 0.12s ease;
+}
+
+.dv-filter-clear-btn:hover {
+  opacity: 0.75;
+}
+
+.page.theme-dark .dv-filter-clear-btn {
+  color: #FBB060;
+}
+
+/* ── Empty state ─────────────────────────────────────────────── */
+
+.dv-empty {
+  padding: 40px 20px;
+  text-align: center;
+  color: #9fa5be;
+  font-size: 0.85rem;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-top: none;
+  border-radius: 0 0 14px 14px;
+}
+
+/* ── Mobile ──────────────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .dv-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .dv-trigger-btn span {
+    display: none;
+  }
+}

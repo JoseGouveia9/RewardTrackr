@@ -6,6 +6,7 @@ import { SupportButton } from "@/components/support-button";
 import { SheetSelector, ExportOptions, useExport, useExportConfig } from "@/features/export";
 import type { CacheState } from "@/features/export";
 import { ReferralButton } from "@/components/referral-button";
+import { DataViewerButton, DataViewer } from "@/components/data-viewer";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { useTheme } from "./theme-context";
 import logo from "/logo.webp";
@@ -124,6 +125,7 @@ function App() {
   const [cache, setCache] = useState<CacheState>(() => loadAllCacheEntries());
   const [supportOpen, setSupportOpen] = useState(false);
   const [referralOpen, setReferralOpen] = useState(false);
+  const [view, setView] = useState<"main" | "records">("main");
 
   useEffect(() => {
     if (window.innerWidth <= 640) return;
@@ -256,6 +258,10 @@ function App() {
                 onOpen={() => setSupportOpen(true)}
                 onClose={() => setSupportOpen(false)}
               />
+              <DataViewerButton
+                active={view === "records"}
+                onClick={() => setView(view === "records" ? "main" : "records")}
+              />
               {!user && (
                 <ReferralButton
                   open={referralOpen}
@@ -362,9 +368,11 @@ function App() {
           </div>
         )}
 
-        {!user ? (
+        {view === "records" && <DataViewer onClose={() => setView("main")} />}
+
+        {view === "main" && !user ? (
           <AuthPanel onSync={handleCheckSync} />
-        ) : (
+        ) : view === "main" ? (
           <>
             <ErrorBoundary>
               <section className="panel-glass">
@@ -482,7 +490,7 @@ function App() {
               </div>
             </ErrorBoundary>
           </>
-        )}
+        ) : null}
 
         {message ? <MessageBanner message={message} /> : null}
 
