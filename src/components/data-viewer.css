@@ -312,7 +312,11 @@
 }
 
 .dv-table-totals td {
-  background: rgba(247, 147, 26, 0.07);
+  background: rgba(247, 147, 26, 0.1);
+}
+
+.dv-table.dv-table-totals tbody tr:hover td {
+  background: rgba(247, 147, 26, 0.1);
 }
 
 .page.theme-dark .dv-table-totals {
@@ -320,7 +324,11 @@
 }
 
 .page.theme-dark .dv-table-totals td {
-  background: rgba(247, 147, 26, 0.1);
+  background: rgba(247, 147, 26, 0.12);
+}
+
+.page.theme-dark .dv-table.dv-table-totals tbody tr:hover td {
+  background: rgba(247, 147, 26, 0.12);
 }
 
 /* Data table */
