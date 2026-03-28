@@ -496,12 +496,42 @@ function isDateRangeActive(r: DateRange): boolean {
   return !!(r.from || r.to);
 }
 
+function getDateBounds(rows: Array<{ date: string }>): { minDate?: string; maxDate?: string } {
+  if (!rows.length) return {};
+  let min = rows[0].date.slice(0, 10);
+  let max = min;
+  for (const r of rows) {
+    const d = r.date.slice(0, 10);
+    if (d < min) min = d;
+    if (d > max) max = d;
+  }
+  return { minDate: min, maxDate: max };
+}
+
 function matchesDateRange(isoDate: string, range: DateRange): boolean {
   if (!range.from && !range.to) return true;
   const d = isoDate.slice(0, 10);
   if (range.from && d < range.from) return false;
   if (range.to && d > range.to) return false;
   return true;
+}
+
+function useFilterDropdownPos() {
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const [rect, setRect] = useState<DOMRect | null>(null);
+  function capturePos() {
+    if (btnRef.current) setRect(btnRef.current.getBoundingClientRect());
+  }
+  const style: React.CSSProperties | undefined = rect
+    ? {
+        position: "fixed",
+        top: rect.top - 8,
+        left: rect.left,
+        bottom: "auto",
+        transform: "translateY(-100%)",
+      }
+    : undefined;
+  return { btnRef, style, capturePos };
 }
 
 function ColFilterWrap({
@@ -515,6 +545,7 @@ function ColFilterWrap({
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const { btnRef, style, capturePos } = useFilterDropdownPos();
 
   useEffect(() => {
     if (!open) return;
@@ -528,9 +559,13 @@ function ColFilterWrap({
   return (
     <div ref={ref} className="dv-col-filter">
       <button
+        ref={btnRef}
         type="button"
         className={`dv-col-filter-btn${active ? " dv-col-filter-btn--active" : ""}`}
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => {
+          if (!open) capturePos();
+          setOpen((o) => !o);
+        }}
       >
         <svg
           width="10"
@@ -547,7 +582,11 @@ function ColFilterWrap({
         </svg>
         {label}
       </button>
-      {open && <div className="dv-col-filter-dropdown">{children}</div>}
+      {open && (
+        <div className="dv-col-filter-dropdown" style={style}>
+          {children}
+        </div>
+      )}
     </div>
   );
 }
@@ -602,6 +641,8 @@ function MiniCalendar({
   pending,
   picking,
   hover,
+  minDate,
+  maxDate,
   onDayClick,
   onDayHover,
 }: {
@@ -610,6 +651,8 @@ function MiniCalendar({
   pending: DateRange;
   picking: boolean;
   hover: string;
+  minDate?: string;
+  maxDate?: string;
   onDayClick: (iso: string) => void;
   onDayHover: (iso: string) => void;
 }) {
@@ -649,17 +692,25 @@ function MiniCalendar({
         </span>
       ))}
       {cells.map(({ day, iso: cellIso, out }) => {
-        const isSel = !out && (cellIso === pending.from || cellIso === pending.to);
-        const isInRange = !out && !!lo && !!hi && cellIso > lo && cellIso < hi;
+        const isDisabled =
+          out || (!!minDate && cellIso < minDate) || (!!maxDate && cellIso > maxDate);
+        const isSel = !isDisabled && (cellIso === pending.from || cellIso === pending.to);
+        const isInRange = !isDisabled && !!lo && !!hi && cellIso > lo && cellIso < hi;
+        const hasRange = !!lo && !!hi && lo !== hi;
+        const isSelStart = hasRange && !isDisabled && cellIso === lo;
+        const isSelEnd = hasRange && !isDisabled && cellIso === hi;
         return (
           <button
             key={cellIso + (out ? "o" : "")}
             type="button"
-            className={`dv-cal-day${out ? " dv-cal-day--out" : ""}${isSel ? " dv-cal-day--sel" : ""}${isInRange ? " dv-cal-day--in-range" : ""}`}
+            className={`dv-cal-day${isDisabled ? " dv-cal-day--out" : ""}${isSel ? " dv-cal-day--sel" : ""}${isSelStart ? " dv-cal-day--sel-start" : ""}${isSelEnd ? " dv-cal-day--sel-end" : ""}${isInRange ? " dv-cal-day--in-range" : ""}`}
+            disabled={isDisabled}
             onClick={() => {
-              if (!out) onDayClick(cellIso);
+              if (!isDisabled) onDayClick(cellIso);
             }}
-            onMouseEnter={() => onDayHover(cellIso)}
+            onMouseEnter={() => {
+              if (!isDisabled) onDayHover(cellIso);
+            }}
           >
             {day}
           </button>
@@ -672,19 +723,25 @@ function MiniCalendar({
 function DateRangeFilter({
   value,
   onChange,
+  minDate,
+  maxDate,
 }: {
   value: DateRange;
   onChange: (v: DateRange) => void;
+  minDate?: string;
+  maxDate?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState<DateRange>(EMPTY_DATE_RANGE);
   const [picking, setPicking] = useState(false);
   const [hover, setHover] = useState("");
   const today = new Date();
-  const [calYear, setCalYear] = useState(today.getFullYear());
-  const [calMonth, setCalMonth] = useState(today.getMonth());
+  const initDate = maxDate ? new Date(maxDate + "T00:00:00") : today;
+  const [calYear, setCalYear] = useState(initDate.getFullYear());
+  const [calMonth, setCalMonth] = useState(initDate.getMonth());
   const ref = useRef<HTMLDivElement>(null);
   const years = Array.from({ length: 8 }, (_, i) => today.getFullYear() - 5 + i);
+  const { btnRef, style: dropStyle, capturePos } = useFilterDropdownPos();
 
   useEffect(() => {
     if (!open) return;
@@ -696,6 +753,7 @@ function DateRangeFilter({
   }, [open]);
 
   function openPicker() {
+    capturePos();
     setPending({ ...value });
     setPicking(false);
     setHover("");
@@ -704,12 +762,12 @@ function DateRangeFilter({
 
   function handleApply() {
     onChange(pending);
-    setOpen(false);
     setPicking(false);
   }
 
-  function handleCancel() {
-    setOpen(false);
+  function handleClear() {
+    onChange(EMPTY_DATE_RANGE);
+    setPending(EMPTY_DATE_RANGE);
     setPicking(false);
     setHover("");
   }
@@ -739,6 +797,7 @@ function DateRangeFilter({
   return (
     <div ref={ref} className="dv-col-filter">
       <button
+        ref={btnRef}
         type="button"
         className={`dv-col-filter-btn${isDateRangeActive(value) ? " dv-col-filter-btn--active" : ""}`}
         onClick={openPicker}
@@ -760,7 +819,7 @@ function DateRangeFilter({
       </button>
 
       {open && (
-        <div className="dv-col-filter-dropdown">
+        <div className="dv-col-filter-dropdown" style={dropStyle}>
           <div className="dv-filter-date-layout">
             {/* Left: presets + actions */}
             <div className="dv-filter-date-presets">
@@ -780,8 +839,8 @@ function DateRangeFilter({
                 <button type="button" className="dv-filter-apply-btn" onClick={handleApply}>
                   Apply
                 </button>
-                <button type="button" className="dv-filter-cancel-btn" onClick={handleCancel}>
-                  Cancel
+                <button type="button" className="dv-filter-clear-btn" onClick={handleClear}>
+                  Clear
                 </button>
               </div>
             </div>
@@ -818,6 +877,8 @@ function DateRangeFilter({
                 pending={pending}
                 picking={picking}
                 hover={hover}
+                minDate={minDate}
+                maxDate={maxDate}
                 onDayClick={handleDayClick}
                 onDayHover={setHover}
               />
@@ -853,12 +914,12 @@ function TypeCheckFilter({
                 onChange(e.target.checked ? [...selected, t] : selected.filter((x) => x !== t))
               }
             />
-            {t}
+            {t.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())}
           </label>
         ))}
       </div>
       {selected.length > 0 && (
-        <button type="button" className="dv-filter-clear-btn" onClick={() => onChange([])}>
+        <button type="button" className="dv-filter-clear-link" onClick={() => onChange([])}>
           Clear
         </button>
       )}
@@ -894,6 +955,8 @@ function MiningTable({
     });
   }, [entry, currency]);
 
+  const dateBounds = useMemo(() => getDateBounds(rows), [rows]);
+
   const filteredRows = useMemo(
     () => rows.filter((r) => matchesDateRange(r.date, dateRange)),
     [rows, dateRange],
@@ -908,7 +971,7 @@ function MiningTable({
 
   const totals = useMemo(
     () =>
-      rows.reduce(
+      filteredRows.reduce(
         (acc, r) => ({
           poolReward: acc.poolReward + r.poolReward,
           maintenance: acc.maintenance + r.maintenance,
@@ -916,7 +979,7 @@ function MiningTable({
         }),
         { poolReward: 0, maintenance: 0, reward: 0 },
       ),
-    [rows],
+    [filteredRows],
   );
 
   if (!entry) {
@@ -974,7 +1037,7 @@ function MiningTable({
         <thead>
           <tr>
             <th>
-              <DateRangeFilter value={dateRange} onChange={setDateRange} />
+              <DateRangeFilter value={dateRange} onChange={setDateRange} {...dateBounds} />
             </th>
             <th>Pool Reward</th>
             <th>Maintenance</th>
@@ -1012,16 +1075,18 @@ function MiningTable({
   );
 }
 
-// ── Simple table (bounties / referrals / ambassador / withdrawals) ──
+// ── Simple table (bounties / referrals / ambassador / deposits / withdrawals) ──
+
+type SimpleView = "NATIVE" | "USD" | "FIAT";
 
 function SimpleTable({
   rewardKey,
   fiatCode,
-  fiatView,
+  simpleView,
 }: {
   rewardKey: RewardKey;
   fiatCode: string;
-  fiatView: "USD" | "FIAT";
+  simpleView: SimpleView;
 }) {
   const [page, setPage] = useState(0);
   const [dateRange, setDateRange] = useState<DateRange>(EMPTY_DATE_RANGE);
@@ -1044,6 +1109,8 @@ function SimpleTable({
     });
   }, [entry]);
 
+  const dateBounds = useMemo(() => getDateBounds(rows), [rows]);
+
   const filteredRows = useMemo(
     () => rows.filter((r) => matchesDateRange(r.date, dateRange)),
     [rows, dateRange],
@@ -1059,7 +1126,7 @@ function SimpleTable({
   // One totals row per distinct currency
   const currencyTotals = useMemo(() => {
     const map = new Map<string, { reward: number; rewardInUSD: number; rewardInFiat: number }>();
-    for (const row of rows) {
+    for (const row of filteredRows) {
       const cur = map.get(row.currency) ?? { reward: 0, rewardInUSD: 0, rewardInFiat: 0 };
       map.set(row.currency, {
         reward: cur.reward + row.reward,
@@ -1068,7 +1135,7 @@ function SimpleTable({
       });
     }
     return [...map.entries()];
-  }, [rows]);
+  }, [filteredRows]);
 
   const grandTotal = useMemo(
     () =>
@@ -1090,9 +1157,26 @@ function SimpleTable({
     );
   }
 
-  const isUsd = fiatView === "USD";
-  const fiatIcon = isUsd ? <UsdIcon /> : <FiatIcon code={fiatCode} />;
-  const totalFiat = isUsd ? grandTotal.rewardInUSD : grandTotal.rewardInFiat;
+  const isNative = simpleView === "NATIVE";
+  const rewardIcon = isNative ? null : simpleView === "USD" ? (
+    <UsdIcon />
+  ) : (
+    <FiatIcon code={fiatCode} />
+  );
+  const isSingleCurrency = currencyTotals.length === 1;
+  const valueLabel =
+    rewardKey === "deposits" ? "Deposited" : rewardKey === "withdrawals" ? "Withdrawn" : "Reward";
+
+  function rowValue(row: {
+    reward: number;
+    rewardInUSD: number;
+    rewardInFiat: number;
+    currency: string;
+  }) {
+    if (simpleView === "USD") return { v: row.rewardInUSD, c: "USD" };
+    if (simpleView === "FIAT") return { v: row.rewardInFiat, c: "FIAT" };
+    return { v: row.reward, c: row.currency };
+  }
 
   return (
     <div className="dv-tables-wrap">
@@ -1101,44 +1185,42 @@ function SimpleTable({
         <colgroup>
           <col className="dv-col-date" />
           <col className="dv-col-value" />
-          <col className="dv-col-value" />
         </colgroup>
         <tbody>
           {currencyTotals.map(([currency, totals]) => {
-            const fiatValue = isUsd ? totals.rewardInUSD : totals.rewardInFiat;
+            const { v, c } = rowValue({ ...totals, currency });
             return (
               <tr key={currency}>
                 <td>
-                  <span className="dv-totals-currency-cell">
-                    <AnyCurrencyIcon currency={currency} />
-                    <span className="dv-totals-currency-label">{currency}</span>
-                  </span>
+                  {isSingleCurrency ? (
+                    <span className="dv-totals-label">Total</span>
+                  ) : (
+                    <span className="dv-totals-currency-cell">
+                      <AnyCurrencyIcon currency={currency} />
+                      <span className="dv-totals-currency-label">{currency}</span>
+                    </span>
+                  )}
                 </td>
                 <td>
-                  <span className="dv-total-cell-label">Reward</span>
+                  <span className="dv-total-cell-label">{valueLabel}</span>
                   <span className="dv-total-cell-value dv-cell-with-icon">
-                    {fmtAny(totals.reward, currency)}
-                    <AnyCurrencyIcon currency={currency} />
-                  </span>
-                </td>
-                <td>
-                  <span className="dv-total-cell-label">Reward</span>
-                  <span className="dv-total-cell-value dv-cell-with-icon">
-                    {fmtAny(fiatValue, fiatView)}
-                    {fiatIcon}
+                    {fmtAny(v, c)}
+                    {isNative ? <AnyCurrencyIcon currency={currency} /> : rewardIcon}
                   </span>
                 </td>
               </tr>
             );
           })}
-          {currencyTotals.length > 1 && (
+          {!isSingleCurrency && !isNative && (
             <tr>
               <td className="dv-totals-label">Total</td>
-              <td />
               <td>
                 <span className="dv-total-cell-value dv-total-cell-value--accent dv-cell-with-icon">
-                  {fmtAny(totalFiat, fiatView)}
-                  {fiatIcon}
+                  {fmtAny(
+                    simpleView === "USD" ? grandTotal.rewardInUSD : grandTotal.rewardInFiat,
+                    simpleView,
+                  )}
+                  {rewardIcon}
                 </span>
               </td>
             </tr>
@@ -1151,35 +1233,29 @@ function SimpleTable({
         <colgroup>
           <col className="dv-col-date" />
           <col className="dv-col-value" />
-          <col className="dv-col-value" />
         </colgroup>
         <thead>
           <tr>
             <th>
-              <DateRangeFilter value={dateRange} onChange={setDateRange} />
+              <DateRangeFilter value={dateRange} onChange={setDateRange} {...dateBounds} />
             </th>
-            <th>Reward</th>
             <th>
-              <span className="dv-cell-with-icon">Reward {fiatIcon}</span>
+              <span className="dv-cell-with-icon">
+                {valueLabel} {rewardIcon}
+              </span>
             </th>
           </tr>
         </thead>
         <tbody>
           {pageRows.map((row, i) => {
-            const fiatValue = isUsd ? row.rewardInUSD : row.rewardInFiat;
+            const { v, c } = rowValue(row);
             return (
               <tr key={i}>
                 <td className="dv-td-date">{fmtDate(row.date)}</td>
-                <td className="dv-td-white">
+                <td className={isNative ? "dv-td-white" : ""}>
                   <span className="dv-cell-with-icon">
-                    {fmtAny(row.reward, row.currency)}
-                    <AnyCurrencyIcon currency={row.currency} />
-                  </span>
-                </td>
-                <td>
-                  <span className="dv-cell-with-icon">
-                    {fmtAny(fiatValue, fiatView)}
-                    {fiatIcon}
+                    {fmtAny(v, c)}
+                    {isNative ? <AnyCurrencyIcon currency={row.currency} /> : rewardIcon}
                   </span>
                 </td>
               </tr>
@@ -1229,6 +1305,8 @@ function SimpleEarnTable({
     });
   }, [entry]);
 
+  const dateBounds = useMemo(() => getDateBounds(rows), [rows]);
+
   const filteredRows = useMemo(
     () => rows.filter((r) => matchesDateRange(r.date, dateRange)),
     [rows, dateRange],
@@ -1246,7 +1324,7 @@ function SimpleEarnTable({
       string,
       { currency: string; reward: number; rewardInUSD: number; rewardInFiat: number }
     >();
-    for (const row of rows) {
+    for (const row of filteredRows) {
       const cur = map.get(row.asset) ?? {
         currency: row.currency,
         reward: 0,
@@ -1261,7 +1339,7 @@ function SimpleEarnTable({
       });
     }
     return [...map.entries()];
-  }, [rows]);
+  }, [filteredRows]);
 
   const earnGrandTotal = useMemo(
     () =>
@@ -1348,7 +1426,7 @@ function SimpleEarnTable({
         <thead>
           <tr>
             <th>
-              <DateRangeFilter value={dateRange} onChange={setDateRange} />
+              <DateRangeFilter value={dateRange} onChange={setDateRange} {...dateBounds} />
             </th>
             <th>Asset</th>
             <th>APR</th>
@@ -1426,6 +1504,8 @@ function TransactionsTable({
     });
   }, [entry]);
 
+  const dateBounds = useMemo(() => getDateBounds(allRows), [allRows]);
+
   const types = useMemo(
     () => [...new Set(allRows.map((r) => r.txType))].filter(Boolean).sort(),
     [allRows],
@@ -1457,6 +1537,19 @@ function TransactionsTable({
     return { v: row.reward, c: "GMT" };
   }
 
+  const total = useMemo(
+    () =>
+      filteredRows.reduce(
+        (acc, r) => ({
+          reward: acc.reward + r.reward,
+          rewardInUSD: acc.rewardInUSD + r.rewardInUSD,
+          rewardInFiat: acc.rewardInFiat + r.rewardInFiat,
+        }),
+        { reward: 0, rewardInUSD: 0, rewardInFiat: 0 },
+      ),
+    [filteredRows],
+  );
+
   if (!entry) {
     return (
       <div className="dv-empty">
@@ -1467,6 +1560,29 @@ function TransactionsTable({
 
   return (
     <div className="dv-tables-wrap">
+      {/* Totals */}
+      <table className="dv-table dv-table-totals">
+        <colgroup>
+          <col className="dv-col-date" />
+          <col style={{ width: "36%" }} />
+          <col className="dv-col-value" />
+        </colgroup>
+        <tbody>
+          <tr>
+            <td className="dv-totals-label">Total</td>
+            <td />
+            <td>
+              <span className="dv-total-cell-label">Reward</span>
+              <span className="dv-total-cell-value dv-total-cell-value--accent dv-cell-with-icon">
+                {fmtAny(rowValue(total).v, rowValue(total).c)}
+                {rewardIcon}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      {/* Data table */}
       <table className="dv-table dv-table-data">
         <colgroup>
           <col className="dv-col-date" />
@@ -1476,7 +1592,7 @@ function TransactionsTable({
         <thead>
           <tr>
             <th>
-              <DateRangeFilter value={dateRange} onChange={setDateRange} />
+              <DateRangeFilter value={dateRange} onChange={setDateRange} {...dateBounds} />
             </th>
             <th>
               <TypeCheckFilter
@@ -1547,6 +1663,8 @@ function PurchasesTable({ fiatCode, fiatView }: { fiatCode: string; fiatView: "U
     [purchasesEntry, upgradesEntry],
   );
 
+  const dateBounds = useMemo(() => getDateBounds(rows), [rows]);
+
   const types = useMemo(() => [...new Set(rows.map((r) => r.type))].filter(Boolean).sort(), [rows]);
 
   const filteredRows = useMemo(
@@ -1568,7 +1686,7 @@ function PurchasesTable({ fiatCode, fiatView }: { fiatCode: string; fiatView: "U
 
   const currencyTotals = useMemo(() => {
     const map = new Map<string, { valueUsd: number; valueFiat: number }>();
-    for (const row of rows) {
+    for (const row of filteredRows) {
       const cur = map.get(row.currency) ?? { valueUsd: 0, valueFiat: 0 };
       map.set(row.currency, {
         valueUsd: cur.valueUsd + row.valueUsd,
@@ -1576,7 +1694,7 @@ function PurchasesTable({ fiatCode, fiatView }: { fiatCode: string; fiatView: "U
       });
     }
     return [...map.entries()];
-  }, [rows]);
+  }, [filteredRows]);
 
   const grandTotal = useMemo(
     () =>
@@ -1621,7 +1739,7 @@ function PurchasesTable({ fiatCode, fiatView }: { fiatCode: string; fiatView: "U
               </td>
               <td />
               <td>
-                <span className="dv-total-cell-label">Reward</span>
+                <span className="dv-total-cell-label">Bought</span>
                 <span className="dv-total-cell-value dv-cell-with-icon">
                   {fmtAny(isUsd ? t.valueUsd : t.valueFiat, isUsd ? "USD" : "FIAT")}
                   {fiatIcon}
@@ -1657,7 +1775,7 @@ function PurchasesTable({ fiatCode, fiatView }: { fiatCode: string; fiatView: "U
         <thead>
           <tr>
             <th>
-              <DateRangeFilter value={dateRange} onChange={setDateRange} />
+              <DateRangeFilter value={dateRange} onChange={setDateRange} {...dateBounds} />
             </th>
             <th>
               <TypeCheckFilter
@@ -1668,7 +1786,7 @@ function PurchasesTable({ fiatCode, fiatView }: { fiatCode: string; fiatView: "U
               />
             </th>
             <th>
-              <span className="dv-cell-with-icon">Reward {fiatIcon}</span>
+              <span className="dv-cell-with-icon">Bought {fiatIcon}</span>
             </th>
           </tr>
         </thead>
@@ -1704,6 +1822,7 @@ export const DataViewer = memo(function DataViewer({ onClose }: DataViewerProps)
   const [fiatView, setFiatView] = useState<"USD" | "FIAT">("USD");
   const [earnView, setEarnView] = useState<EarnView>("NATIVE");
   const [txView, setTxView] = useState<TxView>("GMT");
+  const [simpleView, setSimpleView] = useState<SimpleView>("NATIVE");
   const fiatCode = useMemo(() => loadFiatCode(), []);
 
   const activeTab = ALL_TABS.find((t) => t.key === activeKey)!;
@@ -1711,6 +1830,47 @@ export const DataViewer = memo(function DataViewer({ onClose }: DataViewerProps)
   const isEarnTab = activeTab.kind === "earn";
   const isTxTab = activeTab.kind === "tx";
   const isPurchaseTab = activeTab.kind === "purchase";
+  const isSimpleTab = !isMiningTab && !isEarnTab && !isTxTab && !isPurchaseTab;
+
+  const simpleDataInfo = useMemo(() => {
+    if (!isSimpleTab) return { currencies: [] as string[], hasUsd: false, hasFiat: false };
+    const entry = loadCacheEntry(activeKey);
+    if (!entry?.records?.length)
+      return { currencies: [] as string[], hasUsd: false, hasFiat: false };
+    const set = new Set<string>();
+    let hasUsd = false;
+    let hasFiat = false;
+    for (const r of entry.records) {
+      const rec = r as Record<string, unknown>;
+      const cur = String(rec.currency ?? "");
+      if (cur) set.add(cur);
+      if (Number(rec.rewardInUSD ?? rec.rewardInUsd ?? 0) !== 0) hasUsd = true;
+      if (Number(rec.rewardInFiat ?? 0) !== 0) hasFiat = true;
+    }
+    return { currencies: [...set], hasUsd, hasFiat };
+  }, [activeKey, isSimpleTab]);
+
+  const txDataInfo = useMemo(() => {
+    if (!isTxTab) return { hasUsd: false, hasFiat: false };
+    const entry = loadCacheEntry(activeKey);
+    if (!entry?.records?.length) return { hasUsd: false, hasFiat: false };
+    let hasUsd = false;
+    let hasFiat = false;
+    for (const r of entry.records) {
+      const rec = r as Record<string, unknown>;
+      if (Number(rec.rewardInUSD ?? rec.rewardInUsd ?? 0) !== 0) hasUsd = true;
+      if (Number(rec.rewardInFiat ?? 0) !== 0) hasFiat = true;
+    }
+    return { hasUsd, hasFiat };
+  }, [activeKey, isTxTab]);
+
+  useEffect(() => {
+    if (isSimpleTab) setSimpleView("NATIVE");
+  }, [activeKey, isSimpleTab]);
+
+  useEffect(() => {
+    if (isTxTab) setTxView("GMT");
+  }, [activeKey, isTxTab]);
 
   const currencies: { key: Currency; label: string }[] = [
     { key: "BTC", label: "BTC" },
@@ -1727,14 +1887,28 @@ export const DataViewer = memo(function DataViewer({ onClose }: DataViewerProps)
 
   const txViews: { key: TxView; label: string }[] = [
     { key: "GMT", label: "GMT" },
-    { key: "USD", label: "USD" },
-    { key: "FIAT", label: fiatCode },
+    ...(txDataInfo.hasUsd ? [{ key: "USD" as TxView, label: "USD" }] : []),
+    ...(txDataInfo.hasFiat ? [{ key: "FIAT" as TxView, label: fiatCode }] : []),
   ];
+  const showTxSelector = txDataInfo.hasUsd || txDataInfo.hasFiat;
 
   const fiatViews: { key: "USD" | "FIAT"; label: string }[] = [
     { key: "USD", label: "USD" },
     { key: "FIAT", label: fiatCode },
   ];
+
+  const {
+    currencies: simpleCurrencies,
+    hasUsd: simpleHasUsd,
+    hasFiat: simpleHasFiat,
+  } = simpleDataInfo;
+  const nativeLabel = simpleCurrencies.length === 1 ? simpleCurrencies[0] : "Native";
+  const simpleViews: { key: SimpleView; label: string }[] = [
+    { key: "NATIVE", label: nativeLabel },
+    ...(simpleHasUsd ? [{ key: "USD" as SimpleView, label: "USD" }] : []),
+    ...(simpleHasFiat ? [{ key: "FIAT" as SimpleView, label: fiatCode }] : []),
+  ];
+  const showSimpleSelector = simpleHasUsd || simpleHasFiat;
 
   return (
     <div className="dv-page">
@@ -1788,7 +1962,7 @@ export const DataViewer = memo(function DataViewer({ onClose }: DataViewerProps)
               </button>
             ))}
           </div>
-        ) : isTxTab ? (
+        ) : isTxTab && showTxSelector ? (
           <div className="dv-currency-selector">
             {txViews.map((v) => (
               <button
@@ -1801,7 +1975,7 @@ export const DataViewer = memo(function DataViewer({ onClose }: DataViewerProps)
               </button>
             ))}
           </div>
-        ) : (
+        ) : isPurchaseTab ? (
           <div className="dv-currency-selector">
             {fiatViews.map((v) => (
               <button
@@ -1814,7 +1988,20 @@ export const DataViewer = memo(function DataViewer({ onClose }: DataViewerProps)
               </button>
             ))}
           </div>
-        )}
+        ) : showSimpleSelector ? (
+          <div className="dv-currency-selector">
+            {simpleViews.map((v) => (
+              <button
+                key={v.key}
+                type="button"
+                className={`dv-currency-btn${simpleView === v.key ? " dv-currency-btn--active" : ""}`}
+                onClick={() => setSimpleView(v.key)}
+              >
+                {v.label}
+              </button>
+            ))}
+          </div>
+        ) : null}
       </div>
 
       {/* Tabs */}
@@ -1861,7 +2048,7 @@ export const DataViewer = memo(function DataViewer({ onClose }: DataViewerProps)
             key={activeKey}
             rewardKey={activeKey}
             fiatCode={fiatCode}
-            fiatView={fiatView}
+            simpleView={simpleView}
           />
         )}
       </div>
