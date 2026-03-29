@@ -126,6 +126,19 @@ function App() {
   const [supportOpen, setSupportOpen] = useState(false);
   const [referralOpen, setReferralOpen] = useState(false);
   const [view, setView] = useState<"main" | "records">("main");
+  const [noticeRateLimitsDismissed, setNoticeRateLimitsDismissed] = useState(
+    () => localStorage.getItem("notice_ratelimits_dismissed") === "1",
+  );
+  const [noticeUnofficialDismissed, setNoticeUnofficialDismissed] = useState(
+    () => localStorage.getItem("notice_unofficial_dismissed") === "1",
+  );
+  const [noticeOpenSourceDismissed, setNoticeOpenSourceDismissed] = useState(
+    () => localStorage.getItem("notice_opensource_dismissed") === "1",
+  );
+  function dismissNotice(key: string, setter: (v: boolean) => void) {
+    localStorage.setItem(key, "1");
+    setter(true);
+  }
 
   useEffect(() => {
     if (window.innerWidth <= 640) return;
@@ -288,85 +301,177 @@ function App() {
           )}
         </header>
 
-        <div className="app-notice">
-          <svg
-            className="app-notice-icon"
-            xmlns="http://www.w3.org/2000/svg"
-            width="15"
-            height="15"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" />
-            <path d="M12 9v4" />
-            <path d="M12 17h.01" />
-          </svg>
-          <span>
-            This app currently runs on free-tier services (Cloudflare, CoinGecko, FX Rates API). If
-            a request fails due to rate limits, wait a moment and try again, or try again tomorrow.
-          </span>
-        </div>
-
-        <div className="app-notice app-notice-unofficial">
-          <svg
-            className="app-notice-icon"
-            xmlns="http://www.w3.org/2000/svg"
-            width="15"
-            height="15"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" />
-            <path d="M12 9v4" />
-            <path d="M12 17h.01" />
-          </svg>
-          <span>
-            This is an unofficial tool and is not affiliated with, endorsed by, or associated with
-            the GoMining team.
-          </span>
-        </div>
-
-        {!user && (
-          <div className="app-notice app-notice-opensource">
-            <svg
-              className="app-notice-icon"
-              xmlns="http://www.w3.org/2000/svg"
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
+        <AnimatePresence>
+          {!noticeRateLimitsDismissed && (
+            <motion.div
+              className="app-notice"
+              initial={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.85 }}
+              transition={{ duration: 0.2, ease: "easeIn" }}
             >
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-            </svg>
-            <span>
-              This app and extension were built with security and transparency in mind. The full
-              source code is open source and accessible to anyone who wants to inspect it before
-              using it.{" "}
-              <a
-                href="https://github.com/JoseGouveia9/RewardTrackr"
-                target="_blank"
-                rel="noopener noreferrer"
+              <svg
+                className="app-notice-icon"
+                xmlns="http://www.w3.org/2000/svg"
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
               >
-                Check it here.
-              </a>
-            </span>
-          </div>
-        )}
+                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" />
+                <path d="M12 9v4" />
+                <path d="M12 17h.01" />
+              </svg>
+              <span>
+                This app currently runs on free-tier services (Cloudflare, CoinGecko, FX Rates API).
+                If a request fails due to rate limits, wait a moment and try again, or try again
+                tomorrow.
+              </span>
+              <button
+                type="button"
+                className="app-notice-dismiss"
+                aria-label="Dismiss"
+                onClick={() =>
+                  dismissNotice("notice_ratelimits_dismissed", setNoticeRateLimitsDismissed)
+                }
+              >
+                <svg
+                  width="13"
+                  height="13"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  aria-hidden="true"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {!noticeUnofficialDismissed && (
+            <motion.div
+              className="app-notice app-notice-unofficial"
+              initial={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.85 }}
+              transition={{ duration: 0.2, ease: "easeIn" }}
+            >
+              <svg
+                className="app-notice-icon"
+                xmlns="http://www.w3.org/2000/svg"
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" />
+                <path d="M12 9v4" />
+                <path d="M12 17h.01" />
+              </svg>
+              <span>
+                This is an unofficial tool and is not affiliated with, endorsed by, or associated
+                with the GoMining team.
+              </span>
+              <button
+                type="button"
+                className="app-notice-dismiss"
+                aria-label="Dismiss"
+                onClick={() =>
+                  dismissNotice("notice_unofficial_dismissed", setNoticeUnofficialDismissed)
+                }
+              >
+                <svg
+                  width="13"
+                  height="13"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  aria-hidden="true"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {!user && !noticeOpenSourceDismissed && (
+            <motion.div
+              className="app-notice app-notice-opensource"
+              initial={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.85 }}
+              transition={{ duration: 0.2, ease: "easeIn" }}
+            >
+              <svg
+                className="app-notice-icon"
+                xmlns="http://www.w3.org/2000/svg"
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
+              <span>
+                This app and extension were built with security and transparency in mind. The full
+                source code is open source and accessible to anyone who wants to inspect it before
+                using it.{" "}
+                <a
+                  href="https://github.com/JoseGouveia9/RewardTrackr"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Check it here.
+                </a>
+              </span>
+              <button
+                type="button"
+                className="app-notice-dismiss"
+                aria-label="Dismiss"
+                onClick={() =>
+                  dismissNotice("notice_opensource_dismissed", setNoticeOpenSourceDismissed)
+                }
+              >
+                <svg
+                  width="13"
+                  height="13"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  aria-hidden="true"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {view === "records" && <DataViewer onClose={() => setView("main")} />}
 

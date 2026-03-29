@@ -366,7 +366,21 @@ function loadFiatCode(): string {
 // Mining tabs: decimals driven by selector currency
 function fmt(value: number, currency: Currency): string {
   if (!Number.isFinite(value)) return "—";
-  const decimals = currency === "BTC" ? 8 : currency === "GMT" ? 4 : 2;
+  if (currency === "BTC") {
+    return new Intl.NumberFormat(undefined, {
+      minimumFractionDigits: 8,
+      maximumFractionDigits: 8,
+    }).format(value);
+  }
+  // GMT, USD, FIAT: adaptive like fmtAny
+  let decimals = 2;
+  while (
+    decimals < 18 &&
+    value !== 0 &&
+    Math.floor(Math.abs(value) * Math.pow(10, decimals)) === 0
+  ) {
+    decimals++;
+  }
   return new Intl.NumberFormat(undefined, {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
@@ -410,6 +424,20 @@ function fmtDate(iso: string): string {
   }
 }
 
+function fmtDateTime(iso: string): string {
+  try {
+    return new Date(iso).toLocaleString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch {
+    return iso;
+  }
+}
+
 function getField(record: Record<string, unknown>, currency: Currency, base: string): number {
   const map: Record<Currency, string> = {
     BTC: base,
@@ -446,18 +474,7 @@ function Pagination({
         disabled={page === 0}
         aria-label="Previous page"
       >
-        <svg
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M15 18l-6-6 6-6" />
-        </svg>
+        ‹
       </button>
       <span className="dv-pagination-info">
         {page + 1} / {pageCount}
@@ -469,18 +486,7 @@ function Pagination({
         disabled={page >= pageCount - 1}
         aria-label="Next page"
       >
-        <svg
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M9 18l6-6-6-6" />
-        </svg>
+        ›
       </button>
     </div>
   );
@@ -516,12 +522,20 @@ function matchesDateRange(isoDate: string, range: DateRange): boolean {
   return true;
 }
 
-function useFilterDropdownPos() {
+function useFilterDropdownPos(open: boolean) {
   const btnRef = useRef<HTMLButtonElement>(null);
   const [rect, setRect] = useState<DOMRect | null>(null);
   function capturePos() {
     if (btnRef.current) setRect(btnRef.current.getBoundingClientRect());
   }
+  useEffect(() => {
+    if (!open) return;
+    function update() {
+      if (btnRef.current) setRect(btnRef.current.getBoundingClientRect());
+    }
+    window.addEventListener("scroll", update, true);
+    return () => window.removeEventListener("scroll", update, true);
+  }, [open]);
   const style: React.CSSProperties | undefined = rect
     ? {
         position: "fixed",
@@ -545,7 +559,7 @@ function ColFilterWrap({
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const { btnRef, style, capturePos } = useFilterDropdownPos();
+  const { btnRef, style, capturePos } = useFilterDropdownPos(open);
 
   useEffect(() => {
     if (!open) return;
@@ -741,7 +755,7 @@ function DateRangeFilter({
   const [calMonth, setCalMonth] = useState(initDate.getMonth());
   const ref = useRef<HTMLDivElement>(null);
   const years = Array.from({ length: 8 }, (_, i) => today.getFullYear() - 5 + i);
-  const { btnRef, style: dropStyle, capturePos } = useFilterDropdownPos();
+  const { btnRef, style: dropStyle, capturePos } = useFilterDropdownPos(open);
 
   useEffect(() => {
     if (!open) return;
@@ -951,6 +965,8 @@ function MiningTable({
         poolReward: getField(rec, currency, "poolReward"),
         maintenance: getField(rec, currency, "maintenance"),
         reward: getField(rec, currency, "reward"),
+        totalPower: Number(rec.totalPower ?? 0),
+        discount: Number(rec.discount ?? 0),
       };
     });
   }, [entry, currency]);
@@ -998,10 +1014,13 @@ function MiningTable({
           <col className="dv-col-value" />
           <col className="dv-col-value" />
           <col className="dv-col-value" />
+          <col className="dv-col-value" />
+          <col className="dv-col-value" />
         </colgroup>
         <tbody>
           <tr>
             <td className="dv-totals-label">Total</td>
+            <td />
             <td>
               <span className="dv-total-cell-label">Pool Reward</span>
               <span className="dv-total-cell-value dv-cell-with-icon">
@@ -1016,6 +1035,7 @@ function MiningTable({
                 <MiningCurrencyIcon currency={currency} fiatCode={fiatCode} />
               </span>
             </td>
+            <td />
             <td>
               <span className="dv-total-cell-label">Reward</span>
               <span className="dv-total-cell-value dv-total-cell-value--accent dv-cell-with-icon">
@@ -1033,14 +1053,18 @@ function MiningTable({
           <col className="dv-col-value" />
           <col className="dv-col-value" />
           <col className="dv-col-value" />
+          <col className="dv-col-value" />
+          <col className="dv-col-value" />
         </colgroup>
         <thead>
           <tr>
             <th>
               <DateRangeFilter value={dateRange} onChange={setDateRange} {...dateBounds} />
             </th>
+            <th>Power</th>
             <th>Pool Reward</th>
             <th>Maintenance</th>
+            <th>Discount</th>
             <th>Reward</th>
           </tr>
         </thead>
@@ -1048,6 +1072,13 @@ function MiningTable({
           {pageRows.map((row, i) => (
             <tr key={i}>
               <td className="dv-td-date">{fmtDate(row.date)}</td>
+              <td>
+                {row.totalPower > 0
+                  ? new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(
+                      row.totalPower,
+                    ) + " TH"
+                  : "—"}
+              </td>
               <td>
                 <span className="dv-cell-with-icon">
                   {fmt(row.poolReward, currency)}
@@ -1060,6 +1091,7 @@ function MiningTable({
                   <MiningCurrencyIcon currency={currency} fiatCode={fiatCode} />
                 </span>
               </td>
+              <td>{row.discount > 0 ? (row.discount * 100).toFixed(2) + "%" : "—"}</td>
               <td className="dv-td-accent">
                 <span className="dv-cell-with-icon">
                   {fmt(row.reward, currency)}
@@ -1083,13 +1115,16 @@ function SimpleTable({
   rewardKey,
   fiatCode,
   simpleView,
+  groupByDay,
 }: {
   rewardKey: RewardKey;
   fiatCode: string;
   simpleView: SimpleView;
+  groupByDay: boolean;
 }) {
   const [page, setPage] = useState(0);
   const [dateRange, setDateRange] = useState<DateRange>(EMPTY_DATE_RANGE);
+  const [hiddenCurrencies, setHiddenCurrencies] = useState<Set<string>>(new Set());
   const entry = useMemo(() => loadCacheEntry(rewardKey), [rewardKey]);
 
   const rows = useMemo(() => {
@@ -1116,11 +1151,36 @@ function SimpleTable({
     [rows, dateRange],
   );
 
-  useEffect(() => setPage(0), [dateRange]);
+  useEffect(() => setPage(0), [dateRange, hiddenCurrencies, groupByDay]);
+
+  const displayRows = useMemo(
+    () => filteredRows.filter((r) => !hiddenCurrencies.has(r.currency)),
+    [filteredRows, hiddenCurrencies],
+  );
+
+  const finalRows = useMemo(() => {
+    if (!groupByDay) return displayRows;
+    const map = new Map<string, (typeof displayRows)[0]>();
+    for (const row of displayRows) {
+      const key = row.date.slice(0, 10) + "|" + row.currency;
+      const ex = map.get(key);
+      if (ex) {
+        map.set(key, {
+          ...ex,
+          reward: ex.reward + row.reward,
+          rewardInUSD: ex.rewardInUSD + row.rewardInUSD,
+          rewardInFiat: ex.rewardInFiat + row.rewardInFiat,
+        });
+      } else {
+        map.set(key, { ...row, date: row.date.slice(0, 10) });
+      }
+    }
+    return [...map.values()];
+  }, [displayRows, groupByDay]);
 
   const pageRows = useMemo(
-    () => filteredRows.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE),
-    [filteredRows, page],
+    () => finalRows.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE),
+    [finalRows, page],
   );
 
   // One totals row per distinct currency
@@ -1189,8 +1249,22 @@ function SimpleTable({
         <tbody>
           {currencyTotals.map(([currency, totals]) => {
             const { v, c } = rowValue({ ...totals, currency });
+            const hidden = hiddenCurrencies.has(currency);
+            const toggle = isSingleCurrency
+              ? undefined
+              : () =>
+                  setHiddenCurrencies((prev) => {
+                    const next = new Set(prev);
+                    if (next.has(currency)) next.delete(currency);
+                    else next.add(currency);
+                    return next;
+                  });
             return (
-              <tr key={currency}>
+              <tr
+                key={currency}
+                className={`${!isSingleCurrency ? "dv-totals-row--clickable" : ""}${hidden ? " dv-totals-row--hidden" : ""}`}
+                onClick={toggle}
+              >
                 <td>
                   {isSingleCurrency ? (
                     <span className="dv-totals-label">Total</span>
@@ -1251,7 +1325,9 @@ function SimpleTable({
             const { v, c } = rowValue(row);
             return (
               <tr key={i}>
-                <td className="dv-td-date">{fmtDate(row.date)}</td>
+                <td className="dv-td-date">
+                  {groupByDay ? fmtDate(row.date) : fmtDateTime(row.date)}
+                </td>
                 <td className={isNative ? "dv-td-white" : ""}>
                   <span className="dv-cell-with-icon">
                     {fmtAny(v, c)}
@@ -1263,7 +1339,7 @@ function SimpleTable({
           })}
         </tbody>
       </table>
-      <Pagination page={page} total={filteredRows.length} onChange={setPage} />
+      <Pagination page={page} total={finalRows.length} onChange={setPage} />
     </div>
   );
 }
@@ -1276,10 +1352,12 @@ function SimpleEarnTable({
   rewardKey,
   fiatCode,
   earnView,
+  groupByDay,
 }: {
   rewardKey: RewardKey;
   fiatCode: string;
   earnView: EarnView;
+  groupByDay: boolean;
 }) {
   const [page, setPage] = useState(0);
   const [dateRange, setDateRange] = useState<DateRange>(EMPTY_DATE_RANGE);
@@ -1312,11 +1390,33 @@ function SimpleEarnTable({
     [rows, dateRange],
   );
 
-  useEffect(() => setPage(0), [dateRange]);
+  useEffect(() => setPage(0), [dateRange, groupByDay]);
+
+  const displayRows = filteredRows;
+
+  const finalRows = useMemo(() => {
+    if (!groupByDay) return displayRows;
+    const map = new Map<string, (typeof displayRows)[0]>();
+    for (const row of displayRows) {
+      const key = row.date.slice(0, 10) + "|" + row.asset;
+      const ex = map.get(key);
+      if (ex) {
+        map.set(key, {
+          ...ex,
+          reward: ex.reward + row.reward,
+          rewardInUSD: ex.rewardInUSD + row.rewardInUSD,
+          rewardInFiat: ex.rewardInFiat + row.rewardInFiat,
+        });
+      } else {
+        map.set(key, { ...row, date: row.date.slice(0, 10) });
+      }
+    }
+    return [...map.values()];
+  }, [displayRows, groupByDay]);
 
   const pageRows = useMemo(
-    () => filteredRows.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE),
-    [filteredRows, page],
+    () => finalRows.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE),
+    [finalRows, page],
   );
 
   const assetTotals = useMemo(() => {
@@ -1445,7 +1545,9 @@ function SimpleEarnTable({
             );
             return (
               <tr key={i}>
-                <td className="dv-td-date">{fmtDate(row.date)}</td>
+                <td className="dv-td-date">
+                  {groupByDay ? fmtDate(row.date) : fmtDateTime(row.date)}
+                </td>
                 <td>
                   <span className="dv-cell-with-icon">
                     <AnyCurrencyIcon currency={row.asset} />
@@ -1464,7 +1566,7 @@ function SimpleEarnTable({
           })}
         </tbody>
       </table>
-      <Pagination page={page} total={filteredRows.length} onChange={setPage} />
+      <Pagination page={page} total={finalRows.length} onChange={setPage} />
     </div>
   );
 }
@@ -1477,10 +1579,12 @@ function TransactionsTable({
   rewardKey,
   fiatCode,
   txView,
+  groupByDay,
 }: {
   rewardKey: RewardKey;
   fiatCode: string;
   txView: TxView;
+  groupByDay: boolean;
 }) {
   const [page, setPage] = useState(0);
   const [dateRange, setDateRange] = useState<DateRange>(EMPTY_DATE_RANGE);
@@ -1521,11 +1625,31 @@ function TransactionsTable({
     [allRows, dateRange, selectedTypes],
   );
 
-  useEffect(() => setPage(0), [dateRange, selectedTypes]);
+  useEffect(() => setPage(0), [dateRange, selectedTypes, groupByDay]);
+
+  const finalRows = useMemo(() => {
+    if (!groupByDay) return filteredRows;
+    const map = new Map<string, (typeof filteredRows)[0]>();
+    for (const row of filteredRows) {
+      const key = row.date.slice(0, 10) + "|" + row.txType;
+      const ex = map.get(key);
+      if (ex) {
+        map.set(key, {
+          ...ex,
+          reward: ex.reward + row.reward,
+          rewardInUSD: ex.rewardInUSD + row.rewardInUSD,
+          rewardInFiat: ex.rewardInFiat + row.rewardInFiat,
+        });
+      } else {
+        map.set(key, { ...row, date: row.date.slice(0, 10) });
+      }
+    }
+    return [...map.values()];
+  }, [filteredRows, groupByDay]);
 
   const pageRows = useMemo(
-    () => filteredRows.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE),
-    [filteredRows, page],
+    () => finalRows.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE),
+    [finalRows, page],
   );
 
   const rewardIcon =
@@ -1612,7 +1736,9 @@ function TransactionsTable({
             const { v, c } = rowValue(row);
             return (
               <tr key={i}>
-                <td className="dv-td-date">{fmtDate(row.date)}</td>
+                <td className="dv-td-date">
+                  {groupByDay ? fmtDate(row.date) : fmtDateTime(row.date)}
+                </td>
                 <td>{row.txType}</td>
                 <td className="dv-td-accent">
                   <span className="dv-cell-with-icon">
@@ -1625,17 +1751,28 @@ function TransactionsTable({
           })}
         </tbody>
       </table>
-      <Pagination page={page} total={filteredRows.length} onChange={setPage} />
+      <Pagination page={page} total={finalRows.length} onChange={setPage} />
     </div>
   );
 }
 
 // ── Purchases / Upgrades table ────────────────────────────────
 
-function PurchasesTable({ fiatCode, fiatView }: { fiatCode: string; fiatView: "USD" | "FIAT" }) {
+type PurchaseView = "NATIVE" | "USD" | "FIAT";
+
+function PurchasesTable({
+  fiatCode,
+  purchaseView,
+  groupByDay,
+}: {
+  fiatCode: string;
+  purchaseView: PurchaseView;
+  groupByDay: boolean;
+}) {
   const [page, setPage] = useState(0);
   const [dateRange, setDateRange] = useState<DateRange>(EMPTY_DATE_RANGE);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  const [hiddenCurrencies, setHiddenCurrencies] = useState<Set<string>>(new Set());
   const purchasesEntry = useMemo(() => loadCacheEntry("purchases"), []);
   const upgradesEntry = useMemo(() => loadCacheEntry("upgrades"), []);
 
@@ -1645,10 +1782,12 @@ function PurchasesTable({ fiatCode, fiatView }: { fiatCode: string; fiatView: "U
       const rec = r as Record<string, unknown>;
       const valueUsd = Number(rec.valueUsd ?? 0);
       const valueFiat = Number(rec.valueFiat ?? 0);
+      const reward = rec.reward != null ? Number(rec.reward) : undefined;
       return {
         date: String(rec.createdAt ?? ""),
         type: String(rec.type ?? ""),
         currency: String(rec.currency ?? ""),
+        reward: reward != null && Number.isFinite(reward) ? reward : undefined,
         valueUsd: Number.isFinite(valueUsd) ? valueUsd : 0,
         valueFiat: Number.isFinite(valueFiat) ? valueFiat : 0,
       };
@@ -1677,18 +1816,47 @@ function PurchasesTable({ fiatCode, fiatView }: { fiatCode: string; fiatView: "U
     [rows, dateRange, selectedTypes],
   );
 
-  useEffect(() => setPage(0), [dateRange, selectedTypes]);
+  useEffect(() => setPage(0), [dateRange, selectedTypes, hiddenCurrencies, groupByDay]);
+
+  const displayRows = useMemo(
+    () => filteredRows.filter((r) => !hiddenCurrencies.has(r.currency)),
+    [filteredRows, hiddenCurrencies],
+  );
+
+  const finalRows = useMemo(() => {
+    if (!groupByDay) return displayRows;
+    const map = new Map<string, (typeof displayRows)[0]>();
+    for (const row of displayRows) {
+      const key = `${row.date.slice(0, 10)}|${row.currency}|${row.type}`;
+      const existing = map.get(key);
+      if (existing) {
+        map.set(key, {
+          ...existing,
+          reward:
+            existing.reward != null && row.reward != null
+              ? existing.reward + row.reward
+              : (existing.reward ?? row.reward),
+          valueUsd: existing.valueUsd + row.valueUsd,
+          valueFiat: existing.valueFiat + row.valueFiat,
+        });
+      } else {
+        map.set(key, { ...row, date: row.date.slice(0, 10) });
+      }
+    }
+    return [...map.values()];
+  }, [displayRows, groupByDay]);
 
   const pageRows = useMemo(
-    () => filteredRows.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE),
-    [filteredRows, page],
+    () => finalRows.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE),
+    [finalRows, page],
   );
 
   const currencyTotals = useMemo(() => {
-    const map = new Map<string, { valueUsd: number; valueFiat: number }>();
+    const map = new Map<string, { nativeAmount: number; valueUsd: number; valueFiat: number }>();
     for (const row of filteredRows) {
-      const cur = map.get(row.currency) ?? { valueUsd: 0, valueFiat: 0 };
+      const cur = map.get(row.currency) ?? { nativeAmount: 0, valueUsd: 0, valueFiat: 0 };
       map.set(row.currency, {
+        nativeAmount: cur.nativeAmount + (row.reward ?? row.valueUsd),
         valueUsd: cur.valueUsd + row.valueUsd,
         valueFiat: cur.valueFiat + row.valueFiat,
       });
@@ -1708,8 +1876,22 @@ function PurchasesTable({ fiatCode, fiatView }: { fiatCode: string; fiatView: "U
     [currencyTotals],
   );
 
-  const isUsd = fiatView === "USD";
-  const fiatIcon = isUsd ? <UsdIcon /> : <FiatIcon code={fiatCode} />;
+  const isSingleCurrency = currencyTotals.length === 1;
+  const isNative = purchaseView === "NATIVE";
+  const boughtIcon = isNative ? null : purchaseView === "USD" ? (
+    <UsdIcon />
+  ) : (
+    <FiatIcon code={fiatCode} />
+  );
+
+  function totalValue(
+    t: { nativeAmount: number; valueUsd: number; valueFiat: number },
+    currency: string,
+  ) {
+    if (purchaseView === "USD") return { v: t.valueUsd, c: "USD" as string };
+    if (purchaseView === "FIAT") return { v: t.valueFiat, c: "FIAT" as string };
+    return { v: t.nativeAmount, c: currency };
+  }
 
   if (!purchasesEntry && !upgradesEntry) {
     return (
@@ -1729,35 +1911,56 @@ function PurchasesTable({ fiatCode, fiatView }: { fiatCode: string; fiatView: "U
           <col className="dv-col-value" />
         </colgroup>
         <tbody>
-          {currencyTotals.map(([currency, t]) => (
-            <tr key={currency}>
-              <td>
-                <span className="dv-totals-currency-cell">
-                  <AnyCurrencyIcon currency={currency} />
-                  <span className="dv-totals-currency-label">{currency}</span>
-                </span>
-              </td>
-              <td />
-              <td>
-                <span className="dv-total-cell-label">Bought</span>
-                <span className="dv-total-cell-value dv-cell-with-icon">
-                  {fmtAny(isUsd ? t.valueUsd : t.valueFiat, isUsd ? "USD" : "FIAT")}
-                  {fiatIcon}
-                </span>
-              </td>
-            </tr>
-          ))}
-          {currencyTotals.length > 1 && (
+          {currencyTotals.map(([currency, t]) => {
+            const { v, c } = totalValue(t, currency);
+            const hidden = hiddenCurrencies.has(currency);
+            const toggle = isSingleCurrency
+              ? undefined
+              : () =>
+                  setHiddenCurrencies((prev) => {
+                    const next = new Set(prev);
+                    if (next.has(currency)) next.delete(currency);
+                    else next.add(currency);
+                    return next;
+                  });
+            return (
+              <tr
+                key={currency}
+                className={`${!isSingleCurrency ? "dv-totals-row--clickable" : ""}${hidden ? " dv-totals-row--hidden" : ""}`}
+                onClick={toggle}
+              >
+                <td>
+                  {isSingleCurrency ? (
+                    <span className="dv-totals-label">Total</span>
+                  ) : (
+                    <span className="dv-totals-currency-cell">
+                      <AnyCurrencyIcon currency={currency} />
+                      <span className="dv-totals-currency-label">{currency}</span>
+                    </span>
+                  )}
+                </td>
+                <td />
+                <td>
+                  <span className="dv-total-cell-label">Bought</span>
+                  <span className="dv-total-cell-value dv-cell-with-icon">
+                    {fmtAny(v, c)}
+                    {isNative ? <AnyCurrencyIcon currency={currency} /> : boughtIcon}
+                  </span>
+                </td>
+              </tr>
+            );
+          })}
+          {!isSingleCurrency && !isNative && (
             <tr>
               <td className="dv-totals-label">Total</td>
               <td />
               <td>
                 <span className="dv-total-cell-value dv-total-cell-value--accent dv-cell-with-icon">
                   {fmtAny(
-                    isUsd ? grandTotal.valueUsd : grandTotal.valueFiat,
-                    isUsd ? "USD" : "FIAT",
+                    purchaseView === "USD" ? grandTotal.valueUsd : grandTotal.valueFiat,
+                    purchaseView,
                   )}
-                  {fiatIcon}
+                  {boughtIcon}
                 </span>
               </td>
             </tr>
@@ -1786,26 +1989,53 @@ function PurchasesTable({ fiatCode, fiatView }: { fiatCode: string; fiatView: "U
               />
             </th>
             <th>
-              <span className="dv-cell-with-icon">Bought {fiatIcon}</span>
+              {purchaseView === "NATIVE" && "Bought"}
+              {purchaseView === "USD" && (
+                <span className="dv-cell-with-icon">
+                  Bought <UsdIcon />
+                </span>
+              )}
+              {purchaseView === "FIAT" && (
+                <span className="dv-cell-with-icon">
+                  Bought <FiatIcon code={fiatCode} />
+                </span>
+              )}
             </th>
           </tr>
         </thead>
         <tbody>
-          {pageRows.map((row, i) => (
-            <tr key={i}>
-              <td className="dv-td-date">{fmtDate(row.date)}</td>
-              <td>{row.type}</td>
-              <td className="dv-td-accent">
-                <span className="dv-cell-with-icon">
-                  {fmtAny(isUsd ? row.valueUsd : row.valueFiat, isUsd ? "USD" : "FIAT")}
-                  {fiatIcon}
-                </span>
-              </td>
-            </tr>
-          ))}
+          {pageRows.map((row, i) => {
+            const boughtVal =
+              purchaseView === "NATIVE"
+                ? (row.reward ?? row.valueUsd)
+                : purchaseView === "USD"
+                  ? row.valueUsd
+                  : row.valueFiat;
+            const boughtCur = purchaseView === "NATIVE" ? row.currency : purchaseView;
+            return (
+              <tr key={i}>
+                <td className="dv-td-date">
+                  {groupByDay ? fmtDate(row.date) : fmtDateTime(row.date)}
+                </td>
+                <td>{row.type}</td>
+                <td className="dv-td-accent">
+                  <span className="dv-cell-with-icon">
+                    {fmtAny(boughtVal, boughtCur)}
+                    {purchaseView === "NATIVE" ? (
+                      <AnyCurrencyIcon currency={row.currency} />
+                    ) : purchaseView === "USD" ? (
+                      <UsdIcon />
+                    ) : (
+                      <FiatIcon code={fiatCode} />
+                    )}
+                  </span>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
-      <Pagination page={page} total={filteredRows.length} onChange={setPage} />
+      <Pagination page={page} total={finalRows.length} onChange={setPage} />
     </div>
   );
 }
@@ -1819,10 +2049,8 @@ interface DataViewerProps {
 export const DataViewer = memo(function DataViewer({ onClose }: DataViewerProps) {
   const [activeKey, setActiveKey] = useState<RewardKey>("solo-mining");
   const [currency, setCurrency] = useState<Currency>("BTC");
-  const [fiatView, setFiatView] = useState<"USD" | "FIAT">("USD");
-  const [earnView, setEarnView] = useState<EarnView>("NATIVE");
-  const [txView, setTxView] = useState<TxView>("GMT");
-  const [simpleView, setSimpleView] = useState<SimpleView>("NATIVE");
+  const [sharedView, setSharedView] = useState<"NATIVE" | "USD" | "FIAT">("NATIVE");
+  const [groupByDay, setGroupByDay] = useState(false);
   const fiatCode = useMemo(() => loadFiatCode(), []);
 
   const activeTab = ALL_TABS.find((t) => t.key === activeKey)!;
@@ -1864,13 +2092,31 @@ export const DataViewer = memo(function DataViewer({ onClose }: DataViewerProps)
     return { hasUsd, hasFiat };
   }, [activeKey, isTxTab]);
 
-  useEffect(() => {
-    if (isSimpleTab) setSimpleView("NATIVE");
-  }, [activeKey, isSimpleTab]);
+  // Syncs both mining currency and shared view together so USD/FIAT stays locked across all tabs
+  const setView = (v: "NATIVE" | "USD" | "FIAT") => {
+    setSharedView(v);
+    if (v === "USD") setCurrency("USD");
+    else if (v === "FIAT") setCurrency("FIAT");
+    // NATIVE: leave mining currency as-is (BTC or GMT)
+  };
 
-  useEffect(() => {
-    if (isTxTab) setTxView("GMT");
-  }, [activeKey, isTxTab]);
+  // Derive per-tab effective views from sharedView, falling back to first option if unavailable
+  const effectiveEarnView: EarnView = sharedView;
+  const effectiveTxView: TxView =
+    sharedView === "USD" && !txDataInfo.hasUsd
+      ? "GMT"
+      : sharedView === "FIAT" && !txDataInfo.hasFiat
+        ? "GMT"
+        : sharedView === "NATIVE"
+          ? "GMT"
+          : sharedView;
+  const effectiveSimpleView: SimpleView =
+    sharedView === "USD" && !simpleDataInfo.hasUsd
+      ? "NATIVE"
+      : sharedView === "FIAT" && !simpleDataInfo.hasFiat
+        ? "NATIVE"
+        : sharedView;
+  const effectivePurchaseView: PurchaseView = sharedView;
 
   const currencies: { key: Currency; label: string }[] = [
     { key: "BTC", label: "BTC" },
@@ -1892,11 +2138,6 @@ export const DataViewer = memo(function DataViewer({ onClose }: DataViewerProps)
   ];
   const showTxSelector = txDataInfo.hasUsd || txDataInfo.hasFiat;
 
-  const fiatViews: { key: "USD" | "FIAT"; label: string }[] = [
-    { key: "USD", label: "USD" },
-    { key: "FIAT", label: fiatCode },
-  ];
-
   const {
     currencies: simpleCurrencies,
     hasUsd: simpleHasUsd,
@@ -1909,6 +2150,12 @@ export const DataViewer = memo(function DataViewer({ onClose }: DataViewerProps)
     ...(simpleHasFiat ? [{ key: "FIAT" as SimpleView, label: fiatCode }] : []),
   ];
   const showSimpleSelector = simpleHasUsd || simpleHasFiat;
+
+  const purchaseViews: { key: PurchaseView; label: string }[] = [
+    { key: "NATIVE", label: "Native" },
+    { key: "USD", label: "USD" },
+    { key: "FIAT", label: fiatCode },
+  ];
 
   return (
     <div className="dv-page">
@@ -1935,73 +2182,106 @@ export const DataViewer = memo(function DataViewer({ onClose }: DataViewerProps)
           <span className="dv-title">Records</span>
         </div>
 
-        {/* Currency selector */}
-        {isMiningTab ? (
-          <div className="dv-currency-selector">
-            {currencies.map((c) => (
-              <button
-                key={c.key}
-                type="button"
-                className={`dv-currency-btn${currency === c.key ? " dv-currency-btn--active" : ""}`}
-                onClick={() => setCurrency(c.key)}
+        {/* Toolbar: group button + currency selector */}
+        <div className="dv-toolbar">
+          {!isMiningTab && (
+            <button
+              type="button"
+              className={`dv-group-btn${groupByDay ? " dv-group-btn--active" : ""}`}
+              onClick={() => setGroupByDay((v) => !v)}
+              title="Group by day"
+              aria-pressed={groupByDay}
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
               >
-                {c.label}
-              </button>
-            ))}
-          </div>
-        ) : isEarnTab ? (
-          <div className="dv-currency-selector">
-            {earnViews.map((v) => (
-              <button
-                key={v.key}
-                type="button"
-                className={`dv-currency-btn${earnView === v.key ? " dv-currency-btn--active" : ""}`}
-                onClick={() => setEarnView(v.key)}
-              >
-                {v.label}
-              </button>
-            ))}
-          </div>
-        ) : isTxTab && showTxSelector ? (
-          <div className="dv-currency-selector">
-            {txViews.map((v) => (
-              <button
-                key={v.key}
-                type="button"
-                className={`dv-currency-btn${txView === v.key ? " dv-currency-btn--active" : ""}`}
-                onClick={() => setTxView(v.key)}
-              >
-                {v.label}
-              </button>
-            ))}
-          </div>
-        ) : isPurchaseTab ? (
-          <div className="dv-currency-selector">
-            {fiatViews.map((v) => (
-              <button
-                key={v.key}
-                type="button"
-                className={`dv-currency-btn${fiatView === v.key ? " dv-currency-btn--active" : ""}`}
-                onClick={() => setFiatView(v.key)}
-              >
-                {v.label}
-              </button>
-            ))}
-          </div>
-        ) : showSimpleSelector ? (
-          <div className="dv-currency-selector">
-            {simpleViews.map((v) => (
-              <button
-                key={v.key}
-                type="button"
-                className={`dv-currency-btn${simpleView === v.key ? " dv-currency-btn--active" : ""}`}
-                onClick={() => setSimpleView(v.key)}
-              >
-                {v.label}
-              </button>
-            ))}
-          </div>
-        ) : null}
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <line x1="3" y1="12" x2="15" y2="12" />
+                <line x1="3" y1="18" x2="15" y2="18" />
+                <polyline points="17 15 20 18 23 15" />
+              </svg>
+              <span>Group by day</span>
+            </button>
+          )}
+          {!isMiningTab && <span className="dv-toolbar-sep">·</span>}
+          {isMiningTab ? (
+            <div className="dv-currency-selector">
+              {currencies.map((c) => (
+                <button
+                  key={c.key}
+                  type="button"
+                  className={`dv-currency-btn${currency === c.key ? " dv-currency-btn--active" : ""}`}
+                  onClick={() => {
+                    setCurrency(c.key);
+                    setSharedView(c.key === "USD" ? "USD" : c.key === "FIAT" ? "FIAT" : "NATIVE");
+                  }}
+                >
+                  {c.label}
+                </button>
+              ))}
+            </div>
+          ) : isEarnTab ? (
+            <div className="dv-currency-selector">
+              {earnViews.map((v) => (
+                <button
+                  key={v.key}
+                  type="button"
+                  className={`dv-currency-btn${effectiveEarnView === v.key ? " dv-currency-btn--active" : ""}`}
+                  onClick={() => setView(v.key)}
+                >
+                  {v.label}
+                </button>
+              ))}
+            </div>
+          ) : isTxTab && showTxSelector ? (
+            <div className="dv-currency-selector">
+              {txViews.map((v) => (
+                <button
+                  key={v.key}
+                  type="button"
+                  className={`dv-currency-btn${effectiveTxView === v.key ? " dv-currency-btn--active" : ""}`}
+                  onClick={() => setView(v.key === "GMT" ? "NATIVE" : v.key)}
+                >
+                  {v.label}
+                </button>
+              ))}
+            </div>
+          ) : isPurchaseTab ? (
+            <div className="dv-currency-selector">
+              {purchaseViews.map((v) => (
+                <button
+                  key={v.key}
+                  type="button"
+                  className={`dv-currency-btn${effectivePurchaseView === v.key ? " dv-currency-btn--active" : ""}`}
+                  onClick={() => setView(v.key)}
+                >
+                  {v.label}
+                </button>
+              ))}
+            </div>
+          ) : showSimpleSelector ? (
+            <div className="dv-currency-selector">
+              {simpleViews.map((v) => (
+                <button
+                  key={v.key}
+                  type="button"
+                  className={`dv-currency-btn${effectiveSimpleView === v.key ? " dv-currency-btn--active" : ""}`}
+                  onClick={() => setView(v.key)}
+                >
+                  {v.label}
+                </button>
+              ))}
+            </div>
+          ) : null}
+        </div>
       </div>
 
       {/* Tabs */}
@@ -2032,23 +2312,31 @@ export const DataViewer = memo(function DataViewer({ onClose }: DataViewerProps)
             key={activeKey}
             rewardKey={activeKey}
             fiatCode={fiatCode}
-            earnView={earnView}
+            earnView={effectiveEarnView}
+            groupByDay={groupByDay}
           />
         ) : isTxTab ? (
           <TransactionsTable
             key={activeKey}
             rewardKey={activeKey}
             fiatCode={fiatCode}
-            txView={txView}
+            txView={effectiveTxView}
+            groupByDay={groupByDay}
           />
         ) : isPurchaseTab ? (
-          <PurchasesTable key={activeKey} fiatCode={fiatCode} fiatView={fiatView} />
+          <PurchasesTable
+            key={activeKey}
+            fiatCode={fiatCode}
+            purchaseView={effectivePurchaseView}
+            groupByDay={groupByDay}
+          />
         ) : (
           <SimpleTable
             key={activeKey}
             rewardKey={activeKey}
             fiatCode={fiatCode}
-            simpleView={simpleView}
+            simpleView={effectiveSimpleView}
+            groupByDay={groupByDay}
           />
         )}
       </div>

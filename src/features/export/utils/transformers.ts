@@ -20,7 +20,7 @@ import type {
   WalletTxRawRecord,
 } from "../types";
 import { fetchCoinGeckoPrice } from "../api/coingecko";
-import { prefetchExchangeRates, getRate } from "../api/fx-rates";
+import { prefetchExchangeRates, prefetchAdditionalRates, getRate } from "../api/fx-rates";
 
 function usdToGmt(usd: number, gmtPrice: number): number {
   return gmtPrice > 0 ? usd / gmtPrice : 0;
@@ -37,14 +37,24 @@ function transformSoloMining(raw: SoloMiningRawRecord, fiatRate: number): Mining
   let poolReward = 0;
   let maintenance = 0;
   let reinvested = false;
+  let totalPower = 0;
+  let discountSum = 0;
+  let discountCount = 0;
 
   if (Array.isArray(raw.incomeList)) {
     for (const inc of raw.incomeList) {
       poolReward += inc?.metaData?.poolReward ?? 0;
       maintenance += (inc?.c1Value ?? 0) + (inc?.c2Value ?? 0);
       if (inc?.reinvestmentInPowerNftStatusExecuted === true) reinvested = true;
+      totalPower += inc?.power ?? 0;
+      if (inc?.totalDiscount != null) {
+        discountSum += inc.totalDiscount;
+        discountCount++;
+      }
     }
   }
+
+  const discount = discountCount > 0 ? discountSum / discountCount : 0;
 
   if (poolReward === 0 && Number.isFinite(raw.value ?? 0)) {
     poolReward = (raw.value ?? 0) + maintenance;
@@ -72,6 +82,8 @@ function transformSoloMining(raw: SoloMiningRawRecord, fiatRate: number): Mining
     rewardInUSD,
     rewardInFiat: rewardInUSD * fiatRate,
     reinvested,
+    totalPower,
+    discount,
   };
 }
 
@@ -102,6 +114,8 @@ function transformMinerWars(raw: MinerWarsRawRecord, fiatRate: number): MiningEn
     rewardInUSD: rewardUSD,
     rewardInFiat: rewardUSD * fiatRate,
     reinvested: raw.reinvestmentInPowerNftStatusExecuted === true,
+    totalPower: raw.power ?? 0,
+    discount: raw.totalDiscount ?? 0,
   };
 }
 
@@ -178,15 +192,19 @@ function transformExistingPrice(
   };
 }
 
-function transformPurchase(raw: PurchaseRawRecord, fiatRate: number): PurchaseEnrichedRecord {
-  const valueFiatRaw = raw.value ?? 0;
-  const valueUsd = fiatRate > 0 ? valueFiatRaw / fiatRate : 0;
+function transformPurchase(
+  raw: PurchaseRawRecord,
+  valueUsd: number,
+  fiatRate: number,
+): PurchaseEnrichedRecord {
+  const nativeAmount = raw.value ?? 0;
   return {
     createdAt: raw.createdAt,
     type: "Purchase",
     currency: raw.currency || "EUR",
+    reward: parseFloat(nativeAmount.toFixed(8)),
     valueUsd: parseFloat(valueUsd.toFixed(2)),
-    valueFiat: parseFloat(valueFiatRaw.toFixed(2)),
+    valueFiat: parseFloat((valueUsd * fiatRate).toFixed(2)),
   };
 }
 
@@ -217,7 +235,8 @@ function transformUpgrade(raw: UpgradeRawRecord, fiatRate: number): PurchaseEnri
   return {
     createdAt: raw.createdAt,
     type: kind === "nftEnergyEfficiencyUpgrade" ? "Upgrade - Energy Efficiency" : "Upgrade - Power",
-    currency: "USD",
+    currency: raw.providerCurrency || "GMT",
+    reward: raw.providerCurrencyValue ?? 0,
     valueUsd: parseFloat(valueUsd.toFixed(2)),
     valueFiat: parseFloat((valueUsd * fiatRate).toFixed(2)),
   };
@@ -279,6 +298,23 @@ export async function enrichRecords(
     );
   }
 
+  // For purchases, also prefetch FX rates for any fiat purchase currencies that differ from extraFiatCurrency.
+  if (config.enrichType === "purchase") {
+    const fiatPurchaseCurrencies = [
+      ...new Set(
+        (rawRecords as Array<{ currency?: string }>)
+          .map((r) => r?.currency)
+          .filter((c): c is string => !!c && c !== extraFiatCurrency && !CURRENCY_TO_COINGECKO[c]),
+      ),
+    ];
+    for (const cur of fiatPurchaseCurrencies) {
+      await prefetchAdditionalRates(
+        (rawRecords as Array<{ createdAt?: string }>).map((r) => r?.createdAt),
+        cur,
+      );
+    }
+  }
+
   const enriched: EnrichedRecord[] = [];
 
   for (let i = 0; i < rawRecords.length; i++) {
@@ -330,9 +366,36 @@ export async function enrichRecords(
         case "existing-price":
           record = transformExistingPrice(raw as unknown as ExistingPriceRawRecord, fiatRate);
           break;
-        case "purchase":
-          record = transformPurchase(raw as unknown as PurchaseRawRecord, fiatRate);
+        case "purchase": {
+          const purchaseRaw = raw as unknown as PurchaseRawRecord;
+          const purchaseCurrency = purchaseRaw.currency || "EUR";
+          const purchaseAmount = purchaseRaw.value ?? 0;
+          let purchaseValueUsd: number;
+          if (
+            purchaseCurrency === "USD" ||
+            purchaseCurrency === "USDT" ||
+            purchaseCurrency === "USDC"
+          ) {
+            purchaseValueUsd = purchaseAmount;
+          } else {
+            const cgId = CURRENCY_TO_COINGECKO[purchaseCurrency];
+            if (cgId) {
+              const result = await fetchCoinGeckoPrice(
+                cgId,
+                purchaseRaw.createdAt,
+                priceCache,
+                onProgress,
+              );
+              purchaseValueUsd = result ? purchaseAmount * result.price : 0;
+            } else {
+              // Fiat currency: rate was prefetched above if it differs from extraFiatCurrency
+              const purchaseFiatRate = await getRate(purchaseRaw.createdAt, purchaseCurrency);
+              purchaseValueUsd = purchaseFiatRate > 0 ? purchaseAmount / purchaseFiatRate : 0;
+            }
+          }
+          record = transformPurchase(purchaseRaw, purchaseValueUsd, fiatRate);
           break;
+        }
         case "upgrade":
           record = transformUpgrade(raw as unknown as UpgradeRawRecord, fiatRate);
           break;

@@ -58,6 +58,50 @@ async function fetchRatesForRange(
   return rates;
 }
 
+// Ensures USD→currency rates are cached for an additional currency without clearing other cached currencies.
+// Use this when you need rates for multiple currencies simultaneously (e.g. purchase currency + extraFiat).
+export async function prefetchAdditionalRates(
+  rawDates: unknown[],
+  currency: string,
+): Promise<void> {
+  seedFxCache();
+
+  const dates = [
+    ...new Set(
+      rawDates
+        .filter(Boolean)
+        .map((d) => String(d).substring(0, 10))
+        .filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d)),
+    ),
+  ].sort();
+
+  if (dates.length === 0) return;
+
+  const missing = dates.filter((d) => !rateCache.has(`${d}_${currency}`));
+  if (missing.length === 0) return;
+
+  const rangeStart = new Date(`${missing[0]}T00:00:00Z`);
+  rangeStart.setUTCDate(rangeStart.getUTCDate() - 7);
+  const todayKey = new Date().toISOString().split("T")[0];
+  const needsToday = dates.some((d) => d >= todayKey) && !rateCache.has(`${todayKey}_${currency}`);
+
+  const [rates, todayRate] = await Promise.all([
+    fetchRatesForRange(
+      rangeStart.toISOString().split("T")[0],
+      missing[missing.length - 1],
+      currency,
+    ),
+    needsToday ? fetchLatestRate(currency as ExtraFiatCurrency) : Promise.resolve(null),
+  ]);
+
+  for (const [k, v] of Object.entries(rates)) rateCache.set(`${k}_${currency}`, v);
+  if (needsToday && todayRate !== null && !rateCache.has(`${todayKey}_${currency}`)) {
+    rateCache.set(`${todayKey}_${currency}`, todayRate);
+  }
+
+  persistFxCache();
+}
+
 // Ensures USD→currency rates are cached for all provided ISO dates, fetching any that are missing.
 // Clears rates for any other currency to avoid stale accumulation when the user switches currency.
 export async function prefetchExchangeRates(rawDates: unknown[], currency: string): Promise<void> {

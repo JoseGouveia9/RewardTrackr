@@ -244,12 +244,14 @@ function buildMiningSheet(
   const fiatHeaders = getFiatHeaders(extraCurrency);
   const headers = [
     "Date",
+    "Power (TH)",
     "Pool Reward (BTC)",
     "Pool Reward (GMT)",
     ...fiatHeaders.map((h) => h.replace("Reward", "Pool Reward")),
     "Maintenance (BTC)",
     "Maintenance (GMT)",
     ...fiatHeaders.map((h) => h.replace("Reward", "Maintenance")),
+    "Discount",
     "Reward (BTC)",
     "Reward (GMT)",
     ...fiatHeaders,
@@ -262,12 +264,14 @@ function buildMiningSheet(
     const date = new Date(r.createdAt);
     ws.addRow([
       Number.isNaN(date.getTime()) ? "" : date,
+      r.totalPower ?? 0,
       r.poolReward ?? 0,
       r.poolRewardGMT ?? 0,
       ...getFiatValues(r.poolRewardUSD ?? 0, r.poolRewardFiat ?? 0, extraCurrency),
       r.maintenance ?? 0,
       r.maintenanceGMT ?? 0,
       ...getFiatValues(r.maintenanceUSD ?? 0, r.maintenanceFiat ?? 0, extraCurrency),
+      r.discount ?? 0,
       r.reward ?? 0,
       r.rewardGMT ?? 0,
       ...getFiatValues(r.rewardInUSD ?? 0, r.rewardInFiat ?? 0, extraCurrency),
@@ -281,6 +285,7 @@ function buildMiningSheet(
   for (let row = 2; row <= lastDataRow; row++) {
     let col = 1;
     ws.getCell(row, col++).numFmt = FMT_DATE;
+    ws.getCell(row, col++).numFmt = FMT_OTHER; // Power (TH/s)
     ws.getCell(row, col++).numFmt = FMT_BTC;
     ws.getCell(row, col++).numFmt = FMT_OTHER;
     fiatFormats.forEach((fmt) => {
@@ -291,11 +296,13 @@ function buildMiningSheet(
     fiatFormats.forEach((fmt) => {
       ws.getCell(row, col++).numFmt = fmt;
     });
+    ws.getCell(row, col++).numFmt = "0.00%"; // Discount
     ws.getCell(row, col++).numFmt = FMT_BTC;
     ws.getCell(row, col++).numFmt = FMT_OTHER;
     fiatFormats.forEach((fmt) => {
       ws.getCell(row, col++).numFmt = fmt;
     });
+    // Reinvested to Power — text, no numFmt
   }
 
   ws.spliceRows(1, 0, new Array(COLS).fill(""));
@@ -308,31 +315,39 @@ function buildMiningSheet(
 
   ws.getCell("A1").value = "TOTAL";
   let totalCol = 2;
-  ws.getCell(1, totalCol).value = subtotal("B", dataFrom, dataTo);
+  // Power (TH/s) — sum
+  ws.getCell(1, totalCol).value = subtotal(String.fromCharCode(64 + totalCol), dataFrom, dataTo);
+  ws.getCell(1, totalCol++).numFmt = FMT_OTHER;
+  // Pool Reward BTC, GMT, fiat
+  ws.getCell(1, totalCol).value = subtotal(String.fromCharCode(64 + totalCol), dataFrom, dataTo);
   ws.getCell(1, totalCol++).numFmt = FMT_BTC;
-  ws.getCell(1, totalCol).value = subtotal("C", dataFrom, dataTo);
+  ws.getCell(1, totalCol).value = subtotal(String.fromCharCode(64 + totalCol), dataFrom, dataTo);
   ws.getCell(1, totalCol++).numFmt = FMT_OTHER;
   fiatFormats.forEach((fmt) => {
-    const letter = String.fromCharCode(64 + totalCol);
-    ws.getCell(1, totalCol).value = subtotal(letter, dataFrom, dataTo);
+    ws.getCell(1, totalCol).value = subtotal(String.fromCharCode(64 + totalCol), dataFrom, dataTo);
     ws.getCell(1, totalCol++).numFmt = fmt;
   });
+  // Maintenance BTC, GMT, fiat
   ws.getCell(1, totalCol).value = subtotal(String.fromCharCode(64 + totalCol), dataFrom, dataTo);
   ws.getCell(1, totalCol++).numFmt = FMT_BTC;
   ws.getCell(1, totalCol).value = subtotal(String.fromCharCode(64 + totalCol), dataFrom, dataTo);
   ws.getCell(1, totalCol++).numFmt = FMT_OTHER;
   fiatFormats.forEach((fmt) => {
-    const letter = String.fromCharCode(64 + totalCol);
-    ws.getCell(1, totalCol).value = subtotal(letter, dataFrom, dataTo);
+    ws.getCell(1, totalCol).value = subtotal(String.fromCharCode(64 + totalCol), dataFrom, dataTo);
     ws.getCell(1, totalCol++).numFmt = fmt;
   });
+  // Discount — average
+  ws.getCell(1, totalCol).value = {
+    formula: `AVERAGE(${String.fromCharCode(64 + totalCol)}$${dataFrom}:${String.fromCharCode(64 + totalCol)}$${dataTo})`,
+  };
+  ws.getCell(1, totalCol++).numFmt = "0.00%";
+  // Reward BTC, GMT, fiat
   ws.getCell(1, totalCol).value = subtotal(String.fromCharCode(64 + totalCol), dataFrom, dataTo);
   ws.getCell(1, totalCol++).numFmt = FMT_BTC;
   ws.getCell(1, totalCol).value = subtotal(String.fromCharCode(64 + totalCol), dataFrom, dataTo);
   ws.getCell(1, totalCol++).numFmt = FMT_OTHER;
   fiatFormats.forEach((fmt) => {
-    const letter = String.fromCharCode(64 + totalCol);
-    ws.getCell(1, totalCol).value = subtotal(letter, dataFrom, dataTo);
+    ws.getCell(1, totalCol).value = subtotal(String.fromCharCode(64 + totalCol), dataFrom, dataTo);
     ws.getCell(1, totalCol++).numFmt = fmt;
   });
   styleTotal(ws, 1, COLS);
@@ -488,7 +503,7 @@ function buildPurchasesSheet(
   extraCurrency: ExtraFiatCurrency | null,
 ): void {
   const ws = workbook.addWorksheet(sheetName);
-  const headers = ["Date", "Type", "Currency", "Value (USD)"];
+  const headers = ["Date", "Type", "Currency", "Paid", "Value (USD)"];
   if (extraCurrency) headers.push(`Value (${extraCurrency})`);
   const COLS = headers.length;
 
@@ -499,6 +514,7 @@ function buildPurchasesSheet(
       Number.isNaN(date.getTime()) ? "" : date,
       r.type || "",
       r.currency || "",
+      r.reward ?? r.valueFiat ?? 0,
       r.valueUsd ?? 0,
     ];
     if (extraCurrency) row.push(r.valueFiat ?? 0);
@@ -508,8 +524,9 @@ function buildPurchasesSheet(
   const lastDataRow = ws.rowCount;
   for (let row = 2; row <= lastDataRow; row++) {
     ws.getCell(`A${row}`).numFmt = FMT_DATE;
-    ws.getCell(row, 4).numFmt = FMT_USD;
-    if (extraCurrency) ws.getCell(row, 5).numFmt = getCurrencyFormat(extraCurrency);
+    ws.getCell(row, 4).numFmt = FMT_OTHER;
+    ws.getCell(row, 5).numFmt = FMT_USD;
+    if (extraCurrency) ws.getCell(row, 6).numFmt = getCurrencyFormat(extraCurrency);
   }
 
   ws.spliceRows(1, 0, new Array(COLS).fill(""));
@@ -521,11 +538,11 @@ function buildPurchasesSheet(
   styleHeader(ws, headerRow, COLS);
 
   ws.getCell("A1").value = "TOTAL";
-  ws.getCell(1, 4).value = subtotal("D", dataFrom, dataTo);
-  ws.getCell(1, 4).numFmt = FMT_USD;
+  ws.getCell(1, 5).value = subtotal("E", dataFrom, dataTo);
+  ws.getCell(1, 5).numFmt = FMT_USD;
   if (extraCurrency) {
-    ws.getCell(1, 5).value = subtotal("E", dataFrom, dataTo);
-    ws.getCell(1, 5).numFmt = getCurrencyFormat(extraCurrency);
+    ws.getCell(1, 6).value = subtotal("F", dataFrom, dataTo);
+    ws.getCell(1, 6).numFmt = getCurrencyFormat(extraCurrency);
   }
   styleTotal(ws, 1, COLS);
 

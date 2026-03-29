@@ -111,6 +111,68 @@
   color: #f0f4ff;
 }
 
+/* ── Toolbar (group button + currency selector) ──────────────── */
+
+.dv-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dv-toolbar-sep {
+  color: rgba(0, 0, 0, 0.2);
+  font-size: 14px;
+  user-select: none;
+}
+
+.page.theme-dark .dv-toolbar-sep {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.dv-group-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  background: transparent;
+  color: #6d7589;
+  cursor: pointer;
+  font-size: 0.75rem !important;
+  white-space: nowrap;
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+  flex-shrink: 0;
+}
+
+.dv-group-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #22283a;
+}
+
+.dv-group-btn--active {
+  background: #22283a;
+  border-color: #22283a;
+  color: #ffffff;
+}
+
+.page.theme-dark .dv-group-btn {
+  color: rgba(255, 255, 255, 0.45);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.page.theme-dark .dv-group-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.page.theme-dark .dv-group-btn--active {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
 /* ── Currency selector ───────────────────────────────────────── */
 
 .dv-currency-selector {
@@ -180,7 +242,7 @@
   white-space: nowrap;
 }
 
-.dv-tab:hover {
+.dv-tab:not(.dv-tab--active):hover {
   background: rgba(0, 0, 0, 0.05);
   color: #22283a;
 }
@@ -195,7 +257,7 @@
   color: rgba(255, 255, 255, 0.45);
 }
 
-.page.theme-dark .dv-tab:hover {
+.page.theme-dark .dv-tab:not(.dv-tab--active):hover {
   background: rgba(255, 255, 255, 0.06);
   color: rgba(255, 255, 255, 0.85);
 }
@@ -305,7 +367,7 @@
 
 /* Totals table */
 .dv-table-totals {
-  border: 1px solid rgba(247, 147, 26, 0.2);
+  border: 1px solid rgba(247, 147, 26, 0.4);
   border-radius: 14px;
   margin-bottom: 8px;
   overflow: hidden;
@@ -320,7 +382,7 @@
 }
 
 .page.theme-dark .dv-table-totals {
-  border-color: rgba(247, 147, 26, 0.25);
+  border-color: rgba(247, 147, 26, 0.45);
 }
 
 .page.theme-dark .dv-table-totals td {
@@ -329,6 +391,28 @@
 
 .page.theme-dark .dv-table.dv-table-totals tbody tr:hover td {
   background: rgba(247, 147, 26, 0.12);
+}
+
+/* Clickable totals rows (currency filter toggle) */
+.dv-totals-row--clickable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.dv-table.dv-table-totals tbody .dv-totals-row--clickable:hover td {
+  background: rgba(247, 147, 26, 0.2);
+}
+
+.page.theme-dark .dv-table.dv-table-totals tbody .dv-totals-row--clickable:hover td {
+  background: rgba(247, 147, 26, 0.22);
+}
+
+.dv-totals-row--hidden td {
+  opacity: 0.35;
+}
+
+.dv-totals-row--hidden .dv-totals-currency-label {
+  text-decoration: line-through;
 }
 
 /* Data table */

@@ -145,6 +145,8 @@ export interface SoloIncomeListItem {
   c1Value?: number;
   c2Value?: number;
   reinvestmentInPowerNftStatusExecuted?: boolean;
+  power?: number;
+  totalDiscount?: number;
 }
 
 export interface SoloMiningRawRecord {
@@ -163,6 +165,8 @@ export interface MinerWarsRawRecord {
   reinvestmentStatus?: string | null;
   reinvestmentInPowerNftStatusExecuted?: boolean;
   incomeStatistic?: { btcCourseInUsd?: number; gmtPrice?: number };
+  power?: number;
+  totalDiscount?: number;
 }
 
 export interface WalletTxRawRecord {
@@ -205,6 +209,8 @@ export interface UpgradeRawRecord {
   dataType?: string;
   upgradeType?: string;
   usdtValue?: number;
+  providerCurrency?: string;
+  providerCurrencyValue?: number;
 }
 
 // Enriched record shapes
@@ -226,6 +232,8 @@ export interface MiningEnrichedRecord {
   rewardInUSD: number;
   rewardInFiat: number;
   reinvested: boolean;
+  totalPower: number;
+  discount: number;
 }
 
 export interface WalletTxEnrichedRecord {
@@ -253,6 +261,7 @@ export interface PurchaseEnrichedRecord {
   createdAt: string;
   type: string;
   currency: string;
+  reward?: number;
   valueUsd: number;
   valueFiat: number;
 }

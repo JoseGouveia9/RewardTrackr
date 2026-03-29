@@ -162,6 +162,24 @@ h3,
   color: #c97d10;
 }
 
+.app-notice-dismiss {
+  margin-left: auto;
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.45;
+  padding: 0 0 0 6px;
+  line-height: 1;
+  align-self: center;
+  transition: opacity 0.12s ease;
+}
+
+.app-notice-dismiss:hover {
+  opacity: 0.9;
+}
+
 .app-notice.app-notice-opensource {
   border-color: rgba(22, 163, 74, 0.25);
   background: rgba(220, 252, 231, 0.6);
