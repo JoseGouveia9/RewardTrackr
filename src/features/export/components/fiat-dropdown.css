@@ -1,9 +1,13 @@
+/* ── Wrapper ─────────────────────────────────────────────────── */
+
 .fiat-dropdown-wrap {
   position: relative;
   display: inline-flex;
   flex-direction: column;
   align-items: flex-end;
 }
+
+/* ── Trigger ─────────────────────────────────────────────────── */
 
 .fiat-dropdown-trigger {
   min-width: 130px;
@@ -29,6 +33,8 @@
   transform: rotate(180deg);
 }
 
+/* ── Dropdown menu ───────────────────────────────────────────── */
+
 .fiat-dropdown-menu {
   position: absolute;
   bottom: calc(100% + 8px);
@@ -45,6 +51,8 @@
   scrollbar-width: thin;
   scrollbar-color: #E07D10 #1e1e20;
 }
+
+/* ── Scrollbar ───────────────────────────────────────────────── */
 
 .fiat-dropdown-menu::-webkit-scrollbar {
   width: 10px;
@@ -65,6 +73,8 @@
   background: linear-gradient(180deg, #E8850F 0%, #CB7010 100%);
 }
 
+/* ── Search ──────────────────────────────────────────────────── */
+
 .fiat-dropdown-search {
   width: 100%;
   box-sizing: border-box;
@@ -76,6 +86,8 @@
   font-size: 0.85rem;
   outline: none;
 }
+
+/* ── Options ─────────────────────────────────────────────────── */
 
 .fiat-dropdown-option {
   width: 100%;
@@ -114,7 +126,7 @@
   font-size: 1.1rem;
 }
 
-/* Light mode */
+/* ── Light mode ──────────────────────────────────────────────── */
 
 .page.theme-light .fiat-dropdown-menu {
   background: rgba(255, 255, 255, 0.95);
@@ -148,7 +160,7 @@
   color: rgba(0, 0, 0, 0.45);
 }
 
-/* Dark mode */
+/* ── Dark mode ───────────────────────────────────────────────── */
 
 .page.theme-dark .fiat-dropdown-trigger {
   background: #242424;

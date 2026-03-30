@@ -25,6 +25,7 @@ interface ExportOptionsProps {
   onChangeFiatCurrency: (v: ExtraFiatCurrency) => void;
 }
 
+/** Renders the animated export options panels (transaction filter, wallet pricing, extra fiat). */
 export const ExportOptions = memo(function ExportOptions({
   selectedKeys,
   walletSheetsSelected,

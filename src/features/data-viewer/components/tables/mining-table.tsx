@@ -1,0 +1,181 @@
+import { useEffect, useMemo, useState } from "react";
+import { loadCacheEntry } from "@/features/export/utils/cache";
+import type { RewardKey } from "@/features/export/types";
+import type { Currency, DateRange } from "../../types";
+import { EMPTY_DATE_RANGE, PAGE_SIZE } from "../../utils/constants";
+import {
+  formatMiningValue,
+  getRecordField,
+  getDateBounds,
+  matchesDateRange,
+  fmtDate,
+} from "../../utils";
+import { MiningCurrencyIcon } from "../icons/currency-icons";
+import { DateRangeFilter } from "../date-range-filter";
+import { Pagination } from "../pagination";
+
+/** Renders a paged mining-rewards data table with date-range filter and running totals. */
+export function MiningTable({
+  rewardKey,
+  currency,
+  fiatCode,
+}: {
+  rewardKey: RewardKey;
+  currency: Currency;
+  fiatCode: string;
+}) {
+  const [page, setPage] = useState(0);
+  const [dateRange, setDateRange] = useState<DateRange>(EMPTY_DATE_RANGE);
+  const entry = useMemo(() => loadCacheEntry(rewardKey), [rewardKey]);
+
+  const rows = useMemo(() => {
+    if (!entry?.records?.length) return [];
+    return entry.records.map((r) => {
+      const rec = r as Record<string, unknown>;
+      return {
+        date: String(rec.createdAt ?? ""),
+        poolReward: getRecordField(rec, currency, "poolReward"),
+        maintenance: getRecordField(rec, currency, "maintenance"),
+        reward: getRecordField(rec, currency, "reward"),
+        totalPower: Number(rec.totalPower ?? 0),
+        discount: Number(rec.discount ?? 0),
+      };
+    });
+  }, [entry, currency]);
+
+  const dateBounds = useMemo(() => getDateBounds(rows), [rows]);
+
+  const filteredRows = useMemo(
+    () => rows.filter((r) => matchesDateRange(r.date, dateRange)),
+    [rows, dateRange],
+  );
+
+  useEffect(() => setPage(0), [dateRange]);
+
+  const pageRows = useMemo(
+    () => filteredRows.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE),
+    [filteredRows, page],
+  );
+
+  const totals = useMemo(
+    () =>
+      filteredRows.reduce(
+        (acc, r) => ({
+          poolReward: acc.poolReward + r.poolReward,
+          maintenance: acc.maintenance + r.maintenance,
+          reward: acc.reward + r.reward,
+        }),
+        { poolReward: 0, maintenance: 0, reward: 0 },
+      ),
+    [filteredRows],
+  );
+
+  if (!entry) {
+    return (
+      <div className="dv-empty">
+        No cached data for this sheet. Export it first from the main panel.
+      </div>
+    );
+  }
+
+  return (
+    <div className="dv-tables-wrap">
+      <table className="dv-table dv-table-totals">
+        <colgroup>
+          <col className="dv-col-date" />
+          <col className="dv-col-value" />
+          <col className="dv-col-value" />
+          <col className="dv-col-value" />
+          <col className="dv-col-value" />
+          <col className="dv-col-value" />
+        </colgroup>
+        <tbody>
+          <tr>
+            <td className="dv-totals-label">Total</td>
+            <td />
+            <td>
+              <span className="dv-total-cell-label">Pool Reward</span>
+              <span className="dv-total-cell-value dv-cell-with-icon">
+                {formatMiningValue(totals.poolReward, currency)}
+                <MiningCurrencyIcon currency={currency} fiatCode={fiatCode} />
+              </span>
+            </td>
+            <td>
+              <span className="dv-total-cell-label">Maintenance</span>
+              <span className="dv-total-cell-value dv-cell-with-icon">
+                {formatMiningValue(totals.maintenance, currency)}
+                <MiningCurrencyIcon currency={currency} fiatCode={fiatCode} />
+              </span>
+            </td>
+            <td />
+            <td>
+              <span className="dv-total-cell-label">Reward</span>
+              <span className="dv-total-cell-value dv-total-cell-value--accent dv-cell-with-icon">
+                {formatMiningValue(totals.reward, currency)}
+                <MiningCurrencyIcon currency={currency} fiatCode={fiatCode} />
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <table className="dv-table dv-table-data">
+        <colgroup>
+          <col className="dv-col-date" />
+          <col className="dv-col-value" />
+          <col className="dv-col-value" />
+          <col className="dv-col-value" />
+          <col className="dv-col-value" />
+          <col className="dv-col-value" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th>
+              <DateRangeFilter value={dateRange} onChange={setDateRange} {...dateBounds} />
+            </th>
+            <th>Power</th>
+            <th>Pool Reward</th>
+            <th>Maintenance</th>
+            <th>Discount</th>
+            <th>Reward</th>
+          </tr>
+        </thead>
+        <tbody>
+          {pageRows.map((row, i) => (
+            <tr key={`${row.date}-${i}`}>
+              <td className="dv-td-date">{fmtDate(row.date)}</td>
+              <td>
+                {row.totalPower > 0
+                  ? new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(
+                      row.totalPower,
+                    ) + " TH"
+                  : "—"}
+              </td>
+              <td>
+                <span className="dv-cell-with-icon">
+                  {formatMiningValue(row.poolReward, currency)}
+                  <MiningCurrencyIcon currency={currency} fiatCode={fiatCode} />
+                </span>
+              </td>
+              <td>
+                <span className="dv-cell-with-icon">
+                  {formatMiningValue(row.maintenance, currency)}
+                  <MiningCurrencyIcon currency={currency} fiatCode={fiatCode} />
+                </span>
+              </td>
+              <td>{row.discount > 0 ? (row.discount * 100).toFixed(2) + "%" : "—"}</td>
+              <td className="dv-td-accent">
+                <span className="dv-cell-with-icon">
+                  {formatMiningValue(row.reward, currency)}
+                  <MiningCurrencyIcon currency={currency} fiatCode={fiatCode} />
+                </span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <Pagination page={page} total={filteredRows.length} onChange={setPage} />
+    </div>
+  );
+}
+export default MiningTable;

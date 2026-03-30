@@ -1,4 +1,5 @@
-import { memo, useEffect } from "react";
+import { memo } from "react";
+import { useEscapeKey } from "@/hooks/use-escape-key";
 import "./referral-button.css";
 
 interface ReferralButtonProps {
@@ -7,19 +8,13 @@ interface ReferralButtonProps {
   onClose: () => void;
 }
 
+/** Renders the "No GoMining account?" button and a modal with referral perks and sign-up link. */
 export const ReferralButton = memo(function ReferralButton({
   open,
   onOpen,
   onClose,
 }: ReferralButtonProps) {
-  useEffect(() => {
-    if (!open) return;
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-    }
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
+  useEscapeKey(onClose, open);
 
   return (
     <>

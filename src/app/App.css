@@ -1,3 +1,5 @@
+/* ── Page root ──────────────────────────────────────────────── */
+
 .page {
   min-height: 100vh;
   position: relative;
@@ -18,6 +20,8 @@ h5,
 h6 {
   font-family: "Space Grotesk", sans-serif;
 }
+
+/* ── Background decoration ───────────────────────────────────── */
 
 .background-shape {
   position: fixed;
@@ -43,6 +47,8 @@ h6 {
   left: -120px;
 }
 
+/* ── Container ───────────────────────────────────────────────── */
+
 .container {
   max-width: 1120px;
   margin: 0 auto;
@@ -50,6 +56,8 @@ h6 {
   position: relative;
   z-index: 1;
 }
+
+/* ── Hero ────────────────────────────────────────────────────── */
 
 .hero {
   background: transparent;
@@ -134,12 +142,16 @@ h3,
   line-height: inherit;
 }
 
+/* ── Copyright ───────────────────────────────────────────────── */
+
 .copyright {
   margin: 12px 0 0;
   font-size: 0.72rem;
   color: #9fa5be;
   text-align: center;
 }
+
+/* ── App notices ─────────────────────────────────────────────── */
 
 .app-notice {
   display: flex;
@@ -229,6 +241,8 @@ h3,
 }
 
 
+/* ── Panels ──────────────────────────────────────────────────── */
+
 .panel {
   background: #ffffff;
   border: 1px solid #e6e9f2;
@@ -259,6 +273,8 @@ h3,
   color: #6d7589;
 }
 
+/* ── Forms ───────────────────────────────────────────────────── */
+
 textarea {
   width: 100%;
   resize: vertical;
@@ -277,6 +293,8 @@ textarea:focus {
   outline: 2px solid rgba(247, 147, 26, 0.28);
   border-color: #FBB060;
 }
+
+/* ── Buttons ─────────────────────────────────────────────────── */
 
 button {
   border: 1px solid transparent;
@@ -326,6 +344,8 @@ button:disabled {
   width: 100%;
   margin-top: 2px;
 }
+
+/* ── Export section ──────────────────────────────────────────── */
 
 .export-section {
   margin-top: 16px;
@@ -411,6 +431,8 @@ button:disabled {
   font-size: 0.8rem !important;
 }
 
+/* ── Panel actions ───────────────────────────────────────────── */
+
 .panel-actions {
   display: flex;
   flex-direction: column;
@@ -431,6 +453,8 @@ button:disabled {
   margin: 0;
 }
 
+/* ── Utility icons ───────────────────────────────────────────── */
+
 .section-icon {
   color: #F7931A;
   flex-shrink: 0;
@@ -443,6 +467,8 @@ button:disabled {
 .btn-icon {
   flex-shrink: 0;
 }
+
+/* ── Messages ────────────────────────────────────────────────── */
 
 .message {
   display: flex;
@@ -492,6 +518,8 @@ button:disabled {
   border-color: rgba(203, 213, 225, 0.15);
 }
 
+/* ── Divider & misc ──────────────────────────────────────────── */
+
 .divider {
   margin: 16px 0;
   border: 0;
@@ -506,7 +534,7 @@ button:disabled {
   line-height: 1.5;
 }
 
-/* Dark mode */
+/* ── Dark mode ───────────────────────────────────────────────── */
 
 .page.theme-dark {
   background: #121214;
@@ -612,7 +640,7 @@ button:disabled {
   color: #6b7090;
 }
 
-/* Responsive */
+/* ── Mobile ──────────────────────────────────────────────────── */
 
 @media (max-width: 640px) {
   .container {

@@ -270,20 +270,6 @@
 
 /* ── Totals row ──────────────────────────────────────────────── */
 
-
-.dv-totals-label {
-  font-size: 0.72rem;
-  font-weight: 700;
-  font-family: "Space Grotesk", sans-serif;
-  color: #CB7010 !important;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-.page.theme-dark .dv-totals-label {
-  color: #FBB060 !important;
-}
-
 .dv-total-cell-label {
   display: block;
   font-size: 0.68rem;
@@ -364,6 +350,8 @@
 
 .dv-col-date { width: 22%; }
 .dv-col-value { width: 26%; }
+.dv-col-type { width: 36%; }
+.dv-col-rate { width: 12%; }
 
 /* Totals table */
 .dv-table-totals {

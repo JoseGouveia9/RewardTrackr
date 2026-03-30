@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import * as Sentry from "@sentry/react";
 import { decodeJwt } from "@/lib/http";
+import { LS_KEY_SYNC_ALIAS, LS_KEY_SYNC_TOKEN } from "@/lib/storage-keys";
 import type { AuthUser } from "../types";
 
-const EXTENSION_SYNC_ALIAS_STORE_KEY = "rt_sync_alias";
-const EXTENSION_SYNC_TOKEN_STORE_KEY = "rt_sync_token_stored";
+// ── Private helpers ───────────────────────────────────────────────
 
+/** Decodes and validates a JWT token, returning an AuthUser or null if expired/invalid. */
 function loginWithToken(token: string): AuthUser | null {
   const decoded = decodeJwt(token);
   if (!decoded || typeof decoded !== "object") return null;
@@ -38,14 +39,18 @@ interface UseAuthReturn {
   handleLogout: () => void;
 }
 
+// ── Hook ──────────────────────────────────────────────────────────
+
+/** Manages authentication state: session restore, token sync from the extension, and logout. */
 export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
   const [storedToken, setStoredToken] = useState<string>("");
   const [user, setUser] = useState<AuthUser | null>(null);
   const [syncedAlias] = useState<string>(() =>
-    (localStorage.getItem(EXTENSION_SYNC_ALIAS_STORE_KEY) || "").trim(),
+    (localStorage.getItem(LS_KEY_SYNC_ALIAS) || "").trim(),
   );
   const expiryTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  /** Cancels the pending token-expiry timer, if any. */
   const clearExpiryTimer = useCallback(() => {
     if (expiryTimer.current) {
       clearTimeout(expiryTimer.current);
@@ -53,6 +58,7 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
     }
   }, []);
 
+  /** Schedules automatic logout at the JWT expiry time. */
   const scheduleExpiry = useCallback(
     (exp: number | null) => {
       clearExpiryTimer();
@@ -60,7 +66,7 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
       const msUntilExpiry = exp * 1000 - Date.now();
       if (msUntilExpiry <= 0) return;
       expiryTimer.current = setTimeout(() => {
-        localStorage.removeItem(EXTENSION_SYNC_TOKEN_STORE_KEY);
+        localStorage.removeItem(LS_KEY_SYNC_TOKEN);
         setUser(null);
         setStoredToken("");
       }, msUntilExpiry);
@@ -68,13 +74,14 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
     [clearExpiryTimer],
   );
 
+  /** Validates and applies a token, updating user state and scheduling expiry. */
   const applyToken = useCallback(
     (token: string, message?: string): boolean => {
       const userData = loginWithToken(token);
       if (!userData) return false;
-      const storedAlias = localStorage.getItem(EXTENSION_SYNC_ALIAS_STORE_KEY)?.trim() ?? null;
+      const storedAlias = localStorage.getItem(LS_KEY_SYNC_ALIAS)?.trim() ?? null;
       if (storedAlias) userData.alias = storedAlias;
-      localStorage.setItem(EXTENSION_SYNC_TOKEN_STORE_KEY, token);
+      localStorage.setItem(LS_KEY_SYNC_TOKEN, token);
       setStoredToken(token);
       setUser(userData);
       scheduleExpiry(userData.exp ?? null);
@@ -86,7 +93,7 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
 
   // On mount: restore session from localStorage
   useEffect(() => {
-    const token = localStorage.getItem(EXTENSION_SYNC_TOKEN_STORE_KEY);
+    const token = localStorage.getItem(LS_KEY_SYNC_TOKEN);
     if (token) applyToken(token);
     return clearExpiryTimer;
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -94,7 +101,7 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
   // Storage event: extension injected a new token into this tab
   useEffect(() => {
     const handleStorage = (e: StorageEvent): void => {
-      if (e.key !== EXTENSION_SYNC_TOKEN_STORE_KEY || !e.newValue) return;
+      if (e.key !== LS_KEY_SYNC_TOKEN || !e.newValue) return;
       applyToken(e.newValue, "Session refreshed from extension.");
     };
     window.addEventListener("storage", handleStorage);
@@ -105,14 +112,15 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
   useEffect(() => {
     if (user) return;
     const interval = setInterval(() => {
-      const token = localStorage.getItem(EXTENSION_SYNC_TOKEN_STORE_KEY);
+      const token = localStorage.getItem(LS_KEY_SYNC_TOKEN);
       if (token) applyToken(token, "Session synced from extension.");
     }, 1000);
     return () => clearInterval(interval);
   }, [user, applyToken]);
 
+  /** Manually checks localStorage for an extension-synced token and logs the user in if valid. */
   const handleCheckSync = useCallback((): void => {
-    const syncToken = localStorage.getItem(EXTENSION_SYNC_TOKEN_STORE_KEY);
+    const syncToken = localStorage.getItem(LS_KEY_SYNC_TOKEN);
     if (syncToken) {
       const success = applyToken(syncToken);
       if (success) {
@@ -127,9 +135,10 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
     }
   }, [applyToken, onMessage]);
 
+  /** Clears the stored token and resets auth state, logging the user out. */
   const handleLogout = useCallback((): void => {
     clearExpiryTimer();
-    localStorage.removeItem(EXTENSION_SYNC_TOKEN_STORE_KEY);
+    localStorage.removeItem(LS_KEY_SYNC_TOKEN);
     setUser(null);
     setStoredToken("");
     Sentry.logger.info("User logged out");

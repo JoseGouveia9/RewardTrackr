@@ -1,8 +1,12 @@
+/* ── Grid layout ─────────────────────────────────────────────── */
+
 .sheet-selector {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
   gap: 6px;
 }
+
+/* ── Card ────────────────────────────────────────────────────── */
 
 .sheet-card {
   display: flex;
@@ -42,6 +46,8 @@
   flex-shrink: 0;
 }
 
+/* ── Card states ─────────────────────────────────────────────── */
+
 .sheet-card:hover {
   transform: translateY(-1px);
   box-shadow: 0 8px 16px rgba(247, 147, 26, 0.15);
@@ -70,6 +76,8 @@
   grid-column: 1 / -1;
 }
 
+/* ── Typography ──────────────────────────────────────────────── */
+
 .sheet-title {
   font-size: 0.9rem !important;
   font-weight: 700 !important;
@@ -85,7 +93,7 @@
   color: #C07010;
 }
 
-/* Responsive */
+/* ── Mobile ──────────────────────────────────────────────────── */
 
 @media (max-width: 640px) {
   .sheet-selector {
@@ -93,7 +101,7 @@
   }
 }
 
-/* Dark mode */
+/* ── Dark mode ───────────────────────────────────────────────── */
 
 .page.theme-dark .sheet-card {
   border: none;
