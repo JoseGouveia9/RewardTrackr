@@ -141,9 +141,11 @@ export type CoinGeckoPriceCacheValue = CoinGeckoPriceResult | number | null;
 // Raw record shapes from the API
 
 export interface SoloIncomeListItem {
-  metaData?: { poolReward?: number };
+  metaData?: { poolReward?: number; maintenanceInBtc?: number };
   c1Value?: number;
   c2Value?: number;
+  maintenanceForWithdrawInGmt?: number;
+  maintenanceByGmt?: boolean;
   reinvestmentInPowerNftStatusExecuted?: boolean;
   power?: number;
   totalDiscount?: number;
@@ -162,6 +164,11 @@ export interface MinerWarsRawRecord {
   totalReward?: number;
   c1Value?: number;
   c2Value?: number;
+  c1ValueInBtc?: number;
+  c2ValueInBtc?: number;
+  c1ValueInGmt?: number;
+  c2ValueInGmt?: number;
+  maintenanceByGmt?: boolean;
   reinvestmentStatus?: string | null;
   reinvestmentInPowerNftStatusExecuted?: boolean;
   incomeStatistic?: { btcCourseInUsd?: number; gmtPrice?: number };

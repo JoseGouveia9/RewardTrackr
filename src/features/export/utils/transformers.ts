@@ -39,8 +39,10 @@ function transformSoloMining(raw: SoloMiningRawRecord, fiatRate: number): Mining
   const btcPrice = raw.incomeStatistic?.btcCourseInUsd ?? 0;
   const gmtPrice = raw.incomeStatistic?.gmtPrice ?? 0;
 
-  let poolReward = 0;
-  let maintenance = 0;
+  let maintenanceInBtcSum = 0;
+  let hasMaintenanceInBtc = false;
+  let maintenanceGMTDirect = 0;
+  let hasGmtMaintenance = false;
   let reinvested = false;
   let totalPower = 0;
   let discountSum = 0;
@@ -48,8 +50,16 @@ function transformSoloMining(raw: SoloMiningRawRecord, fiatRate: number): Mining
 
   if (Array.isArray(raw.incomeList)) {
     for (const inc of raw.incomeList) {
-      poolReward += inc?.metaData?.poolReward ?? 0;
-      maintenance += (inc?.c1Value ?? 0) + (inc?.c2Value ?? 0);
+      const maintenanceBtcVal = inc?.metaData?.maintenanceInBtc ?? null;
+      if (maintenanceBtcVal != null) {
+        maintenanceInBtcSum += maintenanceBtcVal;
+        hasMaintenanceInBtc = true;
+      }
+      const gmtAmt = inc?.maintenanceForWithdrawInGmt ?? null;
+      if (gmtAmt != null) {
+        maintenanceGMTDirect += gmtAmt;
+        hasGmtMaintenance = true;
+      }
       if (inc?.reinvestmentInPowerNftStatusExecuted === true) reinvested = true;
       totalPower += inc?.power ?? 0;
       if (inc?.totalDiscount != null) {
@@ -60,14 +70,35 @@ function transformSoloMining(raw: SoloMiningRawRecord, fiatRate: number): Mining
   }
 
   const discount = discountCount > 0 ? discountSum / discountCount : 0;
+  const rawValue = raw.value ?? 0;
 
-  if (poolReward === 0 && Number.isFinite(raw.value ?? 0)) {
-    poolReward = (raw.value ?? 0) + maintenance;
-  }
+  // Maintenance in BTC: use precise metaData.maintenanceInBtc sum when available,
+  // otherwise derive from GMT amount charged
+  const maintenanceBtc = hasMaintenanceInBtc
+    ? maintenanceInBtcSum
+    : hasGmtMaintenance && gmtPrice > 0 && btcPrice > 0
+      ? (maintenanceGMTDirect * gmtPrice) / btcPrice
+      : 0;
 
-  const reward = poolReward - maintenance;
+  // Pool reward (gross BTC):
+  //   maintenanceByGmt=true  → raw.value is already gross (maintenance paid separately in GMT)
+  //   maintenanceByGmt=false → raw.value is net; add maintenance back to get gross
+  // hasGmtMaintenance is our proxy for maintenanceByGmt=true
+  const poolReward = hasGmtMaintenance ? rawValue : rawValue + maintenanceBtc;
+
+  // True economic reward: gross minus maintenance
+  const reward = poolReward - maintenanceBtc;
+
+  // MaintenanceGMT: use direct sum when available, else derive from BTC
+  const maintenanceGMT = hasGmtMaintenance
+    ? maintenanceGMTDirect
+    : btcPrice > 0 && gmtPrice > 0
+      ? (maintenanceBtc * btcPrice) / gmtPrice
+      : 0;
+
+  const maintenanceUSD = maintenanceBtc * btcPrice;
+
   const poolRewardUSD = poolReward * btcPrice;
-  const maintenanceUSD = maintenance * btcPrice;
   const rewardInUSD = reward * btcPrice;
 
   return {
@@ -78,8 +109,8 @@ function transformSoloMining(raw: SoloMiningRawRecord, fiatRate: number): Mining
     poolRewardGMT: usdToGmt(poolRewardUSD, gmtPrice),
     poolRewardUSD,
     poolRewardFiat: poolRewardUSD * fiatRate,
-    maintenance,
-    maintenanceGMT: usdToGmt(maintenanceUSD, gmtPrice),
+    maintenance: maintenanceBtc,
+    maintenanceGMT,
     maintenanceUSD,
     maintenanceFiat: maintenanceUSD * fiatRate,
     reward,
@@ -96,11 +127,30 @@ function transformSoloMining(raw: SoloMiningRawRecord, fiatRate: number): Mining
 function transformMinerWars(raw: MinerWarsRawRecord, fiatRate: number): MiningEnrichedRecord {
   const btcPrice = raw.incomeStatistic?.btcCourseInUsd ?? 0;
   const gmtPrice = raw.incomeStatistic?.gmtPrice ?? 0;
-  const maintenance = (raw.c1Value ?? 0) + (raw.c2Value ?? 0);
-  const poolReward = (raw.totalReward ?? 0) + maintenance;
-  const reward = poolReward - maintenance;
+  const maintenanceByGmt = raw.maintenanceByGmt ?? false;
+
+  // Use InBtc variants when available — same precision as c1Value/c2Value for now but future-proof
+  const c1Btc = raw.c1ValueInBtc ?? raw.c1Value ?? 0;
+  const c2Btc = raw.c2ValueInBtc ?? raw.c2Value ?? 0;
+  const maintenanceBtc = c1Btc + c2Btc;
+
+  // Pool reward (gross BTC):
+  //   maintenanceByGmt=true  → totalReward is gross (maintenance paid separately in GMT)
+  //   maintenanceByGmt=false → totalReward is net; add maintenance back to get gross
+  const netReward = raw.totalReward ?? 0;
+  const poolReward = maintenanceByGmt ? netReward : netReward + maintenanceBtc;
+  const reward = poolReward - maintenanceBtc;
+
+  // MaintenanceGMT: use InGmt fields when maintenance was paid in GMT, else derive from BTC
+  const c1Gmt = raw.c1ValueInGmt ?? 0;
+  const c2Gmt = raw.c2ValueInGmt ?? 0;
+  const maintenanceGMT =
+    maintenanceByGmt && c1Gmt + c2Gmt > 0
+      ? c1Gmt + c2Gmt
+      : usdToGmt(maintenanceBtc * btcPrice, gmtPrice);
+
   const poolRewardUSD = poolReward * btcPrice;
-  const maintenanceUSD = maintenance * btcPrice;
+  const maintenanceUSD = maintenanceBtc * btcPrice;
   const rewardUSD = reward * btcPrice;
 
   return {
@@ -111,8 +161,8 @@ function transformMinerWars(raw: MinerWarsRawRecord, fiatRate: number): MiningEn
     poolRewardGMT: usdToGmt(poolRewardUSD, gmtPrice),
     poolRewardUSD,
     poolRewardFiat: poolRewardUSD * fiatRate,
-    maintenance,
-    maintenanceGMT: usdToGmt(maintenanceUSD, gmtPrice),
+    maintenance: maintenanceBtc,
+    maintenanceGMT,
     maintenanceUSD,
     maintenanceFiat: maintenanceUSD * fiatRate,
     reward,
