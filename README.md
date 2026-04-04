@@ -28,12 +28,8 @@ You can also browse your data directly in the app before exporting, with filters
 
 ## Features
 
-- **Data Viewer** - browse your fetched records directly in the app before exporting, with column sorting, pagination, and per-tab filters
-- **Date range filter** - pick a custom date range with an inline calendar to narrow down your records
-- **Currency toggle** - switch between BTC, GMT, USD, and your local fiat currency on the fly
-- **Group by day** - collapse multiple records into daily totals for a cleaner overview
-- **Transaction type filter** - select which transaction types to include in the Transactions sheet
-- **Silent token refresh** - your session is automatically refreshed in the background via the extension, so you don't get logged out mid-export
+- **Data Viewer** - browse your records in-app before exporting, with filters, date ranges, and currency toggles
+- **Fiat conversion** - each row shows the USD and local currency value at the time the reward was received
 - **Browser cache** - data is cached after the first fetch, so subsequent exports only pull new records
 - **Dark & light mode** - follows your system preference with a manual toggle
 
@@ -61,8 +57,8 @@ That's it, your file will download automatically.
 
 | Layer            | Choice                              | Reason                                                                |
 | ---------------- | ----------------------------------- | --------------------------------------------------------------------- |
-| UI framework     | React 18 + TypeScript               | Component model and type safety                                       |
-| Build tool       | Vite 6                              | Fast dev server and ESM-native bundling                               |
+| UI framework     | React 19 + TypeScript               | Component model and type safety                                       |
+| Build tool       | Vite 8                              | Fast dev server and ESM-native bundling                               |
 | Styling          | Plain CSS (component-scoped)        | No overhead, full control, dark/light theming via CSS variables       |
 | Animations       | Framer Motion                       | Declarative enter/exit transitions                                    |
 | State            | `useState` + custom hooks           | Feature logic is self-contained, no global store needed               |
@@ -71,7 +67,7 @@ That's it, your file will download automatically.
 | Pricing data     | CoinGecko + FX Rates API            | Historical USD prices and fiat exchange rates per day                 |
 | Backend          | Cloudflare Workers                  | Edge-deployed, free-tier friendly, low-latency proxy                  |
 | Error tracking   | Sentry                              | Production error visibility with source maps                          |
-| Code quality     | ESLint 9 + Prettier + Husky         | Enforced on every commit via lint-staged                              |
+| Code quality     | ESLint 10 + Prettier + Husky        | Enforced on every commit via lint-staged                              |
 
 The folder structure follows a **feature-based layout** (`features/auth`, `features/export`, `features/data-viewer`) where each feature owns its components, hooks, types, and utilities. Shared utilities live in `src/lib`. There is no UI component library, all components are hand-built.
 
