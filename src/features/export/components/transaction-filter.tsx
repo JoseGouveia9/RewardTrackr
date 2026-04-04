@@ -1,4 +1,4 @@
-import { memo } from "react";
+﻿import { memo } from "react";
 import { TX_CHECKBOX_OPTIONS } from "../config/wallet-types";
 
 interface TransactionFilterProps {
@@ -6,7 +6,7 @@ interface TransactionFilterProps {
   onToggleTxType: (fromTypes: string[], checked: boolean) => void;
 }
 
-/** Renders toggle checkboxes for each wallet-transaction type to include in the export. */
+// Renders toggle checkboxes for each wallet-transaction type to include in the export.
 export const TransactionFilter = memo(function TransactionFilter({
   selectedTxFromTypes,
   onToggleTxType,

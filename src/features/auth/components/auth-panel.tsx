@@ -1,4 +1,4 @@
-import { memo } from "react";
+﻿import { memo } from "react";
 import extensionSyncImg from "../assets/extension-sync.webp";
 import extensionSuccessImg from "../assets/extension-success.webp";
 import "./auth-panel.css";
@@ -7,7 +7,7 @@ interface AuthPanelProps {
   onSync: () => void;
 }
 
-/** Renders the step-by-step instructions panel for connecting via the RewardTrackr browser extension. */
+// Renders the step-by-step instructions panel for connecting via the RewardTrackr browser extension.
 export const AuthPanel = memo(function AuthPanel({ onSync }: AuthPanelProps) {
   return (
     <section className="panel-glass panel-auth">

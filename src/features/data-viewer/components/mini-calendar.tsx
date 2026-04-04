@@ -1,4 +1,4 @@
-import type { DateRange } from "../types";
+﻿import type { DateRange } from "../types";
 import { buildIsoDate } from "../utils";
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -17,7 +17,7 @@ export const CAL_MONTHS = [
   "December",
 ];
 
-/** Renders a 6×7 calendar grid for a single month, highlighting the selected date range. */
+// Renders a 6×7 calendar grid for a single month, highlighting the selected date range.
 export function MiniCalendar({
   year,
   month,

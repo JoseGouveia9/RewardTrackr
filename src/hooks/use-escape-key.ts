@@ -1,6 +1,6 @@
-import { useEffect } from "react";
+﻿import { useEffect } from "react";
 
-/** Calls `onEscape` when the Escape key is pressed while `enabled` is true. */
+// Calls `onEscape` when the Escape key is pressed while `enabled` is true.
 export function useEscapeKey(onEscape: () => void, enabled: boolean): void {
   useEffect(() => {
     if (!enabled) return;

@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef, useState } from "react";
+﻿import { memo, useEffect, useRef, useState } from "react";
 import type { AuthUser } from "../types";
 import "./header-user-menu.css";
 
@@ -10,7 +10,7 @@ interface HeaderUserMenuProps {
   onLogout: () => void;
 }
 
-/** Renders the user avatar button with a dropdown showing user info, theme toggle, and logout. */
+// Renders the user avatar button with a dropdown showing user info, theme toggle, and logout.
 export const HeaderUserMenu = memo(function HeaderUserMenu({
   user,
   displayAlias,

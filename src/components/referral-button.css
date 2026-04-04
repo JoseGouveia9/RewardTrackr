@@ -1,4 +1,4 @@
-/* ── Trigger button ─────────────────────────────────────────── */
+﻿/* Trigger button */
 .referral-btn {
   display: flex;
   align-items: center;
@@ -25,7 +25,7 @@
   flex-shrink: 0;
 }
 
-/* ── Overlay ────────────────────────────────────────────────── */
+/* Overlay */
 .referral-overlay {
   position: fixed;
   inset: 0;
@@ -39,7 +39,7 @@
   padding: 20px;
 }
 
-/* ── Modal card ─────────────────────────────────────────────── */
+/* Modal card */
 .referral-modal {
   width: 100%;
   max-width: 480px;
@@ -95,7 +95,7 @@
   color: #86efac;
 }
 
-/* ── Perks list ─────────────────────────────────────────────── */
+/* Perks list */
 .referral-modal-perks {
   margin: 0;
   padding: 0;
@@ -126,7 +126,7 @@
   color: rgba(134, 239, 172, 0.6);
 }
 
-/* ── CTA ────────────────────────────────────────────────────── */
+/* CTA */
 .referral-modal-cta {
   display: block;
   text-align: center;
@@ -156,7 +156,7 @@
   color: #86efac;
 }
 
-/* ── Mobile ─────────────────────────────────────────────────── */
+/* Mobile */
 @media (max-width: 640px) {
   .referral-btn {
     background: rgba(5, 46, 22, 0.65);
@@ -171,7 +171,7 @@
   }
 }
 
-/* ── Light mode ─────────────────────────────────────────────── */
+/* Light mode */
 .page.theme-light .referral-overlay {
   background: transparent;
 }

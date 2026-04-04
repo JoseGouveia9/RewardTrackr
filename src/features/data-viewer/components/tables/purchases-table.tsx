@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { loadCacheEntry } from "@/features/export/utils/cache";
 import type { PurchaseView, DateRange } from "../../types";
-import { EMPTY_DATE_RANGE, PAGE_SIZE } from "../../utils/constants";
+import { PAGE_SIZE } from "../../utils/constants";
 import {
   formatCurrencyValue,
   getDateBounds,
@@ -14,24 +14,27 @@ import { DateRangeFilter } from "../date-range-filter";
 import { TypeCheckFilter } from "../type-check-filter";
 import { Pagination } from "../pagination";
 
-/** Renders a paged purchases and upgrades table combining both sheets, with type/date filters. */
+// Renders a paged purchases and upgrades table combining both sheets, with type/date filters.
 export function PurchasesTable({
   fiatCode,
   purchaseView,
   groupByDay,
+  dateRange,
+  setDateRange,
 }: {
   fiatCode: string;
   purchaseView: PurchaseView;
   groupByDay: boolean;
+  dateRange: DateRange;
+  setDateRange: (v: DateRange) => void;
 }) {
   const [page, setPage] = useState(0);
-  const [dateRange, setDateRange] = useState<DateRange>(EMPTY_DATE_RANGE);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [hiddenCurrencies, setHiddenCurrencies] = useState<Set<string>>(new Set());
   const purchasesEntry = useMemo(() => loadCacheEntry("purchases"), []);
   const upgradesEntry = useMemo(() => loadCacheEntry("upgrades"), []);
 
-  /** Normalises a cache entry's records into the shape expected by this table. */
+  // Normalises a cache entry's records into the shape expected by this table.
   function parseEntry(entry: ReturnType<typeof loadCacheEntry>) {
     if (!entry?.records?.length) return [];
     return entry.records.map((r) => {
@@ -59,6 +62,7 @@ export function PurchasesTable({
   );
 
   const dateBounds = useMemo(() => getDateBounds(rows), [rows]);
+  const rowDates = useMemo(() => rows.map((r) => r.date.slice(0, 10)), [rows]);
 
   const types = useMemo(() => [...new Set(rows.map((r) => r.type))].filter(Boolean).sort(), [rows]);
 
@@ -122,14 +126,16 @@ export function PurchasesTable({
 
   const grandTotal = useMemo(
     () =>
-      currencyTotals.reduce(
-        (acc, [, t]) => ({
-          valueUsd: acc.valueUsd + t.valueUsd,
-          valueFiat: acc.valueFiat + t.valueFiat,
-        }),
-        { valueUsd: 0, valueFiat: 0 },
-      ),
-    [currencyTotals],
+      currencyTotals
+        .filter(([currency]) => !hiddenCurrencies.has(currency))
+        .reduce(
+          (acc, [, t]) => ({
+            valueUsd: acc.valueUsd + t.valueUsd,
+            valueFiat: acc.valueFiat + t.valueFiat,
+          }),
+          { valueUsd: 0, valueFiat: 0 },
+        ),
+    [currencyTotals, hiddenCurrencies],
   );
 
   const isSingleCurrency = currencyTotals.length === 1;
@@ -140,7 +146,7 @@ export function PurchasesTable({
     <FiatIcon code={fiatCode} />
   );
 
-  /** Returns the display value and currency label for a totals row based on the active purchaseView. */
+  // Returns the display value and currency label for a totals row based on the active purchaseView.
   function totalValue(
     t: { nativeAmount: number; valueUsd: number; valueFiat: number },
     currency: string,
@@ -235,7 +241,12 @@ export function PurchasesTable({
         <thead>
           <tr>
             <th>
-              <DateRangeFilter value={dateRange} onChange={setDateRange} {...dateBounds} />
+              <DateRangeFilter
+                value={dateRange}
+                onChange={setDateRange}
+                {...dateBounds}
+                dates={rowDates}
+              />
             </th>
             <th>
               <TypeCheckFilter

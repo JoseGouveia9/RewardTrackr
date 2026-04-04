@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { loadCacheEntry } from "@/features/export/utils/cache";
 import type { RewardKey } from "@/features/export/types";
 import type { EarnView, DateRange } from "../../types";
-import { EMPTY_DATE_RANGE, PAGE_SIZE } from "../../utils/constants";
+import { PAGE_SIZE } from "../../utils/constants";
 import {
   formatCurrencyValue,
   getDateBounds,
@@ -14,20 +14,23 @@ import { AnyCurrencyIcon, UsdIcon, FiatIcon } from "../icons/currency-icons";
 import { DateRangeFilter } from "../date-range-filter";
 import { Pagination } from "../pagination";
 
-/** Renders a paged Simple Earn table with asset, APR, reward and optional group-by-day aggregation. */
+// Renders a paged Simple Earn table with asset, APR, reward and optional group-by-day aggregation.
 export function SimpleEarnTable({
   rewardKey,
   fiatCode,
   earnView,
   groupByDay,
+  dateRange,
+  setDateRange,
 }: {
   rewardKey: RewardKey;
   fiatCode: string;
   earnView: EarnView;
   groupByDay: boolean;
+  dateRange: DateRange;
+  setDateRange: (v: DateRange) => void;
 }) {
   const [page, setPage] = useState(0);
-  const [dateRange, setDateRange] = useState<DateRange>(EMPTY_DATE_RANGE);
   const entry = useMemo(() => loadCacheEntry(rewardKey), [rewardKey]);
 
   const rows = useMemo(() => {
@@ -51,6 +54,7 @@ export function SimpleEarnTable({
   }, [entry]);
 
   const dateBounds = useMemo(() => getDateBounds(rows), [rows]);
+  const rowDates = useMemo(() => rows.map((r) => r.date.slice(0, 10)), [rows]);
 
   const filteredRows = useMemo(
     () => rows.filter((r) => matchesDateRange(r.date, dateRange)),
@@ -132,7 +136,7 @@ export function SimpleEarnTable({
     <FiatIcon code={fiatCode} />
   );
 
-  /** Returns the display value and currency label for a row based on the active earnView. */
+  // Returns the display value and currency label for a row based on the active earnView.
   function earnRowValue(row: {
     reward: number;
     rewardInUSD: number;
@@ -194,7 +198,12 @@ export function SimpleEarnTable({
         <thead>
           <tr>
             <th>
-              <DateRangeFilter value={dateRange} onChange={setDateRange} {...dateBounds} />
+              <DateRangeFilter
+                value={dateRange}
+                onChange={setDateRange}
+                {...dateBounds}
+                dates={rowDates}
+              />
             </th>
             <th>Asset</th>
             <th>APR</th>

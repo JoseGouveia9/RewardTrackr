@@ -1,4 +1,4 @@
-import { memo } from "react";
+﻿import { memo } from "react";
 import { FiatDropdown } from "./fiat-dropdown";
 import type { ExtraFiatCurrency } from "../types";
 
@@ -9,7 +9,7 @@ interface ExtraFiatOptionsProps {
   onChangeCurrency: (v: ExtraFiatCurrency) => void;
 }
 
-/** Renders the extra fiat conversion toggle and currency selector for the Excel export. */
+// Renders the extra fiat conversion toggle and currency selector for the Excel export.
 export const ExtraFiatOptions = memo(function ExtraFiatOptions({
   includeExcelFiat,
   onToggle,

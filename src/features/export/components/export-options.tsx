@@ -1,4 +1,4 @@
-import { memo } from "react";
+﻿import { memo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { TransactionFilter } from "./transaction-filter";
 import { WalletPricingOptions } from "./wallet-pricing-options";
@@ -25,7 +25,7 @@ interface ExportOptionsProps {
   onChangeFiatCurrency: (v: ExtraFiatCurrency) => void;
 }
 
-/** Renders the animated export options panels (transaction filter, wallet pricing, extra fiat). */
+// Renders the animated export options panels (transaction filter, wallet pricing, extra fiat).
 export const ExportOptions = memo(function ExportOptions({
   selectedKeys,
   walletSheetsSelected,

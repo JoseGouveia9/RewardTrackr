@@ -1,4 +1,4 @@
-/* ── Trigger button ─────────────────────────────────────────── */
+﻿/* Trigger button */
 .support-button {
   display: flex;
   align-items: center;
@@ -54,7 +54,7 @@
   transform: translateX(0);
 }
 
-/* ── Overlay ────────────────────────────────────────────────── */
+/* Overlay */
 .support-overlay {
   position: fixed;
   inset: 0;
@@ -68,7 +68,7 @@
   padding: 20px;
 }
 
-/* ── Modal card ─────────────────────────────────────────────── */
+/* Modal card */
 .support-modal {
   width: 100%;
   max-width: 600px;
@@ -129,7 +129,7 @@
   line-height: 1.5;
 }
 
-/* ── Addresses ──────────────────────────────────────────────── */
+/* Addresses */
 .support-addresses {
   display: flex;
   flex-direction: column;
@@ -189,7 +189,7 @@
   color: #ffffff;
 }
 
-/* ── Ko-fi section inside modal (mobile only) ───────────────── */
+/* Ko-fi section inside modal (mobile only) */
 
 .support-kofi-section {
   display: none;
@@ -291,7 +291,7 @@
   padding: 0;
 }
 
-/* ── Mobile: show expanded by default (no hover available) ─── */
+/* Mobile: show expanded by default (no hover available) */
 
 @media (max-width: 640px) {
   .support-button {
@@ -315,7 +315,7 @@
   }
 }
 
-/* ── Light mode ─────────────────────────────────────────────── */
+/* Light mode */
 .page.theme-light .support-overlay {
   background: transparent;
 }

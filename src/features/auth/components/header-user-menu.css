@@ -1,4 +1,4 @@
-/* ── Trigger button ──────────────────────────────────────────── */
+﻿/* Trigger button */
 
 .user-menu-wrapper {
   position: relative;
@@ -51,7 +51,7 @@
   margin-left: 2px;
 }
 
-/* ── Dropdown ────────────────────────────────────────────────── */
+/* Dropdown */
 
 .user-menu-dropdown {
   position: absolute;
@@ -68,7 +68,7 @@
   -webkit-backdrop-filter: blur(20px) saturate(160%);
 }
 
-/* ── User info rows ──────────────────────────────────────────── */
+/* User info rows */
 
 .user-menu-info-row {
   display: flex;
@@ -110,7 +110,7 @@
   margin: 16px 0;
 }
 
-/* ── Actions ─────────────────────────────────────────────────── */
+/* Actions */
 
 .user-menu-action {
   display: flex;
@@ -155,7 +155,7 @@
   background: rgba(255, 40, 70, 0.22);
 }
 
-/* ── Mobile ──────────────────────────────────────────────────── */
+/* Mobile */
 
 @media (max-width: 640px) {
   .user-menu-wrapper {
@@ -168,7 +168,7 @@
   }
 }
 
-/* ── Light mode ──────────────────────────────────────────────── */
+/* Light mode */
 
 .page.theme-light .user-menu-button {
   background: rgba(255, 255, 255, 0.72);

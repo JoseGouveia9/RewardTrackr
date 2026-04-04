@@ -1,4 +1,4 @@
-import { memo } from "react";
+﻿import { memo } from "react";
 import { useEscapeKey } from "@/hooks/use-escape-key";
 import "./referral-button.css";
 
@@ -8,7 +8,7 @@ interface ReferralButtonProps {
   onClose: () => void;
 }
 
-/** Renders the "No GoMining account?" button and a modal with referral perks and sign-up link. */
+// Renders the "No GoMining account?" button and a modal with referral perks and sign-up link.
 export const ReferralButton = memo(function ReferralButton({
   open,
   onOpen,

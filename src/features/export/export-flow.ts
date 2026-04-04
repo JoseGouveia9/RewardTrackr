@@ -1,4 +1,4 @@
-import { WALLET_TX_KEYS } from "./config/wallet-types";
+﻿import { WALLET_TX_KEYS } from "./config/wallet-types";
 import { REWARD_CONFIG_MAP, ALL_REWARD_KEYS } from "./config/reward-configs";
 import { buildApiHeaders, postJson } from "@/lib/http";
 import { enrichRecords, reenrichFiatValues } from "./utils/transformers";
@@ -24,7 +24,7 @@ import {
   saveCacheEntry,
 } from "./utils/cache";
 
-// ── Constants ────────────────────────────────────────────────────
+// Constants
 
 const WORKER_URL =
   (import.meta.env.VITE_WORKER_URL as string | undefined)?.replace(/\/$/, "") ?? "";
@@ -32,9 +32,9 @@ const WORKER_URL =
 const MAX_RETRIES = 5;
 const RETRY_DELAY_MS = 60_000;
 
-// ── Rate limit helpers ───────────────────────────────────────────
+// Rate limit helpers
 
-/** Calls the worker's rate-limit check endpoint and throws if the user has exceeded their daily quota. */
+// Calls the worker's rate-limit check endpoint and throws if the user has exceeded their daily quota.
 async function checkExportRateLimit(token: string): Promise<void> {
   if (!WORKER_URL) return;
   const response = await fetch(`${WORKER_URL}/rl-check`, {
@@ -47,7 +47,7 @@ async function checkExportRateLimit(token: string): Promise<void> {
   }
 }
 
-/** Rolls back the rate-limit counter on the worker if the export ultimately failed. */
+// Rolls back the rate-limit counter on the worker if the export ultimately failed.
 async function rollbackExportRateLimit(token: string): Promise<void> {
   if (!WORKER_URL) return;
   await fetch(`${WORKER_URL}/rl-rollback`, {
@@ -58,9 +58,9 @@ async function rollbackExportRateLimit(token: string): Promise<void> {
   });
 }
 
-// ── Download helper ──────────────────────────────────────────────
+// Download helper
 
-/** Triggers a browser download of the given ArrayBuffer as an .xlsx file. */
+// Triggers a browser download of the given ArrayBuffer as an .xlsx file.
 function triggerFileDownload(buffer: ArrayBuffer, fileName: string): void {
   const blob = new Blob([buffer], {
     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -75,9 +75,9 @@ function triggerFileDownload(buffer: ArrayBuffer, fileName: string): void {
   URL.revokeObjectURL(url);
 }
 
-// ── Fetch helpers ────────────────────────────────────────────────
+// Fetch helpers
 
-/** Wraps an async fetch call with retry logic, retrying up to MAX_RETRIES times on timeout. */
+// Wraps an async fetch call with retry logic, retrying up to MAX_RETRIES times on timeout.
 async function fetchWithRetry<T>(
   fn: () => Promise<T>,
   onProgress?: (msg: string) => void,
@@ -95,7 +95,7 @@ async function fetchWithRetry<T>(
   throw new Error("Max retries exceeded");
 }
 
-/** Fetches all paginated records for a sheet config, supporting incremental (new-only) mode. */
+// Fetches all paginated records for a sheet config, supporting incremental (new-only) mode.
 async function fetchAllPages(
   config: RewardConfig,
   accessToken: string,
@@ -194,9 +194,9 @@ async function fetchAllPages(
   return { records: all, totalCount };
 }
 
-// ── Cache helpers ────────────────────────────────────────────────
+// Cache helpers
 
-/** Returns the cache metadata extras (pricingMode + currency) for a given sheet key. */
+// Returns the cache metadata extras (pricingMode + currency) for a given sheet key.
 function cacheExtras(key: RewardKey, includeWalletFiat: boolean, currency: ExtraFiatCurrency) {
   const pricingMode = WALLET_TX_KEYS.has(key)
     ? ((includeWalletFiat ? "fiat-on" : "fiat-off") as "fiat-on" | "fiat-off")
@@ -206,7 +206,7 @@ function cacheExtras(key: RewardKey, includeWalletFiat: boolean, currency: Extra
     : { extraFiatCurrency: currency };
 }
 
-/** Fetches the current total record count for each key using a cheap limit=1 probe request. */
+// Fetches the current total record count for each key using a cheap limit=1 probe request.
 async function fetchLiveCounts(
   accessToken: string,
   keys: RewardKey[],
@@ -242,7 +242,7 @@ async function fetchLiveCounts(
   return Object.fromEntries(entries);
 }
 
-/** Merges incoming records into existing ones, deduplicating by createdAt and sorting newest first. */
+// Merges incoming records into existing ones, deduplicating by createdAt and sorting newest first.
 function mergeRecords(existing: RewardRecord[], incoming: RewardRecord[]): RewardRecord[] {
   const seen = new Set<string>();
   const merged: RewardRecord[] = [];
@@ -264,7 +264,7 @@ function mergeRecords(existing: RewardRecord[], incoming: RewardRecord[]): Rewar
   );
 }
 
-// ── Public API ───────────────────────────────────────────────────
+// Public API
 
 export interface ExportFlowParams {
   accessToken: string;
@@ -278,7 +278,7 @@ export interface ExportFlowParams {
   onCacheUpdate: (cache: CacheState) => void;
 }
 
-/** Orchestrates the full export: probe → fetch → enrich → build Excel → download. */
+// Orchestrates the full export: probe → fetch → enrich → build Excel → download.
 export async function executeExportFlow({
   accessToken,
   selectedKeys,
@@ -323,7 +323,7 @@ export async function executeExportFlow({
         }
         if (liveCount !== entry.totalCount) return true;
 
-        // Count matches — if only the currency changed, re-enrich in place (no GoMining fetch).
+        // Count matches, if only the currency changed, re-enrich in place (no GoMining fetch).
         if (entry.extraFiatCurrency !== excelFiatCurrency) currencyChangeKeys.add(k);
         return false;
       });
@@ -375,7 +375,7 @@ export async function executeExportFlow({
     }
 
     // Phase 1.5: Re-enrich currency-change-only keys using existing cached USD values.
-    // Count is unchanged so no GoMining fetch is needed — just recompute fiat fields.
+    // Count is unchanged so no GoMining fetch is needed, just recompute fiat fields.
     for (const key of currencyChangeKeys) {
       const currentEntry = updatedCache[key];
       if (!currentEntry) continue;

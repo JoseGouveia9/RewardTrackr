@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { loadCacheEntry } from "@/features/export/utils/cache";
 import type { RewardKey } from "@/features/export/types";
 import type { SimpleView, DateRange } from "../../types";
-import { EMPTY_DATE_RANGE, PAGE_SIZE } from "../../utils/constants";
+import { PAGE_SIZE } from "../../utils/constants";
 import {
   formatCurrencyValue,
   getDateBounds,
@@ -14,20 +14,23 @@ import { AnyCurrencyIcon, UsdIcon, FiatIcon } from "../icons/currency-icons";
 import { DateRangeFilter } from "../date-range-filter";
 import { Pagination } from "../pagination";
 
-/** Renders a paged reward table for non-mining sheets with per-currency totals and optional group-by-day. */
+// Renders a paged reward table for non-mining sheets with per-currency totals and optional group-by-day.
 export function SimpleTable({
   rewardKey,
   fiatCode,
   simpleView,
   groupByDay,
+  dateRange,
+  setDateRange,
 }: {
   rewardKey: RewardKey;
   fiatCode: string;
   simpleView: SimpleView;
   groupByDay: boolean;
+  dateRange: DateRange;
+  setDateRange: (v: DateRange) => void;
 }) {
   const [page, setPage] = useState(0);
-  const [dateRange, setDateRange] = useState<DateRange>(EMPTY_DATE_RANGE);
   const [hiddenCurrencies, setHiddenCurrencies] = useState<Set<string>>(new Set());
   const entry = useMemo(() => loadCacheEntry(rewardKey), [rewardKey]);
 
@@ -49,6 +52,7 @@ export function SimpleTable({
   }, [entry]);
 
   const dateBounds = useMemo(() => getDateBounds(rows), [rows]);
+  const rowDates = useMemo(() => rows.map((r) => r.date.slice(0, 10)), [rows]);
 
   const filteredRows = useMemo(
     () => rows.filter((r) => matchesDateRange(r.date, dateRange)),
@@ -103,14 +107,16 @@ export function SimpleTable({
 
   const grandTotal = useMemo(
     () =>
-      currencyTotals.reduce(
-        (acc, [, t]) => ({
-          rewardInUSD: acc.rewardInUSD + t.rewardInUSD,
-          rewardInFiat: acc.rewardInFiat + t.rewardInFiat,
-        }),
-        { rewardInUSD: 0, rewardInFiat: 0 },
-      ),
-    [currencyTotals],
+      currencyTotals
+        .filter(([currency]) => !hiddenCurrencies.has(currency))
+        .reduce(
+          (acc, [, t]) => ({
+            rewardInUSD: acc.rewardInUSD + t.rewardInUSD,
+            rewardInFiat: acc.rewardInFiat + t.rewardInFiat,
+          }),
+          { rewardInUSD: 0, rewardInFiat: 0 },
+        ),
+    [currencyTotals, hiddenCurrencies],
   );
 
   if (!entry) {
@@ -131,7 +137,7 @@ export function SimpleTable({
   const valueLabel =
     rewardKey === "deposits" ? "Deposited" : rewardKey === "withdrawals" ? "Withdrawn" : "Reward";
 
-  /** Returns the display value and currency label for a row based on the active simpleView. */
+  // Returns the display value and currency label for a row based on the active simpleView.
   function rowValue(row: {
     reward: number;
     rewardInUSD: number;
@@ -145,7 +151,7 @@ export function SimpleTable({
 
   return (
     <div className="dv-tables-wrap">
-      {/* Totals — one row per currency */}
+      {/* Totals - one row per currency */}
       <table className="dv-table dv-table-totals">
         <colgroup>
           <col className="dv-col-date" />
@@ -216,7 +222,12 @@ export function SimpleTable({
         <thead>
           <tr>
             <th>
-              <DateRangeFilter value={dateRange} onChange={setDateRange} {...dateBounds} />
+              <DateRangeFilter
+                value={dateRange}
+                onChange={setDateRange}
+                {...dateBounds}
+                dates={rowDates}
+              />
             </th>
             <th>
               <span className="dv-cell-with-icon">

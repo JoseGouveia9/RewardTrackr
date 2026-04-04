@@ -1,9 +1,9 @@
-// ── Constants ────────────────────────────────────────────────────
+﻿// Constants
 
 const REQUEST_TIMEOUT_MS = 30_000;
 const GET_TIMEOUT_MS = 15_000;
 
-// ── Types ─────────────────────────────────────────────────────────
+// Types
 
 interface JwtPayload {
   id?: string;
@@ -16,10 +16,10 @@ interface JwtPayload {
   iat?: number;
 }
 
-// ── API request helpers ───────────────────────────────────────────
+// API request helpers
 
-/** Builds the auth headers required by the GoMining API.
- *  Browsers silently drop User-Agent, but the rest are passed through. */
+// Builds the auth headers required by the GoMining API.
+// Browsers silently drop User-Agent, but the rest are passed through.
 export function buildApiHeaders(token: string): Record<string, string> {
   return {
     "Content-Type": "application/json",
@@ -29,8 +29,8 @@ export function buildApiHeaders(token: string): Record<string, string> {
   };
 }
 
-/** Sends a POST request with a JSON body and returns the parsed response.
- *  Throws on HTTP errors, extracting the API error message when available. */
+// Sends a POST request with a JSON body and returns the parsed response.
+// Throws on HTTP errors, extracting the API error message when available.
 export async function postJson<TResponse = unknown>(
   url: string,
   headers: Record<string, string>,
@@ -71,8 +71,8 @@ export async function postJson<TResponse = unknown>(
   }
 }
 
-/** Sends a GET request and returns the parsed JSON response.
- *  Throws on any non-OK HTTP status. */
+// Sends a GET request and returns the parsed JSON response.
+// Throws on any non-OK HTTP status.
 export async function getJson<TResponse = unknown>(url: string): Promise<TResponse> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), GET_TIMEOUT_MS);
@@ -85,8 +85,8 @@ export async function getJson<TResponse = unknown>(url: string): Promise<TRespon
   }
 }
 
-/** Sends a GET request and attempts to parse JSON regardless of HTTP status.
- *  Used for APIs that may return partial data or non-standard error bodies. */
+// Sends a GET request and attempts to parse JSON regardless of HTTP status.
+// Used for APIs that may return partial data or non-standard error bodies.
 export async function getJsonTolerant<TResponse = unknown>(url: string): Promise<TResponse> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), GET_TIMEOUT_MS);
@@ -103,10 +103,10 @@ export async function getJsonTolerant<TResponse = unknown>(url: string): Promise
   }
 }
 
-// ── JWT helpers ───────────────────────────────────────────────────
+// JWT helpers
 
-/** Decodes the payload section of a JWT without verifying the signature.
- *  Returns null if the token is malformed or unparseable. */
+// Decodes the payload section of a JWT without verifying the signature.
+// Returns null if the token is malformed or unparseable.
 export function decodeJwt(token: string): JwtPayload | null {
   try {
     const parts = token.split(".");

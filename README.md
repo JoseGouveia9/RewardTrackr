@@ -8,7 +8,7 @@ A free tool built to help GoMining users export their full rewards history for t
 
 ## What it does
 
-Tax season is stressful enough without having to manually track your crypto rewards. GoMining only offers built-in exports for Solo Mining and MinerWars, leaving everything else out. RewardTrackr fills that gap. Connect your account, pick which sheets you want, and download a ready-to-use `.xlsx` file with all your data — including fiat values in your local currency — making it easy to hand off to your accountant or fill in your tax return.
+Tax season is stressful enough without having to manually track your crypto rewards. GoMining only offers built-in exports for Solo Mining and MinerWars, leaving everything else out. RewardTrackr fills that gap. Connect your account, pick which sheets you want, and download a ready-to-use `.xlsx` file with all your data, including fiat values in your local currency, making it easy to hand off to your accountant or fill in your tax return.
 
 You can also browse your data directly in the app before exporting, with filters, date ranges, and currency toggles.
 
@@ -28,14 +28,14 @@ You can also browse your data directly in the app before exporting, with filters
 
 ## Features
 
-- **Data Viewer** — browse your fetched records directly in the app before exporting, with column sorting, pagination, and per-tab filters
-- **Date range filter** — pick a custom date range with an inline calendar to narrow down your records
-- **Currency toggle** — switch between BTC, GMT, USD, and your local fiat currency on the fly
-- **Group by day** — collapse multiple records into daily totals for a cleaner overview
-- **Transaction type filter** — select which transaction types to include in the Transactions sheet
-- **Silent token refresh** — your session is automatically refreshed in the background via the extension, so you don't get logged out mid-export
-- **Browser cache** — data is cached after the first fetch, so subsequent exports only pull new records
-- **Dark & light mode** — follows your system preference with a manual toggle
+- **Data Viewer** - browse your fetched records directly in the app before exporting, with column sorting, pagination, and per-tab filters
+- **Date range filter** - pick a custom date range with an inline calendar to narrow down your records
+- **Currency toggle** - switch between BTC, GMT, USD, and your local fiat currency on the fly
+- **Group by day** - collapse multiple records into daily totals for a cleaner overview
+- **Transaction type filter** - select which transaction types to include in the Transactions sheet
+- **Silent token refresh** - your session is automatically refreshed in the background via the extension, so you don't get logged out mid-export
+- **Browser cache** - data is cached after the first fetch, so subsequent exports only pull new records
+- **Dark & light mode** - follows your system preference with a manual toggle
 
 ## Privacy
 
@@ -49,13 +49,41 @@ Your GoMining session token is used only inside your browser to fetch your data 
 4. Open the [RewardTrackr app](https://josegouveia9.github.io/RewardTrackr/)
 5. Select the sheets you want and click **Build Excel**
 
-That's it — your file will download automatically.
+That's it, your file will download automatically.
 
 ## Notes
 
 - The app runs on free-tier services (Cloudflare, CoinGecko, FX Rates API). If a request fails due to rate limits, wait a moment and try again.
 - Exports are limited to **1 per day** to keep the service free and available for everyone.
 - Data is cached in your browser after the first export, so future exports only fetch new records.
+
+## Tech stack
+
+| Layer            | Choice                              | Reason                                                                |
+| ---------------- | ----------------------------------- | --------------------------------------------------------------------- |
+| UI framework     | React 18 + TypeScript               | Component model and type safety                                       |
+| Build tool       | Vite 6                              | Fast dev server and ESM-native bundling                               |
+| Styling          | Plain CSS (component-scoped)        | No overhead, full control, dark/light theming via CSS variables       |
+| Animations       | Framer Motion                       | Declarative enter/exit transitions                                    |
+| State            | `useState` + custom hooks           | Feature logic is self-contained, no global store needed               |
+| Data fetching    | Native `fetch` with custom wrappers | Lightweight, no extra dependency for simple REST calls                |
+| Excel generation | ExcelJS                             | Full control over cell formatting, column widths, and sheet structure |
+| Pricing data     | CoinGecko + FX Rates API            | Historical USD prices and fiat exchange rates per day                 |
+| Backend          | Cloudflare Workers                  | Edge-deployed, free-tier friendly, low-latency proxy                  |
+| Error tracking   | Sentry                              | Production error visibility with source maps                          |
+| Code quality     | ESLint 9 + Prettier + Husky         | Enforced on every commit via lint-staged                              |
+
+The folder structure follows a **feature-based layout** (`features/auth`, `features/export`, `features/data-viewer`) where each feature owns its components, hooks, types, and utilities. Shared utilities live in `src/lib`. There is no UI component library, all components are hand-built.
+
+### Why no server-side backend?
+
+This was a deliberate choice, driven by two things:
+
+**Deployment simplicity** - a fully static app can be hosted on GitHub Pages at zero cost with no infrastructure to maintain. There is no server to provision, scale, or keep alive.
+
+**User trust** - your GoMining session token is the most sensitive piece of data in this flow. By keeping everything client-side, the token never leaves your browser. It is used directly to call the GoMining API from your machine, the resulting data is processed locally, and the final `.xlsx` file is assembled and downloaded entirely in-browser. There is no server that could log, store, or misuse it. You can verify this yourself by inspecting the source, what you read is exactly what runs.
+
+The Cloudflare Worker listed in the stack is a thin, stateless proxy used only to attach required headers to third-party API calls (CoinGecko, FX rates) that would otherwise be blocked by CORS. It never sees your token or your reward data.
 
 ## Feedback & issues
 

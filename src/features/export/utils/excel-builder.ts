@@ -1,4 +1,4 @@
-import ExcelJS from "exceljs";
+﻿import ExcelJS from "exceljs";
 import type { Workbook, Worksheet } from "exceljs";
 import { REWARD_CONFIG_MAP } from "../config/reward-configs";
 import { WALLET_TX_KEYS } from "../config/wallet-types";
@@ -14,7 +14,7 @@ import type {
   WalletTxEnrichedRecord,
 } from "../types";
 
-// ── Format constants ──────────────────────────────────────────────
+// Format constants
 
 const FMT_DATE = "dd/mm/yyyy hh:mm:ss";
 const FMT_BTC = "0.00000000";
@@ -22,9 +22,9 @@ const FMT_OTHER = "[<=0.009]0.000;0.00";
 const FMT_USD = "[<=0.009]$#,##0.000;$#,##0.00";
 const FMT_EUR = "[<=0.009]\u20ac#,##0.000;\u20ac#,##0.00";
 
-// ── Style helpers ─────────────────────────────────────────────────
+// Style helpers
 
-/** Sets each column's width to fit its widest cell content, capped at 60 characters. */
+// Sets each column's width to fit its widest cell content, capped at 60 characters.
 function autoFitColumns(ws: Worksheet): void {
   ws.columns.forEach((col) => {
     if (!col?.eachCell) return;
@@ -190,24 +190,24 @@ const CURRENCY_FMT: Record<string, string> = {
   XPF: '"CFP"#,##0',
 };
 
-/** Returns the Excel number-format string for the given ISO 4217 currency code. */
+// Returns the Excel number-format string for the given ISO 4217 currency code.
 function getCurrencyFormat(currency: string): string {
   return CURRENCY_FMT[currency] ?? `"${currency} "#,##0.00`;
 }
 
-/** Returns the fiat column header strings for USD and/or the extra currency. */
+// Returns the fiat column header strings for USD and/or the extra currency.
 function getFiatHeaders(extraCurrency: ExtraFiatCurrency | null, includeUsd = true): string[] {
   if (!includeUsd) return [];
   return extraCurrency ? ["Reward (USD)", `Reward (${extraCurrency})`] : ["Reward (USD)"];
 }
 
-/** Returns the Excel number-format strings for the fiat columns. */
+// Returns the Excel number-format strings for the fiat columns.
 function getFiatFormats(extraCurrency: ExtraFiatCurrency | null, includeUsd = true): string[] {
   if (!includeUsd) return [];
   return extraCurrency ? [FMT_USD, getCurrencyFormat(extraCurrency)] : [FMT_USD];
 }
 
-/** Returns the fiat cell values to append to a row based on the enabled currencies. */
+// Returns the fiat cell values to append to a row based on the enabled currencies.
 function getFiatValues(
   usdValue: number,
   fiatValue: number,
@@ -218,7 +218,7 @@ function getFiatValues(
   return extraCurrency ? [usdValue, fiatValue] : [usdValue];
 }
 
-/** Applies the purple-fill / bold-white style to a totals row. */
+// Applies the purple-fill / bold-white style to a totals row.
 function styleTotal(ws: Worksheet, rowNumber: number, colCount: number): void {
   const row = ws.getRow(rowNumber);
   for (let c = 1; c <= colCount; c++) {
@@ -227,7 +227,7 @@ function styleTotal(ws: Worksheet, rowNumber: number, colCount: number): void {
   }
 }
 
-/** Applies the purple-fill / bold-white / centered style to a header row. */
+// Applies the purple-fill / bold-white / centered style to a header row.
 function styleHeader(ws: Worksheet, rowNumber: number, colCount: number): void {
   const row = ws.getRow(rowNumber);
   for (let c = 1; c <= colCount; c++) {
@@ -237,14 +237,14 @@ function styleHeader(ws: Worksheet, rowNumber: number, colCount: number): void {
   }
 }
 
-/** Returns an ExcelJS formula object for SUBTOTAL(9, …) over the given column and row range. */
+// Returns an ExcelJS formula object for SUBTOTAL(9, …) over the given column and row range.
 function subtotal(col: string, from: number, to: number): { formula: string } {
   return { formula: `SUBTOTAL(9,${col}$${from}:${col}$${to})` };
 }
 
 // Sheet builders
 
-/** Adds a mining (Solo Mining / Miner Wars) worksheet with daily reward, maintenance and power columns. */
+// Adds a mining (Solo Mining / Miner Wars) worksheet with daily reward, maintenance and power columns.
 function buildMiningSheet(
   workbook: Workbook,
   sheetName: string,
@@ -313,7 +313,7 @@ function buildMiningSheet(
     fiatFormats.forEach((fmt) => {
       ws.getCell(row, col++).numFmt = fmt;
     });
-    // Reinvested to Power — text, no numFmt
+    // Reinvested to Power - text, no numFmt
   }
 
   ws.spliceRows(1, 0, new Array(COLS).fill(""));
@@ -326,7 +326,7 @@ function buildMiningSheet(
 
   ws.getCell("A1").value = "TOTAL";
   let totalCol = 2;
-  // Power (TH/s) — sum
+  // Power (TH/s) - sum
   ws.getCell(1, totalCol).value = subtotal(String.fromCharCode(64 + totalCol), dataFrom, dataTo);
   ws.getCell(1, totalCol++).numFmt = FMT_OTHER;
   // Pool Reward BTC, GMT, fiat
@@ -347,7 +347,7 @@ function buildMiningSheet(
     ws.getCell(1, totalCol).value = subtotal(String.fromCharCode(64 + totalCol), dataFrom, dataTo);
     ws.getCell(1, totalCol++).numFmt = fmt;
   });
-  // Discount — average
+  // Discount - average
   ws.getCell(1, totalCol).value = {
     formula: `AVERAGE(${String.fromCharCode(64 + totalCol)}$${dataFrom}:${String.fromCharCode(64 + totalCol)}$${dataTo})`,
   };
@@ -368,7 +368,7 @@ function buildMiningSheet(
   autoFitColumns(ws);
 }
 
-/** Adds a standard single-currency reward worksheet (date, currency, reward, optional fiat). */
+// Adds a standard single-currency reward worksheet (date, currency, reward, optional fiat).
 function buildStandardSheet(
   workbook: Workbook,
   sheetName: string,
@@ -426,7 +426,7 @@ function buildStandardSheet(
   autoFitColumns(ws);
 }
 
-/** Adds a multi-currency reward worksheet with one TOTAL row per distinct currency. */
+// Adds a multi-currency reward worksheet with one TOTAL row per distinct currency.
 function buildMultiCurrencySheet(
   workbook: Workbook,
   sheetName: string,
@@ -509,7 +509,7 @@ function buildMultiCurrencySheet(
   autoFitColumns(ws);
 }
 
-/** Adds a purchases/upgrades worksheet listing type, currency, amount and USD/fiat value. */
+// Adds a purchases/upgrades worksheet listing type, currency, amount and USD/fiat value.
 function buildPurchasesSheet(
   workbook: Workbook,
   sheetName: string,
@@ -565,7 +565,7 @@ function buildPurchasesSheet(
   autoFitColumns(ws);
 }
 
-/** Adds a wallet-transactions worksheet with type, currency, reward and optional fiat columns. */
+// Adds a wallet-transactions worksheet with type, currency, reward and optional fiat columns.
 function buildTransactionsSheet(
   workbook: Workbook,
   sheetName: string,
@@ -630,7 +630,7 @@ function buildTransactionsSheet(
   autoFitColumns(ws);
 }
 
-/** Adds a Simple Earn worksheet with asset, APR, reward and optional fiat columns. */
+// Adds a Simple Earn worksheet with asset, APR, reward and optional fiat columns.
 function buildSimpleEarnSheet(
   workbook: Workbook,
   sheetName: string,
@@ -703,7 +703,7 @@ function buildSimpleEarnSheet(
 
 // Main builder
 
-/** Builds an Excel workbook from the supplied sheet payloads and returns its ArrayBuffer. */
+// Builds an Excel workbook from the supplied sheet payloads and returns its ArrayBuffer.
 export async function buildExcelFromSheets(
   sheets: RewardSheetPayload[],
   options: FetchRewardsOptions = {},

@@ -1,11 +1,11 @@
-import { memo } from "react";
+﻿import { memo } from "react";
 
 interface WalletPricingOptionsProps {
   includeWalletFiat: boolean;
   onToggle: (checked: boolean) => void;
 }
 
-/** Renders the wallet-fiat pricing toggle and rate-limit warning for wallet-tx sheets. */
+// Renders the wallet-fiat pricing toggle and rate-limit warning for wallet-tx sheets.
 export const WalletPricingOptions = memo(function WalletPricingOptions({
   includeWalletFiat,
   onToggle,

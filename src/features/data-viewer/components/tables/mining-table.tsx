@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { loadCacheEntry } from "@/features/export/utils/cache";
 import type { RewardKey } from "@/features/export/types";
 import type { Currency, DateRange } from "../../types";
-import { EMPTY_DATE_RANGE, PAGE_SIZE } from "../../utils/constants";
+import { PAGE_SIZE } from "../../utils/constants";
 import {
   formatMiningValue,
   getRecordField,
@@ -14,18 +14,21 @@ import { MiningCurrencyIcon } from "../icons/currency-icons";
 import { DateRangeFilter } from "../date-range-filter";
 import { Pagination } from "../pagination";
 
-/** Renders a paged mining-rewards data table with date-range filter and running totals. */
+// Renders a paged mining-rewards data table with date-range filter and running totals.
 export function MiningTable({
   rewardKey,
   currency,
   fiatCode,
+  dateRange,
+  setDateRange,
 }: {
   rewardKey: RewardKey;
   currency: Currency;
   fiatCode: string;
+  dateRange: DateRange;
+  setDateRange: (v: DateRange) => void;
 }) {
   const [page, setPage] = useState(0);
-  const [dateRange, setDateRange] = useState<DateRange>(EMPTY_DATE_RANGE);
   const entry = useMemo(() => loadCacheEntry(rewardKey), [rewardKey]);
 
   const rows = useMemo(() => {
@@ -44,6 +47,7 @@ export function MiningTable({
   }, [entry, currency]);
 
   const dateBounds = useMemo(() => getDateBounds(rows), [rows]);
+  const rowDates = useMemo(() => rows.map((r) => r.date.slice(0, 10)), [rows]);
 
   const filteredRows = useMemo(
     () => rows.filter((r) => matchesDateRange(r.date, dateRange)),
@@ -131,7 +135,12 @@ export function MiningTable({
         <thead>
           <tr>
             <th>
-              <DateRangeFilter value={dateRange} onChange={setDateRange} {...dateBounds} />
+              <DateRangeFilter
+                value={dateRange}
+                onChange={setDateRange}
+                {...dateBounds}
+                dates={rowDates}
+              />
             </th>
             <th>Power</th>
             <th>Pool Reward</th>

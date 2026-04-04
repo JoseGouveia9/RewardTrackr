@@ -1,4 +1,4 @@
-import { lazy, memo, Suspense, useMemo } from "react";
+﻿import { lazy, memo, Suspense, useMemo } from "react";
 import { loadCacheEntry } from "@/features/export/utils/cache";
 import { ErrorBoundary } from "@/components/error-boundary";
 import type { Currency, EarnView, TxView, SimpleView, PurchaseView } from "./types";
@@ -17,7 +17,7 @@ interface DataViewerProps {
   onClose: () => void;
 }
 
-/** Renders the full data-viewer page with tab navigation, currency selector, and lazy-loaded tables. */
+// Renders the full data-viewer page with tab navigation, currency selector, and lazy-loaded tables.
 export const DataViewer = memo(function DataViewer({ onClose }: DataViewerProps) {
   const {
     activeKey,
@@ -29,6 +29,8 @@ export const DataViewer = memo(function DataViewer({ onClose }: DataViewerProps)
     setView,
     groupByDay,
     setGroupByDay,
+    dateRange,
+    setDateRange,
   } = useDataViewerState();
   const fiatCode = useMemo(() => loadFiatCode(), []);
 
@@ -279,6 +281,8 @@ export const DataViewer = memo(function DataViewer({ onClose }: DataViewerProps)
                 rewardKey={activeKey}
                 currency={currency}
                 fiatCode={fiatCode}
+                dateRange={dateRange}
+                setDateRange={setDateRange}
               />
             ) : isEarnTab ? (
               <SimpleEarnTable
@@ -287,6 +291,8 @@ export const DataViewer = memo(function DataViewer({ onClose }: DataViewerProps)
                 fiatCode={fiatCode}
                 earnView={effectiveEarnView}
                 groupByDay={groupByDay}
+                dateRange={dateRange}
+                setDateRange={setDateRange}
               />
             ) : isTxTab ? (
               <TransactionsTable
@@ -295,6 +301,8 @@ export const DataViewer = memo(function DataViewer({ onClose }: DataViewerProps)
                 fiatCode={fiatCode}
                 txView={effectiveTxView}
                 groupByDay={groupByDay}
+                dateRange={dateRange}
+                setDateRange={setDateRange}
               />
             ) : isPurchaseTab ? (
               <PurchasesTable
@@ -302,6 +310,8 @@ export const DataViewer = memo(function DataViewer({ onClose }: DataViewerProps)
                 fiatCode={fiatCode}
                 purchaseView={effectivePurchaseView}
                 groupByDay={groupByDay}
+                dateRange={dateRange}
+                setDateRange={setDateRange}
               />
             ) : (
               <SimpleTable
@@ -310,6 +320,8 @@ export const DataViewer = memo(function DataViewer({ onClose }: DataViewerProps)
                 fiatCode={fiatCode}
                 simpleView={effectiveSimpleView}
                 groupByDay={groupByDay}
+                dateRange={dateRange}
+                setDateRange={setDateRange}
               />
             )}
           </Suspense>
@@ -319,14 +331,14 @@ export const DataViewer = memo(function DataViewer({ onClose }: DataViewerProps)
   );
 });
 
-// ── Trigger button ────────────────────────────────────────────
+// Trigger button
 
 interface DataViewerButtonProps {
   active: boolean;
   onClick: () => void;
 }
 
-/** Renders the header button that toggles the data-viewer panel open and closed. */
+// Renders the header button that toggles the data-viewer panel open and closed.
 export const DataViewerButton = memo(function DataViewerButton({
   active,
   onClick,

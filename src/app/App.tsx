@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { AppNotice } from "@/components/app-notice";
 import { loadAllCacheEntries } from "@/features/export/utils/cache";
@@ -21,7 +21,7 @@ declare global {
   }
 }
 
-/** Classifies a status message string as "success", "error", or "loading" for styling. */
+// Classifies a status message string as "success", "error", or "loading" for styling.
 function getMessageType(msg: string): "success" | "error" | "loading" {
   const lower = msg.toLowerCase();
   if (
@@ -43,7 +43,7 @@ function getMessageType(msg: string): "success" | "error" | "loading" {
   return "loading";
 }
 
-/** Renders a coloured status message banner with an icon and optional markdown links. */
+// Renders a coloured status message banner with an icon and optional markdown links.
 function MessageBanner({ message }: { message: string }) {
   const type = getMessageType(message);
 
@@ -123,7 +123,7 @@ function MessageBanner({ message }: { message: string }) {
   );
 }
 
-/** Root application component: wires together auth, export config, cache, and view routing. */
+// Root application component: wires together auth, export config, cache, and view routing.
 function App() {
   const [message, setMessage] = useState<string>("");
   const [cache, setCache] = useState<CacheState>(() => loadAllCacheEntries());
@@ -139,7 +139,7 @@ function App() {
   const [noticeOpenSourceDismissed, setNoticeOpenSourceDismissed] = useState(
     () => localStorage.getItem("notice_opensource_dismissed") === "1",
   );
-  /** Persists a notice dismissal to localStorage and updates the local state. */
+  // Persists a notice dismissal to localStorage and updates the local state.
   function dismissNotice(key: string, setter: (v: boolean) => void) {
     localStorage.setItem(key, "1");
     setter(true);

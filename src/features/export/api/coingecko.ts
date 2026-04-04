@@ -1,4 +1,4 @@
-import { LS_KEY_PRICE_CACHE } from "@/lib/storage-keys";
+﻿import { LS_KEY_PRICE_CACHE } from "@/lib/storage-keys";
 import type {
   CoinGeckoMarketRangeResponse,
   CoinGeckoPriceCacheValue,
@@ -8,20 +8,20 @@ import type {
 
 export { LS_KEY_PRICE_CACHE };
 
-// ── Constants ────────────────────────────────────────────────────
+// Constants
 
 const COINGECKO_MAX_RETRIES = 10;
 const COINGECKO_RETRY_WAIT_MS = 60_000;
 const COINGECKO_FETCH_TIMEOUT_MS = 15_000;
 
-// ── Session cache ─────────────────────────────────────────────────
+// Session cache
 
 const SHARED_PRICE_CACHE = new Map<string, CoinGeckoPriceCacheValue>();
 let priceCacheSeeded = false;
 
-// ── Private helpers ───────────────────────────────────────────────
+// Private helpers
 
-/** Loads previously saved CoinGecko prices from localStorage into the session cache (runs once per session). */
+// Loads previously saved CoinGecko prices from localStorage into the session cache (runs once per session).
 function seedPriceCache(): void {
   if (priceCacheSeeded) return;
   priceCacheSeeded = true;
@@ -33,16 +33,16 @@ function seedPriceCache(): void {
       if (v != null) SHARED_PRICE_CACHE.set(k, v);
     }
   } catch {
-    /* ignore corrupt storage */
+    // ignore corrupt storage
   }
 }
 
-/** Resolves after `ms` milliseconds. */
+// Resolves after `ms` milliseconds.
 function sleep(ms: number) {
   return new Promise<void>((resolve) => setTimeout(resolve, ms));
 }
 
-/** Waits for `ms` milliseconds, calling onTick every second with the remaining seconds. */
+// Waits for `ms` milliseconds, calling onTick every second with the remaining seconds.
 async function sleepWithCountdown(ms: number, onTick: (seconds: number) => void) {
   const end = Date.now() + ms;
   while (true) {
@@ -53,7 +53,7 @@ async function sleepWithCountdown(ms: number, onTick: (seconds: number) => void)
   }
 }
 
-/** Returns the price tuple from `prices` whose timestamp is closest to `targetMs`. */
+// Returns the price tuple from `prices` whose timestamp is closest to `targetMs`.
 function findNearestPrice(prices: CoinGeckoPriceTuple[], targetMs: number) {
   if (!prices.length) return null;
 
@@ -73,10 +73,10 @@ function findNearestPrice(prices: CoinGeckoPriceTuple[], targetMs: number) {
   return { price, timestampMs };
 }
 
-// ── Public API ───────────────────────────────────────────────────
+// Public API
 
-/** Fetches the USD price for a coin at a specific point in time from CoinGecko.
- *  Returns null if the price cannot be determined; retries on rate-limit (up to 10×60s). */
+// Fetches the USD price for a coin at a specific point in time from CoinGecko.
+// Returns null if the price cannot be determined; retries on rate-limit (up to 10x60s).
 export async function fetchCoinGeckoPrice(
   coingeckoId: string,
   createdAtIso: string,
@@ -120,7 +120,7 @@ export async function fetchCoinGeckoPrice(
       try {
         data = text ? (JSON.parse(text) as CoinGeckoMarketRangeResponse) : null;
       } catch {
-        /* unparseable response */
+        // unparseable response
       }
 
       const isRateLimited = data?.status?.error_code === 429 || response.status === 429;
@@ -171,7 +171,7 @@ export async function fetchCoinGeckoPrice(
   return null;
 }
 
-/** Returns the module-level price cache shared across the entire session, seeding from localStorage on first call. */
+// Returns the module-level price cache shared across the entire session, seeding from localStorage on first call.
 export function getSessionPriceCache() {
   seedPriceCache();
   return SHARED_PRICE_CACHE;

@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useMemo, useReducer } from "react";
+﻿import { useCallback, useEffect, useMemo, useReducer } from "react";
 import { ALL_REWARD_KEYS } from "../config/reward-configs";
 import { WALLET_TX_KEYS } from "../config/wallet-types";
 import { LS_KEY_EXPORT_CONFIG } from "@/lib/storage-keys";
 import type { ExtraFiatCurrency, RewardGroup, RewardKey } from "../types";
 
-// ── Types ─────────────────────────────────────────────────────────
+// Types
 
 interface ExportConfigState {
   selectedKeys: RewardKey[];
@@ -22,7 +22,7 @@ type ExportConfigAction =
   | { type: "SET_INCLUDE_EXCEL_FIAT"; checked: boolean }
   | { type: "SET_FIAT_CURRENCY"; currency: ExtraFiatCurrency };
 
-// ── Initial state & helpers ───────────────────────────────────────
+// Initial state & helpers
 
 const initialState: ExportConfigState = {
   selectedKeys: [],
@@ -32,7 +32,7 @@ const initialState: ExportConfigState = {
   excelFiatCurrency: "EUR",
 };
 
-/** Loads the persisted export configuration from localStorage, falling back to initialState. */
+// Loads the persisted export configuration from localStorage, falling back to initialState.
 function loadSavedConfig(): ExportConfigState {
   try {
     const raw = localStorage.getItem(LS_KEY_EXPORT_CONFIG);
@@ -57,7 +57,7 @@ function loadSavedConfig(): ExportConfigState {
   }
 }
 
-/** Pure reducer for all export-configuration state transitions. */
+// Pure reducer for all export-configuration state transitions.
 function exportConfigReducer(
   state: ExportConfigState,
   action: ExportConfigAction,
@@ -94,9 +94,9 @@ function exportConfigReducer(
   }
 }
 
-// ── Hook ──────────────────────────────────────────────────────────
+// Hook
 
-/** Manages export configuration state (selected sheets, fiat options, tx filters) with localStorage persistence. */
+// Manages export configuration state (selected sheets, fiat options, tx filters) with localStorage persistence.
 export function useExportConfig() {
   const [state, dispatch] = useReducer(exportConfigReducer, undefined, loadSavedConfig);
 
@@ -104,11 +104,11 @@ export function useExportConfig() {
     try {
       localStorage.setItem(LS_KEY_EXPORT_CONFIG, JSON.stringify(state));
     } catch {
-      /* QuotaExceededError, skip silently */
+      // QuotaExceededError, skip silently
     }
   }, [state]);
 
-  /** Returns true if every key in the group is currently selected. */
+  // Returns true if every key in the group is currently selected.
   const isGroupSelected = useCallback(
     (group: RewardGroup): boolean => group.keys.every((k) => state.selectedKeys.includes(k)),
     [state.selectedKeys],

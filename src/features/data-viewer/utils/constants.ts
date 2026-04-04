@@ -40,4 +40,9 @@ export const DATE_PRESETS = [
     to: () => toIsoOffset(0),
   },
   { label: "This year", from: () => `${new Date().getFullYear()}-01-01`, to: () => toIsoOffset(0) },
+  {
+    label: "Last year",
+    from: () => `${new Date().getFullYear() - 1}-01-01`,
+    to: () => `${new Date().getFullYear() - 1}-12-31`,
+  },
 ];

@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+﻿import { useEffect, useRef, useState } from "react";
 import type React from "react";
 
-/** Tracks the trigger button's position so a filter dropdown can be anchored above it via fixed positioning. */
+// Tracks the trigger button's position so a filter dropdown can be anchored below it via fixed positioning.
 export function useFilterDropdownPos(open: boolean) {
   const btnRef = useRef<HTMLButtonElement>(null);
   const [rect, setRect] = useState<DOMRect | null>(null);
-  /** Captures the button's current bounding rect on demand (call before opening the dropdown). */
+  // Captures the button's current bounding rect on demand (call before opening the dropdown).
   function capturePos() {
     if (btnRef.current) setRect(btnRef.current.getBoundingClientRect());
   }
@@ -20,10 +20,10 @@ export function useFilterDropdownPos(open: boolean) {
   const style: React.CSSProperties | undefined = rect
     ? {
         position: "fixed",
-        top: rect.top - 8,
+        top: rect.bottom + 8,
         left: rect.left,
         bottom: "auto",
-        transform: "translateY(-100%)",
+        transform: "none",
       }
     : undefined;
   return { btnRef, style, capturePos };

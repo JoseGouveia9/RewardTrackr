@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from "framer-motion";
+﻿import { AnimatePresence, motion } from "framer-motion";
 
 const DISMISS_ICON = (
   <svg
@@ -24,7 +24,7 @@ interface AppNoticeProps {
   children: React.ReactNode;
 }
 
-/** Renders a dismissible animated notice banner with an icon and arbitrary content. */
+// Renders a dismissible animated notice banner with an icon and arbitrary content.
 export function AppNotice({ visible, className, icon, onDismiss, children }: AppNoticeProps) {
   return (
     <AnimatePresence>

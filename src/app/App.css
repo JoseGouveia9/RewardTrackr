@@ -1,4 +1,4 @@
-/* ── Page root ──────────────────────────────────────────────── */
+﻿/* Page root */
 
 .page {
   min-height: 100vh;
@@ -21,7 +21,7 @@ h6 {
   font-family: "Space Grotesk", sans-serif;
 }
 
-/* ── Background decoration ───────────────────────────────────── */
+/* Background decoration */
 
 .background-shape {
   position: fixed;
@@ -47,7 +47,7 @@ h6 {
   left: -120px;
 }
 
-/* ── Container ───────────────────────────────────────────────── */
+/* Container */
 
 .container {
   max-width: 1120px;
@@ -57,7 +57,7 @@ h6 {
   z-index: 1;
 }
 
-/* ── Hero ────────────────────────────────────────────────────── */
+/* Hero */
 
 .hero {
   background: transparent;
@@ -142,7 +142,7 @@ h3,
   line-height: inherit;
 }
 
-/* ── Copyright ───────────────────────────────────────────────── */
+/* Copyright */
 
 .copyright {
   margin: 12px 0 0;
@@ -151,7 +151,7 @@ h3,
   text-align: center;
 }
 
-/* ── App notices ─────────────────────────────────────────────── */
+/* App notices */
 
 .app-notice {
   display: flex;
@@ -241,7 +241,7 @@ h3,
 }
 
 
-/* ── Panels ──────────────────────────────────────────────────── */
+/* Panels */
 
 .panel {
   background: #ffffff;
@@ -273,7 +273,7 @@ h3,
   color: #6d7589;
 }
 
-/* ── Forms ───────────────────────────────────────────────────── */
+/* Forms */
 
 textarea {
   width: 100%;
@@ -294,7 +294,7 @@ textarea:focus {
   border-color: #FBB060;
 }
 
-/* ── Buttons ─────────────────────────────────────────────────── */
+/* Buttons */
 
 button {
   border: 1px solid transparent;
@@ -345,7 +345,7 @@ button:disabled {
   margin-top: 2px;
 }
 
-/* ── Export section ──────────────────────────────────────────── */
+/* Export section */
 
 .export-section {
   margin-top: 16px;
@@ -431,7 +431,7 @@ button:disabled {
   font-size: 0.8rem !important;
 }
 
-/* ── Panel actions ───────────────────────────────────────────── */
+/* Panel actions */
 
 .panel-actions {
   display: flex;
@@ -453,7 +453,7 @@ button:disabled {
   margin: 0;
 }
 
-/* ── Utility icons ───────────────────────────────────────────── */
+/* Utility icons */
 
 .section-icon {
   color: #F7931A;
@@ -468,7 +468,7 @@ button:disabled {
   flex-shrink: 0;
 }
 
-/* ── Messages ────────────────────────────────────────────────── */
+/* Messages */
 
 .message {
   display: flex;
@@ -518,7 +518,7 @@ button:disabled {
   border-color: rgba(203, 213, 225, 0.15);
 }
 
-/* ── Divider & misc ──────────────────────────────────────────── */
+/* Divider & misc */
 
 .divider {
   margin: 16px 0;
@@ -534,11 +534,12 @@ button:disabled {
   line-height: 1.5;
 }
 
-/* ── Dark mode ───────────────────────────────────────────────── */
+/* Dark mode */
 
 .page.theme-dark {
   background: #121214;
   color: #ffffff;
+  color-scheme: dark;
 }
 
 .page.theme-dark .background-shape-top {
@@ -640,7 +641,7 @@ button:disabled {
   color: #6b7090;
 }
 
-/* ── Mobile ──────────────────────────────────────────────────── */
+/* Mobile */
 
 @media (max-width: 640px) {
   .container {

@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+﻿import { useEffect, useRef, useState } from "react";
 import type React from "react";
 import { useFilterDropdownPos } from "../hooks/use-filter-dropdown-pos";
 
-/** Wraps column-filter content in a toggle button + anchored dropdown that closes on outside click. */
+// Wraps column-filter content in a toggle button + anchored dropdown that closes on outside click.
 export function ColFilterWrap({
   label,
   active,

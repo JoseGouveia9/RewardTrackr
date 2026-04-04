@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { loadCacheEntry } from "@/features/export/utils/cache";
 import type { RewardKey } from "@/features/export/types";
 import type { TxView, DateRange } from "../../types";
-import { EMPTY_DATE_RANGE, PAGE_SIZE } from "../../utils/constants";
+import { PAGE_SIZE } from "../../utils/constants";
 import {
   formatCurrencyValue,
   getDateBounds,
@@ -15,20 +15,23 @@ import { DateRangeFilter } from "../date-range-filter";
 import { TypeCheckFilter } from "../type-check-filter";
 import { Pagination } from "../pagination";
 
-/** Renders a paged GMT wallet-transactions table with type filter, date filter and optional group-by-day. */
+// Renders a paged GMT wallet-transactions table with type filter, date filter and optional group-by-day.
 export function TransactionsTable({
   rewardKey,
   fiatCode,
   txView,
   groupByDay,
+  dateRange,
+  setDateRange,
 }: {
   rewardKey: RewardKey;
   fiatCode: string;
   txView: TxView;
   groupByDay: boolean;
+  dateRange: DateRange;
+  setDateRange: (v: DateRange) => void;
 }) {
   const [page, setPage] = useState(0);
-  const [dateRange, setDateRange] = useState<DateRange>(EMPTY_DATE_RANGE);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const entry = useMemo(() => loadCacheEntry(rewardKey), [rewardKey]);
 
@@ -50,6 +53,7 @@ export function TransactionsTable({
   }, [entry]);
 
   const dateBounds = useMemo(() => getDateBounds(allRows), [allRows]);
+  const rowDates = useMemo(() => allRows.map((r) => r.date.slice(0, 10)), [allRows]);
 
   const types = useMemo(
     () => [...new Set(allRows.map((r) => r.txType))].filter(Boolean).sort(),
@@ -96,7 +100,7 @@ export function TransactionsTable({
   const rewardIcon =
     txView === "GMT" ? <GmtIcon /> : txView === "USD" ? <UsdIcon /> : <FiatIcon code={fiatCode} />;
 
-  /** Returns the display value and currency label for a row based on the active txView. */
+  // Returns the display value and currency label for a row based on the active txView.
   function rowValue(row: { reward: number; rewardInUSD: number; rewardInFiat: number }) {
     if (txView === "USD") return { v: row.rewardInUSD, c: "USD" };
     if (txView === "FIAT") return { v: row.rewardInFiat, c: "FIAT" };
@@ -158,7 +162,12 @@ export function TransactionsTable({
         <thead>
           <tr>
             <th>
-              <DateRangeFilter value={dateRange} onChange={setDateRange} {...dateBounds} />
+              <DateRangeFilter
+                value={dateRange}
+                onChange={setDateRange}
+                {...dateBounds}
+                dates={rowDates}
+              />
             </th>
             <th>
               <TypeCheckFilter

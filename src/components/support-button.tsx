@@ -1,9 +1,9 @@
-import { memo, useState } from "react";
+﻿import { memo, useState } from "react";
 import { useEscapeKey } from "@/hooks/use-escape-key";
 import { createPortal } from "react-dom";
 import "./support-button.css";
 
-/** Renders a Ko-fi button that opens an embedded donation iframe in a portal overlay. */
+// Renders a Ko-fi button that opens an embedded donation iframe in a portal overlay.
 function KofiMobileButton() {
   const [open, setOpen] = useState(false);
 
@@ -70,11 +70,11 @@ const ADDRESSES = [
   { label: "Bitcoin · Lightning", value: "moustachio@blink.sv" },
 ];
 
-/** Renders an icon button that copies the given value to the clipboard and shows a brief checkmark. */
+// Renders an icon button that copies the given value to the clipboard and shows a brief checkmark.
 function CopyButton({ value }: { value: string }) {
   const [copied, setCopied] = useState(false);
 
-  /** Copies the address to the clipboard and temporarily shows a checkmark. */
+  // Copies the address to the clipboard and temporarily shows a checkmark.
   const handleCopy = () => {
     navigator.clipboard
       .writeText(value)
@@ -130,7 +130,7 @@ interface SupportButtonProps {
   onClose: () => void;
 }
 
-/** Renders the support heart button and a modal with crypto donation addresses and Ko-fi. */
+// Renders the support heart button and a modal with crypto donation addresses and Ko-fi.
 export const SupportButton = memo(function SupportButton({
   open,
   onOpen,

@@ -1,4 +1,4 @@
-import { CURRENCY_TO_COINGECKO, WALLET_TO_CURRENCY } from "../config/currencies";
+﻿import { CURRENCY_TO_COINGECKO, WALLET_TO_CURRENCY } from "../config/currencies";
 import { TX_FROM_TYPE_LABEL } from "../config/wallet-types";
 import type {
   CoinGeckoPriceCacheValue,
@@ -22,19 +22,19 @@ import type {
 import { fetchCoinGeckoPrice } from "../api/coingecko";
 import { prefetchExchangeRates, prefetchAdditionalRates, getRate } from "../api/fx-rates";
 
-// ── Private transform helpers ─────────────────────────────────────
+// Private transform helpers
 
-/** Converts a USD amount to GMT using the current GMT price; returns 0 if price is zero. */
+// Converts a USD amount to GMT using the current GMT price; returns 0 if price is zero.
 function usdToGmt(usd: number, gmtPrice: number): number {
   return gmtPrice > 0 ? usd / gmtPrice : 0;
 }
 
-/** Maps a wallet type string to its display currency code (e.g. "BTC_WALLET" → "BTC"). */
+// Maps a wallet type string to its display currency code (e.g. "BTC_WALLET" → "BTC").
 function currencyFromWalletType(walletType: string | undefined): string {
   return WALLET_TO_CURRENCY[walletType ?? ""] || walletType || "UNKNOWN";
 }
 
-/** Transforms a raw Solo Mining API record into a fully enriched MiningEnrichedRecord. */
+// Transforms a raw Solo Mining API record into a fully enriched MiningEnrichedRecord.
 function transformSoloMining(raw: SoloMiningRawRecord, fiatRate: number): MiningEnrichedRecord {
   const btcPrice = raw.incomeStatistic?.btcCourseInUsd ?? 0;
   const gmtPrice = raw.incomeStatistic?.gmtPrice ?? 0;
@@ -45,8 +45,7 @@ function transformSoloMining(raw: SoloMiningRawRecord, fiatRate: number): Mining
   let hasGmtMaintenance = false;
   let reinvested = false;
   let totalPower = 0;
-  let discountSum = 0;
-  let discountCount = 0;
+  let discountMax = 0;
 
   if (Array.isArray(raw.incomeList)) {
     for (const inc of raw.incomeList) {
@@ -62,14 +61,13 @@ function transformSoloMining(raw: SoloMiningRawRecord, fiatRate: number): Mining
       }
       if (inc?.reinvestmentInPowerNftStatusExecuted === true) reinvested = true;
       totalPower += inc?.power ?? 0;
-      if (inc?.totalDiscount != null) {
-        discountSum += inc.totalDiscount;
-        discountCount++;
+      if (inc?.totalDiscount != null && inc.totalDiscount > discountMax) {
+        discountMax = inc.totalDiscount;
       }
     }
   }
 
-  const discount = discountCount > 0 ? discountSum / discountCount : 0;
+  const discount = discountMax;
   const rawValue = raw.value ?? 0;
 
   // Maintenance in BTC: use precise metaData.maintenanceInBtc sum when available,
@@ -123,13 +121,13 @@ function transformSoloMining(raw: SoloMiningRawRecord, fiatRate: number): Mining
   };
 }
 
-/** Transforms a raw Miner Wars API record into a fully enriched MiningEnrichedRecord. */
+// Transforms a raw Miner Wars API record into a fully enriched MiningEnrichedRecord.
 function transformMinerWars(raw: MinerWarsRawRecord, fiatRate: number): MiningEnrichedRecord {
   const btcPrice = raw.incomeStatistic?.btcCourseInUsd ?? 0;
   const gmtPrice = raw.incomeStatistic?.gmtPrice ?? 0;
   const maintenanceByGmt = raw.maintenanceByGmt ?? false;
 
-  // Use InBtc variants when available — same precision as c1Value/c2Value for now but future-proof
+  // Use InBtc variants when available, same precision as c1Value/c2Value for now but future-proof
   const c1Btc = raw.c1ValueInBtc ?? raw.c1Value ?? 0;
   const c2Btc = raw.c2ValueInBtc ?? raw.c2Value ?? 0;
   const maintenanceBtc = c1Btc + c2Btc;
@@ -175,7 +173,7 @@ function transformMinerWars(raw: MinerWarsRawRecord, fiatRate: number): MiningEn
   };
 }
 
-/** Transforms a raw wallet-tx record, fetching its historical USD price from CoinGecko. */
+// Transforms a raw wallet-tx record, fetching its historical USD price from CoinGecko.
 async function transformWalletTxCoingecko(
   raw: WalletTxRawRecord,
   fiatRate: number,
@@ -233,7 +231,7 @@ async function transformWalletTxCoingecko(
   };
 }
 
-/** Transforms a raw record that already carries a USD price into a StandardEnrichedRecord. */
+// Transforms a raw record that already carries a USD price into a StandardEnrichedRecord.
 function transformExistingPrice(
   raw: ExistingPriceRawRecord,
   fiatRate: number,
@@ -250,7 +248,7 @@ function transformExistingPrice(
   };
 }
 
-/** Transforms a raw purchase record into a PurchaseEnrichedRecord with USD and fiat values. */
+// Transforms a raw purchase record into a PurchaseEnrichedRecord with USD and fiat values.
 function transformPurchase(
   raw: PurchaseRawRecord,
   valueUsd: number,
@@ -267,7 +265,7 @@ function transformPurchase(
   };
 }
 
-/** Expands a Simple Earn daily record into per-asset enriched rows with fiat values. */
+// Expands a Simple Earn daily record into per-asset enriched rows with fiat values.
 function transformSimpleEarn(
   raw: SimpleEarnRawRecord,
   fiatRate: number,
@@ -289,7 +287,7 @@ function transformSimpleEarn(
   });
 }
 
-/** Transforms a raw upgrade record into a PurchaseEnrichedRecord with USD and fiat values. */
+// Transforms a raw upgrade record into a PurchaseEnrichedRecord with USD and fiat values.
 function transformUpgrade(raw: UpgradeRawRecord, fiatRate: number): PurchaseEnrichedRecord {
   const valueUsd = raw.usdtValue ?? 0;
   const kind = raw.upgradeType || raw.dataType || "";
@@ -303,10 +301,10 @@ function transformUpgrade(raw: UpgradeRawRecord, fiatRate: number): PurchaseEnri
   };
 }
 
-// ── Public API ───────────────────────────────────────────────────
+// Public API
 
-/** Recomputes only the fiat fields on already-enriched cached records using a new currency.
- *  Reads USD values already stored on each record — no GoMining API call needed. */
+// Recomputes only the fiat fields on already-enriched cached records using a new currency.
+// Reads USD values already stored on each record, no GoMining API call needed.
 export async function reenrichFiatValues(
   config: RewardConfig,
   records: RewardRecord[],
@@ -343,7 +341,7 @@ export async function reenrichFiatValues(
   );
 }
 
-/** Enriches raw API records with fiat pricing. All fiat values use historical rates for `extraFiatCurrency`. */
+// Enriches raw API records with fiat pricing. All fiat values use historical rates for `extraFiatCurrency`.
 export async function enrichRecords(
   config: RewardConfig,
   rawRecords: unknown[],

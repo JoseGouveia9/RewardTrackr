@@ -1,6 +1,6 @@
-import { ColFilterWrap } from "./col-filter-wrap";
+﻿import { ColFilterWrap } from "./col-filter-wrap";
 
-/** Renders a checkbox list filter inside a ColFilterWrap for selecting one or more type values. */
+// Renders a checkbox list filter inside a ColFilterWrap for selecting one or more type values.
 export function TypeCheckFilter({
   label,
   types,

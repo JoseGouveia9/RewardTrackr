@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+﻿import { useCallback, useState } from "react";
 import * as Sentry from "@sentry/react";
 import { decodeJwt } from "@/lib/http";
 import { ALL_REWARD_KEYS } from "../config/reward-configs";
@@ -6,7 +6,7 @@ import { clearAllCacheEntries } from "../utils/cache";
 import { executeExportFlow } from "../export-flow";
 import type { CacheState, ExtraFiatCurrency, RewardKey } from "../types";
 
-// ── Types ─────────────────────────────────────────────────────────
+// Types
 
 interface UseExportParams {
   storedToken: string;
@@ -26,9 +26,9 @@ interface UseExportReturn {
   handleClearCache: () => void;
 }
 
-// ── Hook ──────────────────────────────────────────────────────────
+// Hook
 
-/** Manages export execution state, triggering the export flow and handling errors and cache clearing. */
+// Manages export execution state, triggering the export flow and handling errors and cache clearing.
 export function useExport({
   storedToken,
   selectedKeys,
@@ -42,14 +42,14 @@ export function useExport({
 }: UseExportParams): UseExportReturn {
   const [loading, setLoading] = useState<boolean>(false);
 
-  /** Clears all localStorage cache entries and resets the in-memory cache state. */
+  // Clears all localStorage cache entries and resets the in-memory cache state.
   const handleClearCache = useCallback((): void => {
     clearAllCacheEntries();
     onCacheUpdate(Object.fromEntries(ALL_REWARD_KEYS.map((k) => [k, null])) as CacheState);
     onMessage("Cache cleared. Next export will fetch fresh data.");
   }, [onMessage, onCacheUpdate]);
 
-  /** Validates the session token then runs the full export flow, reporting success or error. */
+  // Validates the session token then runs the full export flow, reporting success or error.
   const handleExport = useCallback(async (): Promise<void> => {
     if (selectedKeys.length === 0) return;
 

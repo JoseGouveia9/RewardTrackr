@@ -1,4 +1,4 @@
-import { memo, useEffect, useState } from "react";
+﻿import { memo, useEffect, useState } from "react";
 import { REWARD_GROUPS } from "../config/reward-configs";
 import "./sheet-selector.css";
 import { formatAge } from "../utils/cache";
@@ -11,7 +11,7 @@ interface SheetSelectorProps {
   isGroupSelected: (group: RewardGroup) => boolean;
 }
 
-/** Renders sheet-selection cards with cache age badges and a select-all toggle. */
+// Renders sheet-selection cards with cache age badges and a select-all toggle.
 export const SheetSelector = memo(function SheetSelector({
   cache,
   onToggleGroup,
