@@ -12,6 +12,7 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@emotion/is-prop-valid": "^1.4.0",
     "@sentry/react": "^10.47.0",
     "@tailwindcss/vite": "^4.2.2",
     "exceljs": "^4.4.0",
