@@ -17,6 +17,11 @@ export default defineConfig({
   ],
   build: {
     sourcemap: true,
+    // LightningCSS (used by @tailwindcss/vite) has a bug where it strips the
+    // standard backdrop-filter and only outputs -webkit-backdrop-filter, which
+    // modern Chrome/Opera no longer recognise. Targeting chrome100 tells
+    // LightningCSS to emit the unprefixed property.
+    cssTarget: "chrome100",
   },
   base: "./",
   resolve: {

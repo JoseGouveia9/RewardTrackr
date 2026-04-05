@@ -160,7 +160,7 @@ h3,
   border: 1px solid rgba(242, 197, 123, 0.5);
   background: rgba(255, 246, 232, 0.6);
   backdrop-filter: blur(12px) saturate(140%);
-  -webkit-backdrop-filter: blur(12px) saturate(140%);
+
   color: #7a4d0b;
   border-radius: 14px;
   padding: 12px 16px;
@@ -257,7 +257,7 @@ h3,
   padding: 18px;
   margin-top: 16px;
   backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
+
 }
 
 .panel-split {
@@ -477,7 +477,7 @@ button:disabled {
   border-radius: 12px;
   padding: 10px 14px;
   backdrop-filter: blur(12px) saturate(140%);
-  -webkit-backdrop-filter: blur(12px) saturate(140%);
+
   border: 1px solid transparent;
 }
 

@@ -55,7 +55,7 @@
   padding: 8px 10px;
   font-size: 0.8rem;
   backdrop-filter: blur(12px) saturate(140%);
-  -webkit-backdrop-filter: blur(12px) saturate(140%);
+
 }
 
 .wallet-option-row input {
@@ -65,7 +65,7 @@
 .wallet-currency-row {
   background: transparent !important;
   backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
+
 }
 
 /* Fiat currency grid */
@@ -129,7 +129,7 @@
   border: 1px solid rgba(242, 197, 123, 0.45);
   background: rgba(255, 246, 232, 0.55);
   backdrop-filter: blur(12px) saturate(140%);
-  -webkit-backdrop-filter: blur(12px) saturate(140%);
+
   color: #7a4d0b;
   border-radius: 12px;
   padding: 10px 12px;
@@ -157,7 +157,7 @@
   cursor: pointer;
   color: #3a445a;
   backdrop-filter: blur(12px) saturate(140%);
-  -webkit-backdrop-filter: blur(12px) saturate(140%);
+
 }
 
 .transaction-filter-label {
