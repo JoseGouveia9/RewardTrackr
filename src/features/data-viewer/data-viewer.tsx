@@ -15,10 +15,14 @@ const PurchasesTable = lazy(() => import("./components/tables/purchases-table"))
 
 interface DataViewerProps {
   onClose: () => void;
+  isFetching?: boolean;
 }
 
 // Renders the full data-viewer page with tab navigation, currency selector, and lazy-loaded tables.
-export const DataViewer = memo(function DataViewer({ onClose }: DataViewerProps) {
+export const DataViewer = memo(function DataViewer({
+  onClose,
+  isFetching = false,
+}: DataViewerProps) {
   const {
     activeKey,
     setActiveKey,
@@ -281,6 +285,7 @@ export const DataViewer = memo(function DataViewer({ onClose }: DataViewerProps)
                 rewardKey={activeKey}
                 currency={currency}
                 fiatCode={fiatCode}
+                isFetching={isFetching}
                 dateRange={dateRange}
                 setDateRange={setDateRange}
               />
@@ -290,6 +295,7 @@ export const DataViewer = memo(function DataViewer({ onClose }: DataViewerProps)
                 rewardKey={activeKey}
                 fiatCode={fiatCode}
                 earnView={effectiveEarnView}
+                isFetching={isFetching}
                 groupByDay={groupByDay}
                 dateRange={dateRange}
                 setDateRange={setDateRange}
@@ -300,6 +306,7 @@ export const DataViewer = memo(function DataViewer({ onClose }: DataViewerProps)
                 rewardKey={activeKey}
                 fiatCode={fiatCode}
                 txView={effectiveTxView}
+                isFetching={isFetching}
                 groupByDay={groupByDay}
                 dateRange={dateRange}
                 setDateRange={setDateRange}
@@ -309,6 +316,7 @@ export const DataViewer = memo(function DataViewer({ onClose }: DataViewerProps)
                 key={activeKey}
                 fiatCode={fiatCode}
                 purchaseView={effectivePurchaseView}
+                isFetching={isFetching}
                 groupByDay={groupByDay}
                 dateRange={dateRange}
                 setDateRange={setDateRange}
@@ -319,6 +327,7 @@ export const DataViewer = memo(function DataViewer({ onClose }: DataViewerProps)
                 rewardKey={activeKey}
                 fiatCode={fiatCode}
                 simpleView={effectiveSimpleView}
+                isFetching={isFetching}
                 groupByDay={groupByDay}
                 dateRange={dateRange}
                 setDateRange={setDateRange}

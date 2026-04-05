@@ -20,6 +20,7 @@ export function TransactionsTable({
   rewardKey,
   fiatCode,
   txView,
+  isFetching = false,
   groupByDay,
   dateRange,
   setDateRange,
@@ -27,6 +28,7 @@ export function TransactionsTable({
   rewardKey: RewardKey;
   fiatCode: string;
   txView: TxView;
+  isFetching?: boolean;
   groupByDay: boolean;
   dateRange: DateRange;
   setDateRange: (v: DateRange) => void;
@@ -123,7 +125,9 @@ export function TransactionsTable({
   if (!entry) {
     return (
       <div className="dv-empty">
-        No cached data for this sheet. Export it first from the main panel.
+        {isFetching
+          ? "Fetching data..."
+          : "No cached data for this sheet. Export it first from the main panel."}
       </div>
     );
   }

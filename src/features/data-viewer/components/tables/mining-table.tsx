@@ -19,12 +19,14 @@ export function MiningTable({
   rewardKey,
   currency,
   fiatCode,
+  isFetching = false,
   dateRange,
   setDateRange,
 }: {
   rewardKey: RewardKey;
   currency: Currency;
   fiatCode: string;
+  isFetching?: boolean;
   dateRange: DateRange;
   setDateRange: (v: DateRange) => void;
 }) {
@@ -77,7 +79,9 @@ export function MiningTable({
   if (!entry) {
     return (
       <div className="dv-empty">
-        No cached data for this sheet. Export it first from the main panel.
+        {isFetching
+          ? "Fetching data..."
+          : "No cached data for this sheet. Export it first from the main panel."}
       </div>
     );
   }

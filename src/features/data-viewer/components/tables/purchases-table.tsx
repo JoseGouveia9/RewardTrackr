@@ -18,12 +18,14 @@ import { Pagination } from "../pagination";
 export function PurchasesTable({
   fiatCode,
   purchaseView,
+  isFetching = false,
   groupByDay,
   dateRange,
   setDateRange,
 }: {
   fiatCode: string;
   purchaseView: PurchaseView;
+  isFetching?: boolean;
   groupByDay: boolean;
   dateRange: DateRange;
   setDateRange: (v: DateRange) => void;
@@ -159,7 +161,9 @@ export function PurchasesTable({
   if (!purchasesEntry && !upgradesEntry) {
     return (
       <div className="dv-empty">
-        No cached data for this sheet. Export it first from the main panel.
+        {isFetching
+          ? "Fetching data..."
+          : "No cached data for this sheet. Export it first from the main panel."}
       </div>
     );
   }

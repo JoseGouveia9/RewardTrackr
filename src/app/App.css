@@ -27,7 +27,6 @@ h6 {
   position: fixed;
   border-radius: 999px;
   pointer-events: none;
-  filter: blur(42px);
   opacity: 0.22;
 }
 

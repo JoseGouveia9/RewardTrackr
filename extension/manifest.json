@@ -3,7 +3,7 @@
   "name": "RewardTrackr",
   "version": "1.0.0",
   "description": "Track and export your crypto mining rewards history to Excel for tax reporting and personal record keeping.",
-  "permissions": ["cookies", "tabs", "scripting"],
+  "permissions": ["cookies", "tabs", "scripting", "storage"],
   "host_permissions": [
     "https://app.gomining.com/*",
     "https://*.gomining.com/*",
@@ -11,17 +11,25 @@
     "http://localhost/*"
   ],
   "icons": {
-    "16": "logo.png",
-    "48": "logo.png",
-    "128": "logo.png"
+    "16": "images/logo.png",
+    "48": "images/logo.png",
+    "128": "images/logo.png"
   },
+  "content_scripts": [
+    {
+      "matches": ["https://josegouveia9.github.io/*", "http://localhost/*"],
+      "js": ["scripts/contentscript.js"],
+      "run_at": "document_start",
+      "all_frames": false
+    }
+  ],
   "action": {
-    "default_popup": "popup.html",
+    "default_popup": "pages/popup.html",
     "default_title": "RewardTrackr",
     "default_icon": {
-      "16": "logo.png",
-      "48": "logo.png",
-      "128": "logo.png"
+      "16": "images/logo.png",
+      "48": "images/logo.png",
+      "128": "images/logo.png"
     }
   }
 }

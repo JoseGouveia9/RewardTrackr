@@ -400,7 +400,7 @@ function App() {
           </a>
         </AppNotice>
 
-        {view === "records" && <DataViewer onClose={() => setView("main")} />}
+        {view === "records" && <DataViewer onClose={() => setView("main")} isFetching={loading} />}
 
         {view === "main" && !user ? (
           <AuthPanel onSync={handleCheckSync} />
