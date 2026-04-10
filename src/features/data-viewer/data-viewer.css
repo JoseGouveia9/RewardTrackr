@@ -1212,10 +1212,15 @@
   /* Auto-width columns: content drives each column's size.
      useSyncTableColumns hook reads the data table's header column widths and
      applies them to both tables so totals columns stay aligned with data columns.
-     Wide/scroll tables (mining, simple-earn) keep their CSS pixel widths so they
-     overflow the wrapper and scroll; narrow tables stay within the viewport. */
+     Mining (--wide, 750px) keeps its desktop pixel width to force horizontal
+     scroll on mobile. All other tables use width:100% and fit within the screen. */
   .dv-table {
     table-layout: auto;
+    width: 100%;
+  }
+
+  /* Simple-earn (4-col) fits on mobile – reset the desktop 560px to full width */
+  .dv-tables-wrap--scroll .dv-table {
     width: 100%;
   }
 
