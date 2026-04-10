@@ -1167,9 +1167,9 @@
 /* Mobile */
 
 @media (max-width: 640px) {
-  /* Explicit width forces both the totals and data tables to identical sizes
-     so their fixed-layout percentage columns always align while scrolling */
-  .dv-table {
+  /* Wide tables (6-col mining): fixed pixel width so totals and data tables
+     always align while the wrapper scrolls horizontally */
+  .dv-tables-wrap--wide .dv-table {
     width: 640px;
   }
 

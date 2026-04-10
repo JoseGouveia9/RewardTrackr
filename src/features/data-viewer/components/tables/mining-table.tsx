@@ -87,7 +87,7 @@ export function MiningTable({
   }
 
   return (
-    <div className="dv-tables-wrap">
+    <div className="dv-tables-wrap dv-tables-wrap--wide">
       <table className="dv-table dv-table-totals">
         <colgroup>
           <col className="dv-col-date" />
