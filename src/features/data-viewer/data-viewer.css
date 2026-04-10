@@ -357,6 +357,19 @@
   table-layout: auto;
 }
 
+/* Mining tables: fixed layout so totals and data columns share identical widths */
+.dv-tables-wrap--wide .dv-table {
+  table-layout: fixed;
+}
+
+/* Mining tables: extra horizontal padding for breathing room between columns */
+.dv-tables-wrap--wide .dv-table td {
+  padding: 9px 20px;
+}
+.dv-tables-wrap--wide .dv-table-data thead th {
+  padding: 10px 20px;
+}
+
 /* Totals table */
 .dv-table-totals {
   border: 1px solid rgba(247, 147, 26, 0.4);
@@ -464,8 +477,9 @@
   color: #FBB060 !important;
 }
 
-/* Type column: allow word-wrap on long type strings */
-.dv-td-type {
+/* Type column: allow word-wrap on long type strings.
+   Use .dv-table td.dv-td-type for higher specificity than .dv-table td */
+.dv-table td.dv-td-type {
   white-space: normal;
   overflow-wrap: break-word;
   word-break: break-word;
