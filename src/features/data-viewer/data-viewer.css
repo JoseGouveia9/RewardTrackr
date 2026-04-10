@@ -1174,14 +1174,14 @@
   /* Pixel widths replace percentages on mobile.
      dv-col-date is sized for the "DD/MM/YYYY, HH:MM" datetime format. */
   .dv-col-date  { width: 145px; }
-  .dv-col-value { width: 110px; }
+  .dv-col-value { width: 130px; }
   .dv-col-type  { width: 130px; }
   .dv-col-rate  { width: 55px; }
 
-  /* 6-col mining tables: explicit width = sum of pixel col widths (145 + 5×110)
+  /* 6-col mining tables: explicit width = sum of pixel col widths (145 + 5×130)
      so both the totals and data tables are always identical and aligned */
   .dv-tables-wrap--wide .dv-table {
-    width: 695px;
+    width: 795px;
   }
 
   /* 4-col earn tables with datetime: 100% compression would leave the date
