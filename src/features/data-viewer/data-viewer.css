@@ -1210,17 +1210,12 @@
 
 @media (max-width: 640px) {
   /* Auto-width columns: content drives each column's size.
-     useSyncTableColumns hook measures both tables, applies max(totalsW, dataW)
-     per column, switches to fixed layout, and sets min-width = total so the
-     wrapper scrolls horizontally when content is wider than the viewport. */
+     useSyncTableColumns hook reads the data table's header column widths and
+     applies them to both tables so totals columns stay aligned with data columns.
+     Wide/scroll tables (mining, simple-earn) keep their CSS pixel widths so they
+     overflow the wrapper and scroll; narrow tables stay within the viewport. */
   .dv-table {
     table-layout: auto;
-    width: 100%;
-  }
-
-  /* Reset desktop pixel widths so the JS hook measures from natural content size */
-  .dv-tables-wrap--wide .dv-table,
-  .dv-tables-wrap--scroll .dv-table {
     width: 100%;
   }
 
