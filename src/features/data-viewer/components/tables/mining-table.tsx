@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useRef, useState } from "react";
 import { loadCacheEntry } from "@/features/export/utils/cache";
 import type { RewardKey } from "@/features/export/types";
 import type { Currency, DateRange } from "../../types";
@@ -13,6 +13,7 @@ import {
 import { MiningCurrencyIcon } from "../icons/currency-icons";
 import { DateRangeFilter } from "../date-range-filter";
 import { Pagination } from "../pagination";
+import { useSyncTableColumns } from "../../hooks/use-sync-table-columns";
 
 // Renders a paged mining-rewards data table with date-range filter and running totals.
 export function MiningTable({
@@ -31,6 +32,9 @@ export function MiningTable({
   setDateRange: (v: DateRange) => void;
 }) {
   const [page, setPage] = useState(0);
+  const totalsRef = useRef<HTMLTableElement>(null);
+  const dataRef = useRef<HTMLTableElement>(null);
+  useSyncTableColumns(totalsRef, dataRef);
   const entry = useMemo(() => loadCacheEntry(rewardKey), [rewardKey]);
 
   const rows = useMemo(() => {
@@ -88,7 +92,7 @@ export function MiningTable({
 
   return (
     <div className="dv-tables-wrap dv-tables-wrap--wide">
-      <table className="dv-table dv-table-totals">
+      <table ref={totalsRef} className="dv-table dv-table-totals">
         <colgroup>
           <col className="dv-col-date" />
           <col className="dv-col-value" />
@@ -127,7 +131,7 @@ export function MiningTable({
         </tbody>
       </table>
 
-      <table className="dv-table dv-table-data">
+      <table ref={dataRef} className="dv-table dv-table-data">
         <colgroup>
           <col className="dv-col-date" />
           <col className="dv-col-value" />

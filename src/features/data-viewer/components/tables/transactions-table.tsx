@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useRef, useState } from "react";
 import { loadCacheEntry } from "@/features/export/utils/cache";
 import type { RewardKey } from "@/features/export/types";
 import type { TxView, DateRange } from "../../types";
@@ -14,6 +14,7 @@ import { GmtIcon, UsdIcon, FiatIcon } from "../icons/currency-icons";
 import { DateRangeFilter } from "../date-range-filter";
 import { TypeCheckFilter } from "../type-check-filter";
 import { Pagination } from "../pagination";
+import { useSyncTableColumns } from "../../hooks/use-sync-table-columns";
 
 // Renders a paged GMT wallet-transactions table with type filter, date filter and optional group-by-day.
 export function TransactionsTable({
@@ -35,6 +36,9 @@ export function TransactionsTable({
 }) {
   const [page, setPage] = useState(0);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  const totalsRef = useRef<HTMLTableElement>(null);
+  const dataRef = useRef<HTMLTableElement>(null);
+  useSyncTableColumns(totalsRef, dataRef);
   const entry = useMemo(() => loadCacheEntry(rewardKey), [rewardKey]);
 
   const allRows = useMemo(() => {
@@ -135,7 +139,7 @@ export function TransactionsTable({
   return (
     <div className="dv-tables-wrap">
       {/* Totals */}
-      <table className="dv-table dv-table-totals">
+      <table ref={totalsRef} className="dv-table dv-table-totals">
         <colgroup>
           <col className="dv-col-date" />
           <col className="dv-col-type" />
@@ -157,7 +161,7 @@ export function TransactionsTable({
       </table>
 
       {/* Data table */}
-      <table className="dv-table dv-table-data">
+      <table ref={dataRef} className="dv-table dv-table-data">
         <colgroup>
           <col className="dv-col-date" />
           <col className="dv-col-type" />

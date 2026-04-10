@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useRef, useState } from "react";
 import { loadCacheEntry } from "@/features/export/utils/cache";
 import type { RewardKey } from "@/features/export/types";
 import type { SimpleView, DateRange } from "../../types";
@@ -13,6 +13,7 @@ import {
 import { AnyCurrencyIcon, UsdIcon, FiatIcon } from "../icons/currency-icons";
 import { DateRangeFilter } from "../date-range-filter";
 import { Pagination } from "../pagination";
+import { useSyncTableColumns } from "../../hooks/use-sync-table-columns";
 
 // Renders a paged reward table for non-mining sheets with per-currency totals and optional group-by-day.
 export function SimpleTable({
@@ -34,6 +35,9 @@ export function SimpleTable({
 }) {
   const [page, setPage] = useState(0);
   const [hiddenCurrencies, setHiddenCurrencies] = useState<Set<string>>(new Set());
+  const totalsRef = useRef<HTMLTableElement>(null);
+  const dataRef = useRef<HTMLTableElement>(null);
+  useSyncTableColumns(totalsRef, dataRef);
   const entry = useMemo(() => loadCacheEntry(rewardKey), [rewardKey]);
 
   const rows = useMemo(() => {
@@ -156,7 +160,7 @@ export function SimpleTable({
   return (
     <div className="dv-tables-wrap">
       {/* Totals - one row per currency */}
-      <table className="dv-table dv-table-totals">
+      <table ref={totalsRef} className="dv-table dv-table-totals">
         <colgroup>
           <col className="dv-col-date" />
           <col className="dv-col-value" />
@@ -218,7 +222,7 @@ export function SimpleTable({
       </table>
 
       {/* Data table */}
-      <table className="dv-table dv-table-data">
+      <table ref={dataRef} className="dv-table dv-table-data">
         <colgroup>
           <col className="dv-col-date" />
           <col className="dv-col-value" />

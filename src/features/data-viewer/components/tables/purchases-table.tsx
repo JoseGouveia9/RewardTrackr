@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useRef, useState } from "react";
 import { loadCacheEntry } from "@/features/export/utils/cache";
 import type { PurchaseView, DateRange } from "../../types";
 import { PAGE_SIZE } from "../../utils/constants";
@@ -13,6 +13,7 @@ import { AnyCurrencyIcon, UsdIcon, FiatIcon } from "../icons/currency-icons";
 import { DateRangeFilter } from "../date-range-filter";
 import { TypeCheckFilter } from "../type-check-filter";
 import { Pagination } from "../pagination";
+import { useSyncTableColumns } from "../../hooks/use-sync-table-columns";
 
 // Renders a paged purchases and upgrades table combining both sheets, with type/date filters.
 export function PurchasesTable({
@@ -33,6 +34,9 @@ export function PurchasesTable({
   const [page, setPage] = useState(0);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [hiddenCurrencies, setHiddenCurrencies] = useState<Set<string>>(new Set());
+  const totalsRef = useRef<HTMLTableElement>(null);
+  const dataRef = useRef<HTMLTableElement>(null);
+  useSyncTableColumns(totalsRef, dataRef);
   const purchasesEntry = useMemo(() => loadCacheEntry("purchases"), []);
   const upgradesEntry = useMemo(() => loadCacheEntry("upgrades"), []);
 
@@ -171,7 +175,7 @@ export function PurchasesTable({
   return (
     <div className="dv-tables-wrap">
       {/* Totals per currency */}
-      <table className="dv-table dv-table-totals">
+      <table ref={totalsRef} className="dv-table dv-table-totals">
         <colgroup>
           <col className="dv-col-date" />
           <col className="dv-col-type" />
@@ -236,7 +240,7 @@ export function PurchasesTable({
       </table>
 
       {/* Data table */}
-      <table className="dv-table dv-table-data">
+      <table ref={dataRef} className="dv-table dv-table-data">
         <colgroup>
           <col className="dv-col-date" />
           <col className="dv-col-type" />
