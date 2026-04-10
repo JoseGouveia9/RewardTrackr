@@ -1167,16 +1167,11 @@
 /* Mobile */
 
 @media (max-width: 640px) {
+  /* Explicit width forces both the totals and data tables to identical sizes
+     so their fixed-layout percentage columns always align while scrolling */
   .dv-table {
-    width: max-content;
-    min-width: 100%;
+    width: 640px;
   }
-
-  /* Pixel column widths so totals and data tables share identical column sizes */
-  .dv-col-date  { width: 90px; }
-  .dv-col-value { width: 110px; }
-  .dv-col-type  { width: 150px; }
-  .dv-col-rate  { width: 70px; }
 
   /* Stack toolbar: group-by on top, currency selector below, both right-aligned */
   .dv-toolbar {
@@ -1186,6 +1181,11 @@
   }
 
   .dv-toolbar-sep {
+    display: none;
+  }
+
+  /* Back button: icon only on mobile */
+  .dv-back-btn span {
     display: none;
   }
 }
