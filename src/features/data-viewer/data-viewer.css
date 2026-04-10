@@ -344,7 +344,6 @@
 
 .dv-table {
   width: 100%;
-  min-width: 520px;
   border-collapse: collapse;
   font-size: 0.82rem;
   table-layout: fixed;
@@ -1168,12 +1167,9 @@
 /* Mobile */
 
 @media (max-width: 640px) {
-  .dv-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .dv-trigger-btn span {
-    display: none;
+  .dv-table {
+    width: max-content;
+    min-width: 100%;
+    table-layout: auto;
   }
 }
