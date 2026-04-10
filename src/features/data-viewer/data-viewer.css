@@ -1226,7 +1226,7 @@
 
   .dv-tables-wrap {
     display: grid;
-    grid-template-columns: max-content;
+    grid-template-columns: minmax(100%, max-content);
   }
 
   /* Reduce cell padding on mobile */
