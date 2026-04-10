@@ -1209,9 +1209,32 @@
 /* Mobile */
 
 @media (max-width: 640px) {
+  /* Auto-width columns: content drives each column's size.
+     Grid wrapper forces both tables in the same wrapper to the same width
+     (driven by the wider data table) so totals always align with data headers.
+     overflow-x on .dv-tables-wrap (set globally) handles horizontal scroll. */
+  .dv-table {
+    table-layout: auto;
+    width: 100%;
+  }
+
+  /* Reset desktop pixel widths; grid handles sizing on mobile */
+  .dv-tables-wrap--wide .dv-table,
+  .dv-tables-wrap--scroll .dv-table {
+    width: 100%;
+  }
+
+  .dv-tables-wrap {
+    display: grid;
+    grid-template-columns: max-content;
+  }
+
   /* Reduce cell padding on mobile */
   .dv-table td { padding: 6px 8px; }
   .dv-table-data thead th { padding: 7px 8px; }
+  /* Keep mining extra horizontal padding but reduce vertical */
+  .dv-tables-wrap--wide .dv-table td { padding: 6px 16px; }
+  .dv-tables-wrap--wide .dv-table-data thead th { padding: 7px 16px; }
 
   /* Toolbar: keep inline, wrap gracefully, right-align */
   .dv-toolbar {
