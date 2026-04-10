@@ -1,12 +1,12 @@
 import { useLayoutEffect, type RefObject } from "react";
 
-// Reads each column's rendered width from the data table's header row (which
-// already reflects auto-layout sizing for all content in that column), then
-// applies those widths to both the totals table and the data table so their
-// columns stay visually aligned.
+// For each column, takes max(data-header width, totals-row width) so neither
+// table clips its content. Then proportionally scales the result to the wider
+// table's natural width, which keeps the total from exceeding the viewport for
+// tables that already fit without scrolling.
 //
-// Wide/scroll tables (mining, simple-earn) keep their CSS pixel widths and
-// scroll naturally via overflow-x on the wrapper – no min-width override needed.
+// Wide tables (mining, --wide) keep their CSS pixel widths and overflow the
+// wrapper naturally; no min-width override is needed here.
 // Only active on mobile (≤640 px); on wider screens CSS fixed layout handles it
 // and any previously-applied inline styles are cleared.
 export function useSyncTableColumns(
@@ -32,28 +32,53 @@ export function useSyncTableColumns(
     // On desktop let CSS handle column widths
     if (!window.matchMedia("(max-width: 640px)").matches) return;
 
-    // Read the data table's header column widths after the CSS-driven reflow.
-    // With table-layout: auto (set by CSS on mobile), these widths account for
-    // the widest content in each column across all body rows.
-    // getBoundingClientRect() forces a synchronous reflow after the reset above.
+    // getBoundingClientRect() forces a synchronous reflow after the reset above
+    // so we read the freshly-laid-out CSS-driven dimensions.
+
+    // --- Measure data table header column widths ---
     const headerRow = data.tHead?.rows[0];
     if (!headerRow || headerRow.cells.length === 0) return;
 
-    const colWidths: number[] = [];
-    for (let i = 0; i < headerRow.cells.length; i++) {
-      colWidths.push(headerRow.cells[i].getBoundingClientRect().width);
+    const colCount = headerRow.cells.length;
+    const dataWidths = new Array<number>(colCount).fill(0);
+    for (let i = 0; i < colCount; i++) {
+      dataWidths[i] = headerRow.cells[i].getBoundingClientRect().width;
     }
 
-    if (colWidths.every((w) => w === 0)) return;
+    // --- Measure totals table – max per column across all rows ---
+    const totalsWidths = new Array<number>(colCount).fill(0);
+    for (const row of Array.from<HTMLTableRowElement>(totals.rows)) {
+      for (let i = 0; i < Math.min(row.cells.length, colCount); i++) {
+        totalsWidths[i] = Math.max(
+          totalsWidths[i],
+          row.cells[i].getBoundingClientRect().width,
+        );
+      }
+    }
 
-    // Apply the data table's column widths to both tables and switch to fixed
-    // layout so the browser honours them exactly. Both tables end up the same
-    // width as the data table, keeping columns visually aligned without
-    // inflating the total width beyond what the content actually needs.
+    // Per-column max so neither table clips its content
+    const maxWidths = dataWidths.map((dw, i) => Math.max(dw, totalsWidths[i]));
+    const totalMaxWidth = maxWidths.reduce((sum, w) => sum + w, 0);
+    if (totalMaxWidth === 0) return;
+
+    // Natural width of each table (≈ viewport for narrow tables; ≈ 750 px for mining)
+    const dataTotal = dataWidths.reduce((sum, w) => sum + w, 0);
+    const totalsTotal = totalsWidths.reduce((sum, w) => sum + w, 0);
+    const targetWidth = Math.max(dataTotal, totalsTotal);
+
+    // Scale maxWidths proportionally so they sum to targetWidth.
+    // This preserves relative proportions while ensuring we never inflate the
+    // table beyond what the content actually needs, keeping narrow tables within
+    // the viewport and wide tables (mining) within their CSS pixel width.
+    const scale = targetWidth / totalMaxWidth;
+    const finalWidths = maxWidths.map((w) => Math.round(w * scale));
+
+    // Apply the same column widths to both tables and switch to fixed layout
+    // so the browser honours them exactly and both tables stay aligned.
     const applyFixed = (table: HTMLTableElement) => {
       table.querySelectorAll<HTMLElement>("col").forEach((col, i) => {
-        if (i < colWidths.length && colWidths[i] > 0) {
-          col.style.width = `${colWidths[i]}px`;
+        if (i < finalWidths.length && finalWidths[i] > 0) {
+          col.style.width = `${finalWidths[i]}px`;
         }
       });
       table.style.tableLayout = "fixed";
