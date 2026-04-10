@@ -674,13 +674,22 @@ button:disabled {
     flex-wrap: wrap;
   }
 
-  .hero-actions > * {
-    flex: 1;
+  /* Support: full-width first row */
+  .hero-actions .support-button {
+    flex: 0 0 100%;
+    order: 1;
   }
 
+  /* Records: 50%, second row */
   .hero-actions .dv-trigger-btn {
     order: 3;
     flex: 0 0 calc(50% - 5px);
-    margin-left: auto;
+  }
+
+  /* Profile / No GoMining account: 50%, second row */
+  .hero-actions .referral-btn,
+  .hero-actions .user-menu-wrapper {
+    flex: 0 0 calc(50% - 5px);
+    order: 2;
   }
 }

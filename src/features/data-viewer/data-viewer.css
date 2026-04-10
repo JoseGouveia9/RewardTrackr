@@ -354,12 +354,21 @@
   width: 100%;
   border-collapse: collapse;
   font-size: 0.82rem;
-  table-layout: auto;
+  /* fixed layout: both totals and data tables in the same tab share identical
+     column widths so they always align; browser distributes width equally
+     across columns when no explicit col widths are set */
+  table-layout: fixed;
 }
 
-/* Mining tables: fixed layout so totals and data columns share identical widths */
+/* Mining (6-col): fixed pixel width wider than any mobile viewport so the
+   wrapper scrolls horizontally and both tables are identically 750px wide */
 .dv-tables-wrap--wide .dv-table {
-  table-layout: fixed;
+  width: 750px;
+}
+
+/* Simple Earn (4-col with datetime): widen to avoid date column overflow */
+.dv-tables-wrap--scroll .dv-table {
+  width: 560px;
 }
 
 /* Mining tables: extra horizontal padding for breathing room between columns */
