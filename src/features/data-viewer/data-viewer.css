@@ -1167,16 +1167,33 @@
 /* Mobile */
 
 @media (max-width: 640px) {
-  /* Wide tables (6-col mining): fixed pixel width so totals and data tables
-     always align while the wrapper scrolls horizontally */
+  /* Reduce cell padding so content fits in narrower columns */
+  .dv-table td { padding: 6px 8px; }
+  .dv-table-data thead th { padding: 7px 8px; }
+
+  /* Pixel widths replace percentages on mobile.
+     dv-col-date is sized for the "DD/MM/YYYY, HH:MM" datetime format. */
+  .dv-col-date  { width: 145px; }
+  .dv-col-value { width: 110px; }
+  .dv-col-type  { width: 130px; }
+  .dv-col-rate  { width: 55px; }
+
+  /* 6-col mining tables: explicit width = sum of pixel col widths (145 + 5×110)
+     so both the totals and data tables are always identical and aligned */
   .dv-tables-wrap--wide .dv-table {
-    width: 640px;
+    width: 695px;
   }
 
-  /* Stack toolbar: group-by on top, currency selector below, both right-aligned */
+  /* 4-col earn tables with datetime: 100% compression would leave the date
+     column too narrow, so use a fixed scroll width instead */
+  .dv-tables-wrap--scroll .dv-table {
+    width: 480px;
+  }
+
+  /* Toolbar: keep inline, wrap gracefully, right-align */
   .dv-toolbar {
-    flex-direction: column;
-    align-items: flex-end;
+    flex-wrap: wrap;
+    justify-content: flex-end;
     gap: 6px;
   }
 
@@ -1184,7 +1201,7 @@
     display: none;
   }
 
-  /* Back button: icon only on mobile */
+  /* Back button: icon only */
   .dv-back-btn span {
     display: none;
   }

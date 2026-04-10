@@ -161,7 +161,7 @@ export function SimpleEarnTable({
   }
 
   return (
-    <div className="dv-tables-wrap">
+    <div className="dv-tables-wrap dv-tables-wrap--scroll">
       {/* Grand total */}
       <table className="dv-table dv-table-totals">
         <colgroup>
