@@ -1170,6 +1170,22 @@
   .dv-table {
     width: max-content;
     min-width: 100%;
-    table-layout: auto;
+  }
+
+  /* Pixel column widths so totals and data tables share identical column sizes */
+  .dv-col-date  { width: 90px; }
+  .dv-col-value { width: 110px; }
+  .dv-col-type  { width: 150px; }
+  .dv-col-rate  { width: 70px; }
+
+  /* Stack toolbar: group-by on top, currency selector below, both right-aligned */
+  .dv-toolbar {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+  }
+
+  .dv-toolbar-sep {
+    display: none;
   }
 }

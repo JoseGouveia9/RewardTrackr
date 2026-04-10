@@ -680,6 +680,7 @@ button:disabled {
 
   .hero-actions .dv-trigger-btn {
     order: 3;
-    flex: 1 1 100%;
+    flex: 0 0 calc(50% - 5px);
+    margin-left: auto;
   }
 }
