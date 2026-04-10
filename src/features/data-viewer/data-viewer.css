@@ -339,10 +339,12 @@
 
 .dv-tables-wrap {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .dv-table {
   width: 100%;
+  min-width: 520px;
   border-collapse: collapse;
   font-size: 0.82rem;
   table-layout: fixed;

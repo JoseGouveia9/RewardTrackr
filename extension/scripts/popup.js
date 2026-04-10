@@ -1,10 +1,7 @@
 "use strict";
 
 (() => {
-  const DEV_MODE = !chrome.runtime.getManifest().update_url;
-  const EXPORTER_URL = DEV_MODE
-    ? "http://localhost:5173/"
-    : "https://josegouveia9.github.io/RewardTrackr/";
+  const EXPORTER_URL = "https://josegouveia9.github.io/RewardTrackr/";
 
   const INTRO_SEEN_KEY = "rt_intro_seen";
   const THEME_KEY = "rt_theme";

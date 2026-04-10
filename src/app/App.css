@@ -671,9 +671,15 @@ button:disabled {
 
   .hero-actions {
     width: 100%;
+    flex-wrap: wrap;
   }
 
   .hero-actions > * {
     flex: 1;
+  }
+
+  .hero-actions .dv-trigger-btn {
+    order: 3;
+    flex: 1 1 100%;
   }
 }
