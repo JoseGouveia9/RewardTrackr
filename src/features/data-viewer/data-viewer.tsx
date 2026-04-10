@@ -18,6 +18,17 @@ interface DataViewerProps {
   isFetching?: boolean;
 }
 
+// Renders "Native" as full text on desktop and "Ntv" on mobile via CSS.
+function NativeLabel({ label }: { label: string }) {
+  if (label !== "Native") return <>{label}</>;
+  return (
+    <>
+      <span className="dv-label--full">Native</span>
+      <span className="dv-label--short">Ntv</span>
+    </>
+  );
+}
+
 // Renders the full data-viewer page with tab navigation, currency selector, and lazy-loaded tables.
 export const DataViewer = memo(function DataViewer({
   onClose,
@@ -201,7 +212,7 @@ export const DataViewer = memo(function DataViewer({
                     setSharedView(c.key === "USD" ? "USD" : c.key === "FIAT" ? "FIAT" : "NATIVE");
                   }}
                 >
-                  {c.label}
+                  <NativeLabel label={c.label} />
                 </button>
               ))}
             </div>
@@ -214,7 +225,7 @@ export const DataViewer = memo(function DataViewer({
                   className={`dv-currency-btn${effectiveEarnView === v.key ? " dv-currency-btn--active" : ""}`}
                   onClick={() => setView(v.key)}
                 >
-                  {v.label}
+                  <NativeLabel label={v.label} />
                 </button>
               ))}
             </div>
@@ -227,7 +238,7 @@ export const DataViewer = memo(function DataViewer({
                   className={`dv-currency-btn${effectiveTxView === v.key ? " dv-currency-btn--active" : ""}`}
                   onClick={() => setView(v.key === "GMT" ? "NATIVE" : v.key)}
                 >
-                  {v.label}
+                  <NativeLabel label={v.label} />
                 </button>
               ))}
             </div>
@@ -240,7 +251,7 @@ export const DataViewer = memo(function DataViewer({
                   className={`dv-currency-btn${effectivePurchaseView === v.key ? " dv-currency-btn--active" : ""}`}
                   onClick={() => setView(v.key)}
                 >
-                  {v.label}
+                  <NativeLabel label={v.label} />
                 </button>
               ))}
             </div>
@@ -253,7 +264,7 @@ export const DataViewer = memo(function DataViewer({
                   className={`dv-currency-btn${effectiveSimpleView === v.key ? " dv-currency-btn--active" : ""}`}
                   onClick={() => setView(v.key)}
                 >
-                  {v.label}
+                  <NativeLabel label={v.label} />
                 </button>
               ))}
             </div>

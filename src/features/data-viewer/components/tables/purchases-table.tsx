@@ -289,7 +289,7 @@ export function PurchasesTable({
                 <td className="dv-td-date">
                   {groupByDay ? fmtDate(row.date) : fmtDateTime(row.date)}
                 </td>
-                <td>{row.type}</td>
+                <td className="dv-td-type">{row.type}</td>
                 <td className="dv-td-accent">
                   <span className="dv-cell-with-icon">
                     {formatCurrencyValue(boughtVal, boughtCur)}

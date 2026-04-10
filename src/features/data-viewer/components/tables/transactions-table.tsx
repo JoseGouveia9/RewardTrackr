@@ -194,7 +194,7 @@ export function TransactionsTable({
                 <td className="dv-td-date">
                   {groupByDay ? fmtDate(row.date) : fmtDateTime(row.date)}
                 </td>
-                <td>{row.txType}</td>
+                <td className="dv-td-type">{row.txType}</td>
                 <td className="dv-td-accent">
                   <span className="dv-cell-with-icon">
                     {formatCurrencyValue(v, c)}
