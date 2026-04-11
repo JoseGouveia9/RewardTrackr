@@ -486,12 +486,11 @@
   color: #FBB060 !important;
 }
 
-/* Type column: allow word-wrap on long type strings.
+/* Type column: wrap at word boundaries; only break inside a word as last resort.
    Use .dv-table td.dv-td-type for higher specificity than .dv-table td */
 .dv-table td.dv-td-type {
   white-space: normal;
   overflow-wrap: break-word;
-  word-break: break-word;
   max-width: 130px;
 }
 
@@ -1233,9 +1232,10 @@
   /* Keep mining extra horizontal padding but reduce vertical */
   .dv-tables-wrap--wide .dv-table td { padding: 6px 16px; }
   .dv-tables-wrap--wide .dv-table-data thead th { padding: 7px 16px; }
-  /* Last column: right breathing room matching the first column */
-  .dv-table td:last-child { padding-right: 16px; }
-  .dv-table-data thead th:last-child { padding-right: 16px; }
+  /* Last column: right breathing room matching the first column's left gap,
+     and right-align content so values/icons sit flush against the right edge */
+  .dv-table td:last-child { padding-right: 16px; text-align: right; }
+  .dv-table-data thead th:last-child { padding-right: 16px; text-align: right; }
   /* Toolbar: keep inline, wrap gracefully, right-align */
   .dv-toolbar {
     flex-wrap: wrap;

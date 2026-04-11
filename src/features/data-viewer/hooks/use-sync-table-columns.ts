@@ -5,11 +5,15 @@ import { useLayoutEffect, useRef, type RefObject } from "react";
 // currently visible. Both tables are temporarily shrunk to 1 px before
 // measuring so cells report their natural content width rather than the
 // inflated auto-layout width caused by empty columns absorbing spare space.
-// Applies the max per column as percentage widths (always summing to 100%) so
-// both tables fill the wrapper exactly and stay aligned.
-// Col 0 (date) is ratcheted upward across renders: once the datetime format
-// has been measured it never shrinks, keeping the date column the same width
-// regardless of whether group-by-day is active.
+// Column assignment strategy when the table fits within the viewport:
+//   • Col 0 (date) gets its exact min-content percentage — it is never inflated
+//     beyond what the content requires, and is ratcheted upward so toggling
+//     group-by-day never shrinks it below the datetime format width.
+//   • All other columns share the remaining viewport space proportionally to
+//     their own min-content widths, so they are always at least as wide as
+//     their content and grow fairly when extra space is available.
+// When the total min-content exceeds the viewport the table scrolls and every
+// column is set to its proportional share of the total min-content width.
 // Special-case: 2-column tables always use 50/50.
 // Only active on mobile (≤640 px); on wider screens CSS fixed layout handles it
 // and any previously-applied inline styles are cleared.
@@ -98,22 +102,36 @@ export function useSyncTableColumns(
     const totalMaxWidth = maxWidths.reduce((sum, w) => sum + w, 0);
     if (totalMaxWidth === 0) return;
 
-    // tableWidth ≥ viewport so narrow tables always fill the screen;
-    // if content requirements exceed the viewport the table is slightly wider
-    // and the wrapper scrolls a small amount.
-    const tableWidth = Math.max(totalMaxWidth, window.innerWidth);
+    const viewport = window.innerWidth;
+    const tableWidth = Math.max(totalMaxWidth, viewport);
 
-    // Divide by totalMaxWidth (not tableWidth) so percentages always sum to
-    // 100% — every column gets a fair proportional share of the viewport and
-    // the browser has no leftover space to dump arbitrarily into one column.
     const applyFixed = (table: HTMLTableElement) => {
       table.querySelectorAll<HTMLElement>("col").forEach((col, i) => {
-        if (i < maxWidths.length) {
-          col.style.width = `${((maxWidths[i] / totalMaxWidth) * 100).toFixed(3)}%`;
+        if (i >= maxWidths.length) return;
+        let pct: number;
+        if (totalMaxWidth > viewport) {
+          // Scrolling table: every column gets its exact proportional min-content share
+          pct = (maxWidths[i] / totalMaxWidth) * 100;
+        } else {
+          // Table fits in viewport:
+          //   • Col 0 (date) is pinned to its exact min-content — never inflated
+          //   • Other columns split the remaining viewport space in proportion to
+          //     their own min-content widths
+          if (i === 0) {
+            pct = (maxWidths[0] / viewport) * 100;
+          } else {
+            const remainingViewport = viewport - maxWidths[0];
+            const remainingContent = totalMaxWidth - maxWidths[0];
+            pct =
+              remainingContent > 0
+                ? (maxWidths[i] / remainingContent) * (remainingViewport / viewport) * 100
+                : (remainingViewport / viewport / (colCount - 1)) * 100;
+          }
         }
+        col.style.width = `${pct.toFixed(3)}%`;
       });
       table.style.tableLayout = "fixed";
-      if (tableWidth > window.innerWidth) {
+      if (tableWidth > viewport) {
         table.style.minWidth = `${tableWidth}px`;
       }
     };
