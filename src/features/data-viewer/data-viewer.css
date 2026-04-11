@@ -1223,14 +1223,18 @@
     width: 100%;
   }
 
-  /* Uniform cell padding on mobile — every column has identical horizontal
-     padding so the gap between any two adjacent columns is always 32px (16 + 16),
-     matching the outer gap provided by the page container's side padding */
-  .dv-table td { padding: 6px 16px; }
-  .dv-table-data thead th { padding: 7px 16px; }
-  /* Simple Earn (4-col) uses tighter padding so all columns fit without scrolling */
-  .dv-tables-wrap--scroll .dv-table td { padding: 6px 8px; }
-  .dv-tables-wrap--scroll .dv-table-data thead th { padding: 7px 8px; }
+  /* Base: 8px between columns (16px gap); outer edges use 16px so the
+     first/last column content is 30px from the screen edge (16px cell + 14px
+     container), matching the inter-column rhythm visually */
+  .dv-table td { padding: 6px 8px; }
+  .dv-table-data thead th { padding: 7px 8px; }
+  .dv-table td:first-child { padding-left: 16px; }
+  .dv-table td:last-child { padding-right: 16px; }
+  .dv-table-data thead th:first-child { padding-left: 16px; }
+  .dv-table-data thead th:last-child { padding-right: 16px; }
+  /* Mining: restore 16px on all cells (wide table, fewer columns need more room) */
+  .dv-tables-wrap--wide .dv-table td { padding: 6px 16px; }
+  .dv-tables-wrap--wide .dv-table-data thead th { padding: 7px 16px; }
   /* Toolbar: keep inline, wrap gracefully, right-align */
   .dv-toolbar {
     flex-wrap: wrap;
