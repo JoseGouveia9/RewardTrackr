@@ -1,12 +1,13 @@
 import { useLayoutEffect, type RefObject } from "react";
 
-// Per column: takes max(data-header width, totals min-content width).
-// The totals table is temporarily shrunk to 1 px so each cell reports its
-// natural content width rather than the inflated auto-layout width caused by
-// empty columns absorbing redistribution space.
-// Column widths are stored as percentages of the final table width so they
-// always fill the table exactly. Wide tables (mining, --wide) keep their CSS
-// pixel widths and overflow the wrapper naturally via min-width.
+// Measures each column's min-content width from both the totals and data header
+// rows so that column allocation is stable regardless of which body rows are
+// currently visible. Both tables are temporarily shrunk to 1 px before
+// measuring so cells report their natural content width rather than the
+// inflated auto-layout width caused by empty columns absorbing spare space.
+// Applies the max per column as percentage widths so both tables fill the
+// wrapper exactly and stay aligned.
+// Special-case: 2-column tables always use 50/50.
 // Only active on mobile (≤640 px); on wider screens CSS fixed layout handles it
 // and any previously-applied inline styles are cleared.
 export function useSyncTableColumns(
@@ -32,22 +33,32 @@ export function useSyncTableColumns(
     // On desktop let CSS handle column widths
     if (!window.matchMedia("(max-width: 640px)").matches) return;
 
-    // --- Step 1: Measure data table header column widths (CSS-driven auto layout) ---
-    // getBoundingClientRect() forces a synchronous reflow after the reset above.
     const headerRow = data.tHead?.rows[0];
     if (!headerRow || headerRow.cells.length === 0) return;
 
     const colCount = headerRow.cells.length;
-    const dataWidths: number[] = [];
-    for (let i = 0; i < colCount; i++) {
-      dataWidths.push(headerRow.cells[i].getBoundingClientRect().width);
+
+    // --- 2-column tables: always 50 / 50 ---
+    if (colCount === 2) {
+      const applyHalf = (table: HTMLTableElement) => {
+        table.querySelectorAll<HTMLElement>("col").forEach((col) => {
+          col.style.width = "50%";
+        });
+        table.style.tableLayout = "fixed";
+      };
+      applyHalf(totals);
+      applyHalf(data);
+      return;
     }
 
-    // --- Step 2: Measure totals at min-content width ---
+    // --- Measure both tables at min-content width ---
     // Setting width:1px forces each cell to report its natural content width
-    // (longest unbreakable token) rather than the inflated auto-layout width
-    // that results from empty columns absorbing redistribution space.
+    // (longest unbreakable token + padding). This makes measurements stable:
+    // they don't change when the user switches currency filters or navigates
+    // pages, because we're not reading the inflated auto-layout widths.
     totals.style.width = "1px";
+    data.style.width = "1px";
+
     const totalsWidths = new Array<number>(colCount).fill(0);
     for (const row of Array.from<HTMLTableRowElement>(totals.rows)) {
       for (let i = 0; i < Math.min(row.cells.length, colCount); i++) {
@@ -58,21 +69,27 @@ export function useSyncTableColumns(
         );
       }
     }
-    totals.style.width = ""; // restore
 
-    // --- Step 3: Per-column max and final table width ---
+    const dataWidths: number[] = [];
+    for (let i = 0; i < colCount; i++) {
+      dataWidths.push(headerRow.cells[i].getBoundingClientRect().width);
+    }
+
+    // Restore CSS-driven widths
+    totals.style.width = "";
+    data.style.width = "";
+
+    // Per-column max so neither table clips its content
     const maxWidths = dataWidths.map((dw, i) => Math.max(dw, totalsWidths[i]));
     const totalMaxWidth = maxWidths.reduce((sum, w) => sum + w, 0);
     if (totalMaxWidth === 0) return;
 
-    // tableWidth is at least the viewport so narrow tables always fill the screen;
-    // if content requirements exceed the viewport (e.g. very long BTC values) the
-    // table is slightly wider and the wrapper scrolls a tiny amount.
+    // tableWidth ≥ viewport so narrow tables always fill the screen;
+    // if content requirements exceed the viewport the table is slightly wider
+    // and the wrapper scrolls a small amount.
     const tableWidth = Math.max(totalMaxWidth, window.innerWidth);
 
-    // --- Step 4: Apply ---
-    // Percentage widths ensure columns fill the table exactly regardless of
-    // whether it equals the viewport or is a few pixels wider.
+    // Percentage widths ensure columns fill the table exactly.
     const applyFixed = (table: HTMLTableElement) => {
       table.querySelectorAll<HTMLElement>("col").forEach((col, i) => {
         if (i < maxWidths.length) {
