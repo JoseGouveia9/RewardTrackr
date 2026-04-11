@@ -1223,19 +1223,14 @@
     width: 100%;
   }
 
-  /* Reduce cell padding on mobile */
+  /* Uniform cell padding on mobile — every column has identical horizontal
+     padding so the gap between any two adjacent columns is always 16px (8 + 8),
+     matching the outer gap provided by the page container's 14px side padding */
   .dv-table td { padding: 6px 8px; }
   .dv-table-data thead th { padding: 7px 8px; }
-  /* First column: 16px left padding (screen edge), 8px right (inner gap) */
-  .dv-table td:first-child { padding: 6px 8px 6px 16px; }
-  .dv-table-data thead th:first-child { padding: 7px 8px 7px 16px; }
-  /* Keep mining extra horizontal padding but reduce vertical */
+  /* Keep mining extra horizontal padding */
   .dv-tables-wrap--wide .dv-table td { padding: 6px 16px; }
   .dv-tables-wrap--wide .dv-table-data thead th { padding: 7px 16px; }
-  /* Last column: right breathing room matching the first column's left gap,
-     and right-align content so values/icons sit flush against the right edge */
-  .dv-table td:last-child { padding-right: 16px; text-align: right; }
-  .dv-table-data thead th:last-child { padding-right: 16px; text-align: right; }
   /* Toolbar: keep inline, wrap gracefully, right-align */
   .dv-toolbar {
     flex-wrap: wrap;
