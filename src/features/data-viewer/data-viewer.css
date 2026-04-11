@@ -1227,9 +1227,9 @@
   /* Reduce cell padding on mobile */
   .dv-table td { padding: 6px 8px; }
   .dv-table-data thead th { padding: 7px 8px; }
-  /* First column: 16px horizontal padding on all tabs to match mining's breathing room */
-  .dv-table td:first-child { padding: 6px 16px; }
-  .dv-table-data thead th:first-child { padding: 7px 16px; }
+  /* First column: 16px left padding (screen edge), 8px right (inner gap) */
+  .dv-table td:first-child { padding: 6px 8px 6px 16px; }
+  .dv-table-data thead th:first-child { padding: 7px 8px 7px 16px; }
   /* Keep mining extra horizontal padding but reduce vertical */
   .dv-tables-wrap--wide .dv-table td { padding: 6px 16px; }
   .dv-tables-wrap--wide .dv-table-data thead th { padding: 7px 16px; }

@@ -1,12 +1,15 @@
-import { useLayoutEffect, type RefObject } from "react";
+import { useLayoutEffect, useRef, type RefObject } from "react";
 
 // Measures each column's min-content width from both the totals and data header
 // rows so that column allocation is stable regardless of which body rows are
 // currently visible. Both tables are temporarily shrunk to 1 px before
 // measuring so cells report their natural content width rather than the
 // inflated auto-layout width caused by empty columns absorbing spare space.
-// Applies the max per column as percentage widths so both tables fill the
-// wrapper exactly and stay aligned.
+// Applies the max per column as percentage widths (always summing to 100%) so
+// both tables fill the wrapper exactly and stay aligned.
+// Col 0 (date) is ratcheted upward across renders: once the datetime format
+// has been measured it never shrinks, keeping the date column the same width
+// regardless of whether group-by-day is active.
 // Special-case: 2-column tables always use 50/50.
 // Only active on mobile (≤640 px); on wider screens CSS fixed layout handles it
 // and any previously-applied inline styles are cleared.
@@ -14,6 +17,10 @@ export function useSyncTableColumns(
   totalsRef: RefObject<HTMLTableElement | null>,
   dataRef: RefObject<HTMLTableElement | null>,
 ) {
+  // Tracks the maximum date-column (col 0) width seen across renders so that
+  // toggling group-by-day never narrows the column below the datetime format width.
+  const maxCol0Ref = useRef(0);
+
   useLayoutEffect(() => {
     const totals = totalsRef.current;
     const data = dataRef.current;
@@ -81,6 +88,13 @@ export function useSyncTableColumns(
 
     // Per-column max so neither table clips its content
     const maxWidths = dataWidths.map((dw, i) => Math.max(dw, totalsWidths[i]));
+
+    // Ratchet col 0 (date) to the maximum seen across renders so the date column
+    // never shrinks when the user toggles group-by-day. The datetime format is
+    // wider than the date-only format; once measured it becomes the floor.
+    maxWidths[0] = Math.max(maxWidths[0], maxCol0Ref.current);
+    maxCol0Ref.current = maxWidths[0];
+
     const totalMaxWidth = maxWidths.reduce((sum, w) => sum + w, 0);
     if (totalMaxWidth === 0) return;
 
@@ -89,11 +103,13 @@ export function useSyncTableColumns(
     // and the wrapper scrolls a small amount.
     const tableWidth = Math.max(totalMaxWidth, window.innerWidth);
 
-    // Percentage widths ensure columns fill the table exactly.
+    // Divide by totalMaxWidth (not tableWidth) so percentages always sum to
+    // 100% — every column gets a fair proportional share of the viewport and
+    // the browser has no leftover space to dump arbitrarily into one column.
     const applyFixed = (table: HTMLTableElement) => {
       table.querySelectorAll<HTMLElement>("col").forEach((col, i) => {
         if (i < maxWidths.length) {
-          col.style.width = `${((maxWidths[i] / tableWidth) * 100).toFixed(3)}%`;
+          col.style.width = `${((maxWidths[i] / totalMaxWidth) * 100).toFixed(3)}%`;
         }
       });
       table.style.tableLayout = "fixed";
