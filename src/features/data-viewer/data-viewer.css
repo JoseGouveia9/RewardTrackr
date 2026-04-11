@@ -1228,6 +1228,9 @@
      matching the outer gap provided by the page container's side padding */
   .dv-table td { padding: 6px 16px; }
   .dv-table-data thead th { padding: 7px 16px; }
+  /* Simple Earn (4-col) uses tighter padding so all columns fit without scrolling */
+  .dv-tables-wrap--scroll .dv-table td { padding: 6px 8px; }
+  .dv-tables-wrap--scroll .dv-table-data thead th { padding: 7px 8px; }
   /* Toolbar: keep inline, wrap gracefully, right-align */
   .dv-toolbar {
     flex-wrap: wrap;

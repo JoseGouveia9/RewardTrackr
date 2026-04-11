@@ -6,13 +6,13 @@ import { useLayoutEffect, useRef, type RefObject } from "react";
 //
 // Column width strategy (mobile only, ≤640 px):
 //   • 2-column tables always use 50 / 50.
-//   • Scrolling tables (total min-content > viewport): every column gets its
+//   • Scrolling tables (total min-content > container): every column gets its
 //     exact proportional min-content share.
-//   • Tables that fit the viewport: col 0 (date) and all columns from index 2
-//     onward get their exact min-content width; col 1 (type / asset) absorbs
-//     all remaining viewport space so the table fills 100% exactly. This keeps
-//     uniform 8 px cell padding throughout — every inter-column gap is 16 px
-//     (8 right + 8 left), matching the outer gaps.
+//   • Tables that fit: col 0 (date) and all columns from index 2 onward get
+//     their exact min-content width; col 1 (type / asset) absorbs all remaining
+//     container space so the table fills 100% exactly. Using the container
+//     width (not window.innerWidth) guarantees both outer edges equal the cell
+//     padding, because the table IS exactly as wide as the container.
 //
 // Col 0 is ratcheted upward across renders so toggling group-by-day never
 // shrinks the date column below the datetime format width.
@@ -90,16 +90,21 @@ export function useSyncTableColumns(
     const totalMaxWidth = maxWidths.reduce((sum, w) => sum + w, 0);
     if (totalMaxWidth === 0) return;
 
-    const viewport = window.innerWidth;
-    const tableWidth = Math.max(totalMaxWidth, viewport);
+    // Use the wrapper's clientWidth as the available width — this is the actual
+    // rendered width of the table container (viewport minus page padding), not
+    // window.innerWidth. Using window.innerWidth would make column percentages
+    // sum to more than 100% of the table, causing the right edge to overflow.
+    const availableWidth =
+      (data.parentElement?.clientWidth ?? window.innerWidth) || window.innerWidth;
+    const tableWidth = Math.max(totalMaxWidth, availableWidth);
 
     // Build final column widths.
-    // When the table fits the viewport, give all spare space to col 1 so the
-    // table fills 100% and every inter-column gap stays equal (8 px + 8 px).
+    // When the table fits, give all spare space to col 1 so the table fills
+    // 100% and every inter-column gap stays equal (16 px + 16 px).
     const colWidths = [...maxWidths];
-    if (totalMaxWidth <= viewport && colCount > 2) {
+    if (totalMaxWidth <= availableWidth && colCount > 2) {
       const otherTotal = colWidths.reduce((s, w, i) => (i !== 1 ? s + w : s), 0);
-      colWidths[1] = Math.max(colWidths[1], viewport - otherTotal);
+      colWidths[1] = Math.max(colWidths[1], availableWidth - otherTotal);
     }
 
     const applyFixed = (table: HTMLTableElement) => {
@@ -109,7 +114,7 @@ export function useSyncTableColumns(
         }
       });
       table.style.tableLayout = "fixed";
-      if (tableWidth > viewport) {
+      if (tableWidth > availableWidth) {
         table.style.minWidth = `${tableWidth}px`;
       }
     };
