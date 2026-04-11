@@ -24,7 +24,7 @@ function NativeLabel({ label }: { label: string }) {
   return (
     <>
       <span className="dv-label--full">Native</span>
-      <span className="dv-label--short">Ntv</span>
+      <span className="dv-label--short">ALL</span>
     </>
   );
 }

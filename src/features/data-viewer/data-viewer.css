@@ -1233,6 +1233,21 @@
   /* Keep mining extra horizontal padding but reduce vertical */
   .dv-tables-wrap--wide .dv-table td { padding: 6px 16px; }
   .dv-tables-wrap--wide .dv-table-data thead th { padding: 7px 16px; }
+  /* Last column: right breathing room matching the first column */
+  .dv-table td:last-child { padding-right: 16px; }
+  .dv-table-data thead th:last-child { padding-right: 16px; }
+  /* Date cell sizer: hidden datetime string ensures the date column is always
+     wide enough for the long "Mar 30, 2026, 12:00 PM" format so toggling
+     group-by-day does not change the column width. */
+  .dv-td-date::after {
+    content: "Sep 30, 2026, 12:00 PM";
+    visibility: hidden;
+    display: block;
+    height: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    font-size: inherit;
+  }
 
   /* Toolbar: keep inline, wrap gracefully, right-align */
   .dv-toolbar {

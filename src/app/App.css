@@ -680,10 +680,13 @@ button:disabled {
     order: 1;
   }
 
-  /* Records: 50%, second row left */
+  /* Records: 50%, second row left – match support button height (9px vertical padding
+     compensates for the smaller 0.8rem font vs support's 0.875rem, both ~37 px tall) */
   .hero-actions .dv-trigger-btn {
     order: 2;
     flex: 0 0 calc(50% - 5px);
+    padding-top: 9px;
+    padding-bottom: 9px;
   }
 
   /* Profile / No GoMining account: 50%, second row right */
@@ -691,5 +694,19 @@ button:disabled {
   .hero-actions .user-menu-wrapper {
     flex: 0 0 calc(50% - 5px);
     order: 3;
+  }
+
+  /* Referral btn: same height fix as Records */
+  .hero-actions .referral-btn {
+    padding-top: 9px;
+    padding-bottom: 9px;
+  }
+
+  /* User-menu button inside wrapper: bump vertical padding to match support height */
+  .hero-actions .user-menu-wrapper .user-menu-button {
+    padding-top: 8px;
+    padding-bottom: 8px;
+    width: 100%;
+    justify-content: center;
   }
 }
