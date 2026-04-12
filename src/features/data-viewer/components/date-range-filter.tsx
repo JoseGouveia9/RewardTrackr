@@ -80,7 +80,7 @@ export function DateRangeFilter({
   const [calYear, setCalYear] = useState(initDate.getFullYear());
   const [calMonth, setCalMonth] = useState(initDate.getMonth());
   const ref = useRef<HTMLDivElement>(null);
-  const { btnRef, style: dropStyle, capturePos } = useFilterDropdownPos(open);
+  const { btnRef, dropRef, style: dropStyle, capturePos } = useFilterDropdownPos(open, () => setOpen(false));
 
   // Derive available years and year-month combos from entry dates when provided
   const availableYearMonths = useMemo<Set<string>>(() => {
@@ -196,7 +196,7 @@ export function DateRangeFilter({
       </button>
 
       {open && (
-        <div className="dv-col-filter-dropdown" style={dropStyle}>
+        <div ref={dropRef} className="dv-col-filter-dropdown" style={dropStyle}>
           <div className="dv-filter-date-layout">
             {/* Left: presets + actions */}
             <div className="dv-filter-date-presets">

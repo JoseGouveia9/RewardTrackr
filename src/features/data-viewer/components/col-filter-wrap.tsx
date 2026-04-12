@@ -14,7 +14,7 @@ export function ColFilterWrap({
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const { btnRef, style, capturePos } = useFilterDropdownPos(open);
+  const { btnRef, dropRef, style, capturePos } = useFilterDropdownPos(open, () => setOpen(false));
 
   useEffect(() => {
     if (!open) return;
@@ -52,7 +52,7 @@ export function ColFilterWrap({
         {label}
       </button>
       {open && (
-        <div className="dv-col-filter-dropdown" style={style}>
+        <div ref={dropRef} className="dv-col-filter-dropdown" style={style}>
           {children}
         </div>
       )}
