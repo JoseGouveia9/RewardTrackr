@@ -1,60 +1,64 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
 import type React from "react";
 
-// Base style applied via React — only structural props, never top/left.
-// top/left are owned exclusively by the rAF loop and useLayoutEffect so
-// React reconciliation can never override them and cause a 1-frame flicker.
+// Structural style applied via React — top/left are never included here so
+// React reconciliation can never fight with our DOM writes.
 const DROP_STYLE: React.CSSProperties = {
   position: "fixed",
   bottom: "auto",
   transform: "none",
 };
 
-// Returns refs and a stable style for anchoring a filter dropdown directly
-// below its trigger button. The caller renders the dropdown via a portal so
-// it is never clipped by an overflow:auto ancestor.
+// Anchors a filter dropdown directly below its trigger button using
+// position:fixed. The caller renders the dropdown via a portal so it is never
+// clipped by an overflow:auto ancestor.
 //
-// Initial position is written via useLayoutEffect (sync, before first paint).
-// Ongoing position is tracked by a requestAnimationFrame loop that writes
-// directly to the DOM — no React state updates, so no re-renders, no shaking.
+// Position strategy:
+//  • useLayoutEffect: writes initial top/left before first paint (no flash).
+//  • scroll/resize listeners: rAF-throttled DOM write on actual movement only.
+//    No continuous polling → no forced layout every frame → no shaking.
 export function useFilterDropdownPos(open: boolean) {
   const btnRef = useRef<HTMLButtonElement>(null);
   const dropRef = useRef<HTMLDivElement>(null);
-  const rafRef = useRef<number | null>(null);
+  const rafIdRef = useRef<number | null>(null);
 
-  // Sync position before first paint so the dropdown never appears at (0,0).
-  useLayoutEffect(() => {
-    if (!open || !btnRef.current || !dropRef.current) return;
+  function syncPos() {
+    if (!btnRef.current || !dropRef.current) return;
     const r = btnRef.current.getBoundingClientRect();
     dropRef.current.style.top = `${r.bottom + 8}px`;
     dropRef.current.style.left = `${r.left}px`;
+  }
+
+  // Set position before first paint so the dropdown never flashes at (0,0).
+  useLayoutEffect(() => {
+    if (!open) return;
+    syncPos();
   }, [open]);
 
-  // While open, keep position in sync via rAF direct DOM writes.
-  // No setState → no React re-renders → no shaking.
+  // While open, re-sync on any scroll or resize. rAF throttle ensures at most
+  // one DOM write per frame regardless of how many events fire.
   useEffect(() => {
-    if (!open) {
-      if (rafRef.current !== null) {
-        cancelAnimationFrame(rafRef.current);
-        rafRef.current = null;
-      }
-      return;
+    if (!open) return;
+
+    function schedule() {
+      if (rafIdRef.current !== null) return;
+      rafIdRef.current = requestAnimationFrame(() => {
+        rafIdRef.current = null;
+        syncPos();
+      });
     }
 
-    function tick() {
-      if (btnRef.current && dropRef.current) {
-        const r = btnRef.current.getBoundingClientRect();
-        dropRef.current.style.top = `${r.bottom + 8}px`;
-        dropRef.current.style.left = `${r.left}px`;
-      }
-      rafRef.current = requestAnimationFrame(tick);
-    }
+    // capture:true catches scroll on any inner scrollable element (e.g. the
+    // horizontally-scrolling table wrapper) not just window scroll.
+    window.addEventListener("scroll", schedule, { capture: true, passive: true });
+    window.addEventListener("resize", schedule);
 
-    rafRef.current = requestAnimationFrame(tick);
     return () => {
-      if (rafRef.current !== null) {
-        cancelAnimationFrame(rafRef.current);
-        rafRef.current = null;
+      window.removeEventListener("scroll", schedule, { capture: true });
+      window.removeEventListener("resize", schedule);
+      if (rafIdRef.current !== null) {
+        cancelAnimationFrame(rafIdRef.current);
+        rafIdRef.current = null;
       }
     };
   }, [open]);
