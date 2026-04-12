@@ -1,4 +1,5 @@
 ﻿import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type { DateRange } from "../types";
 import { EMPTY_DATE_RANGE, DATE_PRESETS } from "../utils/constants";
 import { isDateRangeActive } from "../utils";
@@ -80,7 +81,7 @@ export function DateRangeFilter({
   const [calYear, setCalYear] = useState(initDate.getFullYear());
   const [calMonth, setCalMonth] = useState(initDate.getMonth());
   const ref = useRef<HTMLDivElement>(null);
-  const { btnRef, dropRef, style: dropStyle, capturePos } = useFilterDropdownPos(open, () => setOpen(false));
+  const { btnRef, dropRef, style: dropStyle, capturePos } = useFilterDropdownPos(open);
 
   // Derive available years and year-month combos from entry dates when provided
   const availableYearMonths = useMemo<Set<string>>(() => {
@@ -112,7 +113,13 @@ export function DateRangeFilter({
   useEffect(() => {
     if (!open) return;
     function onDown(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      const target = e.target as Node;
+      if (
+        ref.current && !ref.current.contains(target) &&
+        dropRef.current && !dropRef.current.contains(target)
+      ) {
+        setOpen(false);
+      }
     }
     document.addEventListener("mousedown", onDown);
     return () => document.removeEventListener("mousedown", onDown);
@@ -195,7 +202,7 @@ export function DateRangeFilter({
         Date
       </button>
 
-      {open && (
+      {open && createPortal(
         <div ref={dropRef} className="dv-col-filter-dropdown" style={dropStyle}>
           <div className="dv-filter-date-layout">
             {/* Left: presets + actions */}
@@ -241,7 +248,8 @@ export function DateRangeFilter({
               />
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );

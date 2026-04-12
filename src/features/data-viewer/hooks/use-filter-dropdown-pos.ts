@@ -1,55 +1,69 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type React from "react";
 
-// Anchors a filter dropdown below its trigger button using position:fixed.
-// • Closes the dropdown when the user scrolls (prevents "gobbling" caused by
-//   updating state on every scroll event and triggering repeated re-renders).
-// • After the dropdown renders, flips it above the button if it would overflow
-//   the viewport at the bottom.
-export function useFilterDropdownPos(open: boolean, onClose: () => void) {
+// Positions a filter dropdown below (or above) its trigger button via
+// position:fixed. The dropdown is rendered via a React portal to document.body
+// so it is never clipped by an overflow:auto ancestor (which causes
+// position:fixed children to be cut on iOS Safari).
+//
+// Scroll tracking is throttled with requestAnimationFrame so the dropdown
+// follows the button smoothly without causing render "gobbling".
+export function useFilterDropdownPos(open: boolean) {
   const btnRef = useRef<HTMLButtonElement>(null);
   const dropRef = useRef<HTMLDivElement>(null);
   const flippedRef = useRef(false);
+  const rafRef = useRef<number | null>(null);
   const [style, setStyle] = useState<React.CSSProperties | undefined>(undefined);
 
-  // Snapshot the button position when the caller is about to open the dropdown.
+  function makeStyle(r: DOMRect, above: boolean): React.CSSProperties {
+    return above
+      ? { position: "fixed", top: "auto", bottom: window.innerHeight - r.top + 8, left: r.left, transform: "none" }
+      : { position: "fixed", top: r.bottom + 8, left: r.left, bottom: "auto", transform: "none" };
+  }
+
+  // Snapshot button position when called; flip is corrected in useLayoutEffect.
   function capturePos() {
     if (!btnRef.current) return;
     flippedRef.current = false;
-    const rect = btnRef.current.getBoundingClientRect();
-    setStyle({
-      position: "fixed",
-      top: rect.bottom + 8,
-      left: rect.left,
-      bottom: "auto",
-      transform: "none",
-    });
+    const r = btnRef.current.getBoundingClientRect();
+    setStyle(makeStyle(r, false));
   }
 
-  // Close on scroll instead of chasing the button — chasing causes a state
-  // update on every scroll frame, which makes the dropdown visually "gobble".
+  // Track button position on scroll, throttled to one update per animation
+  // frame so the dropdown follows the button smoothly (no gobbling).
   useEffect(() => {
     if (!open) return;
-    window.addEventListener("scroll", onClose, true);
-    return () => window.removeEventListener("scroll", onClose, true);
-  }, [open, onClose]);
+    function onScroll() {
+      if (rafRef.current !== null) return; // already scheduled this frame
+      rafRef.current = requestAnimationFrame(() => {
+        rafRef.current = null;
+        if (!btnRef.current) return;
+        const r = btnRef.current.getBoundingClientRect();
+        const dropH = dropRef.current?.getBoundingClientRect().height ?? 0;
+        const above = r.bottom + 8 + dropH > window.innerHeight;
+        flippedRef.current = above;
+        setStyle(makeStyle(r, above));
+      });
+    }
+    window.addEventListener("scroll", onScroll, { passive: true, capture: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll, true);
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+    };
+  }, [open]);
 
-  // After the dropdown renders, check if it overflows the viewport at the
-  // bottom. If so, flip it above the button. Guard with flippedRef so we only
-  // flip once per open cycle and avoid an infinite setState loop.
+  // After the dropdown renders, flip it above the button when there isn't
+  // enough space below. Guard with flippedRef to avoid an infinite setState loop.
   useLayoutEffect(() => {
     if (!open || flippedRef.current || !dropRef.current || !btnRef.current) return;
-    const btnRect = btnRef.current.getBoundingClientRect();
+    const r = btnRef.current.getBoundingClientRect();
     const dropH = dropRef.current.getBoundingClientRect().height;
-    if (btnRect.bottom + 8 + dropH > window.innerHeight) {
+    if (r.bottom + 8 + dropH > window.innerHeight) {
       flippedRef.current = true;
-      setStyle({
-        position: "fixed",
-        top: "auto",
-        bottom: window.innerHeight - btnRect.top + 8,
-        left: btnRect.left,
-        transform: "none",
-      });
+      setStyle(makeStyle(r, true));
     }
   }, [open]);
 

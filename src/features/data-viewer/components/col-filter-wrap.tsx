@@ -1,8 +1,11 @@
-﻿import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type React from "react";
 import { useFilterDropdownPos } from "../hooks/use-filter-dropdown-pos";
 
-// Wraps column-filter content in a toggle button + anchored dropdown that closes on outside click.
+// Wraps column-filter content in a toggle button + anchored dropdown that
+// closes on outside click. The dropdown is rendered via a portal to
+// document.body so it is never clipped by an overflow:auto ancestor.
 export function ColFilterWrap({
   label,
   active,
@@ -14,12 +17,18 @@ export function ColFilterWrap({
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const { btnRef, dropRef, style, capturePos } = useFilterDropdownPos(open, () => setOpen(false));
+  const { btnRef, dropRef, style, capturePos } = useFilterDropdownPos(open);
 
   useEffect(() => {
     if (!open) return;
     function onDown(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      const target = e.target as Node;
+      if (
+        ref.current && !ref.current.contains(target) &&
+        dropRef.current && !dropRef.current.contains(target)
+      ) {
+        setOpen(false);
+      }
     }
     document.addEventListener("mousedown", onDown);
     return () => document.removeEventListener("mousedown", onDown);
@@ -51,10 +60,11 @@ export function ColFilterWrap({
         </svg>
         {label}
       </button>
-      {open && (
+      {open && createPortal(
         <div ref={dropRef} className="dv-col-filter-dropdown" style={style}>
           {children}
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );
