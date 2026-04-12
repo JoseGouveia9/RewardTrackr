@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import type { DateRange } from "../types";
 import { EMPTY_DATE_RANGE, DATE_PRESETS } from "../utils/constants";
 import { isDateRangeActive } from "../utils";
+import { useTheme } from "@/app/theme-context";
 import { useFilterDropdownPos } from "../hooks/use-filter-dropdown-pos";
 import { MiniCalendar, CAL_MONTHS } from "./mini-calendar";
 
@@ -81,7 +82,8 @@ export function DateRangeFilter({
   const [calYear, setCalYear] = useState(initDate.getFullYear());
   const [calMonth, setCalMonth] = useState(initDate.getMonth());
   const ref = useRef<HTMLDivElement>(null);
-  const { btnRef, dropRef, style: dropStyle, capturePos } = useFilterDropdownPos(open);
+  const { theme } = useTheme();
+  const { btnRef, dropRef, style: dropStyle, capturePos } = useFilterDropdownPos();
 
   // Derive available years and year-month combos from entry dates when provided
   const availableYearMonths = useMemo<Set<string>>(() => {
@@ -203,6 +205,10 @@ export function DateRangeFilter({
       </button>
 
       {open && createPortal(
+        <div
+          className={`page ${theme === "dark" ? "theme-dark" : "theme-light"}`}
+          style={{ display: "contents" }}
+        >
         <div ref={dropRef} className="dv-col-filter-dropdown" style={dropStyle}>
           <div className="dv-filter-date-layout">
             {/* Left: presets + actions */}
@@ -248,6 +254,7 @@ export function DateRangeFilter({
               />
             </div>
           </div>
+        </div>
         </div>,
         document.body,
       )}
