@@ -356,6 +356,10 @@
   overflow-y: clip;
   overflow-clip-margin: 600px;
   -webkit-overflow-scrolling: touch;
+  /* Reserve space for ~15 rows so the filter dropdown has room even when
+     there are few entries. min-height here (not on the <table>) keeps rows
+     at their natural height instead of stretching them to fill the space. */
+  min-height: 600px;
 }
 
 .dv-table {
@@ -451,9 +455,6 @@
   border: 1px solid rgba(0, 0, 0, 0.06);
   border-radius: 14px;
   overflow: hidden;
-  /* Always reserve space for ~15 rows so the filter dropdown has room and
-     the table doesn't look too short when there are few entries. */
-  min-height: 600px;
 }
 
 .dv-table-data thead th:first-child { border-top-left-radius: 13px; }
@@ -1272,7 +1273,7 @@
   .dv-tables-wrap--wide .dv-table-data thead th { padding: 7px 16px; }
 
   /* Smaller row height on mobile (~31px/row) → recalculate min height for ~15 rows */
-  .dv-table-data { min-height: 490px; }
+  .dv-tables-wrap { min-height: 490px; }
 
   /* Toolbar: keep inline, wrap gracefully, right-align */
   .dv-toolbar {
