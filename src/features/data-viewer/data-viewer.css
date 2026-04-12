@@ -451,6 +451,9 @@
   border: 1px solid rgba(0, 0, 0, 0.06);
   border-radius: 14px;
   overflow: hidden;
+  /* Always reserve space for ~15 rows so the filter dropdown has room and
+     the table doesn't look too short when there are few entries. */
+  min-height: 600px;
 }
 
 .dv-table-data thead th:first-child { border-top-left-radius: 13px; }
@@ -1267,6 +1270,10 @@
   /* Mining: restore 16px on all cells (wide table, fewer columns need more room) */
   .dv-tables-wrap--wide .dv-table td { padding: 6px 16px; }
   .dv-tables-wrap--wide .dv-table-data thead th { padding: 7px 16px; }
+
+  /* Smaller row height on mobile (~31px/row) → recalculate min height for ~15 rows */
+  .dv-table-data { min-height: 490px; }
+
   /* Toolbar: keep inline, wrap gracefully, right-align */
   .dv-toolbar {
     flex-wrap: wrap;
