@@ -1,13 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import type React from "react";
-import { useTheme } from "@/app/theme-context";
-import { useFilterDropdownPos } from "../hooks/use-filter-dropdown-pos";
 
-// Wraps column-filter content in a toggle button + anchored dropdown that
-// closes on outside click. The dropdown is rendered via a portal to
-// document.body so it is never clipped by an overflow:auto ancestor (which
-// causes position:fixed children to be cut on iOS Safari).
+// Wraps column-filter content in a toggle button + inline dropdown.
+// The dropdown is position:absolute relative to this container so it
+// appears directly below the button — no portal, no JS coordinates.
 export function ColFilterWrap({
   label,
   active,
@@ -19,17 +15,11 @@ export function ColFilterWrap({
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const { theme } = useTheme();
-  const { btnRef, dropRef, floatingRef, style, capturePos } = useFilterDropdownPos(open);
 
   useEffect(() => {
     if (!open) return;
     function onDown(e: MouseEvent) {
-      const target = e.target as Node;
-      if (
-        ref.current && !ref.current.contains(target) &&
-        floatingRef.current && !floatingRef.current.contains(target)
-      ) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
         setOpen(false);
       }
     }
@@ -40,13 +30,9 @@ export function ColFilterWrap({
   return (
     <div ref={ref} className="dv-col-filter">
       <button
-        ref={btnRef}
         type="button"
         className={`dv-col-filter-btn${active ? " dv-col-filter-btn--active" : ""}`}
-        onClick={() => {
-          if (!open) capturePos();
-          setOpen((o) => !o);
-        }}
+        onClick={() => setOpen((o) => !o)}
       >
         <svg
           width="10"
@@ -63,19 +49,10 @@ export function ColFilterWrap({
         </svg>
         {label}
       </button>
-      {open && createPortal(
-        // display:contents erases the wrapper's own box so it takes no space,
-        // but the page/theme-dark classes are still visible to CSS selectors,
-        // giving portal children the same dark-mode styles as in-page elements.
-        <div
-          className={`page ${theme === "dark" ? "theme-dark" : "theme-light"}`}
-          style={{ display: "contents" }}
-        >
-          <div ref={dropRef} className="dv-col-filter-dropdown" style={style}>
-            {children}
-          </div>
-        </div>,
-        document.body,
+      {open && (
+        <div className="dv-col-filter-dropdown">
+          {children}
+        </div>
       )}
     </div>
   );

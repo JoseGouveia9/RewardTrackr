@@ -1,10 +1,7 @@
-﻿import { useEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { DateRange } from "../types";
 import { EMPTY_DATE_RANGE, DATE_PRESETS } from "../utils/constants";
 import { isDateRangeActive } from "../utils";
-import { useTheme } from "@/app/theme-context";
-import { useFilterDropdownPos } from "../hooks/use-filter-dropdown-pos";
 import { MiniCalendar, CAL_MONTHS } from "./mini-calendar";
 
 // A styled custom dropdown matching the fiat-dropdown look, for small option sets.
@@ -82,14 +79,11 @@ export function DateRangeFilter({
   const [calYear, setCalYear] = useState(initDate.getFullYear());
   const [calMonth, setCalMonth] = useState(initDate.getMonth());
   const ref = useRef<HTMLDivElement>(null);
-  const { theme } = useTheme();
-  const { btnRef, dropRef, floatingRef, style: dropStyle, capturePos } = useFilterDropdownPos(open);
 
-  // Derive available years and year-month combos from entry dates when provided
   const availableYearMonths = useMemo<Set<string>>(() => {
     if (!dates?.length) return new Set();
     const s = new Set<string>();
-    for (const d of dates) s.add(d.slice(0, 7)); // "YYYY-MM"
+    for (const d of dates) s.add(d.slice(0, 7));
     return s;
   }, [dates]);
 
@@ -115,34 +109,24 @@ export function DateRangeFilter({
   useEffect(() => {
     if (!open) return;
     function onDown(e: MouseEvent) {
-      const target = e.target as Node;
-      if (
-        ref.current && !ref.current.contains(target) &&
-        floatingRef.current && !floatingRef.current.contains(target)
-      ) {
-        setOpen(false);
-      }
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     }
     document.addEventListener("mousedown", onDown);
     return () => document.removeEventListener("mousedown", onDown);
   }, [open]);
 
-  // Captures the button position and opens the date picker with the current value pre-loaded.
   function openPicker() {
-    capturePos();
     setPending({ ...value });
     setPicking(false);
     setHover("");
     setOpen(true);
   }
 
-  // Commits the pending range selection and notifies the parent.
   function handleApply() {
     onChange(pending);
     setPicking(false);
   }
 
-  // Resets the range filter to empty and notifies the parent.
   function handleClear() {
     onChange(EMPTY_DATE_RANGE);
     setPending(EMPTY_DATE_RANGE);
@@ -150,7 +134,6 @@ export function DateRangeFilter({
     setHover("");
   }
 
-  // Applies a preset date range to the pending selection and navigates the calendar to the end date.
   function handlePreset(p: (typeof DATE_PRESETS)[0]) {
     const to = p.to();
     setPending({ from: p.from(), to });
@@ -163,7 +146,6 @@ export function DateRangeFilter({
     }
   }
 
-  // Handles a calendar day click, setting the range start on first click and end on second.
   function handleDayClick(d: string) {
     if (!picking) {
       setPending({ from: d, to: "" });
@@ -183,7 +165,6 @@ export function DateRangeFilter({
   return (
     <div ref={ref} className="dv-col-filter">
       <button
-        ref={btnRef}
         type="button"
         className={`dv-col-filter-btn${isDateRangeActive(value) ? " dv-col-filter-btn--active" : ""}`}
         onClick={openPicker}
@@ -204,12 +185,8 @@ export function DateRangeFilter({
         Date
       </button>
 
-      {open && createPortal(
-        <div
-          className={`page ${theme === "dark" ? "theme-dark" : "theme-light"}`}
-          style={{ display: "contents" }}
-        >
-        <div ref={dropRef} className="dv-col-filter-dropdown" style={dropStyle}>
+      {open && (
+        <div className="dv-col-filter-dropdown">
           <div className="dv-filter-date-layout">
             {/* Left: presets + actions */}
             <div className="dv-filter-date-presets">
@@ -255,8 +232,6 @@ export function DateRangeFilter({
             </div>
           </div>
         </div>
-        </div>,
-        document.body,
       )}
     </div>
   );

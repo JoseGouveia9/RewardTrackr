@@ -350,9 +350,11 @@
 
 .dv-tables-wrap {
   overflow-x: auto;
-  /* clip does not create a scroll container (unlike auto/hidden/scroll),
-     so position:sticky on the table header sticks to the page, not this wrapper. */
+  /* clip does not create a vertical scroll container, so position:sticky on
+     the thead sticks to the page. overflow-clip-margin lets the absolutely-
+     positioned filter dropdown visually escape the wrapper's bounds. */
   overflow-y: clip;
+  overflow-clip-margin: 600px;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -671,7 +673,9 @@
 
 /* Dropdown panel - glass card style */
 .dv-col-filter-dropdown {
-  position: fixed;
+  position: absolute;
+  top: 100%;
+  left: 0;
   z-index: 9999;
   background: rgba(255, 255, 255, 0.72);
   border: 1px solid rgba(0, 0, 0, 0.07);
