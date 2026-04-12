@@ -20,7 +20,7 @@ export function ColFilterWrap({
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const { theme } = useTheme();
-  const { btnRef, dropRef, style, capturePos } = useFilterDropdownPos(open);
+  const { btnRef, dropRef, floatingRef, style, capturePos } = useFilterDropdownPos(open);
 
   useEffect(() => {
     if (!open) return;
@@ -28,7 +28,7 @@ export function ColFilterWrap({
       const target = e.target as Node;
       if (
         ref.current && !ref.current.contains(target) &&
-        dropRef.current && !dropRef.current.contains(target)
+        floatingRef.current && !floatingRef.current.contains(target)
       ) {
         setOpen(false);
       }
