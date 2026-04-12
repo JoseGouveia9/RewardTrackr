@@ -13,10 +13,10 @@ const DROP_STYLE: React.CSSProperties = {
 // position:fixed. The caller renders the dropdown via a portal so it is never
 // clipped by an overflow:auto ancestor.
 //
-// • useLayoutEffect  — writes initial top/left before first paint (no flash).
-// • scroll/resize    — rAF-throttled DOM write on actual movement.
-//                      Math.round() snaps to integer px to kill sub-pixel jitter.
-// • No setState      — React never touches top/left, so no React-vs-DOM fighting.
+// • useLayoutEffect — writes initial top/left before first paint (no flash).
+// • rAF loop        — updates top/left every frame via direct DOM writes.
+//                     No setState → React never touches top/left → no fighting.
+//                     Math.round() snaps to integer px to kill sub-pixel jitter.
 export function useFilterDropdownPos(open: boolean) {
   const btnRef = useRef<HTMLButtonElement>(null);
   const dropRef = useRef<HTMLDivElement>(null);
@@ -35,25 +35,19 @@ export function useFilterDropdownPos(open: boolean) {
     syncPos();
   }, [open]);
 
-  // While open, re-sync on any scroll or resize.
-  // capture:true catches scroll on inner scrollable elements too (e.g. the table).
+  // While open, sync position on every animation frame so the dropdown
+  // follows the button with zero lag during scroll.
   useEffect(() => {
     if (!open) return;
 
-    function schedule() {
-      if (rafIdRef.current !== null) return;
-      rafIdRef.current = requestAnimationFrame(() => {
-        rafIdRef.current = null;
-        syncPos();
-      });
+    function tick() {
+      syncPos();
+      rafIdRef.current = requestAnimationFrame(tick);
     }
 
-    window.addEventListener("scroll", schedule, { capture: true, passive: true });
-    window.addEventListener("resize", schedule);
+    rafIdRef.current = requestAnimationFrame(tick);
 
     return () => {
-      window.removeEventListener("scroll", schedule, { capture: true });
-      window.removeEventListener("resize", schedule);
       if (rafIdRef.current !== null) {
         cancelAnimationFrame(rafIdRef.current);
         rafIdRef.current = null;
