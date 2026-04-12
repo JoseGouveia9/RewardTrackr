@@ -350,6 +350,9 @@
 
 .dv-tables-wrap {
   overflow-x: auto;
+  /* clip does not create a scroll container (unlike auto/hidden/scroll),
+     so position:sticky on the table header sticks to the page, not this wrapper. */
+  overflow-y: clip;
   -webkit-overflow-scrolling: touch;
 }
 
