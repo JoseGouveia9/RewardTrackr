@@ -360,15 +360,24 @@
   table-layout: fixed;
 }
 
-/* Mining (6-col): fixed pixel width wider than any mobile viewport so the
-   wrapper scrolls horizontally and both tables are identically 750px wide */
+/* Mining (6-col): on mobile the fixed width forces horizontal scroll;
+   on desktop (≥641px) let it stretch to 100% via the override below */
 .dv-tables-wrap--wide .dv-table {
   width: 750px;
 }
 
-/* Simple Earn (4-col with datetime): widen to avoid date column overflow */
+/* Simple Earn (4-col): on mobile the hook fits all columns in the viewport;
+   on desktop stretch to 100% */
 .dv-tables-wrap--scroll .dv-table {
   width: 560px;
+}
+
+/* On desktop both tables should fill the full container width */
+@media (min-width: 641px) {
+  .dv-tables-wrap--wide .dv-table,
+  .dv-tables-wrap--scroll .dv-table {
+    width: 100%;
+  }
 }
 
 /* Mining tables: extra horizontal padding for breathing room between columns */

@@ -702,11 +702,17 @@ button:disabled {
     padding-bottom: 9px;
   }
 
-  /* User-menu button inside wrapper: bump vertical padding to match support height */
+  /* User-menu button: fill wrapper and center content */
   .hero-actions .user-menu-wrapper .user-menu-button {
     padding-top: 8px;
     padding-bottom: 8px;
     width: 100%;
     justify-content: center;
+  }
+  /* Shrink avatar to 21px so button height matches the other buttons:
+     8px padding + 21px avatar + 8px padding = 37px, same as support button */
+  .hero-actions .user-menu-wrapper .user-menu-button .user-menu-avatar {
+    width: 21px;
+    height: 21px;
   }
 }
