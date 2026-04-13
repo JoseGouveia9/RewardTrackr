@@ -19,7 +19,7 @@
     color 0.14s ease;
 }
 
-.dv-trigger-button:hover {
+.dv-trigger-button:not(.dv-trigger-button--active):hover {
   background: rgba(0, 0, 0, 0.05);
   border-color: rgba(0, 0, 0, 0.14);
   color: #22283a;
@@ -42,7 +42,7 @@
   border-color: rgba(255, 255, 255, 0.1);
 }
 
-.page.theme-dark .dv-trigger-button:hover {
+.page.theme-dark .dv-trigger-button:not(.dv-trigger-button--active):hover {
   background: rgba(255, 255, 255, 0.07);
   border-color: rgba(255, 255, 255, 0.2);
   color: #ffffff;
@@ -160,7 +160,7 @@
   flex-shrink: 0;
 }
 
-.dv-group-button:hover {
+.dv-group-button:not(.dv-group-button--active):hover {
   background: rgba(0, 0, 0, 0.05);
   color: #22283a;
 }
@@ -176,7 +176,7 @@
   border-color: rgba(255, 255, 255, 0.1);
 }
 
-.page.theme-dark .dv-group-button:hover {
+.page.theme-dark .dv-group-button:not(.dv-group-button--active):hover {
   background: rgba(255, 255, 255, 0.06);
   color: rgba(255, 255, 255, 0.85);
 }
@@ -210,7 +210,7 @@
   white-space: nowrap;
 }
 
-.dv-currency-button:hover {
+.dv-currency-button:not(.dv-currency-button--active):hover {
   background: rgba(0, 0, 0, 0.05);
   color: #22283a;
 }
@@ -226,7 +226,7 @@
   border-color: rgba(255, 255, 255, 0.1);
 }
 
-.page.theme-dark .dv-currency-button:hover {
+.page.theme-dark .dv-currency-button:not(.dv-currency-button--active):hover {
   background: rgba(255, 255, 255, 0.06);
   color: rgba(255, 255, 255, 0.85);
 }
@@ -365,7 +365,7 @@
 }
 
 .page.theme-dark .dv-totals-label {
-  color: #fbb060 !important;
+  color: #f7931a !important;
 }
 
 /* Tables */
@@ -447,7 +447,7 @@
 }
 
 .page.theme-light .dv-table-totals .dv-totals-label {
-  color: #ffffff !important;
+  color: #f7931a !important;
 }
 
 .page.theme-light .dv-table-totals .dv-total-cell-label {
@@ -473,10 +473,22 @@
 }
 
 .page.theme-dark .dv-table.dv-table-totals tbody .dv-totals-row--clickable:hover td {
-  background: rgba(247, 147, 26, 0.22);
+  background: rgb(247 147 26 / 15%);
 }
 
-.dv-totals-row--hidden td {
+.page.theme-light .dv-table.dv-table-totals tbody .dv-totals-row--clickable:hover td {
+  background: rgb(18 18 18);
+}
+
+.page.theme-dark .dv-totals-row--hidden td {
+  opacity: 0.35;
+}
+
+.page.theme-light .dv-table.dv-table-totals tbody .dv-totals-row--hidden td {
+  background: rgb(18 18 18) !important;
+}
+
+.page.theme-light .dv-table.dv-table-totals tbody .dv-totals-row--hidden td > * {
   opacity: 0.35;
 }
 
@@ -541,7 +553,7 @@
 }
 
 .dv-cell-accent {
-  color: #cb7010 !important;
+  color: #f7931a !important;
   font-weight: 600;
 }
 
