@@ -657,15 +657,26 @@
   background: transparent;
   color: #6d7589;
   cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
   transition:
     background 0.12s ease,
     color 0.12s ease,
-    border-color 0.12s ease;
+    border-color 0.12s ease,
+    transform 0.08s ease;
 }
 
-.dv-pagination-button:hover:not(:disabled) {
-  background: rgba(0, 0, 0, 0.05);
+.dv-pagination-button:active:not(:disabled) {
+  background: rgba(0, 0, 0, 0.08);
   color: #22283a;
+  transform: scale(0.95);
+}
+
+@media (hover: hover) {
+  .dv-pagination-button:hover:not(:disabled) {
+    background: rgba(0, 0, 0, 0.05);
+    color: #22283a;
+  }
 }
 
 .dv-pagination-button:disabled {
@@ -687,9 +698,16 @@
   color: rgba(255, 255, 255, 0.45);
 }
 
-.page.theme-dark .dv-pagination-button:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.06);
-  color: rgba(255, 255, 255, 0.85);
+.page.theme-dark .dv-pagination-button:active:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+@media (hover: hover) {
+  .page.theme-dark .dv-pagination-button:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.85);
+  }
 }
 
 .page.theme-dark .dv-pagination-info {

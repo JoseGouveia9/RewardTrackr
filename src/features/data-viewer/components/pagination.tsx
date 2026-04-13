@@ -1,4 +1,5 @@
-﻿import { PAGE_SIZE } from "../utils/constants";
+﻿import type { MouseEvent } from "react";
+import { PAGE_SIZE } from "../utils/constants";
 
 // Renders previous/next page buttons; returns null when there is only one page.
 export function Pagination({
@@ -12,12 +13,23 @@ export function Pagination({
 }) {
   const pageCount = Math.ceil(total / PAGE_SIZE);
   if (pageCount <= 1) return null;
+
+  function goPrev(e: MouseEvent<HTMLButtonElement>) {
+    e.currentTarget.blur();
+    onChange(Math.max(0, page - 1));
+  }
+
+  function goNext(e: MouseEvent<HTMLButtonElement>) {
+    e.currentTarget.blur();
+    onChange(Math.min(pageCount - 1, page + 1));
+  }
+
   return (
     <div className="dv-pagination">
       <button
         type="button"
         className="dv-pagination-button"
-        onClick={() => onChange(page - 1)}
+        onClick={goPrev}
         disabled={page === 0}
         aria-label="Previous page"
       >
@@ -29,7 +41,7 @@ export function Pagination({
       <button
         type="button"
         className="dv-pagination-button"
-        onClick={() => onChange(page + 1)}
+        onClick={goNext}
         disabled={page >= pageCount - 1}
         aria-label="Next page"
       >
