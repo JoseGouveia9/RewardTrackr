@@ -365,7 +365,7 @@
 }
 
 .page.theme-dark .dv-totals-label {
-  color: #f7931a !important;
+  color: #fbb060 !important;
 }
 
 /* Tables */
@@ -413,6 +413,8 @@
 .dv-table-totals {
   border: 1px solid rgba(247, 147, 26, 0.4);
   border-radius: 14px;
+  border-collapse: separate;
+  border-spacing: 0;
   margin-bottom: 8px;
   overflow: hidden;
 }
@@ -438,12 +440,12 @@
 }
 
 .page.theme-light .dv-table-totals {
-  border-color: #000000;
+  border: 1px solid rgba(0, 0, 0, 0.12);
 }
 
 .page.theme-light .dv-table-totals td,
 .page.theme-light .dv-table.dv-table-totals tbody tr:hover td {
-  background: #000000;
+  background: rgba(0, 0, 0, 0.02);
 }
 
 .page.theme-light .dv-table-totals .dv-totals-label {
@@ -451,11 +453,11 @@
 }
 
 .page.theme-light .dv-table-totals .dv-total-cell-label {
-  color: #8ea4cc;
+  color: #9fa5be;
 }
 
 .page.theme-light .dv-table-totals .dv-total-cell-value {
-  color: #ffffff;
+  color: #22283a;
 }
 
 .page.theme-light .dv-table-totals .dv-total-cell-value--accent {
@@ -477,7 +479,7 @@
 }
 
 .page.theme-light .dv-table.dv-table-totals tbody .dv-totals-row--clickable:hover td {
-  background: rgb(18 18 18);
+  background: rgba(0, 0, 0, 0.05);
 }
 
 .page.theme-dark .dv-totals-row--hidden td {
@@ -485,7 +487,7 @@
 }
 
 .page.theme-light .dv-table.dv-table-totals tbody .dv-totals-row--hidden td {
-  background: rgb(18 18 18) !important;
+  background: rgba(0, 0, 0, 0.02) !important;
 }
 
 .page.theme-light .dv-table.dv-table-totals tbody .dv-totals-row--hidden td > * {
@@ -634,6 +636,10 @@
 
 .page.theme-dark .dv-totals-currency-label {
   color: #f0f4ff;
+}
+
+.page.theme-light .dv-totals-currency-label {
+  color: #22283a;
 }
 
 /* Pagination */
