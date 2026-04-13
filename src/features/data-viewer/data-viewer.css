@@ -454,7 +454,10 @@
 .dv-table-data {
   border: 1px solid rgba(0, 0, 0, 0.06);
   border-radius: 14px;
-  overflow: hidden;
+  /* No overflow:hidden — the filter dropdowns are position:absolute inside
+     the thead and must escape the table's bounds. The table's border-radius
+     still rounds the table's own border. Corner cell backgrounds are
+     ~transparent so there is no visible square bleed at the corners. */
 }
 
 .dv-table-data thead th:first-child { border-top-left-radius: 13px; }
