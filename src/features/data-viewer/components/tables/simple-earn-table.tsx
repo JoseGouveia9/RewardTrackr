@@ -165,94 +165,96 @@ export function SimpleEarnTable({
   }
 
   return (
-    <div className="dv-tables-wrap dv-tables-wrap--scroll">
-      {/* Grand total */}
-      <table ref={totalsRef} className="dv-table dv-table-totals">
-        <colgroup>
-          <col className="dv-col-date" />
-          <col className="dv-col-value" />
-          <col className="dv-col-rate" />
-          <col className="dv-col-value" />
-        </colgroup>
-        <tbody>
-          <tr>
-            <td className="dv-totals-label">Total</td>
-            <td />
-            <td />
-            <td>
-              <span className="dv-total-cell-label">Reward</span>
-              <span className="dv-total-cell-value dv-total-cell-value--accent dv-cell-with-icon">
-                {isEarnNative
-                  ? formatCurrencyValue(earnGrandTotal.reward, nativeCurrency)
-                  : formatCurrencyValue(
-                      isEarnUsd ? earnGrandTotal.rewardInUSD : earnGrandTotal.rewardInFiat,
-                      isEarnUsd ? "USD" : "FIAT",
-                    )}
-                {earnTotalIcon}
-              </span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <>
+      <div className="dv-tables-wrap dv-tables-wrap--scroll">
+        {/* Grand total */}
+        <table ref={totalsRef} className="dv-table dv-table-totals">
+          <colgroup>
+            <col className="dv-column-date" />
+            <col className="dv-column-value" />
+            <col className="dv-column-rate" />
+            <col className="dv-column-value" />
+          </colgroup>
+          <tbody>
+            <tr>
+              <td className="dv-totals-label">Total</td>
+              <td />
+              <td />
+              <td>
+                <span className="dv-total-cell-label">Reward</span>
+                <span className="dv-total-cell-value dv-total-cell-value--accent dv-cell-with-icon">
+                  {isEarnNative
+                    ? formatCurrencyValue(earnGrandTotal.reward, nativeCurrency)
+                    : formatCurrencyValue(
+                        isEarnUsd ? earnGrandTotal.rewardInUSD : earnGrandTotal.rewardInFiat,
+                        isEarnUsd ? "USD" : "FIAT",
+                      )}
+                  {earnTotalIcon}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
 
-      {/* Data table */}
-      <table ref={dataRef} className="dv-table dv-table-data">
-        <colgroup>
-          <col className="dv-col-date" />
-          <col className="dv-col-value" />
-          <col className="dv-col-rate" />
-          <col className="dv-col-value" />
-        </colgroup>
-        <thead>
-          <tr>
-            <th>
-              <DateRangeFilter
-                value={dateRange}
-                onChange={setDateRange}
-                {...dateBounds}
-                dates={rowDates}
-              />
-            </th>
-            <th>Asset</th>
-            <th>APR</th>
-            <th>Reward</th>
-          </tr>
-        </thead>
-        <tbody>
-          {pageRows.map((row, i) => {
-            const { v, c } = earnRowValue(row);
-            const icon = isEarnNative ? (
-              <AnyCurrencyIcon currency={row.currency} />
-            ) : isEarnUsd ? (
-              <UsdIcon />
-            ) : (
-              <FiatIcon code={fiatCode} />
-            );
-            return (
-              <tr key={`${row.date}-${row.asset}-${i}`}>
-                <td className="dv-td-date">
-                  {groupByDay ? fmtDate(row.date) : fmtDateTime(row.date)}
-                </td>
-                <td>
-                  <span className="dv-cell-with-icon">
-                    <AnyCurrencyIcon currency={row.asset} />
-                    {row.asset}
-                  </span>
-                </td>
-                <td>{(row.apr * 100).toFixed(2)}%</td>
-                <td className="dv-td-accent">
-                  <span className="dv-cell-with-icon">
-                    {formatCurrencyValue(v, c)}
-                    {icon}
-                  </span>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+        {/* Data table */}
+        <table ref={dataRef} className="dv-table dv-table-data">
+          <colgroup>
+            <col className="dv-column-date" />
+            <col className="dv-column-value" />
+            <col className="dv-column-rate" />
+            <col className="dv-column-value" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th>
+                <DateRangeFilter
+                  value={dateRange}
+                  onChange={setDateRange}
+                  {...dateBounds}
+                  dates={rowDates}
+                />
+              </th>
+              <th>Asset</th>
+              <th>APR</th>
+              <th>Reward</th>
+            </tr>
+          </thead>
+          <tbody>
+            {pageRows.map((row, i) => {
+              const { v, c } = earnRowValue(row);
+              const icon = isEarnNative ? (
+                <AnyCurrencyIcon currency={row.currency} />
+              ) : isEarnUsd ? (
+                <UsdIcon />
+              ) : (
+                <FiatIcon code={fiatCode} />
+              );
+              return (
+                <tr key={`${row.date}-${row.asset}-${i}`}>
+                  <td className="dv-cell-date">
+                    {groupByDay ? fmtDate(row.date) : fmtDateTime(row.date)}
+                  </td>
+                  <td>
+                    <span className="dv-cell-with-icon">
+                      <AnyCurrencyIcon currency={row.asset} />
+                      {row.asset}
+                    </span>
+                  </td>
+                  <td>{(row.apr * 100).toFixed(2)}%</td>
+                  <td className="dv-cell-accent">
+                    <span className="dv-cell-with-icon">
+                      {formatCurrencyValue(v, c)}
+                      {icon}
+                    </span>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
       <Pagination page={page} total={finalRows.length} onChange={setPage} />
-    </div>
+    </>
   );
 }
 export default SimpleEarnTable;

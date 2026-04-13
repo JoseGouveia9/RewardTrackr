@@ -10,6 +10,11 @@ import { ReferralButton } from "@/components/referral-button";
 import { DataViewerButton, DataViewer } from "@/features/data-viewer";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { useTheme } from "./theme-context";
+import {
+  LS_KEY_NOTICE_RATE_LIMITS,
+  LS_KEY_NOTICE_UNOFFICIAL,
+  LS_KEY_NOTICE_OPENSOURCE,
+} from "@/lib/storage-keys";
 import logo from "/logo.webp";
 import "./App.css";
 
@@ -131,13 +136,13 @@ function App() {
   const [referralOpen, setReferralOpen] = useState(false);
   const [view, setView] = useState<"main" | "records">("main");
   const [noticeRateLimitsDismissed, setNoticeRateLimitsDismissed] = useState(
-    () => localStorage.getItem("notice_ratelimits_dismissed") === "1",
+    () => localStorage.getItem(LS_KEY_NOTICE_RATE_LIMITS) === "1",
   );
   const [noticeUnofficialDismissed, setNoticeUnofficialDismissed] = useState(
-    () => localStorage.getItem("notice_unofficial_dismissed") === "1",
+    () => localStorage.getItem(LS_KEY_NOTICE_UNOFFICIAL) === "1",
   );
   const [noticeOpenSourceDismissed, setNoticeOpenSourceDismissed] = useState(
-    () => localStorage.getItem("notice_opensource_dismissed") === "1",
+    () => localStorage.getItem(LS_KEY_NOTICE_OPENSOURCE) === "1",
   );
   // Persists a notice dismissal to localStorage and updates the local state.
   function dismissNotice(key: string, setter: (v: boolean) => void) {
@@ -308,9 +313,7 @@ function App() {
 
         <AppNotice
           visible={!noticeRateLimitsDismissed}
-          onDismiss={() =>
-            dismissNotice("notice_ratelimits_dismissed", setNoticeRateLimitsDismissed)
-          }
+          onDismiss={() => dismissNotice(LS_KEY_NOTICE_RATE_LIMITS, setNoticeRateLimitsDismissed)}
           icon={
             <svg
               className="app-notice-icon"
@@ -338,9 +341,7 @@ function App() {
         <AppNotice
           visible={!noticeUnofficialDismissed}
           className="app-notice-unofficial"
-          onDismiss={() =>
-            dismissNotice("notice_unofficial_dismissed", setNoticeUnofficialDismissed)
-          }
+          onDismiss={() => dismissNotice(LS_KEY_NOTICE_UNOFFICIAL, setNoticeUnofficialDismissed)}
           icon={
             <svg
               className="app-notice-icon"
@@ -368,9 +369,7 @@ function App() {
         <AppNotice
           visible={!user && !noticeOpenSourceDismissed}
           className="app-notice-opensource"
-          onDismiss={() =>
-            dismissNotice("notice_opensource_dismissed", setNoticeOpenSourceDismissed)
-          }
+          onDismiss={() => dismissNotice(LS_KEY_NOTICE_OPENSOURCE, setNoticeOpenSourceDismissed)}
           icon={
             <svg
               className="app-notice-icon"

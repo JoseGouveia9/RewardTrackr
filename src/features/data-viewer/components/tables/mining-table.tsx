@@ -91,108 +91,110 @@ export function MiningTable({
   }
 
   return (
-    <div className="dv-tables-wrap dv-tables-wrap--wide">
-      <table ref={totalsRef} className="dv-table dv-table-totals">
-        <colgroup>
-          <col className="dv-col-date" />
-          <col className="dv-col-value" />
-          <col className="dv-col-value" />
-          <col className="dv-col-value" />
-          <col className="dv-col-value" />
-          <col className="dv-col-value" />
-        </colgroup>
-        <tbody>
-          <tr>
-            <td className="dv-totals-label">Total</td>
-            <td />
-            <td>
-              <span className="dv-total-cell-label">Pool Reward</span>
-              <span className="dv-total-cell-value dv-cell-with-icon">
-                {formatMiningValue(totals.poolReward, currency)}
-                <MiningCurrencyIcon currency={currency} fiatCode={fiatCode} />
-              </span>
-            </td>
-            <td>
-              <span className="dv-total-cell-label">Maintenance</span>
-              <span className="dv-total-cell-value dv-cell-with-icon">
-                {formatMiningValue(totals.maintenance, currency)}
-                <MiningCurrencyIcon currency={currency} fiatCode={fiatCode} />
-              </span>
-            </td>
-            <td />
-            <td>
-              <span className="dv-total-cell-label">Reward</span>
-              <span className="dv-total-cell-value dv-total-cell-value--accent dv-cell-with-icon">
-                {formatMiningValue(totals.reward, currency)}
-                <MiningCurrencyIcon currency={currency} fiatCode={fiatCode} />
-              </span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      <table ref={dataRef} className="dv-table dv-table-data">
-        <colgroup>
-          <col className="dv-col-date" />
-          <col className="dv-col-value" />
-          <col className="dv-col-value" />
-          <col className="dv-col-value" />
-          <col className="dv-col-value" />
-          <col className="dv-col-value" />
-        </colgroup>
-        <thead>
-          <tr>
-            <th>
-              <DateRangeFilter
-                value={dateRange}
-                onChange={setDateRange}
-                {...dateBounds}
-                dates={rowDates}
-              />
-            </th>
-            <th>Power</th>
-            <th>Pool Reward</th>
-            <th>Maintenance</th>
-            <th>Discount</th>
-            <th>Reward</th>
-          </tr>
-        </thead>
-        <tbody>
-          {pageRows.map((row, i) => (
-            <tr key={`${row.date}-${i}`}>
-              <td className="dv-td-date">{fmtDate(row.date)}</td>
+    <>
+      <div className="dv-tables-wrap dv-tables-wrap--wide">
+        <table ref={totalsRef} className="dv-table dv-table-totals">
+          <colgroup>
+            <col className="dv-column-date" />
+            <col className="dv-column-value" />
+            <col className="dv-column-value" />
+            <col className="dv-column-value" />
+            <col className="dv-column-value" />
+            <col className="dv-column-value" />
+          </colgroup>
+          <tbody>
+            <tr>
+              <td className="dv-totals-label">Total</td>
+              <td />
               <td>
-                {row.totalPower > 0
-                  ? new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(
-                      row.totalPower,
-                    ) + " TH"
-                  : "—"}
-              </td>
-              <td>
-                <span className="dv-cell-with-icon">
-                  {formatMiningValue(row.poolReward, currency)}
+                <span className="dv-total-cell-label">Pool Reward</span>
+                <span className="dv-total-cell-value dv-cell-with-icon">
+                  {formatMiningValue(totals.poolReward, currency)}
                   <MiningCurrencyIcon currency={currency} fiatCode={fiatCode} />
                 </span>
               </td>
               <td>
-                <span className="dv-cell-with-icon">
-                  {formatMiningValue(row.maintenance, currency)}
+                <span className="dv-total-cell-label">Maintenance</span>
+                <span className="dv-total-cell-value dv-cell-with-icon">
+                  {formatMiningValue(totals.maintenance, currency)}
                   <MiningCurrencyIcon currency={currency} fiatCode={fiatCode} />
                 </span>
               </td>
-              <td>{row.discount > 0 ? (row.discount * 100).toFixed(2) + "%" : "—"}</td>
-              <td className="dv-td-accent">
-                <span className="dv-cell-with-icon">
-                  {formatMiningValue(row.reward, currency)}
+              <td />
+              <td>
+                <span className="dv-total-cell-label">Reward</span>
+                <span className="dv-total-cell-value dv-total-cell-value--accent dv-cell-with-icon">
+                  {formatMiningValue(totals.reward, currency)}
                   <MiningCurrencyIcon currency={currency} fiatCode={fiatCode} />
                 </span>
               </td>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </tbody>
+        </table>
+
+        <table ref={dataRef} className="dv-table dv-table-data">
+          <colgroup>
+            <col className="dv-column-date" />
+            <col className="dv-column-value" />
+            <col className="dv-column-value" />
+            <col className="dv-column-value" />
+            <col className="dv-column-value" />
+            <col className="dv-column-value" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th>
+                <DateRangeFilter
+                  value={dateRange}
+                  onChange={setDateRange}
+                  {...dateBounds}
+                  dates={rowDates}
+                />
+              </th>
+              <th>Power</th>
+              <th>Pool Reward</th>
+              <th>Maintenance</th>
+              <th>Discount</th>
+              <th>Reward</th>
+            </tr>
+          </thead>
+          <tbody>
+            {pageRows.map((row, i) => (
+              <tr key={`${row.date}-${i}`}>
+                <td className="dv-cell-date">{fmtDate(row.date)}</td>
+                <td>
+                  {row.totalPower > 0
+                    ? new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(
+                        row.totalPower,
+                      ) + " TH"
+                    : "—"}
+                </td>
+                <td>
+                  <span className="dv-cell-with-icon">
+                    {formatMiningValue(row.poolReward, currency)}
+                    <MiningCurrencyIcon currency={currency} fiatCode={fiatCode} />
+                  </span>
+                </td>
+                <td>
+                  <span className="dv-cell-with-icon">
+                    {formatMiningValue(row.maintenance, currency)}
+                    <MiningCurrencyIcon currency={currency} fiatCode={fiatCode} />
+                  </span>
+                </td>
+                <td>{row.discount > 0 ? (row.discount * 100).toFixed(2) + "%" : "—"}</td>
+                <td className="dv-cell-accent">
+                  <span className="dv-cell-with-icon">
+                    {formatMiningValue(row.reward, currency)}
+                    <MiningCurrencyIcon currency={currency} fiatCode={fiatCode} />
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
       <Pagination page={page} total={filteredRows.length} onChange={setPage} />
-    </div>
+    </>
   );
 }
 export default MiningTable;

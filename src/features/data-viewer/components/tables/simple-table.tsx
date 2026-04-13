@@ -158,113 +158,115 @@ export function SimpleTable({
   }
 
   return (
-    <div className="dv-tables-wrap">
-      {/* Totals - one row per currency */}
-      <table ref={totalsRef} className="dv-table dv-table-totals">
-        <colgroup>
-          <col className="dv-col-date" />
-          <col className="dv-col-value" />
-        </colgroup>
-        <tbody>
-          {currencyTotals.map(([currency, totals]) => {
-            const { v, c } = rowValue({ ...totals, currency });
-            const hidden = hiddenCurrencies.has(currency);
-            const toggle = isSingleCurrency
-              ? undefined
-              : () =>
-                  setHiddenCurrencies((prev) => {
-                    const next = new Set(prev);
-                    if (next.has(currency)) next.delete(currency);
-                    else next.add(currency);
-                    return next;
-                  });
-            return (
-              <tr
-                key={currency}
-                className={`${!isSingleCurrency ? "dv-totals-row--clickable" : ""}${hidden ? " dv-totals-row--hidden" : ""}`}
-                onClick={toggle}
-              >
-                <td>
-                  {isSingleCurrency ? (
-                    <span className="dv-totals-label">Total</span>
-                  ) : (
-                    <span className="dv-totals-currency-cell">
-                      <AnyCurrencyIcon currency={currency} />
-                      <span className="dv-totals-currency-label">{currency}</span>
+    <>
+      <div className="dv-tables-wrap">
+        {/* Totals - one row per currency */}
+        <table ref={totalsRef} className="dv-table dv-table-totals">
+          <colgroup>
+            <col className="dv-column-date" />
+            <col className="dv-column-value" />
+          </colgroup>
+          <tbody>
+            {currencyTotals.map(([currency, totals]) => {
+              const { v, c } = rowValue({ ...totals, currency });
+              const hidden = hiddenCurrencies.has(currency);
+              const toggle = isSingleCurrency
+                ? undefined
+                : () =>
+                    setHiddenCurrencies((prev) => {
+                      const next = new Set(prev);
+                      if (next.has(currency)) next.delete(currency);
+                      else next.add(currency);
+                      return next;
+                    });
+              return (
+                <tr
+                  key={currency}
+                  className={`${!isSingleCurrency ? "dv-totals-row--clickable" : ""}${hidden ? " dv-totals-row--hidden" : ""}`}
+                  onClick={toggle}
+                >
+                  <td>
+                    {isSingleCurrency ? (
+                      <span className="dv-totals-label">Total</span>
+                    ) : (
+                      <span className="dv-totals-currency-cell">
+                        <AnyCurrencyIcon currency={currency} />
+                        <span className="dv-totals-currency-label">{currency}</span>
+                      </span>
+                    )}
+                  </td>
+                  <td>
+                    <span className="dv-total-cell-label">{valueLabel}</span>
+                    <span className="dv-total-cell-value dv-cell-with-icon">
+                      {formatCurrencyValue(v, c)}
+                      {isNative ? <AnyCurrencyIcon currency={currency} /> : rewardIcon}
                     </span>
-                  )}
-                </td>
+                  </td>
+                </tr>
+              );
+            })}
+            {!isSingleCurrency && !isNative && (
+              <tr>
+                <td className="dv-totals-label">Total</td>
                 <td>
-                  <span className="dv-total-cell-label">{valueLabel}</span>
-                  <span className="dv-total-cell-value dv-cell-with-icon">
-                    {formatCurrencyValue(v, c)}
-                    {isNative ? <AnyCurrencyIcon currency={currency} /> : rewardIcon}
+                  <span className="dv-total-cell-value dv-total-cell-value--accent dv-cell-with-icon">
+                    {formatCurrencyValue(
+                      simpleView === "USD" ? grandTotal.rewardInUSD : grandTotal.rewardInFiat,
+                      simpleView,
+                    )}
+                    {rewardIcon}
                   </span>
                 </td>
               </tr>
-            );
-          })}
-          {!isSingleCurrency && !isNative && (
-            <tr>
-              <td className="dv-totals-label">Total</td>
-              <td>
-                <span className="dv-total-cell-value dv-total-cell-value--accent dv-cell-with-icon">
-                  {formatCurrencyValue(
-                    simpleView === "USD" ? grandTotal.rewardInUSD : grandTotal.rewardInFiat,
-                    simpleView,
-                  )}
-                  {rewardIcon}
-                </span>
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+            )}
+          </tbody>
+        </table>
 
-      {/* Data table */}
-      <table ref={dataRef} className="dv-table dv-table-data">
-        <colgroup>
-          <col className="dv-col-date" />
-          <col className="dv-col-value" />
-        </colgroup>
-        <thead>
-          <tr>
-            <th>
-              <DateRangeFilter
-                value={dateRange}
-                onChange={setDateRange}
-                {...dateBounds}
-                dates={rowDates}
-              />
-            </th>
-            <th>
-              <span className="dv-cell-with-icon">
-                {valueLabel} {rewardIcon}
-              </span>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {pageRows.map((row, i) => {
-            const { v, c } = rowValue(row);
-            return (
-              <tr key={`${row.date}-${row.currency}-${i}`}>
-                <td className="dv-td-date">
-                  {groupByDay ? fmtDate(row.date) : fmtDateTime(row.date)}
-                </td>
-                <td className={isNative ? "dv-td-white" : ""}>
-                  <span className="dv-cell-with-icon">
-                    {formatCurrencyValue(v, c)}
-                    {isNative ? <AnyCurrencyIcon currency={row.currency} /> : rewardIcon}
-                  </span>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+        {/* Data table */}
+        <table ref={dataRef} className="dv-table dv-table-data">
+          <colgroup>
+            <col className="dv-column-date" />
+            <col className="dv-column-value" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th>
+                <DateRangeFilter
+                  value={dateRange}
+                  onChange={setDateRange}
+                  {...dateBounds}
+                  dates={rowDates}
+                />
+              </th>
+              <th>
+                <span className="dv-cell-with-icon">
+                  {valueLabel} {rewardIcon}
+                </span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {pageRows.map((row, i) => {
+              const { v, c } = rowValue(row);
+              return (
+                <tr key={`${row.date}-${row.currency}-${i}`}>
+                  <td className="dv-cell-date">
+                    {groupByDay ? fmtDate(row.date) : fmtDateTime(row.date)}
+                  </td>
+                  <td>
+                    <span className="dv-cell-with-icon">
+                      {formatCurrencyValue(v, c)}
+                      {isNative ? <AnyCurrencyIcon currency={row.currency} /> : rewardIcon}
+                    </span>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
       <Pagination page={page} total={finalRows.length} onChange={setPage} />
-    </div>
+    </>
   );
 }
 export default SimpleTable;

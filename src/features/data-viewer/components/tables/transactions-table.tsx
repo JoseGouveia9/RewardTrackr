@@ -113,7 +113,7 @@ export function TransactionsTable({
     return { v: row.reward, c: "GMT" };
   }
 
-  const total = useMemo(
+  const totalValues = useMemo(
     () =>
       filteredRows.reduce(
         (acc, r) => ({
@@ -136,82 +136,86 @@ export function TransactionsTable({
     );
   }
 
-  return (
-    <div className="dv-tables-wrap">
-      {/* Totals */}
-      <table ref={totalsRef} className="dv-table dv-table-totals">
-        <colgroup>
-          <col className="dv-col-date" />
-          <col className="dv-col-type" />
-          <col className="dv-col-value" />
-        </colgroup>
-        <tbody>
-          <tr>
-            <td className="dv-totals-label">Total</td>
-            <td />
-            <td>
-              <span className="dv-total-cell-label">Reward</span>
-              <span className="dv-total-cell-value dv-total-cell-value--accent dv-cell-with-icon">
-                {formatCurrencyValue(rowValue(total).v, rowValue(total).c)}
-                {rewardIcon}
-              </span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+  const { v: totalV, c: totalC } = rowValue(totalValues);
 
-      {/* Data table */}
-      <table ref={dataRef} className="dv-table dv-table-data">
-        <colgroup>
-          <col className="dv-col-date" />
-          <col className="dv-col-type" />
-          <col className="dv-col-value" />
-        </colgroup>
-        <thead>
-          <tr>
-            <th>
-              <DateRangeFilter
-                value={dateRange}
-                onChange={setDateRange}
-                {...dateBounds}
-                dates={rowDates}
-              />
-            </th>
-            <th>
-              <TypeCheckFilter
-                label="Type"
-                types={types}
-                selected={selectedTypes}
-                onChange={setSelectedTypes}
-              />
-            </th>
-            <th>
-              <span className="dv-cell-with-icon">Reward {rewardIcon}</span>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {pageRows.map((row, i) => {
-            const { v, c } = rowValue(row);
-            return (
-              <tr key={`${row.date}-${row.txType}-${i}`}>
-                <td className="dv-td-date">
-                  {groupByDay ? fmtDate(row.date) : fmtDateTime(row.date)}
-                </td>
-                <td className="dv-td-type">{row.txType}</td>
-                <td className="dv-td-accent">
-                  <span className="dv-cell-with-icon">
-                    {formatCurrencyValue(v, c)}
-                    {rewardIcon}
-                  </span>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+  return (
+    <>
+      <div className="dv-tables-wrap">
+        {/* Totals */}
+        <table ref={totalsRef} className="dv-table dv-table-totals">
+          <colgroup>
+            <col className="dv-column-date" />
+            <col className="dv-column-type" />
+            <col className="dv-column-value" />
+          </colgroup>
+          <tbody>
+            <tr>
+              <td className="dv-totals-label">Total</td>
+              <td />
+              <td>
+                <span className="dv-total-cell-label">Reward</span>
+                <span className="dv-total-cell-value dv-total-cell-value--accent dv-cell-with-icon">
+                  {formatCurrencyValue(totalV, totalC)}
+                  {rewardIcon}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        {/* Data table */}
+        <table ref={dataRef} className="dv-table dv-table-data">
+          <colgroup>
+            <col className="dv-column-date" />
+            <col className="dv-column-type" />
+            <col className="dv-column-value" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th>
+                <DateRangeFilter
+                  value={dateRange}
+                  onChange={setDateRange}
+                  {...dateBounds}
+                  dates={rowDates}
+                />
+              </th>
+              <th>
+                <TypeCheckFilter
+                  label="Type"
+                  types={types}
+                  selected={selectedTypes}
+                  onChange={setSelectedTypes}
+                />
+              </th>
+              <th>
+                <span className="dv-cell-with-icon">Reward {rewardIcon}</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {pageRows.map((row, i) => {
+              const { v, c } = rowValue(row);
+              return (
+                <tr key={`${row.date}-${row.txType}-${i}`}>
+                  <td className="dv-cell-date">
+                    {groupByDay ? fmtDate(row.date) : fmtDateTime(row.date)}
+                  </td>
+                  <td className="dv-cell-type">{row.txType}</td>
+                  <td className="dv-cell-accent">
+                    <span className="dv-cell-with-icon">
+                      {formatCurrencyValue(v, c)}
+                      {rewardIcon}
+                    </span>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
       <Pagination page={page} total={finalRows.length} onChange={setPage} />
-    </div>
+    </>
   );
 }
 export default TransactionsTable;

@@ -206,7 +206,7 @@
   width: 100%;
 }
 
-.support-kofi-img-btn {
+.support-kofi-image-button {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -225,7 +225,7 @@
   transition: background 0.14s ease;
 }
 
-.support-kofi-img-btn:hover {
+.support-kofi-image-button:hover {
   background: #E07D10;
 }
 
@@ -298,6 +298,13 @@
     background: rgba(224, 25, 42, 0.1);
     justify-content: center;
     transition: none;
+  }
+
+  .support-button:hover {
+    max-width: unset;
+    gap: 7px;
+    padding: 8px 14px;
+    background: rgba(224, 25, 42, 0.1);
   }
 
   .support-heart-icon {

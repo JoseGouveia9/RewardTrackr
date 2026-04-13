@@ -1,21 +1,7 @@
 import { useLayoutEffect, useRef, type RefObject } from "react";
 
-// Measures each column's min-content width from both the totals and data header
-// rows. Both tables are temporarily shrunk to 1 px so cells report their
-// natural content width rather than the inflated auto-layout width.
-//
-// Column width strategy (mobile only, ≤640 px):
-//   • 2-column tables always use 50 / 50.
-//   • Scrolling tables (total min-content > container): every column gets its
-//     exact proportional min-content share.
-//   • Tables that fit: col 0 (date) and all columns from index 2 onward get
-//     their exact min-content width; col 1 (type / asset) absorbs all remaining
-//     container space so the table fills 100% exactly. Using the container
-//     width (not window.innerWidth) guarantees both outer edges equal the cell
-//     padding, because the table IS exactly as wide as the container.
-//
-// Col 0 is ratcheted upward across renders so toggling group-by-day never
-// shrinks the date column below the datetime format width.
+// Syncs column widths between totals and data tables on mobile (≤640 px).
+// Measures min-content from both tables; col 1 absorbs spare space so narrow tables fill 100%.
 export function useSyncTableColumns(
   totalsRef: RefObject<HTMLTableElement | null>,
   dataRef: RefObject<HTMLTableElement | null>,
@@ -65,10 +51,7 @@ export function useSyncTableColumns(
     const totalsWidths = new Array<number>(colCount).fill(0);
     for (const row of Array.from<HTMLTableRowElement>(totals.rows)) {
       for (let i = 0; i < Math.min(row.cells.length, colCount); i++) {
-        totalsWidths[i] = Math.max(
-          totalsWidths[i],
-          row.cells[i].getBoundingClientRect().width,
-        );
+        totalsWidths[i] = Math.max(totalsWidths[i], row.cells[i].getBoundingClientRect().width);
       }
     }
 
@@ -90,17 +73,12 @@ export function useSyncTableColumns(
     const totalMaxWidth = maxWidths.reduce((sum, w) => sum + w, 0);
     if (totalMaxWidth === 0) return;
 
-    // Use the wrapper's clientWidth as the available width — this is the actual
-    // rendered width of the table container (viewport minus page padding), not
-    // window.innerWidth. Using window.innerWidth would make column percentages
-    // sum to more than 100% of the table, causing the right edge to overflow.
+    // Use wrapper clientWidth (not window.innerWidth) so column % sums to exactly 100% of the table.
     const availableWidth =
       (data.parentElement?.clientWidth ?? window.innerWidth) || window.innerWidth;
     const tableWidth = Math.max(totalMaxWidth, availableWidth);
 
-    // Build final column widths.
-    // When the table fits, give all spare space to col 1 so the table fills
-    // 100% and every inter-column gap stays equal (16 px + 16 px).
+    // When the table fits, give spare space to col 1 so the table fills 100%.
     const colWidths = [...maxWidths];
     if (totalMaxWidth <= availableWidth && colCount > 2) {
       const otherTotal = colWidths.reduce((s, w, i) => (i !== 1 ? s + w : s), 0);

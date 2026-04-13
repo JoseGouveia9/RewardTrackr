@@ -16,7 +16,7 @@ export function Pagination({
     <div className="dv-pagination">
       <button
         type="button"
-        className="dv-pagination-btn"
+        className="dv-pagination-button"
         onClick={() => onChange(page - 1)}
         disabled={page === 0}
         aria-label="Previous page"
@@ -28,7 +28,7 @@ export function Pagination({
       </span>
       <button
         type="button"
-        className="dv-pagination-btn"
+        className="dv-pagination-button"
         onClick={() => onChange(page + 1)}
         disabled={page >= pageCount - 1}
         aria-label="Next page"

@@ -1,4 +1,4 @@
-﻿import { memo, useState } from "react";
+﻿import { memo, useEffect, useState } from "react";
 import { useEscapeKey } from "@/hooks/use-escape-key";
 import { createPortal } from "react-dom";
 import "./support-button.css";
@@ -9,7 +9,7 @@ function KofiMobileButton() {
 
   return (
     <div className="support-kofi-widget">
-      <button type="button" className="support-kofi-img-btn" onClick={() => setOpen(true)}>
+      <button type="button" className="support-kofi-image-button" onClick={() => setOpen(true)}>
         <img
           src="https://storage.ko-fi.com/cdn/logomarkLogo.png"
           alt=""
@@ -137,6 +137,13 @@ export const SupportButton = memo(function SupportButton({
   onClose,
 }: SupportButtonProps) {
   useEscapeKey(onClose, open);
+
+  useEffect(() => {
+    document.body.style.overflow = open ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open]);
 
   return (
     <>

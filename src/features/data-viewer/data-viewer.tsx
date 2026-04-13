@@ -1,24 +1,56 @@
-﻿import { lazy, memo, Suspense, useMemo } from "react";
+﻿import { memo, useEffect, useMemo, useRef } from "react";
 import { loadCacheEntry } from "@/features/export/utils/cache";
 import { ErrorBoundary } from "@/components/error-boundary";
 import type { Currency, EarnView, TxView, SimpleView, PurchaseView } from "./types";
+import type { RewardKey } from "@/features/export/types";
 import { ALL_TABS } from "./utils/constants";
 import { loadFiatCode } from "./utils";
 import { useDataViewerState } from "./hooks/use-data-viewer-state";
+import { MiningTable } from "./components/tables/mining-table";
+import { SimpleTable } from "./components/tables/simple-table";
+import { SimpleEarnTable } from "./components/tables/simple-earn-table";
+import { TransactionsTable } from "./components/tables/transactions-table";
+import { PurchasesTable } from "./components/tables/purchases-table";
 import "./data-viewer.css";
-
-const MiningTable = lazy(() => import("./components/tables/mining-table"));
-const SimpleTable = lazy(() => import("./components/tables/simple-table"));
-const SimpleEarnTable = lazy(() => import("./components/tables/simple-earn-table"));
-const TransactionsTable = lazy(() => import("./components/tables/transactions-table"));
-const PurchasesTable = lazy(() => import("./components/tables/purchases-table"));
 
 interface DataViewerProps {
   onClose: () => void;
   isFetching?: boolean;
 }
 
-// Renders "Native" as full text on desktop and "Ntv" on mobile via CSS.
+function TabList({
+  activeKey,
+  onSelect,
+}: {
+  activeKey: string;
+  onSelect: (key: RewardKey) => void;
+}) {
+  const tabsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    tabsRef.current?.querySelector<HTMLElement>(".dv-tab--active")?.scrollIntoView({
+      inline: "center",
+      block: "nearest",
+      behavior: "smooth",
+    });
+  }, [activeKey]);
+
+  return (
+    <div ref={tabsRef} className="dv-tabs">
+      {ALL_TABS.map((tab) => (
+        <button
+          key={tab.key}
+          type="button"
+          className={`dv-tab${activeKey === tab.key ? " dv-tab--active" : ""}`}
+          onClick={() => onSelect(tab.key)}
+        >
+          {tab.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function NativeLabel({ label }: { label: string }) {
   if (label !== "Native") return <>{label}</>;
   return (
@@ -26,6 +58,31 @@ function NativeLabel({ label }: { label: string }) {
       <span className="dv-label--full">Native</span>
       <span className="dv-label--short">ALL</span>
     </>
+  );
+}
+
+function ViewSelector<K extends string>({
+  views,
+  activeKey,
+  onSelect,
+}: {
+  views: { key: K; label: string }[];
+  activeKey: K;
+  onSelect: (key: K) => void;
+}) {
+  return (
+    <div className="dv-currency-selector">
+      {views.map((v) => (
+        <button
+          key={v.key}
+          type="button"
+          className={`dv-currency-button${activeKey === v.key ? " dv-currency-button--active" : ""}`}
+          onClick={() => onSelect(v.key)}
+        >
+          <NativeLabel label={v.label} />
+        </button>
+      ))}
+    </div>
   );
 }
 
@@ -54,7 +111,7 @@ export const DataViewer = memo(function DataViewer({
   const isEarnTab = activeTab.kind === "earn";
   const isTxTab = activeTab.kind === "tx";
   const isPurchaseTab = activeTab.kind === "purchase";
-  const isSimpleTab = !isMiningTab && !isEarnTab && !isTxTab && !isPurchaseTab;
+  const isSimpleTab = activeTab.kind === "simple";
 
   const simpleDataInfo = useMemo(() => {
     if (!isSimpleTab) return { currencies: [] as string[], hasUsd: false, hasFiat: false };
@@ -150,7 +207,7 @@ export const DataViewer = memo(function DataViewer({
       {/* Header */}
       <div className="dv-header">
         <div className="dv-header-left">
-          <button type="button" className="dv-back-btn" onClick={onClose} aria-label="Back">
+          <button type="button" className="dv-back-button" onClick={onClose} aria-label="Back">
             <svg
               width="16"
               height="16"
@@ -175,7 +232,7 @@ export const DataViewer = memo(function DataViewer({
           {!isMiningTab && (
             <button
               type="button"
-              className={`dv-group-btn${groupByDay ? " dv-group-btn--active" : ""}`}
+              className={`dv-group-button${groupByDay ? " dv-group-button--active" : ""}`}
               onClick={() => setGroupByDay((v) => !v)}
               title="Group by day"
               aria-pressed={groupByDay}
@@ -199,159 +256,101 @@ export const DataViewer = memo(function DataViewer({
               <span>Group by day</span>
             </button>
           )}
-          {!isMiningTab && <span className="dv-toolbar-sep">·</span>}
+          {!isMiningTab && <span className="dv-toolbar-separator">·</span>}
           {isMiningTab ? (
-            <div className="dv-currency-selector">
-              {currencies.map((c) => (
-                <button
-                  key={c.key}
-                  type="button"
-                  className={`dv-currency-btn${currency === c.key ? " dv-currency-btn--active" : ""}`}
-                  onClick={() => {
-                    setCurrency(c.key);
-                    setSharedView(c.key === "USD" ? "USD" : c.key === "FIAT" ? "FIAT" : "NATIVE");
-                  }}
-                >
-                  <NativeLabel label={c.label} />
-                </button>
-              ))}
-            </div>
+            <ViewSelector
+              views={currencies}
+              activeKey={currency}
+              onSelect={(k) => {
+                setCurrency(k);
+                setSharedView(k === "USD" ? "USD" : k === "FIAT" ? "FIAT" : "NATIVE");
+              }}
+            />
           ) : isEarnTab ? (
-            <div className="dv-currency-selector">
-              {earnViews.map((v) => (
-                <button
-                  key={v.key}
-                  type="button"
-                  className={`dv-currency-btn${effectiveEarnView === v.key ? " dv-currency-btn--active" : ""}`}
-                  onClick={() => setView(v.key)}
-                >
-                  <NativeLabel label={v.label} />
-                </button>
-              ))}
-            </div>
+            <ViewSelector views={earnViews} activeKey={effectiveEarnView} onSelect={setView} />
           ) : isTxTab && showTxSelector ? (
-            <div className="dv-currency-selector">
-              {txViews.map((v) => (
-                <button
-                  key={v.key}
-                  type="button"
-                  className={`dv-currency-btn${effectiveTxView === v.key ? " dv-currency-btn--active" : ""}`}
-                  onClick={() => setView(v.key === "GMT" ? "NATIVE" : v.key)}
-                >
-                  <NativeLabel label={v.label} />
-                </button>
-              ))}
-            </div>
+            <ViewSelector
+              views={txViews}
+              activeKey={effectiveTxView}
+              onSelect={(k) => setView(k === "GMT" ? "NATIVE" : k)}
+            />
           ) : isPurchaseTab ? (
-            <div className="dv-currency-selector">
-              {purchaseViews.map((v) => (
-                <button
-                  key={v.key}
-                  type="button"
-                  className={`dv-currency-btn${effectivePurchaseView === v.key ? " dv-currency-btn--active" : ""}`}
-                  onClick={() => setView(v.key)}
-                >
-                  <NativeLabel label={v.label} />
-                </button>
-              ))}
-            </div>
+            <ViewSelector
+              views={purchaseViews}
+              activeKey={effectivePurchaseView}
+              onSelect={setView}
+            />
           ) : showSimpleSelector ? (
-            <div className="dv-currency-selector">
-              {simpleViews.map((v) => (
-                <button
-                  key={v.key}
-                  type="button"
-                  className={`dv-currency-btn${effectiveSimpleView === v.key ? " dv-currency-btn--active" : ""}`}
-                  onClick={() => setView(v.key)}
-                >
-                  <NativeLabel label={v.label} />
-                </button>
-              ))}
-            </div>
+            <ViewSelector views={simpleViews} activeKey={effectiveSimpleView} onSelect={setView} />
           ) : null}
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="dv-tabs">
-        {ALL_TABS.map((tab) => (
-          <button
-            key={tab.key}
-            type="button"
-            className={`dv-tab${activeKey === tab.key ? " dv-tab--active" : ""}`}
-            onClick={() => setActiveKey(tab.key)}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      <TabList activeKey={activeKey} onSelect={setActiveKey} />
 
       {/* Content */}
       <div className="dv-content">
         <ErrorBoundary>
-          <Suspense>
-            {isMiningTab ? (
-              <MiningTable
-                key={activeKey}
-                rewardKey={activeKey}
-                currency={currency}
-                fiatCode={fiatCode}
-                isFetching={isFetching}
-                dateRange={dateRange}
-                setDateRange={setDateRange}
-              />
-            ) : isEarnTab ? (
-              <SimpleEarnTable
-                key={activeKey}
-                rewardKey={activeKey}
-                fiatCode={fiatCode}
-                earnView={effectiveEarnView}
-                isFetching={isFetching}
-                groupByDay={groupByDay}
-                dateRange={dateRange}
-                setDateRange={setDateRange}
-              />
-            ) : isTxTab ? (
-              <TransactionsTable
-                key={activeKey}
-                rewardKey={activeKey}
-                fiatCode={fiatCode}
-                txView={effectiveTxView}
-                isFetching={isFetching}
-                groupByDay={groupByDay}
-                dateRange={dateRange}
-                setDateRange={setDateRange}
-              />
-            ) : isPurchaseTab ? (
-              <PurchasesTable
-                key={activeKey}
-                fiatCode={fiatCode}
-                purchaseView={effectivePurchaseView}
-                isFetching={isFetching}
-                groupByDay={groupByDay}
-                dateRange={dateRange}
-                setDateRange={setDateRange}
-              />
-            ) : (
-              <SimpleTable
-                key={activeKey}
-                rewardKey={activeKey}
-                fiatCode={fiatCode}
-                simpleView={effectiveSimpleView}
-                isFetching={isFetching}
-                groupByDay={groupByDay}
-                dateRange={dateRange}
-                setDateRange={setDateRange}
-              />
-            )}
-          </Suspense>
+          {isMiningTab ? (
+            <MiningTable
+              key={activeKey}
+              rewardKey={activeKey}
+              currency={currency}
+              fiatCode={fiatCode}
+              isFetching={isFetching}
+              dateRange={dateRange}
+              setDateRange={setDateRange}
+            />
+          ) : isEarnTab ? (
+            <SimpleEarnTable
+              key={activeKey}
+              rewardKey={activeKey}
+              fiatCode={fiatCode}
+              earnView={effectiveEarnView}
+              isFetching={isFetching}
+              groupByDay={groupByDay}
+              dateRange={dateRange}
+              setDateRange={setDateRange}
+            />
+          ) : isTxTab ? (
+            <TransactionsTable
+              key={activeKey}
+              rewardKey={activeKey}
+              fiatCode={fiatCode}
+              txView={effectiveTxView}
+              isFetching={isFetching}
+              groupByDay={groupByDay}
+              dateRange={dateRange}
+              setDateRange={setDateRange}
+            />
+          ) : isPurchaseTab ? (
+            <PurchasesTable
+              key={activeKey}
+              fiatCode={fiatCode}
+              purchaseView={effectivePurchaseView}
+              isFetching={isFetching}
+              groupByDay={groupByDay}
+              dateRange={dateRange}
+              setDateRange={setDateRange}
+            />
+          ) : (
+            <SimpleTable
+              key={activeKey}
+              rewardKey={activeKey}
+              fiatCode={fiatCode}
+              simpleView={effectiveSimpleView}
+              isFetching={isFetching}
+              groupByDay={groupByDay}
+              dateRange={dateRange}
+              setDateRange={setDateRange}
+            />
+          )}
         </ErrorBoundary>
       </div>
     </div>
   );
 });
-
-// Trigger button
 
 interface DataViewerButtonProps {
   active: boolean;
@@ -366,7 +365,7 @@ export const DataViewerButton = memo(function DataViewerButton({
   return (
     <button
       type="button"
-      className={`dv-trigger-btn${active ? " dv-trigger-btn--active" : ""}`}
+      className={`dv-trigger-button${active ? " dv-trigger-button--active" : ""}`}
       onClick={onClick}
       aria-label="View records"
     >

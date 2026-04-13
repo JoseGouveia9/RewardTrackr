@@ -1,4 +1,4 @@
-﻿import { memo } from "react";
+﻿import { memo, useEffect } from "react";
 import { useEscapeKey } from "@/hooks/use-escape-key";
 import "./referral-button.css";
 
@@ -16,9 +16,16 @@ export const ReferralButton = memo(function ReferralButton({
 }: ReferralButtonProps) {
   useEscapeKey(onClose, open);
 
+  useEffect(() => {
+    document.body.style.overflow = open ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open]);
+
   return (
     <>
-      <button type="button" className="referral-btn" onClick={onOpen}>
+      <button type="button" className="referral-button" onClick={onOpen}>
         <svg
           width="14"
           height="14"
@@ -29,7 +36,7 @@ export const ReferralButton = memo(function ReferralButton({
           strokeLinecap="round"
           strokeLinejoin="round"
           aria-hidden="true"
-          className="referral-btn-icon"
+          className="referral-button-icon"
         >
           <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
           <circle cx="9" cy="7" r="4" />

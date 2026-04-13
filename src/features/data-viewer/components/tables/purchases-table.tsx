@@ -173,146 +173,148 @@ export function PurchasesTable({
   }
 
   return (
-    <div className="dv-tables-wrap">
-      {/* Totals per currency */}
-      <table ref={totalsRef} className="dv-table dv-table-totals">
-        <colgroup>
-          <col className="dv-col-date" />
-          <col className="dv-col-type" />
-          <col className="dv-col-value" />
-        </colgroup>
-        <tbody>
-          {currencyTotals.map(([currency, t]) => {
-            const { v, c } = totalValue(t, currency);
-            const hidden = hiddenCurrencies.has(currency);
-            const toggle = isSingleCurrency
-              ? undefined
-              : () =>
-                  setHiddenCurrencies((prev) => {
-                    const next = new Set(prev);
-                    if (next.has(currency)) next.delete(currency);
-                    else next.add(currency);
-                    return next;
-                  });
-            return (
-              <tr
-                key={currency}
-                className={`${!isSingleCurrency ? "dv-totals-row--clickable" : ""}${hidden ? " dv-totals-row--hidden" : ""}`}
-                onClick={toggle}
-              >
-                <td>
-                  {isSingleCurrency ? (
-                    <span className="dv-totals-label">Total</span>
-                  ) : (
-                    <span className="dv-totals-currency-cell">
-                      <AnyCurrencyIcon currency={currency} />
-                      <span className="dv-totals-currency-label">{currency}</span>
+    <>
+      <div className="dv-tables-wrap">
+        {/* Totals per currency */}
+        <table ref={totalsRef} className="dv-table dv-table-totals">
+          <colgroup>
+            <col className="dv-column-date" />
+            <col className="dv-column-type" />
+            <col className="dv-column-value" />
+          </colgroup>
+          <tbody>
+            {currencyTotals.map(([currency, t]) => {
+              const { v, c } = totalValue(t, currency);
+              const hidden = hiddenCurrencies.has(currency);
+              const toggle = isSingleCurrency
+                ? undefined
+                : () =>
+                    setHiddenCurrencies((prev) => {
+                      const next = new Set(prev);
+                      if (next.has(currency)) next.delete(currency);
+                      else next.add(currency);
+                      return next;
+                    });
+              return (
+                <tr
+                  key={currency}
+                  className={`${!isSingleCurrency ? "dv-totals-row--clickable" : ""}${hidden ? " dv-totals-row--hidden" : ""}`}
+                  onClick={toggle}
+                >
+                  <td>
+                    {isSingleCurrency ? (
+                      <span className="dv-totals-label">Total</span>
+                    ) : (
+                      <span className="dv-totals-currency-cell">
+                        <AnyCurrencyIcon currency={currency} />
+                        <span className="dv-totals-currency-label">{currency}</span>
+                      </span>
+                    )}
+                  </td>
+                  <td />
+                  <td>
+                    <span className="dv-total-cell-label">Bought</span>
+                    <span className="dv-total-cell-value dv-cell-with-icon">
+                      {formatCurrencyValue(v, c)}
+                      {isNative ? <AnyCurrencyIcon currency={currency} /> : boughtIcon}
                     </span>
-                  )}
-                </td>
+                  </td>
+                </tr>
+              );
+            })}
+            {!isSingleCurrency && !isNative && (
+              <tr>
+                <td className="dv-totals-label">Total</td>
                 <td />
                 <td>
-                  <span className="dv-total-cell-label">Bought</span>
-                  <span className="dv-total-cell-value dv-cell-with-icon">
-                    {formatCurrencyValue(v, c)}
-                    {isNative ? <AnyCurrencyIcon currency={currency} /> : boughtIcon}
-                  </span>
-                </td>
-              </tr>
-            );
-          })}
-          {!isSingleCurrency && !isNative && (
-            <tr>
-              <td className="dv-totals-label">Total</td>
-              <td />
-              <td>
-                <span className="dv-total-cell-value dv-total-cell-value--accent dv-cell-with-icon">
-                  {formatCurrencyValue(
-                    purchaseView === "USD" ? grandTotal.valueUsd : grandTotal.valueFiat,
-                    purchaseView,
-                  )}
-                  {boughtIcon}
-                </span>
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-
-      {/* Data table */}
-      <table ref={dataRef} className="dv-table dv-table-data">
-        <colgroup>
-          <col className="dv-col-date" />
-          <col className="dv-col-type" />
-          <col className="dv-col-value" />
-        </colgroup>
-        <thead>
-          <tr>
-            <th>
-              <DateRangeFilter
-                value={dateRange}
-                onChange={setDateRange}
-                {...dateBounds}
-                dates={rowDates}
-              />
-            </th>
-            <th>
-              <TypeCheckFilter
-                label="Type"
-                types={types}
-                selected={selectedTypes}
-                onChange={setSelectedTypes}
-              />
-            </th>
-            <th>
-              {purchaseView === "NATIVE" && "Bought"}
-              {purchaseView === "USD" && (
-                <span className="dv-cell-with-icon">
-                  Bought <UsdIcon />
-                </span>
-              )}
-              {purchaseView === "FIAT" && (
-                <span className="dv-cell-with-icon">
-                  Bought <FiatIcon code={fiatCode} />
-                </span>
-              )}
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {pageRows.map((row, i) => {
-            const boughtVal =
-              purchaseView === "NATIVE"
-                ? (row.reward ?? row.valueUsd)
-                : purchaseView === "USD"
-                  ? row.valueUsd
-                  : row.valueFiat;
-            const boughtCur = purchaseView === "NATIVE" ? row.currency : purchaseView;
-            return (
-              <tr key={`${row.date}-${row.currency}-${row.type}-${i}`}>
-                <td className="dv-td-date">
-                  {groupByDay ? fmtDate(row.date) : fmtDateTime(row.date)}
-                </td>
-                <td className="dv-td-type">{row.type}</td>
-                <td className="dv-td-accent">
-                  <span className="dv-cell-with-icon">
-                    {formatCurrencyValue(boughtVal, boughtCur)}
-                    {purchaseView === "NATIVE" ? (
-                      <AnyCurrencyIcon currency={row.currency} />
-                    ) : purchaseView === "USD" ? (
-                      <UsdIcon />
-                    ) : (
-                      <FiatIcon code={fiatCode} />
+                  <span className="dv-total-cell-value dv-total-cell-value--accent dv-cell-with-icon">
+                    {formatCurrencyValue(
+                      purchaseView === "USD" ? grandTotal.valueUsd : grandTotal.valueFiat,
+                      purchaseView,
                     )}
+                    {boughtIcon}
                   </span>
                 </td>
               </tr>
-            );
-          })}
-        </tbody>
-      </table>
+            )}
+          </tbody>
+        </table>
+
+        {/* Data table */}
+        <table ref={dataRef} className="dv-table dv-table-data">
+          <colgroup>
+            <col className="dv-column-date" />
+            <col className="dv-column-type" />
+            <col className="dv-column-value" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th>
+                <DateRangeFilter
+                  value={dateRange}
+                  onChange={setDateRange}
+                  {...dateBounds}
+                  dates={rowDates}
+                />
+              </th>
+              <th>
+                <TypeCheckFilter
+                  label="Type"
+                  types={types}
+                  selected={selectedTypes}
+                  onChange={setSelectedTypes}
+                />
+              </th>
+              <th>
+                {purchaseView === "NATIVE" && "Bought"}
+                {purchaseView === "USD" && (
+                  <span className="dv-cell-with-icon">
+                    Bought <UsdIcon />
+                  </span>
+                )}
+                {purchaseView === "FIAT" && (
+                  <span className="dv-cell-with-icon">
+                    Bought <FiatIcon code={fiatCode} />
+                  </span>
+                )}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {pageRows.map((row, i) => {
+              const boughtVal =
+                purchaseView === "NATIVE"
+                  ? (row.reward ?? row.valueUsd)
+                  : purchaseView === "USD"
+                    ? row.valueUsd
+                    : row.valueFiat;
+              const boughtCur = purchaseView === "NATIVE" ? row.currency : purchaseView;
+              return (
+                <tr key={`${row.date}-${row.currency}-${row.type}-${i}`}>
+                  <td className="dv-cell-date">
+                    {groupByDay ? fmtDate(row.date) : fmtDateTime(row.date)}
+                  </td>
+                  <td className="dv-cell-type">{row.type}</td>
+                  <td className="dv-cell-accent">
+                    <span className="dv-cell-with-icon">
+                      {formatCurrencyValue(boughtVal, boughtCur)}
+                      {purchaseView === "NATIVE" ? (
+                        <AnyCurrencyIcon currency={row.currency} />
+                      ) : purchaseView === "USD" ? (
+                        <UsdIcon />
+                      ) : (
+                        <FiatIcon code={fiatCode} />
+                      )}
+                    </span>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
       <Pagination page={page} total={finalRows.length} onChange={setPage} />
-    </div>
+    </>
   );
 }
 export default PurchasesTable;

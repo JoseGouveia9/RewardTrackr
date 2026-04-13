@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { DateRange } from "../types";
 import { EMPTY_DATE_RANGE, DATE_PRESETS } from "../utils/constants";
 import { isDateRangeActive } from "../utils";
 import { MiniCalendar, CAL_MONTHS } from "./mini-calendar";
+import { useOutsideClick } from "../hooks/use-outside-click";
 
 // A styled custom dropdown matching the fiat-dropdown look, for small option sets.
 function CalSelect({
@@ -17,15 +18,7 @@ function CalSelect({
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
   const selectedLabel = options.find((o) => o.value === value)?.label ?? String(value);
-
-  useEffect(() => {
-    if (!open) return;
-    function onDown(e: MouseEvent) {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
-    }
-    document.addEventListener("mousedown", onDown);
-    return () => document.removeEventListener("mousedown", onDown);
-  }, [open]);
+  useOutsideClick(wrapRef, () => setOpen(false), open);
 
   return (
     <div ref={wrapRef} className="dv-cal-sel-wrap">
@@ -74,8 +67,7 @@ export function DateRangeFilter({
   const [pending, setPending] = useState<DateRange>(EMPTY_DATE_RANGE);
   const [picking, setPicking] = useState(false);
   const [hover, setHover] = useState("");
-  const today = useMemo(() => new Date(), []);
-  const initDate = maxDate ? new Date(maxDate + "T00:00:00") : today;
+  const initDate = maxDate ? new Date(maxDate + "T00:00:00") : new Date();
   const [calYear, setCalYear] = useState(initDate.getFullYear());
   const [calMonth, setCalMonth] = useState(initDate.getMonth());
   const ref = useRef<HTMLDivElement>(null);
@@ -92,11 +84,12 @@ export function DateRangeFilter({
       const ys = [...new Set([...availableYearMonths].map((ym) => Number(ym.slice(0, 4))))].sort();
       return ys.map((y) => ({ label: String(y), value: y }));
     }
-    return Array.from({ length: 8 }, (_, i) => today.getFullYear() - 5 + i).map((y) => ({
+    const currentYear = new Date().getFullYear();
+    return Array.from({ length: 8 }, (_, i) => currentYear - 5 + i).map((y) => ({
       label: String(y),
       value: y,
     }));
-  }, [availableYearMonths, today]);
+  }, [availableYearMonths]);
 
   const monthOptions = useMemo(() => {
     return CAL_MONTHS.map((m, i) => {
@@ -106,14 +99,7 @@ export function DateRangeFilter({
     });
   }, [availableYearMonths, calYear]);
 
-  useEffect(() => {
-    if (!open) return;
-    function onDown(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    }
-    document.addEventListener("mousedown", onDown);
-    return () => document.removeEventListener("mousedown", onDown);
-  }, [open]);
+  useOutsideClick(ref, () => setOpen(false), open);
 
   function openPicker() {
     setPending({ ...value });
@@ -163,10 +149,10 @@ export function DateRangeFilter({
     DATE_PRESETS.find((p) => p.from() === pending.from && p.to() === pending.to)?.label ?? null;
 
   return (
-    <div ref={ref} className="dv-col-filter">
+    <div ref={ref} className="dv-column-filter">
       <button
         type="button"
-        className={`dv-col-filter-btn${isDateRangeActive(value) ? " dv-col-filter-btn--active" : ""}`}
+        className={`dv-column-filter-button${isDateRangeActive(value) ? " dv-column-filter-button--active" : ""}`}
         onClick={openPicker}
       >
         <svg
@@ -186,7 +172,7 @@ export function DateRangeFilter({
       </button>
 
       {open && (
-        <div className="dv-col-filter-dropdown">
+        <div className="dv-column-filter-dropdown">
           <div className="dv-filter-date-layout">
             {/* Left: presets + actions */}
             <div className="dv-filter-date-presets">
@@ -195,7 +181,7 @@ export function DateRangeFilter({
                   <button
                     key={p.label}
                     type="button"
-                    className={`dv-filter-preset-btn${activePreset === p.label ? " dv-filter-preset-btn--active" : ""}`}
+                    className={`dv-filter-preset-button${activePreset === p.label ? " dv-filter-preset-button--active" : ""}`}
                     onClick={() => handlePreset(p)}
                   >
                     {p.label}
@@ -203,17 +189,17 @@ export function DateRangeFilter({
                 ))}
               </div>
               <div className="dv-filter-actions">
-                <button type="button" className="dv-filter-apply-btn" onClick={handleApply}>
+                <button type="button" className="dv-filter-apply-button" onClick={handleApply}>
                   Apply
                 </button>
-                <button type="button" className="dv-filter-clear-btn" onClick={handleClear}>
+                <button type="button" className="dv-filter-clear-button" onClick={handleClear}>
                   Clear
                 </button>
               </div>
             </div>
 
             {/* Right: single calendar with selects */}
-            <div className="dv-filter-cals">
+            <div className="dv-filter-calendars">
               <div className="dv-cal-header">
                 <CalSelect value={calMonth} options={monthOptions} onChange={setCalMonth} />
                 <CalSelect value={calYear} options={yearOptions} onChange={setCalYear} />

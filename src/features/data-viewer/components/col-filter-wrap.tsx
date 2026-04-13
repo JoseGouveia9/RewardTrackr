@@ -1,9 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import type React from "react";
+import { useOutsideClick } from "../hooks/use-outside-click";
 
-// Wraps column-filter content in a toggle button + inline dropdown.
-// The dropdown is position:absolute relative to this container so it
-// appears directly below the button — no portal, no JS coordinates.
+// Wraps column-filter content in a toggle button + inline dropdown (position:absolute, no portal).
 export function ColFilterWrap({
   label,
   active,
@@ -15,23 +14,13 @@ export function ColFilterWrap({
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    function onDown(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", onDown);
-    return () => document.removeEventListener("mousedown", onDown);
-  }, [open]);
+  useOutsideClick(ref, () => setOpen(false), open);
 
   return (
-    <div ref={ref} className="dv-col-filter">
+    <div ref={ref} className="dv-column-filter">
       <button
         type="button"
-        className={`dv-col-filter-btn${active ? " dv-col-filter-btn--active" : ""}`}
+        className={`dv-column-filter-button${active ? " dv-column-filter-button--active" : ""}`}
         onClick={() => setOpen((o) => !o)}
       >
         <svg
@@ -49,11 +38,7 @@ export function ColFilterWrap({
         </svg>
         {label}
       </button>
-      {open && (
-        <div className="dv-col-filter-dropdown">
-          {children}
-        </div>
-      )}
+      {open && <div className="dv-column-filter-dropdown">{children}</div>}
     </div>
   );
 }

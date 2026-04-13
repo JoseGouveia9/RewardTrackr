@@ -1,6 +1,6 @@
 ﻿/* Trigger button */
 
-.dv-trigger-btn {
+.dv-trigger-button {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -13,36 +13,45 @@
   font-weight: 600 !important;
   cursor: pointer;
   white-space: nowrap;
-  transition: background 0.14s ease, border-color 0.14s ease, color 0.14s ease;
+  transition:
+    background 0.14s ease,
+    border-color 0.14s ease,
+    color 0.14s ease;
 }
 
-.dv-trigger-btn:hover {
+.dv-trigger-button:hover {
   background: rgba(0, 0, 0, 0.05);
   border-color: rgba(0, 0, 0, 0.14);
   color: #22283a;
 }
 
-.dv-trigger-btn--active {
+.dv-trigger-button--active {
   background: rgba(247, 147, 26, 0.1);
   border-color: rgba(247, 147, 26, 0.3);
-  color: #CB7010;
+  color: #cb7010;
 }
 
-.page.theme-dark .dv-trigger-btn {
+.page.theme-light .dv-trigger-button--active {
+  background: #f7931a;
+  border-color: #f7931a;
+  color: #ffffff;
+}
+
+.page.theme-dark .dv-trigger-button {
   color: rgba(255, 255, 255, 0.65);
   border-color: rgba(255, 255, 255, 0.1);
 }
 
-.page.theme-dark .dv-trigger-btn:hover {
+.page.theme-dark .dv-trigger-button:hover {
   background: rgba(255, 255, 255, 0.07);
   border-color: rgba(255, 255, 255, 0.2);
   color: #ffffff;
 }
 
-.page.theme-dark .dv-trigger-btn--active {
+.page.theme-dark .dv-trigger-button--active {
   background: rgba(247, 147, 26, 0.15);
   border-color: rgba(247, 147, 26, 0.35);
-  color: #FBB060;
+  color: #fbb060;
 }
 
 /* Page */
@@ -70,7 +79,7 @@
   gap: 12px;
 }
 
-.dv-back-btn {
+.dv-back-button {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -82,20 +91,22 @@
   font-size: 0.8rem !important;
   font-weight: 600 !important;
   cursor: pointer;
-  transition: background 0.14s ease, color 0.14s ease;
+  transition:
+    background 0.14s ease,
+    color 0.14s ease;
 }
 
-.dv-back-btn:hover {
+.dv-back-button:hover {
   background: rgba(0, 0, 0, 0.05);
   color: #22283a;
 }
 
-.page.theme-dark .dv-back-btn {
+.page.theme-dark .dv-back-button {
   border-color: rgba(255, 255, 255, 0.1);
   color: rgba(255, 255, 255, 0.5);
 }
 
-.page.theme-dark .dv-back-btn:hover {
+.page.theme-dark .dv-back-button:hover {
   background: rgba(255, 255, 255, 0.06);
   color: rgba(255, 255, 255, 0.85);
 }
@@ -119,17 +130,17 @@
   gap: 8px;
 }
 
-.dv-toolbar-sep {
+.dv-toolbar-separator {
   color: rgba(0, 0, 0, 0.2);
   font-size: 14px;
   user-select: none;
 }
 
-.page.theme-dark .dv-toolbar-sep {
+.page.theme-dark .dv-toolbar-separator {
   color: rgba(255, 255, 255, 0.2);
 }
 
-.dv-group-btn {
+.dv-group-button {
   display: flex;
   align-items: center;
   gap: 5px;
@@ -142,32 +153,35 @@
   cursor: pointer;
   font-size: 0.75rem !important;
   white-space: nowrap;
-  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+  transition:
+    background 0.12s ease,
+    color 0.12s ease,
+    border-color 0.12s ease;
   flex-shrink: 0;
 }
 
-.dv-group-btn:hover {
+.dv-group-button:hover {
   background: rgba(0, 0, 0, 0.05);
   color: #22283a;
 }
 
-.dv-group-btn--active {
-  background: #22283a;
+.dv-group-button--active {
+  background: #000000;
   border-color: #22283a;
   color: #ffffff;
 }
 
-.page.theme-dark .dv-group-btn {
+.page.theme-dark .dv-group-button {
   color: rgba(255, 255, 255, 0.45);
   border-color: rgba(255, 255, 255, 0.1);
 }
 
-.page.theme-dark .dv-group-btn:hover {
+.page.theme-dark .dv-group-button:hover {
   background: rgba(255, 255, 255, 0.06);
   color: rgba(255, 255, 255, 0.85);
 }
 
-.page.theme-dark .dv-group-btn--active {
+.page.theme-dark .dv-group-button--active {
   background: rgba(255, 255, 255, 0.12);
   border-color: rgba(255, 255, 255, 0.25);
   color: #ffffff;
@@ -180,7 +194,7 @@
   gap: 4px;
 }
 
-.dv-currency-btn {
+.dv-currency-button {
   padding: 5px 10px;
   border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 8px;
@@ -189,32 +203,35 @@
   font-size: 0.75rem !important;
   font-weight: 700 !important;
   cursor: pointer;
-  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+  transition:
+    background 0.12s ease,
+    color 0.12s ease,
+    border-color 0.12s ease;
   white-space: nowrap;
 }
 
-.dv-currency-btn:hover {
+.dv-currency-button:hover {
   background: rgba(0, 0, 0, 0.05);
   color: #22283a;
 }
 
-.dv-currency-btn--active {
-  background: #22283a;
+.dv-currency-button--active {
+  background: #000000;
   border-color: #22283a;
   color: #ffffff;
 }
 
-.page.theme-dark .dv-currency-btn {
+.page.theme-dark .dv-currency-button {
   color: rgba(255, 255, 255, 0.45);
   border-color: rgba(255, 255, 255, 0.1);
 }
 
-.page.theme-dark .dv-currency-btn:hover {
+.page.theme-dark .dv-currency-button:hover {
   background: rgba(255, 255, 255, 0.06);
   color: rgba(255, 255, 255, 0.85);
 }
 
-.page.theme-dark .dv-currency-btn--active {
+.page.theme-dark .dv-currency-button--active {
   background: rgba(255, 255, 255, 0.12);
   border-color: rgba(255, 255, 255, 0.25);
   color: #ffffff;
@@ -246,7 +263,10 @@
   font-size: 0.82rem !important;
   font-weight: 600 !important;
   cursor: pointer;
-  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+  transition:
+    background 0.12s ease,
+    color 0.12s ease,
+    border-color 0.12s ease;
   white-space: nowrap;
 }
 
@@ -258,7 +278,13 @@
 .dv-tab--active {
   background: rgba(247, 147, 26, 0.1);
   border-color: rgba(247, 147, 26, 0.25);
-  color: #CB7010;
+  color: #cb7010;
+}
+
+.page.theme-light .dv-tab--active {
+  background: #f7931a;
+  border-color: #f7931a;
+  color: #ffffff;
 }
 
 .page.theme-dark .dv-tab {
@@ -273,7 +299,7 @@
 .page.theme-dark .dv-tab--active {
   background: rgba(247, 147, 26, 0.12);
   border-color: rgba(247, 147, 26, 0.3);
-  color: #FBB060;
+  color: #fbb060;
 }
 
 /* Totals row */
@@ -300,11 +326,11 @@
 }
 
 .dv-total-cell-value--accent {
-  color: #CB7010;
+  color: #cb7010;
 }
 
 .page.theme-dark .dv-total-cell-value--accent {
-  color: #FBB060;
+  color: #fbb060;
 }
 
 .dv-table-data thead th {
@@ -333,13 +359,13 @@
   font-size: 0.72rem !important;
   font-weight: 700 !important;
   font-family: "Space Grotesk", sans-serif;
-  color: #CB7010 !important;
+  color: #cb7010 !important;
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
 
 .page.theme-dark .dv-totals-label {
-  color: #FBB060 !important;
+  color: #fbb060 !important;
 }
 
 /* Tables */
@@ -350,25 +376,16 @@
 
 .dv-tables-wrap {
   overflow-x: auto;
-  /* clip does not create a vertical scroll container, so position:sticky on
-     the thead sticks to the page. overflow-clip-margin lets the absolutely-
-     positioned filter dropdown visually escape the wrapper's bounds. */
   overflow-y: clip;
   overflow-clip-margin: 600px;
   -webkit-overflow-scrolling: touch;
-  /* Reserve space for ~15 rows so the filter dropdown has room even when
-     there are few entries. min-height here (not on the <table>) keeps rows
-     at their natural height instead of stretching them to fill the space. */
-  min-height: 600px;
+  min-height: 697px;
 }
 
 .dv-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.82rem;
-  /* fixed layout: both totals and data tables in the same tab share identical
-     column widths so they always align; browser distributes width equally
-     across columns when no explicit col widths are set */
   table-layout: fixed;
 }
 
@@ -390,14 +407,6 @@
   .dv-tables-wrap--scroll .dv-table {
     width: 100%;
   }
-}
-
-/* Mining tables: extra horizontal padding for breathing room between columns */
-.dv-tables-wrap--wide .dv-table td {
-  padding: 9px 20px;
-}
-.dv-tables-wrap--wide .dv-table-data thead th {
-  padding: 10px 20px;
 }
 
 /* Totals table */
@@ -428,6 +437,31 @@
   background: rgba(247, 147, 26, 0.12);
 }
 
+.page.theme-light .dv-table-totals {
+  border-color: #000000;
+}
+
+.page.theme-light .dv-table-totals td,
+.page.theme-light .dv-table.dv-table-totals tbody tr:hover td {
+  background: #000000;
+}
+
+.page.theme-light .dv-table-totals .dv-totals-label {
+  color: #ffffff !important;
+}
+
+.page.theme-light .dv-table-totals .dv-total-cell-label {
+  color: #8ea4cc;
+}
+
+.page.theme-light .dv-table-totals .dv-total-cell-value {
+  color: #ffffff;
+}
+
+.page.theme-light .dv-table-totals .dv-total-cell-value--accent {
+  color: #f7931a;
+}
+
 /* Clickable totals rows (currency filter toggle) */
 .dv-totals-row--clickable {
   cursor: pointer;
@@ -454,26 +488,31 @@
 .dv-table-data {
   border: 1px solid rgba(0, 0, 0, 0.06);
   border-radius: 14px;
-  /* No overflow:hidden — the filter dropdowns are position:absolute inside
-     the thead and must escape the table's bounds. The table's border-radius
-     still rounds the table's own border. Corner cell backgrounds are
-     ~transparent so there is no visible square bleed at the corners. */
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
 }
 
-.dv-table-data thead th:first-child { border-top-left-radius: 13px; }
-.dv-table-data thead th:last-child  { border-top-right-radius: 13px; }
-.dv-table-data tbody tr:last-child td:first-child { border-bottom-left-radius: 13px; }
-.dv-table-data tbody tr:last-child td:last-child  { border-bottom-right-radius: 13px; }
+.dv-table-data thead th:first-child {
+  border-top-left-radius: 13px;
+}
+.dv-table-data thead th:last-child {
+  border-top-right-radius: 13px;
+}
+.dv-table-data tbody tr:last-child td:first-child {
+  border-bottom-left-radius: 13px;
+}
+.dv-table-data tbody tr:last-child td:last-child {
+  border-bottom-right-radius: 13px;
+}
 
 .page.theme-dark .dv-table-data {
   border-color: rgba(255, 255, 255, 0.06);
 }
 
-
 .dv-table td {
   padding: 9px 16px;
   color: #22283a;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
   vertical-align: middle;
@@ -496,34 +535,40 @@
   background: rgba(255, 255, 255, 0.03);
 }
 
-.dv-td-date {
+.dv-cell-date {
   color: #6d7589 !important;
   font-size: 0.78rem;
 }
 
-.dv-td-accent {
-  color: #CB7010 !important;
+.dv-cell-accent {
+  color: #cb7010 !important;
   font-weight: 600;
 }
 
-.page.theme-dark .dv-td-accent {
-  color: #FBB060 !important;
+.page.theme-dark .dv-cell-accent {
+  color: #fbb060 !important;
 }
 
 /* Type column: wrap at word boundaries; only break inside a word as last resort.
-   Use .dv-table td.dv-td-type for higher specificity than .dv-table td */
-.dv-table td.dv-td-type {
+   Use .dv-table td.dv-cell-type for higher specificity than .dv-table td */
+.dv-table td.dv-cell-type {
   white-space: normal;
   overflow-wrap: break-word;
   max-width: 130px;
 }
 
 /* Responsive label: full text on desktop, short on mobile */
-.dv-label--short { display: none; }
+.dv-label--short {
+  display: none;
+}
 
 @media (max-width: 640px) {
-  .dv-label--full { display: none; }
-  .dv-label--short { display: inline; }
+  .dv-label--full {
+    display: none;
+  }
+  .dv-label--short {
+    display: inline;
+  }
 }
 
 /* Currency icons */
@@ -548,8 +593,8 @@
   height: 18px;
 }
 
-.dv-currency-icon--lg,
-.dv-currency-icon--lg.dv-currency-icon-svg {
+.dv-currency-icon--large,
+.dv-currency-icon--large.dv-currency-icon-svg {
   width: 26px;
   height: 26px;
 }
@@ -571,14 +616,13 @@
   font-size: 0.82rem;
   font-weight: 700;
   font-family: "Space Grotesk", sans-serif;
-  color: #22283a;
+  color: #ffffff;
   line-height: 1;
 }
 
 .page.theme-dark .dv-totals-currency-label {
   color: #f0f4ff;
 }
-
 
 /* Pagination */
 
@@ -590,7 +634,7 @@
   margin-top: 10px;
 }
 
-.dv-pagination-btn {
+.dv-pagination-button {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -601,15 +645,18 @@
   background: transparent;
   color: #6d7589;
   cursor: pointer;
-  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+  transition:
+    background 0.12s ease,
+    color 0.12s ease,
+    border-color 0.12s ease;
 }
 
-.dv-pagination-btn:hover:not(:disabled) {
+.dv-pagination-button:hover:not(:disabled) {
   background: rgba(0, 0, 0, 0.05);
   color: #22283a;
 }
 
-.dv-pagination-btn:disabled {
+.dv-pagination-button:disabled {
   opacity: 0.3;
   cursor: default;
 }
@@ -623,12 +670,12 @@
   text-align: center;
 }
 
-.page.theme-dark .dv-pagination-btn {
+.page.theme-dark .dv-pagination-button {
   border-color: rgba(255, 255, 255, 0.1);
   color: rgba(255, 255, 255, 0.45);
 }
 
-.page.theme-dark .dv-pagination-btn:hover:not(:disabled) {
+.page.theme-dark .dv-pagination-button:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.06);
   color: rgba(255, 255, 255, 0.85);
 }
@@ -639,13 +686,13 @@
 
 /* Column filters */
 
-.dv-col-filter {
+.dv-column-filter {
   position: relative;
   display: inline-block;
 }
 
 /* Matches thead th styling exactly */
-.dv-col-filter-btn {
+.dv-column-filter-button {
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -662,24 +709,24 @@
   transition: color 0.12s ease;
 }
 
-.dv-col-filter-btn:hover {
+.dv-column-filter-button:hover {
   color: #6d7589;
 }
 
-.dv-col-filter-btn--active {
-  color: #CB7010 !important;
+.dv-column-filter-button--active {
+  color: #cb7010 !important;
 }
 
-.page.theme-dark .dv-col-filter-btn:hover {
+.page.theme-dark .dv-column-filter-button:hover {
   color: rgba(255, 255, 255, 0.65);
 }
 
-.page.theme-dark .dv-col-filter-btn--active {
-  color: #FBB060 !important;
+.page.theme-dark .dv-column-filter-button--active {
+  color: #fbb060 !important;
 }
 
 /* Dropdown panel - glass card style */
-.dv-col-filter-dropdown {
+.dv-column-filter-dropdown {
   position: absolute;
   top: 100%;
   left: 0;
@@ -687,7 +734,9 @@
   background: rgba(255, 255, 255, 0.72);
   border: 1px solid rgba(0, 0, 0, 0.07);
   border-radius: 20px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    0 2px 8px rgba(0, 0, 0, 0.06);
   backdrop-filter: blur(20px) saturate(160%);
 
   min-width: fit-content;
@@ -695,17 +744,18 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  /* Reset inherited table header styles */
   text-transform: none;
   letter-spacing: 0;
   font-family: "Inter", sans-serif;
   font-weight: 500;
 }
 
-.page.theme-dark .dv-col-filter-dropdown {
+.page.theme-dark .dv-column-filter-dropdown {
   background: rgba(28, 28, 30, 0.75);
   border-color: rgba(255, 255, 255, 0.07);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.5),
+    0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 /* Date two-column layout */
@@ -729,7 +779,7 @@
   gap: 4px;
 }
 
-.dv-filter-preset-btn {
+.dv-filter-preset-button {
   background: transparent;
   border: 1px solid rgba(0, 0, 0, 0.1);
   padding: 8px 14px;
@@ -741,36 +791,39 @@
   cursor: pointer;
   text-align: left;
   white-space: nowrap;
-  transition: background 0.1s ease, border-color 0.1s ease, color 0.1s ease;
+  transition:
+    background 0.1s ease,
+    border-color 0.1s ease,
+    color 0.1s ease;
 }
 
-.dv-filter-preset-btn:hover {
+.dv-filter-preset-button:hover {
   background: rgba(0, 0, 0, 0.05);
   border-color: rgba(0, 0, 0, 0.18);
   color: #22283a;
 }
 
-.dv-filter-preset-btn--active {
+.dv-filter-preset-button--active {
   background: rgba(247, 147, 26, 0.1);
   border-color: rgba(247, 147, 26, 0.35);
-  color: #CB7010;
+  color: #cb7010;
 }
 
-.page.theme-dark .dv-filter-preset-btn {
+.page.theme-dark .dv-filter-preset-button {
   border-color: rgba(255, 255, 255, 0.12);
   color: rgba(255, 255, 255, 0.6);
 }
 
-.page.theme-dark .dv-filter-preset-btn:hover {
+.page.theme-dark .dv-filter-preset-button:hover {
   background: rgba(255, 255, 255, 0.07);
   border-color: rgba(255, 255, 255, 0.22);
   color: rgba(255, 255, 255, 0.9);
 }
 
-.page.theme-dark .dv-filter-preset-btn--active {
+.page.theme-dark .dv-filter-preset-button--active {
   background: rgba(247, 147, 26, 0.15);
   border-color: rgba(247, 147, 26, 0.4);
-  color: #FBB060;
+  color: #fbb060;
 }
 
 /* Apply / Cancel actions */
@@ -781,11 +834,11 @@
   margin-top: 12px;
 }
 
-.dv-filter-apply-btn {
+.dv-filter-apply-button {
   padding: 9px 14px;
   border-radius: 12px;
   border: none;
-  background: #F7931A;
+  background: #f7931a;
   color: #ffffff;
   font-size: 0.8rem;
   font-family: "Space Grotesk", sans-serif;
@@ -794,11 +847,11 @@
   transition: opacity 0.12s ease;
 }
 
-.dv-filter-apply-btn:hover {
+.dv-filter-apply-button:hover {
   opacity: 0.88;
 }
 
-.dv-filter-clear-btn {
+.dv-filter-clear-button {
   padding: 9px 14px;
   border-radius: 12px;
   border: none;
@@ -808,20 +861,22 @@
   font-family: "Space Grotesk", sans-serif;
   font-weight: 700;
   cursor: pointer;
-  transition: background 0.12s ease, color 0.12s ease;
+  transition:
+    background 0.12s ease,
+    color 0.12s ease;
 }
 
-.dv-filter-clear-btn:hover {
+.dv-filter-clear-button:hover {
   background: rgba(0, 0, 0, 0.13);
   color: #22283a;
 }
 
-.page.theme-dark .dv-filter-clear-btn {
+.page.theme-dark .dv-filter-clear-button {
   background: rgba(255, 255, 255, 0.1);
   color: rgba(255, 255, 255, 0.5);
 }
 
-.page.theme-dark .dv-filter-clear-btn:hover {
+.page.theme-dark .dv-filter-clear-button:hover {
   background: rgba(255, 255, 255, 0.16);
   color: rgba(255, 255, 255, 0.85);
 }
@@ -841,7 +896,9 @@
   cursor: pointer;
   padding: 2px 6px;
   border-radius: 6px;
-  transition: color 0.1s ease, background 0.1s ease;
+  transition:
+    color 0.1s ease,
+    background 0.1s ease;
 }
 
 .dv-filter-close-x:hover {
@@ -859,7 +916,7 @@
 }
 
 /* Right: calendar column */
-.dv-filter-cals {
+.dv-filter-calendars {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -923,13 +980,18 @@
   background: #252527;
   box-shadow: 0 10px 28px rgba(5, 8, 22, 0.4);
   scrollbar-width: thin;
-  scrollbar-color: #E07D10 #1e1e20;
+  scrollbar-color: #e07d10 #1e1e20;
 }
 
-.dv-cal-sel-menu::-webkit-scrollbar { width: 8px; }
-.dv-cal-sel-menu::-webkit-scrollbar-track { background: #1e1e20; border-radius: 999px; }
+.dv-cal-sel-menu::-webkit-scrollbar {
+  width: 8px;
+}
+.dv-cal-sel-menu::-webkit-scrollbar-track {
+  background: #1e1e20;
+  border-radius: 999px;
+}
 .dv-cal-sel-menu::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #F7931A 0%, #E07D10 100%);
+  background: linear-gradient(180deg, #f7931a 0%, #e07d10 100%);
   border-radius: 999px;
   border: 2px solid #1e1e20;
 }
@@ -949,7 +1011,7 @@
 }
 
 .dv-cal-sel-option.selected {
-  color: #F7931A;
+  color: #f7931a;
 }
 
 .dv-cal-sel-option.disabled {
@@ -963,7 +1025,7 @@
   right: 10px;
   top: 50%;
   transform: translateY(-50%);
-  color: #F7931A;
+  color: #f7931a;
   font-size: 0.85rem;
 }
 
@@ -971,11 +1033,15 @@
 .page.theme-light .dv-cal-sel-menu {
   background: rgba(255, 255, 255, 0.97);
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
-  scrollbar-color: #E07D10 #e8eaf2;
+  scrollbar-color: #e07d10 #e8eaf2;
 }
 
-.page.theme-light .dv-cal-sel-menu::-webkit-scrollbar-track { background: #e8eaf2; }
-.page.theme-light .dv-cal-sel-menu::-webkit-scrollbar-thumb { border-color: #e8eaf2; }
+.page.theme-light .dv-cal-sel-menu::-webkit-scrollbar-track {
+  background: #e8eaf2;
+}
+.page.theme-light .dv-cal-sel-menu::-webkit-scrollbar-thumb {
+  border-color: #e8eaf2;
+}
 
 .page.theme-light .dv-cal-sel-option {
   color: #22283a;
@@ -986,11 +1052,11 @@
 }
 
 .page.theme-light .dv-cal-sel-option.selected {
-  color: #E07D10;
+  color: #e07d10;
 }
 
 .page.theme-light .dv-cal-sel-check {
-  color: #E07D10;
+  color: #e07d10;
 }
 
 /* Dark theme */
@@ -1004,7 +1070,7 @@
 }
 
 .page.theme-dark .dv-cal-sel-caret {
-  color: #FBB060;
+  color: #fbb060;
 }
 
 /* Calendar grid */
@@ -1044,7 +1110,9 @@
   font-weight: 400;
   color: #22283a;
   cursor: pointer;
-  transition: background 0.1s ease, color 0.1s ease;
+  transition:
+    background 0.1s ease,
+    color 0.1s ease;
   position: relative;
 }
 
@@ -1083,7 +1151,7 @@
 }
 
 .dv-cal-day--sel {
-  background: #F7931A !important;
+  background: #f7931a !important;
   color: #ffffff !important;
   border-radius: 6px !important;
   font-weight: 600;
@@ -1113,7 +1181,7 @@
 }
 
 .page.theme-dark .dv-cal-day--sel {
-  background: #F7931A !important;
+  background: #f7931a !important;
   color: #ffffff !important;
 }
 
@@ -1165,12 +1233,14 @@
   cursor: pointer;
   flex-shrink: 0;
   position: relative;
-  transition: background 0.12s ease, border-color 0.12s ease;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease;
 }
 
 .dv-filter-checkbox:checked {
-  background: #F7931A;
-  border-color: #F7931A;
+  background: #f7931a;
+  border-color: #f7931a;
 }
 
 .dv-filter-checkbox:checked::after {
@@ -1192,8 +1262,8 @@
 }
 
 .page.theme-dark .dv-filter-checkbox:checked {
-  background: #F7931A;
-  border-color: #F7931A;
+  background: #f7931a;
+  border-color: #f7931a;
 }
 
 /* Clear link (TypeCheckFilter) */
@@ -1205,7 +1275,7 @@
   font-size: 0.72rem;
   font-weight: 600;
   font-family: "Space Grotesk", sans-serif;
-  color: #CB7010;
+  color: #cb7010;
   cursor: pointer;
   margin-top: 2px;
   transition: opacity 0.12s ease;
@@ -1216,7 +1286,7 @@
 }
 
 .page.theme-dark .dv-filter-clear-link {
-  color: #FBB060;
+  color: #fbb060;
 }
 
 /* Empty state */
@@ -1234,63 +1304,57 @@
 /* Mobile */
 
 @media (max-width: 640px) {
-  /* backdrop-filter on position:fixed causes iOS Safari to re-composite the
-     backdrop on every scroll frame, producing a visible shake on deceleration.
-     Use an opaque background instead — the blur is imperceptible on small screens. */
-  .dv-col-filter-dropdown {
+  .dv-column-filter-dropdown {
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
     background: rgba(252, 252, 253, 0.98);
   }
-  .page.theme-dark .dv-col-filter-dropdown {
+  .page.theme-dark .dv-column-filter-dropdown {
     background: rgba(30, 30, 32, 0.98);
   }
 
-
-  /* Auto-width columns: content drives each column's size.
-     useSyncTableColumns hook reads the data table's header column widths and
-     applies them to both tables so totals columns stay aligned with data columns.
-     Mining (--wide, 750px) keeps its desktop pixel width to force horizontal
-     scroll on mobile. All other tables use width:100% and fit within the screen. */
   .dv-table {
     table-layout: auto;
     width: 100%;
   }
 
-  /* Simple-earn (4-col) fits on mobile – reset the desktop 560px to full width */
   .dv-tables-wrap--scroll .dv-table {
     width: 100%;
   }
 
-  /* Base: 8px between columns (16px gap); outer edges use 16px so the
-     first/last column content is 30px from the screen edge (16px cell + 14px
-     container), matching the inter-column rhythm visually */
-  .dv-table td { padding: 6px 8px; }
-  .dv-table-data thead th { padding: 7px 8px; }
-  .dv-table td:first-child { padding-left: 16px; }
-  .dv-table td:last-child { padding-right: 16px; }
-  .dv-table-data thead th:first-child { padding-left: 16px; }
-  .dv-table-data thead th:last-child { padding-right: 16px; }
-  /* Mining: restore 16px on all cells (wide table, fewer columns need more room) */
-  .dv-tables-wrap--wide .dv-table td { padding: 6px 16px; }
-  .dv-tables-wrap--wide .dv-table-data thead th { padding: 7px 16px; }
+  .dv-table td {
+    padding: 6px 8px;
+  }
+  .dv-table-data thead th {
+    padding: 7px 8px;
+  }
+  .dv-table td:first-child {
+    padding-left: 16px;
+  }
+  .dv-table td:last-child {
+    padding-right: 16px;
+  }
+  .dv-table-data thead th:first-child {
+    padding-left: 16px;
+  }
+  .dv-table-data thead th:last-child {
+    padding-right: 16px;
+  }
+  .dv-tables-wrap {
+    min-height: 490px;
+  }
 
-  /* Smaller row height on mobile (~31px/row) → recalculate min height for ~15 rows */
-  .dv-tables-wrap { min-height: 490px; }
-
-  /* Toolbar: keep inline, wrap gracefully, right-align */
   .dv-toolbar {
     flex-wrap: wrap;
     justify-content: flex-end;
     gap: 6px;
   }
 
-  .dv-toolbar-sep {
+  .dv-toolbar-separator {
     display: none;
   }
 
-  /* Back button: icon only */
-  .dv-back-btn span {
+  .dv-back-button span {
     display: none;
   }
 }

@@ -7,16 +7,18 @@
 .user-menu-button {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   background: rgba(28, 28, 30, 0.65);
   color: #ffffff;
   border: 1px solid #2e2e30;
   border-radius: 12px;
-  padding: 6px 12px 6px 6px;
-  font-size: 0.875rem !important;
+  padding: 7px 12px;
+  font-size: 0.8rem !important;
   font-weight: 600 !important;
   cursor: pointer;
-  transition: background 0.14s ease, border-color 0.14s ease;
+  transition:
+    background 0.14s ease,
+    border-color 0.14s ease;
   white-space: nowrap;
 }
 
@@ -29,9 +31,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  background: #F7931A;
+  width: 21px;
+  height: 21px;
+  background: #f7931a;
   border-radius: 50%;
   flex-shrink: 0;
   color: #ffffff;
@@ -65,7 +67,6 @@
   z-index: 100;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(20px) saturate(160%);
-
 }
 
 /* User info rows */
