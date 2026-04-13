@@ -37,6 +37,7 @@
   justify-content: center;
   background: rgba(0, 0, 0, 0.45);
   padding: 20px;
+  backdrop-filter: blur(8px);
 }
 
 /* Modal card */
@@ -179,13 +180,15 @@
 }
 
 .page.theme-light .referral-button {
-  color: #166534;
-  border-color: rgba(22, 163, 74, 0.25);
+  background: rgb(22 163 74);
+  color: #ffffff;
+  border-color: rgb(22 163 74);
+  justify-content: center;
 }
 
 .page.theme-light .referral-button:hover {
-  background: rgba(220, 252, 231, 0.6);
-  border-color: rgba(22, 163, 74, 0.5);
+  background: #44ab5d;
+  border-color: #44ab5d;
 }
 
 .page.theme-light .referral-modal {

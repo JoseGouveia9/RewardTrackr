@@ -3,7 +3,7 @@
   display: flex;
   align-items: center;
   gap: 0;
-  background: transparent;
+  background: rgba(224, 25, 42, 0.1);
   border: none;
   border-radius: 12px;
   padding: 8px;
@@ -28,7 +28,7 @@
 .support-heart-icon {
   flex-shrink: 0;
   stroke: #e0192a;
-  fill: none;
+  fill: #e0192a;
   transition: fill 0.18s ease;
 }
 
@@ -64,6 +64,7 @@
   justify-content: center;
   background: rgba(0, 0, 0, 0.45);
   padding: 20px;
+  backdrop-filter: blur(8px);
 }
 
 /* Modal card */
@@ -110,7 +111,9 @@
   border-radius: 8px;
   color: rgba(255, 255, 255, 0.55);
   cursor: pointer;
-  transition: background 0.14s ease, color 0.14s ease;
+  transition:
+    background 0.14s ease,
+    color 0.14s ease;
   padding: 0;
   flex-shrink: 0;
 }
@@ -178,7 +181,9 @@
   color: rgba(255, 255, 255, 0.5);
   cursor: pointer;
   flex-shrink: 0;
-  transition: background 0.14s ease, color 0.14s ease;
+  transition:
+    background 0.14s ease,
+    color 0.14s ease;
   padding: 0;
 }
 
@@ -212,7 +217,7 @@
   justify-content: center;
   gap: 8px;
   width: 100%;
-  background: #F7931A;
+  background: #f7931a;
   border: none;
   border-radius: 12px;
   padding: 11px 16px;
@@ -226,7 +231,7 @@
 }
 
 .support-kofi-image-button:hover {
-  background: #E07D10;
+  background: #e07d10;
 }
 
 .support-kofi-icon {
