@@ -7,6 +7,20 @@ import prettierConfig from "eslint-config-prettier";
 
 export default tseslint.config(
   { ignores: ["dist", "node_modules"] },
+  {
+    files: ["extension/**/*.js"],
+    languageOptions: {
+      globals: {
+        window: "readonly",
+        document: "readonly",
+        localStorage: "readonly",
+        chrome: "readonly",
+        setTimeout: "readonly",
+        clearTimeout: "readonly",
+        Promise: "readonly",
+      },
+    },
+  },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

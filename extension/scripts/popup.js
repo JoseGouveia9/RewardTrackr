@@ -83,7 +83,10 @@
   function setStatus(text, type = "loading") {
     if (!statusEl) return;
     statusEl.className = `status status-${type}`;
-    statusEl.innerHTML = `${STATUS_ICONS[type]}<span>${text}</span>`;
+    statusEl.innerHTML = STATUS_ICONS[type] ?? "";
+    const span = document.createElement("span");
+    span.textContent = text;
+    statusEl.appendChild(span);
   }
 
   // Shows or hides the personalised greeting on the sync screen.

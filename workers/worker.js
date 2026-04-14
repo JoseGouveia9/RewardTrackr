@@ -124,7 +124,7 @@ export default {
       const response = await fetch(apiRequest);
 
       const newHeaders = new Headers(response.headers);
-      newHeaders.set("Access-Control-Allow-Origin", "*");
+      newHeaders.set("Access-Control-Allow-Origin", ALLOWED_ORIGIN);
 
       return new Response(response.body, {
         status: response.status,
@@ -144,7 +144,7 @@ export default {
     const response = await fetch(apiRequest);
 
     const newHeaders = new Headers(response.headers);
-    newHeaders.set("Access-Control-Allow-Origin", "*");
+    newHeaders.set("Access-Control-Allow-Origin", ALLOWED_ORIGIN);
 
     return new Response(response.body, {
       status: response.status,

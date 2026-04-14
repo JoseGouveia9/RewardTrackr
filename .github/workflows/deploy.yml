@@ -35,6 +35,9 @@ jobs:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+          VITE_API_BASE: ${{ vars.VITE_API_BASE }}
+          VITE_WORKER_URL: ${{ vars.VITE_WORKER_URL }}
+          VITE_SENTRY_DSN: ${{ vars.VITE_SENTRY_DSN }}
 
       - uses: actions/upload-pages-artifact@v4
         with:
