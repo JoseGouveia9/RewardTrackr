@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "package:extension:store": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"$manifest = Get-Content -Raw 'extension/manifest.json' | ConvertFrom-Json; $version = $manifest.version; $date = Get-Date -Format 'yyyyMMdd'; $zipPath = 'release/RewardTrackr-extension-v' + $version + '-' + $date + '.zip'; if (-not (Test-Path 'release')) { New-Item -ItemType Directory -Path 'release' | Out-Null }; if (Test-Path $zipPath) { Remove-Item -Force $zipPath }; Compress-Archive -Path 'extension/*' -DestinationPath $zipPath -Force; Write-Output ('Created ' + $zipPath)\"",
     "preview": "vite preview",
     "lint": "eslint src",
     "format": "prettier --write src",

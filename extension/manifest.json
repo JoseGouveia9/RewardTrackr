@@ -7,8 +7,7 @@
   "host_permissions": [
     "https://app.gomining.com/*",
     "https://*.gomining.com/*",
-    "https://josegouveia9.github.io/*",
-    "http://localhost/*"
+    "https://josegouveia9.github.io/*"
   ],
   "icons": {
     "16": "images/logo.png",
@@ -17,7 +16,7 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://josegouveia9.github.io/*", "http://localhost/*"],
+      "matches": ["https://josegouveia9.github.io/*"],
       "js": ["scripts/contentscript.js"],
       "run_at": "document_start",
       "all_frames": false
