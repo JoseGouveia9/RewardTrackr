@@ -127,7 +127,6 @@ function MessageBanner({ message, onClose }: { message: string; onClose?: () => 
 
   return (
     <motion.div
-      key={message}
       className={`message message-${type}`}
       initial={{ opacity: 0, y: -8, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -246,16 +245,21 @@ function App() {
   });
 
   const displayAlias = syncedAlias || user?.alias?.trim() || "User";
-  const currentUserIdentity = useMemo(
-    () => user?.id || user?.email || user?.alias || null,
-    [user?.id, user?.email, user?.alias],
-  );
+  const currentUserIdentity = user?.id
+    ? `id:${user.id}`
+    : user?.email
+      ? `email:${String(user.email).toLowerCase()}`
+      : null;
 
   useEffect(() => {
     if (!currentUserIdentity) return;
 
     const lastUser = localStorage.getItem(LS_KEY_LAST_SYNC_USER);
-    if (lastUser && lastUser !== currentUserIdentity) {
+    const hasStablePrefix = (value: string) =>
+      value.startsWith("id:") || value.startsWith("email:");
+    const lastComparable = lastUser && hasStablePrefix(lastUser) ? lastUser : null;
+
+    if (lastComparable && lastComparable !== currentUserIdentity) {
       clearAllCacheEntries();
       localStorage.removeItem(LS_KEY_EXPORT_CONFIG);
       resetConfig();

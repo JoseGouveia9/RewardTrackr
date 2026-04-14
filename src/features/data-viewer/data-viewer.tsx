@@ -53,6 +53,8 @@ function TabList({
               onTabSeen?.(activeKey as RewardKey);
               if (activeKey === "purchases") onTabSeen?.("upgrades");
             }
+            onTabSeen?.(tab.key);
+            if (tab.key === "purchases") onTabSeen?.("upgrades");
             onSelect(tab.key);
           }}
         >
