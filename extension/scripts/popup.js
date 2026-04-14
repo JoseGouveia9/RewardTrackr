@@ -11,6 +11,21 @@
   const PENDING_ALIAS_KEY = "rt_pending_alias";
   const GOMINING_URL = "https://app.gomining.com";
 
+  // Promise helpers
+
+  // Wraps a promise with a timeout so a hung extension API call can't block the UI forever.
+  function withTimeout(promise, timeoutMs) {
+    let timeoutId;
+    return Promise.race([
+      promise,
+      new Promise((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error("timeout")), timeoutMs);
+      }),
+    ]).finally(() => {
+      if (timeoutId) clearTimeout(timeoutId);
+    });
+  }
+
   // Theme
 
   // Applies a theme class to the body, removing the other.
@@ -24,11 +39,14 @@
     try {
       const [tab] = await chrome.tabs.query({ url: `${EXPORTER_URL}*` });
       if (tab?.id != null) {
-        const [result] = await chrome.scripting.executeScript({
-          target: { tabId: tab.id },
-          func: (key) => localStorage.getItem(key),
-          args: [THEME_KEY],
-        });
+        const [result] = await withTimeout(
+          chrome.scripting.executeScript({
+            target: { tabId: tab.id },
+            func: (key) => localStorage.getItem(key),
+            args: [THEME_KEY],
+          }),
+          1200
+        );
         const theme = result?.result;
         if (theme === "light" || theme === "dark") {
           localStorage.setItem(THEME_KEY, theme);
@@ -269,10 +287,10 @@
 
       // Push token into all already-open RewardTrackr tabs in parallel.
       const openTabs = await chrome.tabs.query({ url: `${EXPORTER_URL}*` });
-      await Promise.all(
+      await Promise.allSettled(
         openTabs
           .filter((t) => t.id != null)
-          .map((t) => injectTokenIntoTab(t.id, cookie.value, alias).catch(() => {}))
+          .map((t) => withTimeout(injectTokenIntoTab(t.id, cookie.value, alias), 1200))
       );
 
       setButtonState("Open RewardTrackr", () => openRewardTrackr(cookie.value, alias));
