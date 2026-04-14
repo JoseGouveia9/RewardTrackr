@@ -3,6 +3,9 @@ import extensionSyncImg from "../assets/extension-sync.webp";
 import extensionSuccessImg from "../assets/extension-success.webp";
 import "./auth-panel.css";
 
+const CHROME_WEB_STORE_URL =
+  "https://chromewebstore.google.com/detail/hglbdmgkgidakkjbgndjebipocbgggkh?utm_source=item-share-cb";
+
 interface AuthPanelProps {
   onSync: () => void;
 }
@@ -17,7 +20,11 @@ export const AuthPanel = memo(function AuthPanel({ onSync }: AuthPanelProps) {
         <div className="auth-step">
           <span className="auth-step-num">1</span>
           <span>
-            Install the <strong>RewardTrackr</strong> browser extension
+            Install the{" "}
+            <a href={CHROME_WEB_STORE_URL} target="_blank" rel="noopener noreferrer">
+              <strong>RewardTrackr</strong>
+            </a>{" "}
+            browser extension
           </span>
         </div>
         <div className="auth-step">
