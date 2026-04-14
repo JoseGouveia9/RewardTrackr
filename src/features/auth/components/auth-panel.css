@@ -21,12 +21,40 @@
   line-height: 1.6;
 }
 
+.auth-store-link {
+  color: #f7931a;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 2px;
+}
+
+.auth-store-link:visited {
+  color: #f7931a;
+}
+
+.auth-store-link:hover {
+  color: #c97d10;
+}
+
+.auth-store-link:focus-visible {
+  outline: 2px solid rgba(247, 147, 26, 0.45);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.auth-step-sub {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.72rem;
+  opacity: 0.75;
+}
+
 .auth-step-num {
   flex-shrink: 0;
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: #F7931A;
+  background: #f7931a;
   color: #fff;
   font-size: 0.75rem;
   font-weight: 700;

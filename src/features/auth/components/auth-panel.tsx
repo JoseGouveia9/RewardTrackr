@@ -21,10 +21,18 @@ export const AuthPanel = memo(function AuthPanel({ onSync }: AuthPanelProps) {
           <span className="auth-step-num">1</span>
           <span>
             Install the{" "}
-            <a href={CHROME_WEB_STORE_URL} target="_blank" rel="noopener noreferrer">
+            <a
+              className="auth-store-link"
+              href={CHROME_WEB_STORE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               <strong>RewardTrackr</strong>
             </a>{" "}
             browser extension
+            <span className="auth-step-sub">
+              Compatible with Chrome, Opera and Orion (Mobile iOS).
+            </span>
           </span>
         </div>
         <div className="auth-step">
