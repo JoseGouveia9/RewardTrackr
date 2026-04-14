@@ -326,9 +326,8 @@ function buildMiningSheet(
 
   ws.getCell("A1").value = "TOTAL";
   let totalCol = 2;
-  // Power (TH/s) - sum
-  ws.getCell(1, totalCol).value = subtotal(String.fromCharCode(64 + totalCol), dataFrom, dataTo);
-  ws.getCell(1, totalCol++).numFmt = FMT_OTHER;
+  // Power (TH/s) - intentionally left empty
+  totalCol++;
   // Pool Reward BTC, GMT, fiat
   ws.getCell(1, totalCol).value = subtotal(String.fromCharCode(64 + totalCol), dataFrom, dataTo);
   ws.getCell(1, totalCol++).numFmt = FMT_BTC;
@@ -347,11 +346,8 @@ function buildMiningSheet(
     ws.getCell(1, totalCol).value = subtotal(String.fromCharCode(64 + totalCol), dataFrom, dataTo);
     ws.getCell(1, totalCol++).numFmt = fmt;
   });
-  // Discount - average
-  ws.getCell(1, totalCol).value = {
-    formula: `AVERAGE(${String.fromCharCode(64 + totalCol)}$${dataFrom}:${String.fromCharCode(64 + totalCol)}$${dataTo})`,
-  };
-  ws.getCell(1, totalCol++).numFmt = "0.00%";
+  // Discount - intentionally left empty
+  totalCol++;
   // Reward BTC, GMT, fiat
   ws.getCell(1, totalCol).value = subtotal(String.fromCharCode(64 + totalCol), dataFrom, dataTo);
   ws.getCell(1, totalCol++).numFmt = FMT_BTC;

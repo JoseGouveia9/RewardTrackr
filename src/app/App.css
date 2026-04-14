@@ -479,6 +479,40 @@ button:disabled {
   border: 1px solid transparent;
 }
 
+.message span {
+  flex: 1;
+}
+
+.message-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: auto;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: 700;
+  opacity: 0.75;
+  transition: opacity 0.12s ease, background 0.12s ease;
+}
+
+.message-close:hover {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.page.theme-dark .message-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
 .message-success {
   background: rgba(220, 252, 231, 0.65);
   color: #166534;

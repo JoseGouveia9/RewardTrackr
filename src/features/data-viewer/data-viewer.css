@@ -4,6 +4,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  position: relative;
   background: transparent;
   border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 12px;
@@ -241,11 +242,13 @@
 
 .dv-tabs {
   display: flex;
-  gap: 4px;
+  gap: 10px;
   flex-wrap: nowrap;
   overflow-x: auto;
+  overflow-y: visible;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  padding-top: 8px;
   padding-bottom: 2px;
   margin-bottom: 10px;
 }
@@ -258,6 +261,7 @@
   padding: 6px 14px;
   border: 1px solid transparent;
   border-radius: 10px;
+  position: relative;
   background: transparent;
   color: #6d7589;
   font-size: 0.82rem !important;
@@ -269,6 +273,34 @@
     border-color 0.12s ease;
   white-space: nowrap;
 }
+
+.dv-tab--has-new {
+  padding-left: 14px;
+  padding-right: 14px;
+}
+
+.dv-new-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border-radius: 999px;
+  background: #f7931a;
+  color: #ffffff;
+  font-size: 0.4rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  line-height: 1;
+}
+
+.dv-new-badge--button {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+}
+
 
 .dv-tab:not(.dv-tab--active):hover {
   background: rgba(0, 0, 0, 0.05);
@@ -1335,6 +1367,52 @@
   border: 1px solid rgba(0, 0, 0, 0.06);
   border-top: none;
   border-radius: 0 0 14px 14px;
+}
+
+.dv-loading-row td {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.dv-loading-cell {
+  text-align: center;
+  color: #7b8197;
+  font-size: 0.78rem;
+}
+
+.dv-loading-cell .dv-loading-inline {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+}
+
+.page.theme-dark .dv-loading-row td {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.page.theme-dark .dv-loading-cell {
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.dv-loading-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dv-spinner {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  animation: dv-spin 0.7s linear infinite;
+}
+
+@keyframes dv-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Mobile */

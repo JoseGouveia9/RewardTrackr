@@ -16,14 +16,20 @@ import "./data-viewer.css";
 interface DataViewerProps {
   onClose: () => void;
   isFetching?: boolean;
+  cacheVersion?: number;
+  onTabSeen?: (key: RewardKey) => void;
 }
 
 function TabList({
   activeKey,
   onSelect,
+  tabsWithNew,
+  onTabSeen,
 }: {
   activeKey: string;
   onSelect: (key: RewardKey) => void;
+  tabsWithNew: Set<RewardKey>;
+  onTabSeen?: (key: RewardKey) => void;
 }) {
   const tabsRef = useRef<HTMLDivElement>(null);
 
@@ -41,10 +47,19 @@ function TabList({
         <button
           key={tab.key}
           type="button"
-          className={`dv-tab${activeKey === tab.key ? " dv-tab--active" : ""}`}
-          onClick={() => onSelect(tab.key)}
+          className={`dv-tab${activeKey === tab.key ? " dv-tab--active" : ""}${tabsWithNew.has(tab.key) ? " dv-tab--has-new" : ""}`}
+          onClick={() => {
+            if (tab.key !== activeKey) {
+              onTabSeen?.(activeKey as RewardKey);
+              if (activeKey === "purchases") onTabSeen?.("upgrades");
+            }
+            onSelect(tab.key);
+          }}
         >
-          {tab.label}
+          <span>{tab.label}</span>
+          {tabsWithNew.has(tab.key) ? (
+            <span className="dv-new-badge dv-new-badge--button">NEW</span>
+          ) : null}
         </button>
       ))}
     </div>
@@ -90,6 +105,8 @@ function ViewSelector<K extends string>({
 export const DataViewer = memo(function DataViewer({
   onClose,
   isFetching = false,
+  cacheVersion = 0,
+  onTabSeen,
 }: DataViewerProps) {
   const {
     activeKey,
@@ -114,6 +131,7 @@ export const DataViewer = memo(function DataViewer({
   const isSimpleTab = activeTab.kind === "simple";
 
   const simpleDataInfo = useMemo(() => {
+    void cacheVersion;
     if (!isSimpleTab) return { currencies: [] as string[], hasUsd: false, hasFiat: false };
     const entry = loadCacheEntry(activeKey);
     if (!entry?.records?.length)
@@ -129,9 +147,10 @@ export const DataViewer = memo(function DataViewer({
       if (Number(rec.rewardInFiat ?? 0) !== 0) hasFiat = true;
     }
     return { currencies: [...set], hasUsd, hasFiat };
-  }, [activeKey, isSimpleTab]);
+  }, [activeKey, isSimpleTab, cacheVersion]);
 
   const txDataInfo = useMemo(() => {
+    void cacheVersion;
     if (!isTxTab) return { hasUsd: false, hasFiat: false };
     const entry = loadCacheEntry(activeKey);
     if (!entry?.records?.length) return { hasUsd: false, hasFiat: false };
@@ -143,7 +162,32 @@ export const DataViewer = memo(function DataViewer({
       if (Number(rec.rewardInFiat ?? 0) !== 0) hasFiat = true;
     }
     return { hasUsd, hasFiat };
-  }, [activeKey, isTxTab]);
+  }, [activeKey, isTxTab, cacheVersion]);
+
+  const tabsWithNew = useMemo(() => {
+    void cacheVersion;
+    const flagged = new Set<RewardKey>();
+    for (const tab of ALL_TABS) {
+      const count =
+        tab.key === "purchases"
+          ? (loadCacheEntry("purchases")?.newEntriesCount ?? 0) +
+            (loadCacheEntry("upgrades")?.newEntriesCount ?? 0)
+          : (loadCacheEntry(tab.key)?.newEntriesCount ?? 0);
+      if (count > 0) flagged.add(tab.key);
+    }
+    return flagged;
+  }, [cacheVersion]);
+
+  const hasActiveData = useMemo(() => {
+    void cacheVersion;
+    if (isPurchaseTab) {
+      return Boolean(
+        (loadCacheEntry("purchases")?.records?.length ?? 0) > 0 ||
+        (loadCacheEntry("upgrades")?.records?.length ?? 0) > 0,
+      );
+    }
+    return (loadCacheEntry(activeKey)?.records?.length ?? 0) > 0;
+  }, [activeKey, cacheVersion, isPurchaseTab]);
 
   // Derive per-tab effective views from sharedView, falling back to first option if unavailable
   const effectiveEarnView: EarnView = sharedView;
@@ -229,7 +273,7 @@ export const DataViewer = memo(function DataViewer({
 
         {/* Toolbar: group button + currency selector */}
         <div className="dv-toolbar">
-          {!isMiningTab && (
+          {hasActiveData && !isMiningTab && (
             <button
               type="button"
               className={`dv-group-button${groupByDay ? " dv-group-button--active" : ""}`}
@@ -256,8 +300,8 @@ export const DataViewer = memo(function DataViewer({
               <span>Group by day</span>
             </button>
           )}
-          {!isMiningTab && <span className="dv-toolbar-separator">·</span>}
-          {isMiningTab ? (
+          {hasActiveData && !isMiningTab && <span className="dv-toolbar-separator">·</span>}
+          {hasActiveData && isMiningTab ? (
             <ViewSelector
               views={currencies}
               activeKey={currency}
@@ -266,28 +310,33 @@ export const DataViewer = memo(function DataViewer({
                 setSharedView(k === "USD" ? "USD" : k === "FIAT" ? "FIAT" : "NATIVE");
               }}
             />
-          ) : isEarnTab ? (
+          ) : hasActiveData && isEarnTab ? (
             <ViewSelector views={earnViews} activeKey={effectiveEarnView} onSelect={setView} />
-          ) : isTxTab && showTxSelector ? (
+          ) : hasActiveData && isTxTab && showTxSelector ? (
             <ViewSelector
               views={txViews}
               activeKey={effectiveTxView}
               onSelect={(k) => setView(k === "GMT" ? "NATIVE" : k)}
             />
-          ) : isPurchaseTab ? (
+          ) : hasActiveData && isPurchaseTab ? (
             <ViewSelector
               views={purchaseViews}
               activeKey={effectivePurchaseView}
               onSelect={setView}
             />
-          ) : showSimpleSelector ? (
+          ) : hasActiveData && showSimpleSelector ? (
             <ViewSelector views={simpleViews} activeKey={effectiveSimpleView} onSelect={setView} />
           ) : null}
         </div>
       </div>
 
       {/* Tabs */}
-      <TabList activeKey={activeKey} onSelect={setActiveKey} />
+      <TabList
+        activeKey={activeKey}
+        onSelect={setActiveKey}
+        tabsWithNew={tabsWithNew}
+        onTabSeen={onTabSeen}
+      />
 
       {/* Content */}
       <div className="dv-content">
@@ -299,6 +348,7 @@ export const DataViewer = memo(function DataViewer({
               currency={currency}
               fiatCode={fiatCode}
               isFetching={isFetching}
+              cacheVersion={cacheVersion}
               dateRange={dateRange}
               setDateRange={setDateRange}
             />
@@ -309,6 +359,7 @@ export const DataViewer = memo(function DataViewer({
               fiatCode={fiatCode}
               earnView={effectiveEarnView}
               isFetching={isFetching}
+              cacheVersion={cacheVersion}
               groupByDay={groupByDay}
               dateRange={dateRange}
               setDateRange={setDateRange}
@@ -320,6 +371,7 @@ export const DataViewer = memo(function DataViewer({
               fiatCode={fiatCode}
               txView={effectiveTxView}
               isFetching={isFetching}
+              cacheVersion={cacheVersion}
               groupByDay={groupByDay}
               dateRange={dateRange}
               setDateRange={setDateRange}
@@ -330,6 +382,7 @@ export const DataViewer = memo(function DataViewer({
               fiatCode={fiatCode}
               purchaseView={effectivePurchaseView}
               isFetching={isFetching}
+              cacheVersion={cacheVersion}
               groupByDay={groupByDay}
               dateRange={dateRange}
               setDateRange={setDateRange}
@@ -341,6 +394,7 @@ export const DataViewer = memo(function DataViewer({
               fiatCode={fiatCode}
               simpleView={effectiveSimpleView}
               isFetching={isFetching}
+              cacheVersion={cacheVersion}
               groupByDay={groupByDay}
               dateRange={dateRange}
               setDateRange={setDateRange}
@@ -355,12 +409,14 @@ export const DataViewer = memo(function DataViewer({
 interface DataViewerButtonProps {
   active: boolean;
   onClick: () => void;
+  hasNew?: boolean;
 }
 
 // Renders the header button that toggles the data-viewer panel open and closed.
 export const DataViewerButton = memo(function DataViewerButton({
   active,
   onClick,
+  hasNew = false,
 }: DataViewerButtonProps) {
   return (
     <button
@@ -386,6 +442,7 @@ export const DataViewerButton = memo(function DataViewerButton({
         <rect x="14" y="14" width="7" height="7" rx="1" />
       </svg>
       <span>Records</span>
+      {hasNew ? <span className="dv-new-badge dv-new-badge--button">NEW</span> : null}
     </button>
   );
 });

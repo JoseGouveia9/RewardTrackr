@@ -330,6 +330,7 @@ export interface CacheEntry {
   fetchedAt: number;
   pricingMode?: PricingMode;
   extraFiatCurrency?: ExtraFiatCurrency;
+  newEntriesCount?: number;
 }
 
 export type CacheState = Record<RewardKey, CacheEntry | null>;

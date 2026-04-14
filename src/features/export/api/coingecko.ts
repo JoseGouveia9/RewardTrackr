@@ -82,6 +82,7 @@ export async function fetchCoinGeckoPrice(
   createdAtIso: string,
   priceCache: Map<string, CoinGeckoPriceCacheValue>,
   onWait?: (msg: string) => void,
+  entryProgress?: string,
 ): Promise<CoinGeckoPriceResult | null> {
   if (coingeckoId === "tether" || coingeckoId === "usd-coin") {
     return { price: 1, priceTimestamp: createdAtIso };
@@ -127,8 +128,9 @@ export async function fetchCoinGeckoPrice(
       if (!response.ok || isRateLimited) {
         if (attempt < COINGECKO_MAX_RETRIES) {
           await sleepWithCountdown(COINGECKO_RETRY_WAIT_MS, (s) => {
+            const entrySuffix = entryProgress ? ` (entry ${entryProgress})` : "";
             onWait?.(
-              `CoinGecko rate limit hit. Retrying in ${s}s (attempt ${attempt} of ${COINGECKO_MAX_RETRIES})...`,
+              `CoinGecko rate limit hit. Retrying in ${s}s (attempt ${attempt} of ${COINGECKO_MAX_RETRIES})${entrySuffix}...`,
             );
           });
           continue;
@@ -157,8 +159,9 @@ export async function fetchCoinGeckoPrice(
     } catch {
       if (attempt < COINGECKO_MAX_RETRIES) {
         await sleepWithCountdown(COINGECKO_RETRY_WAIT_MS, (s) => {
+          const entrySuffix = entryProgress ? ` (entry ${entryProgress})` : "";
           onWait?.(
-            `CoinGecko rate limit hit. Retrying in ${s}s (attempt ${attempt} of ${COINGECKO_MAX_RETRIES})...`,
+            `CoinGecko rate limit hit. Retrying in ${s}s (attempt ${attempt} of ${COINGECKO_MAX_RETRIES})${entrySuffix}...`,
           );
         });
         continue;

@@ -308,6 +308,7 @@ export async function executeExportFlow({
       staleKeys = cachedKeys.filter((k) => {
         const entry = updatedCache[k];
         if (!entry) return true;
+        const config = REWARD_CONFIG_MAP[k];
 
         if (WALLET_TX_KEYS.has(k)) {
           const desiredMode = includeWalletFiat ? "fiat-on" : "fiat-off";
@@ -316,6 +317,15 @@ export async function executeExportFlow({
         }
 
         const liveCount = counts[k];
+        if (config?.key === "simple-earn") {
+          if (liveCount == null) return false;
+          if (liveCount > entry.totalCount) {
+            incrementalKeys.add(k);
+            return true;
+          }
+          return false;
+        }
+
         if (liveCount == null) return true;
         if (liveCount > entry.totalCount) {
           incrementalKeys.add(k);
@@ -384,7 +394,10 @@ export async function executeExportFlow({
 
       onMessage(`Applying ${excelFiatCurrency} rates to ${config.sheetName}...`);
       const reEnriched = await reenrichFiatValues(config, currentEntry.records, excelFiatCurrency);
-      const extras = cacheExtras(key, includeWalletFiat, excelFiatCurrency);
+      const extras = {
+        ...cacheExtras(key, includeWalletFiat, excelFiatCurrency),
+        newEntriesCount: 0,
+      };
 
       saveCacheEntry(key, currentEntry.sheetName, reEnriched, currentEntry.totalCount, extras);
       persistPriceCache(key, reEnriched);
@@ -423,12 +436,19 @@ export async function executeExportFlow({
         );
       }
 
-      const extras = cacheExtras(key, includeWalletFiat, excelFiatCurrency);
       const currentEntry = updatedCache[key];
       const recordsForCache =
         useIncremental && currentEntry
           ? mergeRecords(currentEntry.records, prepared.records)
           : prepared.records;
+      const previousCount = currentEntry?.records.length ?? 0;
+      const newEntriesCount = !currentEntry
+        ? recordsForCache.length
+        : Math.max(0, recordsForCache.length - previousCount);
+      const extras = {
+        ...cacheExtras(key, includeWalletFiat, excelFiatCurrency),
+        newEntriesCount,
+      };
       const totalCountForCache =
         typeof totalCount === "number"
           ? totalCount

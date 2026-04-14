@@ -14,6 +14,7 @@ import { AnyCurrencyIcon, UsdIcon, FiatIcon } from "../icons/currency-icons";
 import { DateRangeFilter } from "../date-range-filter";
 import { Pagination } from "../pagination";
 import { useSyncTableColumns } from "../../hooks/use-sync-table-columns";
+import { AnimatedLoadingRow } from "./animated-loading-row";
 
 // Renders a paged reward table for non-mining sheets with per-currency totals and optional group-by-day.
 export function SimpleTable({
@@ -21,6 +22,7 @@ export function SimpleTable({
   fiatCode,
   simpleView,
   isFetching = false,
+  cacheVersion = 0,
   groupByDay,
   dateRange,
   setDateRange,
@@ -29,6 +31,7 @@ export function SimpleTable({
   fiatCode: string;
   simpleView: SimpleView;
   isFetching?: boolean;
+  cacheVersion?: number;
   groupByDay: boolean;
   dateRange: DateRange;
   setDateRange: (v: DateRange) => void;
@@ -38,7 +41,10 @@ export function SimpleTable({
   const totalsRef = useRef<HTMLTableElement>(null);
   const dataRef = useRef<HTMLTableElement>(null);
   useSyncTableColumns(totalsRef, dataRef);
-  const entry = useMemo(() => loadCacheEntry(rewardKey), [rewardKey]);
+  const entry = useMemo(() => {
+    void cacheVersion;
+    return loadCacheEntry(rewardKey);
+  }, [rewardKey, cacheVersion]);
 
   const rows = useMemo(() => {
     if (!entry?.records?.length) return [];
@@ -128,9 +134,14 @@ export function SimpleTable({
   if (!entry) {
     return (
       <div className="dv-empty">
-        {isFetching
-          ? "Fetching data..."
-          : "No cached data for this sheet. Export it first from the main panel."}
+        {isFetching ? (
+          <span className="dv-loading-inline">
+            <span className="dv-spinner" aria-hidden="true" />
+            <span>Fetching data...</span>
+          </span>
+        ) : (
+          "No cached data for this sheet. Export it first from the main panel."
+        )}
       </div>
     );
   }
@@ -246,6 +257,7 @@ export function SimpleTable({
             </tr>
           </thead>
           <tbody>
+            <AnimatedLoadingRow show={isFetching && finalRows.length > 0} colSpan={2} />
             {pageRows.map((row, i) => {
               const { v, c } = rowValue(row);
               return (

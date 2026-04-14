@@ -1,19 +1,22 @@
-﻿import { useEffect, useMemo, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { AppNotice } from "@/components/app-notice";
-import { loadAllCacheEntries } from "@/features/export/utils/cache";
+import { clearAllCacheEntries, loadAllCacheEntries } from "@/features/export/utils/cache";
 import { AuthPanel, HeaderUserMenu, useAuth } from "@/features/auth";
 import { SupportButton } from "@/components/support-button";
 import { SheetSelector, ExportOptions, useExport, useExportConfig } from "@/features/export";
-import type { CacheState } from "@/features/export";
+import type { CacheState, RewardKey } from "@/features/export";
 import { ReferralButton } from "@/components/referral-button";
 import { DataViewerButton, DataViewer } from "@/features/data-viewer";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { useTheme } from "./theme-context";
 import {
+  LS_KEY_EXPORT_CONFIG,
+  LS_KEY_LAST_SYNC_USER,
   LS_KEY_NOTICE_RATE_LIMITS,
   LS_KEY_NOTICE_UNOFFICIAL,
   LS_KEY_NOTICE_OPENSOURCE,
+  LS_KEY_REWARD_PREFIX,
 } from "@/lib/storage-keys";
 import logo from "/logo.webp";
 import "./App.css";
@@ -41,6 +44,7 @@ function getMessageType(msg: string): "success" | "error" | "loading" {
     lower.includes("successfully") ||
     lower.includes("synced") ||
     lower.includes("cleared") ||
+    lower.includes("downloaded") ||
     lower.includes("done") ||
     lower.includes("welcome")
   )
@@ -48,9 +52,10 @@ function getMessageType(msg: string): "success" | "error" | "loading" {
   return "loading";
 }
 
-// Renders a coloured status message banner with an icon and optional markdown links.
-function MessageBanner({ message }: { message: string }) {
+// Renders a coloured status message banner with an icon, optional markdown links, and optional dismiss action.
+function MessageBanner({ message, onClose }: { message: string; onClose?: () => void }) {
   const type = getMessageType(message);
+  const canClose = type === "success" || type === "error";
 
   const icon =
     type === "success" ? (
@@ -121,10 +126,27 @@ function MessageBanner({ message }: { message: string }) {
   });
 
   return (
-    <div className={`message message-${type}`}>
+    <motion.div
+      key={message}
+      className={`message message-${type}`}
+      initial={{ opacity: 0, y: -8, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -8, scale: 0.93 }}
+      transition={{ duration: 0.16, ease: "easeOut" }}
+    >
       {icon}
       <span>{content}</span>
-    </div>
+      {canClose && onClose ? (
+        <button
+          type="button"
+          className="message-close"
+          onClick={onClose}
+          aria-label="Close message"
+        >
+          ×
+        </button>
+      ) : null}
+    </motion.div>
   );
 }
 
@@ -135,6 +157,7 @@ function App() {
   const [supportOpen, setSupportOpen] = useState(false);
   const [referralOpen, setReferralOpen] = useState(false);
   const [view, setView] = useState<"main" | "records">("main");
+  const [cacheVersion, setCacheVersion] = useState(0);
   const [noticeRateLimitsDismissed, setNoticeRateLimitsDismissed] = useState(
     () => localStorage.getItem(LS_KEY_NOTICE_RATE_LIMITS) === "1",
   );
@@ -200,9 +223,15 @@ function App() {
     setIncludeWalletFiat,
     setIncludeExcelFiat,
     setFiatCurrency,
+    resetConfig,
   } = useExportConfig();
 
   const { storedToken, user, syncedAlias, handleCheckSync, handleLogout } = useAuth(setMessage);
+
+  const handleCacheUpdate = useCallback((nextCache: CacheState) => {
+    setCache(nextCache);
+    setCacheVersion((v) => v + 1);
+  }, []);
 
   const { loading, handleExport, handleClearCache } = useExport({
     storedToken,
@@ -213,10 +242,30 @@ function App() {
     excelFiatCurrency,
     selectedTxFromTypes,
     onMessage: setMessage,
-    onCacheUpdate: setCache,
+    onCacheUpdate: handleCacheUpdate,
   });
 
   const displayAlias = syncedAlias || user?.alias?.trim() || "User";
+  const currentUserIdentity = useMemo(
+    () => user?.id || user?.email || user?.alias || null,
+    [user?.id, user?.email, user?.alias],
+  );
+
+  useEffect(() => {
+    if (!currentUserIdentity) return;
+
+    const lastUser = localStorage.getItem(LS_KEY_LAST_SYNC_USER);
+    if (lastUser && lastUser !== currentUserIdentity) {
+      clearAllCacheEntries();
+      localStorage.removeItem(LS_KEY_EXPORT_CONFIG);
+      resetConfig();
+      setCache(loadAllCacheEntries());
+      setCacheVersion((v) => v + 1);
+      setMessage("Different account detected. Cache and export options were reset.");
+    }
+
+    localStorage.setItem(LS_KEY_LAST_SYNC_USER, currentUserIdentity);
+  }, [currentUserIdentity, resetConfig]);
 
   const cachedCount = useMemo(
     () => selectedKeys.filter((k) => cache[k]).length,
@@ -224,6 +273,39 @@ function App() {
   );
 
   const hasCachedSheets = useMemo(() => Object.values(cache).some(Boolean), [cache]);
+  const hasNewRecords = useMemo(() => {
+    const purchasesNew =
+      (cache["purchases"]?.newEntriesCount ?? 0) + (cache["upgrades"]?.newEntriesCount ?? 0);
+    return (
+      (cache["solo-mining"]?.newEntriesCount ?? 0) > 0 ||
+      (cache["minerwars"]?.newEntriesCount ?? 0) > 0 ||
+      (cache["bounty"]?.newEntriesCount ?? 0) > 0 ||
+      (cache["referrals"]?.newEntriesCount ?? 0) > 0 ||
+      (cache["ambassador"]?.newEntriesCount ?? 0) > 0 ||
+      (cache["deposits"]?.newEntriesCount ?? 0) > 0 ||
+      (cache["withdrawals"]?.newEntriesCount ?? 0) > 0 ||
+      purchasesNew > 0 ||
+      (cache["simple-earn"]?.newEntriesCount ?? 0) > 0 ||
+      (cache["transactions"]?.newEntriesCount ?? 0) > 0
+    );
+  }, [cache]);
+
+  const handleTabSeen = useCallback((key: RewardKey) => {
+    setCache((prev) => {
+      const entry = prev[key];
+      if (!entry || (entry.newEntriesCount ?? 0) <= 0) return prev;
+
+      const nextEntry = { ...entry, newEntriesCount: 0 };
+      try {
+        localStorage.setItem(LS_KEY_REWARD_PREFIX + key, JSON.stringify(nextEntry));
+      } catch {
+        // ignore storage write errors
+      }
+
+      return { ...prev, [key]: nextEntry };
+    });
+    setCacheVersion((v) => v + 1);
+  }, []);
 
   return (
     <div className={`page ${theme === "dark" ? "theme-dark" : "theme-light"}`}>
@@ -284,6 +366,7 @@ function App() {
               <DataViewerButton
                 active={view === "records"}
                 onClick={() => setView(view === "records" ? "main" : "records")}
+                hasNew={hasNewRecords}
               />
               {!user && (
                 <ReferralButton
@@ -399,7 +482,20 @@ function App() {
           </a>
         </AppNotice>
 
-        {view === "records" && <DataViewer onClose={() => setView("main")} isFetching={loading} />}
+        <AnimatePresence mode="wait">
+          {view === "records" && message ? (
+            <MessageBanner message={message} onClose={() => setMessage("")} />
+          ) : null}
+        </AnimatePresence>
+
+        {view === "records" && (
+          <DataViewer
+            onClose={() => setView("main")}
+            isFetching={loading}
+            cacheVersion={cacheVersion}
+            onTabSeen={handleTabSeen}
+          />
+        )}
 
         {view === "main" && !user ? (
           <AuthPanel onSync={handleCheckSync} />
@@ -523,7 +619,11 @@ function App() {
           </>
         ) : null}
 
-        {message ? <MessageBanner message={message} /> : null}
+        <AnimatePresence mode="wait">
+          {view !== "records" && message ? (
+            <MessageBanner message={message} onClose={() => setMessage("")} />
+          ) : null}
+        </AnimatePresence>
 
         <p className="copyright">© 2026 José Gouveia · Moustachio</p>
       </main>

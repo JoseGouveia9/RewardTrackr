@@ -180,6 +180,7 @@ async function transformWalletTxCoingecko(
   priceCache: Map<string, CoinGeckoPriceCacheValue>,
   includeFiat: boolean,
   onWait?: (msg: string) => void,
+  entryProgress?: string,
 ): Promise<WalletTxEnrichedRecord> {
   const currency = currencyFromWalletType(raw.walletType);
   const reward = parseFloat(raw.valueNumeric || "0") / 1e18;
@@ -209,7 +210,13 @@ async function transformWalletTxCoingecko(
   } else {
     const cgId = CURRENCY_TO_COINGECKO[currency];
     if (cgId) {
-      const result = await fetchCoinGeckoPrice(cgId, raw.createdAt, priceCache, onWait);
+      const result = await fetchCoinGeckoPrice(
+        cgId,
+        raw.createdAt,
+        priceCache,
+        onWait,
+        entryProgress,
+      );
       if (result) {
         priceAtTime = result.price;
         priceTimestamp = result.priceTimestamp || null;
@@ -421,6 +428,7 @@ export async function enrichRecords(
             priceCache,
             includeWalletFiat,
             onProgress,
+            `${i + 1} of ${rawRecords.length}`,
           );
           break;
         }
@@ -446,6 +454,7 @@ export async function enrichRecords(
                 purchaseRaw.createdAt,
                 priceCache,
                 onProgress,
+                `${i + 1} of ${rawRecords.length}`,
               );
               purchaseValueUsd = result ? purchaseAmount * result.price : 0;
             } else {

@@ -20,7 +20,8 @@ type ExportConfigAction =
   | { type: "TOGGLE_TX_TYPE"; fromTypes: string[]; checked: boolean }
   | { type: "SET_INCLUDE_WALLET_FIAT"; checked: boolean }
   | { type: "SET_INCLUDE_EXCEL_FIAT"; checked: boolean }
-  | { type: "SET_FIAT_CURRENCY"; currency: ExtraFiatCurrency };
+  | { type: "SET_FIAT_CURRENCY"; currency: ExtraFiatCurrency }
+  | { type: "RESET" };
 
 // Initial state & helpers
 
@@ -91,6 +92,8 @@ function exportConfigReducer(
       return { ...state, includeExcelFiat: action.checked };
     case "SET_FIAT_CURRENCY":
       return { ...state, excelFiatCurrency: action.currency };
+    case "RESET":
+      return initialState;
   }
 }
 
@@ -143,6 +146,10 @@ export function useExportConfig() {
     dispatch({ type: "SET_FIAT_CURRENCY", currency });
   }, []);
 
+  const resetConfig = useCallback((): void => {
+    dispatch({ type: "RESET" });
+  }, []);
+
   return {
     ...state,
     isGroupSelected,
@@ -153,5 +160,6 @@ export function useExportConfig() {
     setIncludeWalletFiat,
     setIncludeExcelFiat,
     setFiatCurrency,
+    resetConfig,
   };
 }

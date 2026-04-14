@@ -14,6 +14,7 @@ import { MiningCurrencyIcon } from "../icons/currency-icons";
 import { DateRangeFilter } from "../date-range-filter";
 import { Pagination } from "../pagination";
 import { useSyncTableColumns } from "../../hooks/use-sync-table-columns";
+import { AnimatedLoadingRow } from "./animated-loading-row";
 
 // Renders a paged mining-rewards data table with date-range filter and running totals.
 export function MiningTable({
@@ -21,6 +22,7 @@ export function MiningTable({
   currency,
   fiatCode,
   isFetching = false,
+  cacheVersion = 0,
   dateRange,
   setDateRange,
 }: {
@@ -28,6 +30,7 @@ export function MiningTable({
   currency: Currency;
   fiatCode: string;
   isFetching?: boolean;
+  cacheVersion?: number;
   dateRange: DateRange;
   setDateRange: (v: DateRange) => void;
 }) {
@@ -35,7 +38,10 @@ export function MiningTable({
   const totalsRef = useRef<HTMLTableElement>(null);
   const dataRef = useRef<HTMLTableElement>(null);
   useSyncTableColumns(totalsRef, dataRef);
-  const entry = useMemo(() => loadCacheEntry(rewardKey), [rewardKey]);
+  const entry = useMemo(() => {
+    void cacheVersion;
+    return loadCacheEntry(rewardKey);
+  }, [rewardKey, cacheVersion]);
 
   const rows = useMemo(() => {
     if (!entry?.records?.length) return [];
@@ -83,9 +89,14 @@ export function MiningTable({
   if (!entry) {
     return (
       <div className="dv-empty">
-        {isFetching
-          ? "Fetching data..."
-          : "No cached data for this sheet. Export it first from the main panel."}
+        {isFetching ? (
+          <span className="dv-loading-inline">
+            <span className="dv-spinner" aria-hidden="true" />
+            <span>Fetching data...</span>
+          </span>
+        ) : (
+          "No cached data for this sheet. Export it first from the main panel."
+        )}
       </div>
     );
   }
@@ -159,6 +170,7 @@ export function MiningTable({
             </tr>
           </thead>
           <tbody>
+            <AnimatedLoadingRow show={isFetching && filteredRows.length > 0} colSpan={6} />
             {pageRows.map((row, i) => (
               <tr key={`${row.date}-${i}`}>
                 <td className="dv-cell-date">{fmtDate(row.date)}</td>

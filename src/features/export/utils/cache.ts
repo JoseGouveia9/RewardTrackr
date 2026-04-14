@@ -39,6 +39,9 @@ export function loadCacheEntry(key: RewardKey): CacheEntry | null {
       fetchedAt: asNumber(parsed.fetchedAt),
       ...(parsed.pricingMode ? { pricingMode: parsed.pricingMode } : {}),
       ...(parsed.extraFiatCurrency ? { extraFiatCurrency: parsed.extraFiatCurrency } : {}),
+      ...(parsed.newEntriesCount != null
+        ? { newEntriesCount: asNumber(parsed.newEntriesCount) }
+        : {}),
     };
   } catch {
     return null;

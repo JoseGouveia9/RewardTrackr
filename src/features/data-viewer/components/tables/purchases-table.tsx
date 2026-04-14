@@ -14,12 +14,14 @@ import { DateRangeFilter } from "../date-range-filter";
 import { TypeCheckFilter } from "../type-check-filter";
 import { Pagination } from "../pagination";
 import { useSyncTableColumns } from "../../hooks/use-sync-table-columns";
+import { AnimatedLoadingRow } from "./animated-loading-row";
 
 // Renders a paged purchases and upgrades table combining both sheets, with type/date filters.
 export function PurchasesTable({
   fiatCode,
   purchaseView,
   isFetching = false,
+  cacheVersion = 0,
   groupByDay,
   dateRange,
   setDateRange,
@@ -27,6 +29,7 @@ export function PurchasesTable({
   fiatCode: string;
   purchaseView: PurchaseView;
   isFetching?: boolean;
+  cacheVersion?: number;
   groupByDay: boolean;
   dateRange: DateRange;
   setDateRange: (v: DateRange) => void;
@@ -37,8 +40,14 @@ export function PurchasesTable({
   const totalsRef = useRef<HTMLTableElement>(null);
   const dataRef = useRef<HTMLTableElement>(null);
   useSyncTableColumns(totalsRef, dataRef);
-  const purchasesEntry = useMemo(() => loadCacheEntry("purchases"), []);
-  const upgradesEntry = useMemo(() => loadCacheEntry("upgrades"), []);
+  const purchasesEntry = useMemo(() => {
+    void cacheVersion;
+    return loadCacheEntry("purchases");
+  }, [cacheVersion]);
+  const upgradesEntry = useMemo(() => {
+    void cacheVersion;
+    return loadCacheEntry("upgrades");
+  }, [cacheVersion]);
 
   // Normalises a cache entry's records into the shape expected by this table.
   function parseEntry(entry: ReturnType<typeof loadCacheEntry>) {
@@ -165,9 +174,14 @@ export function PurchasesTable({
   if (!purchasesEntry && !upgradesEntry) {
     return (
       <div className="dv-empty">
-        {isFetching
-          ? "Fetching data..."
-          : "No cached data for this sheet. Export it first from the main panel."}
+        {isFetching ? (
+          <span className="dv-loading-inline">
+            <span className="dv-spinner" aria-hidden="true" />
+            <span>Fetching data...</span>
+          </span>
+        ) : (
+          "No cached data for this sheet. Export it first from the main panel."
+        )}
       </div>
     );
   }
@@ -281,6 +295,7 @@ export function PurchasesTable({
             </tr>
           </thead>
           <tbody>
+            <AnimatedLoadingRow show={isFetching && finalRows.length > 0} colSpan={3} />
             {pageRows.map((row, i) => {
               const boughtVal =
                 purchaseView === "NATIVE"
