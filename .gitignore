@@ -6,3 +6,4 @@ dist/
 .claude/
 .wrangler/
 *.xlsx
+release/
