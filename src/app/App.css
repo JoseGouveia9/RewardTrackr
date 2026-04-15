@@ -150,6 +150,18 @@ h3,
   text-align: center;
 }
 
+.copyright-link {
+  color: #9fa5be;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+  transition: color 0.15s ease;
+}
+
+.copyright-link:hover {
+  color: #f7931a;
+}
+
 /* App notices */
 
 .app-notice {

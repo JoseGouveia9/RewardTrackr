@@ -76,6 +76,18 @@ export const AuthPanel = memo(function AuthPanel({ onSync }: AuthPanelProps) {
       <button className="btn-primary btn-primary-large" onClick={onSync}>
         I've synced, open exporter
       </button>
+
+      <p className="auth-update-hint">
+        Having issues syncing?{" "}
+        <a
+          href={CHROME_WEB_STORE_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="auth-store-link"
+        >
+          Make sure you have the latest version of the extension.
+        </a>
+      </p>
     </section>
   );
 });

@@ -74,6 +74,19 @@
   margin-left: 34px;
 }
 
+/* Update hint */
+
+.auth-update-hint {
+  font-size: 0.75rem;
+  color: rgba(0, 0, 0, 0.45);
+  text-align: center;
+  margin: 0;
+}
+
+.page.theme-dark .auth-update-hint {
+  color: rgba(255, 255, 255, 0.45);
+}
+
 /* Mobile */
 
 @media (max-width: 640px) {

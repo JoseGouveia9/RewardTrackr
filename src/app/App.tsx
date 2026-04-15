@@ -629,7 +629,17 @@ function App() {
           ) : null}
         </AnimatePresence>
 
-        <p className="copyright">© 2026 José Gouveia · Moustachio</p>
+        <p className="copyright">
+          © 2026 José Gouveia · Moustachio ·{" "}
+          <a
+            className="copyright-link"
+            href="https://docs.google.com/forms/d/e/1FAIpQLSe98CKOga2pnoXh2SdXu0uxOBd9OOIDm1JsR6ludeGH5HOoLg/viewform"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Feedback &amp; Suggestions
+          </a>
+        </p>
       </main>
     </div>
   );
