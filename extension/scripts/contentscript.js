@@ -2,7 +2,7 @@
 
 // Runs at document_start before the app boots.
 // If a pending token was saved by the extension popup, inject it into
-// localStorage so the auth hook picks it up on mount without needing
+// sessionStorage so the auth hook picks it up on mount without needing
 // a second sync click.
 (async () => {
   try {
@@ -11,7 +11,7 @@
 
     if (!token) return;
 
-    localStorage.setItem("rt_sync_token_stored", token);
+    sessionStorage.setItem("rt_sync_token_stored", token);
     if (alias) localStorage.setItem("rt_sync_alias", alias);
 
     // Clear the pending entry so a manual page refresh doesn't re-inject

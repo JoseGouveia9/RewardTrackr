@@ -198,9 +198,9 @@
     await chrome.scripting.executeScript({
       target: { tabId },
       func: (token, alias, tokenKey, aliasKey) => {
-        localStorage.setItem(tokenKey, token);
+        sessionStorage.setItem(tokenKey, token);
         if (alias) localStorage.setItem(aliasKey, alias);
-        window.dispatchEvent(new StorageEvent("storage", { key: tokenKey, newValue: token, storageArea: localStorage }));
+        window.dispatchEvent(new StorageEvent("storage", { key: tokenKey, newValue: token, storageArea: sessionStorage }));
       },
       args: [token, alias, TOKEN_KEY, ALIAS_KEY],
     });
