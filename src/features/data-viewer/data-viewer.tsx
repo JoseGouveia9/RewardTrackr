@@ -26,7 +26,7 @@ function TabList({
   tabsWithNew,
   onTabSeen,
 }: {
-  activeKey: string;
+  activeKey: RewardKey;
   onSelect: (key: RewardKey) => void;
   tabsWithNew: Set<RewardKey>;
   onTabSeen?: (key: RewardKey) => void;
@@ -50,7 +50,7 @@ function TabList({
           className={`dv-tab${activeKey === tab.key ? " dv-tab--active" : ""}${tabsWithNew.has(tab.key) ? " dv-tab--has-new" : ""}`}
           onClick={() => {
             if (tab.key !== activeKey) {
-              onTabSeen?.(activeKey as RewardKey);
+              onTabSeen?.(activeKey);
               if (activeKey === "purchases") onTabSeen?.("upgrades");
             }
             onTabSeen?.(tab.key);
@@ -125,7 +125,7 @@ export const DataViewer = memo(function DataViewer({
   } = useDataViewerState();
   const fiatCode = useMemo(() => loadFiatCode(), []);
 
-  const activeTab = ALL_TABS.find((t) => t.key === activeKey)!;
+  const activeTab = ALL_TABS.find((t) => t.key === activeKey) ?? ALL_TABS[0];
   const isMiningTab = activeTab.kind === "mining";
   const isEarnTab = activeTab.kind === "earn";
   const isTxTab = activeTab.kind === "tx";

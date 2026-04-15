@@ -10,6 +10,7 @@ import { ReferralButton } from "@/components/referral-button";
 import { DataViewerButton, DataViewer } from "@/features/data-viewer";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { useTheme } from "./theme-context";
+import { MessageBanner } from "@/components/message-banner";
 import {
   LS_KEY_EXPORT_CONFIG,
   LS_KEY_LAST_SYNC_USER,
@@ -26,132 +27,54 @@ const COPYRIGHT_LAYOUT_SPRING = {
   layout: { type: "spring" as const, stiffness: 320, damping: 30 },
 };
 
+function WarningNoticeIcon() {
+  return (
+    <svg
+      className="app-notice-icon"
+      xmlns="http://www.w3.org/2000/svg"
+      width="15"
+      height="15"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" />
+      <path d="M12 9v4" />
+      <path d="M12 17h.01" />
+    </svg>
+  );
+}
+
+function ShieldNoticeIcon() {
+  return (
+    <svg
+      className="app-notice-icon"
+      xmlns="http://www.w3.org/2000/svg"
+      width="15"
+      height="15"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+    </svg>
+  );
+}
+
 declare global {
   interface Window {
     kofiWidgetOverlay?: {
       draw: (username: string, options: Record<string, string>) => void;
     };
   }
-}
-
-// Classifies a status message string as "success", "error", or "loading" for styling.
-function getMessageType(msg: string): "success" | "error" | "loading" {
-  const lower = msg.toLowerCase();
-  if (
-    lower.includes("invalid") ||
-    lower.includes("expired") ||
-    lower.includes("no token") ||
-    lower.includes("error") ||
-    lower.includes("fail")
-  )
-    return "error";
-  if (
-    lower.includes("successfully") ||
-    lower.includes("synced") ||
-    lower.includes("cleared") ||
-    lower.includes("downloaded") ||
-    lower.includes("done") ||
-    lower.includes("welcome")
-  )
-    return "success";
-  return "loading";
-}
-
-// Renders a coloured status message banner with an icon, optional markdown links, and optional dismiss action.
-function MessageBanner({ message, onClose }: { message: string; onClose?: () => void }) {
-  const type = getMessageType(message);
-  const canClose = type === "success" || type === "error";
-
-  const icon =
-    type === "success" ? (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="15"
-        height="15"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-        className="message-icon"
-      >
-        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-        <polyline points="22 4 12 14.01 9 11.01" />
-      </svg>
-    ) : type === "error" ? (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="15"
-        height="15"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-        className="message-icon"
-      >
-        <circle cx="12" cy="12" r="10" />
-        <line x1="15" y1="9" x2="9" y2="15" />
-        <line x1="9" y1="9" x2="15" y2="15" />
-      </svg>
-    ) : (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="15"
-        height="15"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-        className="message-icon"
-      >
-        <circle cx="12" cy="12" r="10" />
-        <polyline points="12 6 12 12 16 14" />
-      </svg>
-    );
-
-  const parts = message.split(/(\[[^\]]+\]\([^)]+\))/g);
-  const content = parts.map((part, i) => {
-    const match = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
-    if (match) {
-      return (
-        <a key={i} href={match[2]} target="_blank" rel="noopener noreferrer">
-          {match[1]}
-        </a>
-      );
-    }
-    return part;
-  });
-
-  return (
-    <motion.div
-      className={`message message-${type}`}
-      initial={{ opacity: 0, y: -8, scale: 0.98 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -8, scale: 0.93 }}
-      transition={{ duration: 0.16, ease: "easeOut" }}
-    >
-      {icon}
-      <span>{content}</span>
-      {canClose && onClose ? (
-        <button
-          type="button"
-          className="message-close"
-          onClick={onClose}
-          aria-label="Close message"
-        >
-          ×
-        </button>
-      ) : null}
-    </motion.div>
-  );
 }
 
 // Root application component: wires together auth, export config, cache, and view routing.
@@ -445,25 +368,7 @@ function App() {
         <AppNotice
           visible={!noticeRateLimitsDismissed}
           onDismiss={() => dismissNotice(LS_KEY_NOTICE_RATE_LIMITS, setNoticeRateLimitsDismissed)}
-          icon={
-            <svg
-              className="app-notice-icon"
-              xmlns="http://www.w3.org/2000/svg"
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" />
-              <path d="M12 9v4" />
-              <path d="M12 17h.01" />
-            </svg>
-          }
+          icon={<WarningNoticeIcon />}
         >
           This app currently runs on free-tier services (Cloudflare, CoinGecko, FX Rates API). If a
           request fails due to rate limits, wait a moment and try again, or try again tomorrow.
@@ -473,25 +378,7 @@ function App() {
           visible={!noticeUnofficialDismissed}
           className="app-notice-unofficial"
           onDismiss={() => dismissNotice(LS_KEY_NOTICE_UNOFFICIAL, setNoticeUnofficialDismissed)}
-          icon={
-            <svg
-              className="app-notice-icon"
-              xmlns="http://www.w3.org/2000/svg"
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" />
-              <path d="M12 9v4" />
-              <path d="M12 17h.01" />
-            </svg>
-          }
+          icon={<WarningNoticeIcon />}
         >
           This is an unofficial tool and is not affiliated with, endorsed by, or associated with the
           GoMining team.
@@ -501,23 +388,7 @@ function App() {
           visible={!user && !noticeOpenSourceDismissed}
           className="app-notice-opensource"
           onDismiss={() => dismissNotice(LS_KEY_NOTICE_OPENSOURCE, setNoticeOpenSourceDismissed)}
-          icon={
-            <svg
-              className="app-notice-icon"
-              xmlns="http://www.w3.org/2000/svg"
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-            </svg>
-          }
+          icon={<ShieldNoticeIcon />}
         >
           This app and extension were built with security and transparency in mind. The full source
           code is open source and accessible to anyone who wants to inspect it before using it.{" "}

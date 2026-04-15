@@ -12,6 +12,13 @@
   line-height: 1.5;
 }
 
+.page.no-motion *,
+.page.no-motion *::before,
+.page.no-motion *::after {
+  transition: none !important;
+  animation: none !important;
+}
+
 h1,
 h2,
 h3,
