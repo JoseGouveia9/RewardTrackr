@@ -1,5 +1,5 @@
 ﻿import { memo, useEffect, useMemo, useRef } from "react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { loadCacheEntry } from "@/features/export/utils/cache";
 import { ErrorBoundary } from "@/components/error-boundary";
 import type { Currency, EarnView, TxView, SimpleView, PurchaseView } from "./types";
@@ -13,8 +13,6 @@ import { SimpleEarnTable } from "./components/tables/simple-earn-table";
 import { TransactionsTable } from "./components/tables/transactions-table";
 import { PurchasesTable } from "./components/tables/purchases-table";
 import "./data-viewer.css";
-
-const VIEW_LAYOUT_SPRING = { layout: { type: "spring" as const, stiffness: 220, damping: 28 } };
 
 interface DataViewerProps {
   onClose: () => void;
@@ -251,6 +249,18 @@ export const DataViewer = memo(function DataViewer({
     { key: "FIAT", label: fiatCode },
   ];
 
+  const tableAnimationKey = `${activeKey}:${
+    isMiningTab
+      ? currency
+      : isEarnTab
+        ? effectiveEarnView
+        : isTxTab
+          ? effectiveTxView
+          : isPurchaseTab
+            ? effectivePurchaseView
+            : effectiveSimpleView
+  }:${groupByDay ? "grouped" : "raw"}`;
+
   return (
     <div className="dv-page">
       {/* Header */}
@@ -344,69 +354,79 @@ export const DataViewer = memo(function DataViewer({
       />
 
       {/* Content */}
-      <motion.div className="dv-content" layout transition={VIEW_LAYOUT_SPRING}>
-        <ErrorBoundary>
-          {isMiningTab ? (
-            <MiningTable
-              key={activeKey}
-              rewardKey={activeKey}
-              currency={currency}
-              fiatCode={fiatCode}
-              isFetching={isFetching}
-              cacheVersion={cacheVersion}
-              dateRange={dateRange}
-              setDateRange={setDateRange}
-            />
-          ) : isEarnTab ? (
-            <SimpleEarnTable
-              key={activeKey}
-              rewardKey={activeKey}
-              fiatCode={fiatCode}
-              earnView={effectiveEarnView}
-              isFetching={isFetching}
-              cacheVersion={cacheVersion}
-              groupByDay={groupByDay}
-              dateRange={dateRange}
-              setDateRange={setDateRange}
-            />
-          ) : isTxTab ? (
-            <TransactionsTable
-              key={activeKey}
-              rewardKey={activeKey}
-              fiatCode={fiatCode}
-              txView={effectiveTxView}
-              isFetching={isFetching}
-              cacheVersion={cacheVersion}
-              groupByDay={groupByDay}
-              dateRange={dateRange}
-              setDateRange={setDateRange}
-            />
-          ) : isPurchaseTab ? (
-            <PurchasesTable
-              key={activeKey}
-              fiatCode={fiatCode}
-              purchaseView={effectivePurchaseView}
-              isFetching={isFetching}
-              cacheVersion={cacheVersion}
-              groupByDay={groupByDay}
-              dateRange={dateRange}
-              setDateRange={setDateRange}
-            />
-          ) : (
-            <SimpleTable
-              key={activeKey}
-              rewardKey={activeKey}
-              fiatCode={fiatCode}
-              simpleView={effectiveSimpleView}
-              isFetching={isFetching}
-              cacheVersion={cacheVersion}
-              groupByDay={groupByDay}
-              dateRange={dateRange}
-              setDateRange={setDateRange}
-            />
-          )}
-        </ErrorBoundary>
-      </motion.div>
+      <div className="dv-content">
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={tableAnimationKey}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.14, ease: "easeOut" }}
+          >
+            <ErrorBoundary>
+              {isMiningTab ? (
+                <MiningTable
+                  key={activeKey}
+                  rewardKey={activeKey}
+                  currency={currency}
+                  fiatCode={fiatCode}
+                  isFetching={isFetching}
+                  cacheVersion={cacheVersion}
+                  dateRange={dateRange}
+                  setDateRange={setDateRange}
+                />
+              ) : isEarnTab ? (
+                <SimpleEarnTable
+                  key={activeKey}
+                  rewardKey={activeKey}
+                  fiatCode={fiatCode}
+                  earnView={effectiveEarnView}
+                  isFetching={isFetching}
+                  cacheVersion={cacheVersion}
+                  groupByDay={groupByDay}
+                  dateRange={dateRange}
+                  setDateRange={setDateRange}
+                />
+              ) : isTxTab ? (
+                <TransactionsTable
+                  key={activeKey}
+                  rewardKey={activeKey}
+                  fiatCode={fiatCode}
+                  txView={effectiveTxView}
+                  isFetching={isFetching}
+                  cacheVersion={cacheVersion}
+                  groupByDay={groupByDay}
+                  dateRange={dateRange}
+                  setDateRange={setDateRange}
+                />
+              ) : isPurchaseTab ? (
+                <PurchasesTable
+                  key={activeKey}
+                  fiatCode={fiatCode}
+                  purchaseView={effectivePurchaseView}
+                  isFetching={isFetching}
+                  cacheVersion={cacheVersion}
+                  groupByDay={groupByDay}
+                  dateRange={dateRange}
+                  setDateRange={setDateRange}
+                />
+              ) : (
+                <SimpleTable
+                  key={activeKey}
+                  rewardKey={activeKey}
+                  fiatCode={fiatCode}
+                  simpleView={effectiveSimpleView}
+                  isFetching={isFetching}
+                  cacheVersion={cacheVersion}
+                  groupByDay={groupByDay}
+                  dateRange={dateRange}
+                  setDateRange={setDateRange}
+                />
+              )}
+            </ErrorBoundary>
+          </motion.div>
+        </AnimatePresence>
+      </div>
     </div>
   );
 });
