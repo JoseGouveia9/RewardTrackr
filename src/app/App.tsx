@@ -23,9 +23,6 @@ import logo from "/logo.webp";
 import "./App.css";
 
 const BASE_LAYOUT_SPRING = { layout: { type: "spring" as const, stiffness: 220, damping: 28 } };
-const COPYRIGHT_LAYOUT_SPRING = {
-  layout: { type: "spring" as const, stiffness: 320, damping: 30 },
-};
 
 function WarningNoticeIcon() {
   return (
@@ -241,9 +238,6 @@ function App() {
   }, []);
 
   const layoutSpring = disableViewMotion ? { layout: { duration: 0 } } : BASE_LAYOUT_SPRING;
-  const copyrightLayoutSpring = disableViewMotion
-    ? { layout: { duration: 0 } }
-    : COPYRIGHT_LAYOUT_SPRING;
 
   const swapView = useCallback((nextView: "main" | "records") => {
     setDisableViewMotion(true);
@@ -401,30 +395,30 @@ function App() {
           </a>
         </AppNotice>
 
-        {view === "records" && (
-          <>
-            <AnimatePresence mode="popLayout">
-              {message ? (
-                <motion.div layout transition={layoutSpring}>
-                  <MessageBanner message={message} onClose={() => setMessage("")} />
-                </motion.div>
-              ) : null}
-            </AnimatePresence>
-            <DataViewer
-              onClose={() => swapView("main")}
-              isFetching={loading}
-              cacheVersion={cacheVersion}
-              onTabSeen={handleTabSeen}
-            />
-          </>
-        )}
+        <LayoutGroup>
+          {view === "records" && (
+            <>
+              <AnimatePresence mode="popLayout">
+                {message ? (
+                  <motion.div layout transition={layoutSpring}>
+                    <MessageBanner message={message} onClose={() => setMessage("")} />
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
+              <DataViewer
+                onClose={() => swapView("main")}
+                isFetching={loading}
+                cacheVersion={cacheVersion}
+                onTabSeen={handleTabSeen}
+              />
+            </>
+          )}
 
-        {view === "main" && !user ? (
-          <AuthPanel onSync={handleCheckSync} />
-        ) : view === "main" ? (
-          <>
-            <ErrorBoundary>
-              <LayoutGroup>
+          {view === "main" && !user ? (
+            <AuthPanel onSync={handleCheckSync} />
+          ) : view === "main" ? (
+            <>
+              <ErrorBoundary>
                 <motion.section className="panel-glass" layout transition={layoutSpring}>
                   <div className="actions-header">
                     <h3>
@@ -554,22 +548,22 @@ function App() {
                     </motion.div>
                   ) : null}
                 </AnimatePresence>
-              </LayoutGroup>
-            </ErrorBoundary>
-          </>
-        ) : null}
+              </ErrorBoundary>
+            </>
+          ) : null}
 
-        <motion.p className="copyright" layout transition={copyrightLayoutSpring}>
-          © 2026 José Gouveia · Moustachio ·{" "}
-          <a
-            className="copyright-link"
-            href="https://docs.google.com/forms/d/e/1FAIpQLSe98CKOga2pnoXh2SdXu0uxOBd9OOIDm1JsR6ludeGH5HOoLg/viewform"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Feedback &amp; Suggestions
-          </a>
-        </motion.p>
+          <motion.p className="copyright" layout transition={layoutSpring}>
+            © 2026 José Gouveia · Moustachio ·{" "}
+            <a
+              className="copyright-link"
+              href="https://docs.google.com/forms/d/e/1FAIpQLSe98CKOga2pnoXh2SdXu0uxOBd9OOIDm1JsR6ludeGH5HOoLg/viewform"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Feedback &amp; Suggestions
+            </a>
+          </motion.p>
+        </LayoutGroup>
       </main>
     </div>
   );

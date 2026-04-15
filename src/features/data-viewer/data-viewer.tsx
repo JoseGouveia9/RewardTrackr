@@ -1,4 +1,5 @@
 ﻿import { memo, useEffect, useMemo, useRef } from "react";
+import { motion } from "framer-motion";
 import { loadCacheEntry } from "@/features/export/utils/cache";
 import { ErrorBoundary } from "@/components/error-boundary";
 import type { Currency, EarnView, TxView, SimpleView, PurchaseView } from "./types";
@@ -12,6 +13,8 @@ import { SimpleEarnTable } from "./components/tables/simple-earn-table";
 import { TransactionsTable } from "./components/tables/transactions-table";
 import { PurchasesTable } from "./components/tables/purchases-table";
 import "./data-viewer.css";
+
+const VIEW_LAYOUT_SPRING = { layout: { type: "spring" as const, stiffness: 220, damping: 28 } };
 
 interface DataViewerProps {
   onClose: () => void;
@@ -341,7 +344,7 @@ export const DataViewer = memo(function DataViewer({
       />
 
       {/* Content */}
-      <div className="dv-content">
+      <motion.div className="dv-content" layout transition={VIEW_LAYOUT_SPRING}>
         <ErrorBoundary>
           {isMiningTab ? (
             <MiningTable
@@ -403,7 +406,7 @@ export const DataViewer = memo(function DataViewer({
             />
           )}
         </ErrorBoundary>
-      </div>
+      </motion.div>
     </div>
   );
 });
