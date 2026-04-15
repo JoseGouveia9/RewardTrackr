@@ -1,4 +1,31 @@
 ﻿import { memo } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+
+const warningWrapMotion = {
+  initial: { height: 0 },
+  animate: {
+    height: "auto" as const,
+    transition: { duration: 0.14, ease: "easeOut" as const },
+  },
+  exit: {
+    height: 0,
+    transition: { duration: 0.1, ease: "easeIn" as const },
+  },
+};
+
+const warningContentMotion = {
+  initial: { opacity: 0, y: -10 },
+  animate: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.14, ease: "easeOut" as const, delay: 0.05 },
+  },
+  exit: {
+    opacity: 0,
+    y: -8,
+    transition: { duration: 0.08, ease: "easeIn" as const },
+  },
+};
 
 interface WalletPricingOptionsProps {
   includeWalletFiat: boolean;
@@ -43,29 +70,44 @@ export const WalletPricingOptions = memo(function WalletPricingOptions({
           onChange={(e) => onToggle(e.target.checked)}
         />
       </label>
-      {includeWalletFiat && (
-        <p className="wallet-warning">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-            className="warning-icon"
+      <AnimatePresence initial={false}>
+        {includeWalletFiat && (
+          <motion.div
+            key="wallet-warning"
+            className="wallet-warning-wrap"
+            initial={warningWrapMotion.initial}
+            animate={warningWrapMotion.animate}
+            exit={warningWrapMotion.exit}
           >
-            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" />
-            <path d="M12 9v4" />
-            <path d="M12 17h.01" />
-          </svg>
-          This can take some time. CoinGecko free plan has rate limits, and each limit hit triggers
-          a 60s cooldown.
-        </p>
-      )}
+            <motion.p
+              className="wallet-warning"
+              initial={warningContentMotion.initial}
+              animate={warningContentMotion.animate}
+              exit={warningContentMotion.exit}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+                className="warning-icon"
+              >
+                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" />
+                <path d="M12 9v4" />
+                <path d="M12 17h.01" />
+              </svg>
+              This can take some time. CoinGecko free plan has rate limits, and each limit hit
+              triggers a 60s cooldown.
+            </motion.p>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 });

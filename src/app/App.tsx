@@ -1,5 +1,5 @@
-﻿import { useCallback, useEffect, useMemo, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+﻿import { useCallback, useEffect, useMemo, useState, type KeyboardEvent } from "react";
+import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
 import { AppNotice } from "@/components/app-notice";
 import { clearAllCacheEntries, loadAllCacheEntries } from "@/features/export/utils/cache";
 import { AuthPanel, HeaderUserMenu, useAuth } from "@/features/auth";
@@ -20,6 +20,11 @@ import {
 } from "@/lib/storage-keys";
 import logo from "/logo.webp";
 import "./App.css";
+
+const BASE_LAYOUT_SPRING = { layout: { type: "spring" as const, stiffness: 220, damping: 28 } };
+const COPYRIGHT_LAYOUT_SPRING = {
+  layout: { type: "spring" as const, stiffness: 320, damping: 30 },
+};
 
 declare global {
   interface Window {
@@ -156,6 +161,7 @@ function App() {
   const [supportOpen, setSupportOpen] = useState(false);
   const [referralOpen, setReferralOpen] = useState(false);
   const [view, setView] = useState<"main" | "records">("main");
+  const [disableViewMotion, setDisableViewMotion] = useState(false);
   const [cacheVersion, setCacheVersion] = useState(0);
   const [noticeRateLimitsDismissed, setNoticeRateLimitsDismissed] = useState(
     () => localStorage.getItem(LS_KEY_NOTICE_RATE_LIMITS) === "1",
@@ -311,6 +317,37 @@ function App() {
     setCacheVersion((v) => v + 1);
   }, []);
 
+  const layoutSpring = disableViewMotion ? { layout: { duration: 0 } } : BASE_LAYOUT_SPRING;
+  const copyrightLayoutSpring = disableViewMotion
+    ? { layout: { duration: 0 } }
+    : COPYRIGHT_LAYOUT_SPRING;
+
+  const swapView = useCallback((nextView: "main" | "records") => {
+    setDisableViewMotion(true);
+    setView(nextView);
+    requestAnimationFrame(() => {
+      setDisableViewMotion(false);
+    });
+  }, []);
+
+  const handleToggleRecords = useCallback(() => {
+    swapView(view === "records" ? "main" : "records");
+  }, [swapView, view]);
+
+  const handleHeroTitleClick = useCallback(() => {
+    swapView("main");
+  }, [swapView]);
+
+  const handleHeroTitleKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLDivElement>) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        swapView("main");
+      }
+    },
+    [swapView],
+  );
+
   return (
     <div className={`page ${theme === "dark" ? "theme-dark" : "theme-light"}`}>
       <div className="background-shape background-shape-top" />
@@ -319,7 +356,14 @@ function App() {
       <main className="container">
         <header className="hero">
           <div className="hero-top">
-            <div className="hero-title-row">
+            <div
+              className="hero-title-row"
+              role="button"
+              tabIndex={0}
+              onClick={handleHeroTitleClick}
+              onKeyDown={handleHeroTitleKeyDown}
+              aria-label="Go to main page"
+            >
               <img src={logo} alt="RewardTrackr logo" className="hero-logo" />
               <div>
                 <motion.span
@@ -369,7 +413,7 @@ function App() {
               />
               <DataViewerButton
                 active={view === "records"}
-                onClick={() => setView(view === "records" ? "main" : "records")}
+                onClick={handleToggleRecords}
                 hasNew={hasNewRecords}
               />
               {!user && (
@@ -486,19 +530,22 @@ function App() {
           </a>
         </AppNotice>
 
-        <AnimatePresence mode="wait">
-          {view === "records" && message ? (
-            <MessageBanner message={message} onClose={() => setMessage("")} />
-          ) : null}
-        </AnimatePresence>
-
         {view === "records" && (
-          <DataViewer
-            onClose={() => setView("main")}
-            isFetching={loading}
-            cacheVersion={cacheVersion}
-            onTabSeen={handleTabSeen}
-          />
+          <>
+            <AnimatePresence mode="popLayout">
+              {message ? (
+                <motion.div layout transition={layoutSpring}>
+                  <MessageBanner message={message} onClose={() => setMessage("")} />
+                </motion.div>
+              ) : null}
+            </AnimatePresence>
+            <DataViewer
+              onClose={() => swapView("main")}
+              isFetching={loading}
+              cacheVersion={cacheVersion}
+              onTabSeen={handleTabSeen}
+            />
+          </>
         )}
 
         {view === "main" && !user ? (
@@ -506,32 +553,14 @@ function App() {
         ) : view === "main" ? (
           <>
             <ErrorBoundary>
-              <section className="panel-glass">
-                <div className="actions-header">
-                  <h3>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      aria-hidden="true"
-                      className="section-icon"
-                    >
-                      <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18" />
-                    </svg>
-                    Select Sheets
-                  </h3>
-                  {hasCachedSheets && (
-                    <button className="btn-danger btn-danger-small" onClick={handleClearCache}>
+              <LayoutGroup>
+                <motion.section className="panel-glass" layout transition={layoutSpring}>
+                  <div className="actions-header">
+                    <h3>
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        width="13"
-                        height="13"
+                        width="16"
+                        height="16"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
@@ -539,65 +568,18 @@ function App() {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         aria-hidden="true"
+                        className="section-icon"
                       >
-                        <path d="M3 6h18" />
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
-                        <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18" />
                       </svg>
-                      Clear Cache
-                    </button>
-                  )}
-                </div>
-                <SheetSelector
-                  cache={cache}
-                  onToggleGroup={toggleGroup}
-                  onToggleAll={toggleAll}
-                  isGroupSelected={isGroupSelected}
-                />
-              </section>
-
-              <ExportOptions
-                selectedKeys={selectedKeys}
-                walletSheetsSelected={walletSheetsSelected}
-                selectedTxFromTypes={selectedTxFromTypes}
-                onToggleTxType={toggleTxType}
-                includeWalletFiat={includeWalletFiat}
-                onToggleWalletFiat={setIncludeWalletFiat}
-                includeExcelFiat={includeExcelFiat}
-                onToggleExcelFiat={setIncludeExcelFiat}
-                excelFiatCurrency={excelFiatCurrency}
-                onChangeFiatCurrency={setFiatCurrency}
-              />
-
-              <div className="export-section panel-glass">
-                <div className="export-meta-row">
-                  {cachedCount > 0 && cachedCount < selectedKeys.length && (
-                    <p className="subtle">
-                      {selectedKeys.length - cachedCount} sheet(s) will be fetched. {cachedCount}{" "}
-                      stored, will be probed for updates first.
-                    </p>
-                  )}
-                  {cachedCount === selectedKeys.length && selectedKeys.length > 0 && (
-                    <p className="subtle">
-                      All sheets stored. Will probe for updates before building.
-                    </p>
-                  )}
-                  <p className="export-limit-notice">Max 1 export per day.</p>
-                </div>
-                <div className="export-btn-wrapper">
-                  <button
-                    className="btn-primary btn-primary-large"
-                    disabled={loading || selectedKeys.length === 0}
-                    onClick={handleExport}
-                  >
-                    {loading ? (
-                      "Processing..."
-                    ) : (
-                      <>
+                      Select Sheets
+                    </h3>
+                    {hasCachedSheets && (
+                      <button className="btn-danger btn-danger-small" onClick={handleClearCache}>
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
-                          width="16"
-                          height="16"
+                          width="13"
+                          height="13"
                           viewBox="0 0 24 24"
                           fill="none"
                           stroke="currentColor"
@@ -605,31 +587,108 @@ function App() {
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           aria-hidden="true"
-                          className="btn-icon"
                         >
-                          <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
-                          <path d="M14 2v4a2 2 0 0 0 2 2h4" />
-                          <path d="M8 18v-2" />
-                          <path d="M12 18v-4" />
-                          <path d="M16 18v-6" />
+                          <path d="M3 6h18" />
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                          <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                         </svg>
-                        Build Report
-                      </>
+                        Clear Cache
+                      </button>
                     )}
-                  </button>
-                </div>
-              </div>
+                  </div>
+                  <SheetSelector
+                    cache={cache}
+                    onToggleGroup={toggleGroup}
+                    onToggleAll={toggleAll}
+                    isGroupSelected={isGroupSelected}
+                  />
+                </motion.section>
+
+                <ExportOptions
+                  selectedKeys={selectedKeys}
+                  walletSheetsSelected={walletSheetsSelected}
+                  selectedTxFromTypes={selectedTxFromTypes}
+                  onToggleTxType={toggleTxType}
+                  includeWalletFiat={includeWalletFiat}
+                  onToggleWalletFiat={setIncludeWalletFiat}
+                  includeExcelFiat={includeExcelFiat}
+                  onToggleExcelFiat={setIncludeExcelFiat}
+                  excelFiatCurrency={excelFiatCurrency}
+                  onChangeFiatCurrency={setFiatCurrency}
+                />
+
+                <motion.section
+                  className="export-section panel-glass"
+                  layout
+                  transition={layoutSpring}
+                >
+                  <div className="export-meta-row">
+                    {cachedCount > 0 && cachedCount < selectedKeys.length && (
+                      <p className="subtle">
+                        {selectedKeys.length - cachedCount} sheet(s) will be fetched. {cachedCount}{" "}
+                        stored, will be probed for updates first.
+                      </p>
+                    )}
+                    {cachedCount === selectedKeys.length && selectedKeys.length > 0 && (
+                      <p className="subtle">
+                        All sheets stored. Will probe for updates before building.
+                      </p>
+                    )}
+                    <p className="export-limit-notice">Max 1 export per day.</p>
+                  </div>
+                  <div className="export-btn-wrapper">
+                    <button
+                      className="btn-primary btn-primary-large"
+                      disabled={loading || selectedKeys.length === 0}
+                      onClick={handleExport}
+                    >
+                      {loading ? (
+                        "Processing..."
+                      ) : (
+                        <>
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            aria-hidden="true"
+                            className="btn-icon"
+                          >
+                            <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+                            <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+                            <path d="M8 18v-2" />
+                            <path d="M12 18v-4" />
+                            <path d="M16 18v-6" />
+                          </svg>
+                          Build Report
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </motion.section>
+
+                <AnimatePresence mode="popLayout">
+                  {message ? (
+                    <motion.div layout transition={layoutSpring}>
+                      <MessageBanner
+                        key={`main-message-${message}`}
+                        message={message}
+                        onClose={() => setMessage("")}
+                      />
+                    </motion.div>
+                  ) : null}
+                </AnimatePresence>
+              </LayoutGroup>
             </ErrorBoundary>
           </>
         ) : null}
 
-        <AnimatePresence mode="wait">
-          {view !== "records" && message ? (
-            <MessageBanner message={message} onClose={() => setMessage("")} />
-          ) : null}
-        </AnimatePresence>
-
-        <p className="copyright">
+        <motion.p className="copyright" layout transition={copyrightLayoutSpring}>
           © 2026 José Gouveia · Moustachio ·{" "}
           <a
             className="copyright-link"
@@ -639,7 +698,7 @@ function App() {
           >
             Feedback &amp; Suggestions
           </a>
-        </p>
+        </motion.p>
       </main>
     </div>
   );

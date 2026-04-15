@@ -536,7 +536,17 @@
   border-radius: 14px;
   border-collapse: separate;
   border-spacing: 0;
-  overflow: hidden;
+}
+
+.page.theme-light .dv-table-data {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(52, 66, 97, 0.15);
+  box-shadow: 0 8px 18px rgba(40, 52, 84, 0.04);
+}
+
+.page.theme-light .dv-table-data thead th {
+  background: rgba(31, 43, 68, 0.05);
+  border-bottom-color: rgba(52, 66, 97, 0.15);
 }
 
 .dv-table-data thead th:first-child {
@@ -796,7 +806,7 @@
 /* Dropdown panel - glass card style */
 .dv-column-filter-dropdown {
   position: absolute;
-  top: 100%;
+  top: calc(100% + 4px);
   left: 0;
   z-index: 9999;
   background: rgba(255, 255, 255, 0.72);
@@ -934,9 +944,14 @@
     color 0.12s ease;
 }
 
-.dv-filter-clear-button:hover {
+.dv-filter-clear-button:hover:not(:disabled) {
   background: rgba(0, 0, 0, 0.13);
   color: #22283a;
+}
+
+.dv-filter-clear-button:disabled {
+  opacity: 0.35;
+  cursor: default;
 }
 
 .page.theme-dark .dv-filter-clear-button {

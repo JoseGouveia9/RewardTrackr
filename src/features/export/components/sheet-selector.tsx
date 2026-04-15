@@ -26,33 +26,35 @@ export const SheetSelector = memo(function SheetSelector({
 
   const totalGroupCount = REWARD_GROUPS.length;
   const selectedGroupCount = REWARD_GROUPS.filter((g) => isGroupSelected(g)).length;
+  const allSelected = selectedGroupCount === totalGroupCount;
 
   return (
     <div className="sheet-selector">
       <button
         type="button"
-        className={`sheet-card sheet-card-all ${selectedGroupCount === totalGroupCount ? "selected" : ""}`}
+        className={`sheet-card sheet-card-all ${allSelected ? "selected" : ""}`}
         onClick={onToggleAll}
-        aria-pressed={selectedGroupCount === totalGroupCount}
+        aria-pressed={allSelected}
       >
         <div className="sheet-card-top">
           <span className="sheet-title">Select All</span>
-          {selectedGroupCount === totalGroupCount && (
-            <span className="sheet-check-icon" aria-hidden="true">
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-            </span>
-          )}
+          <span
+            className={`sheet-check-icon${allSelected ? " sheet-check-icon--visible" : ""}`}
+            aria-hidden="true"
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </span>
         </div>
         <span className="sheet-meta">
           {selectedGroupCount}/{totalGroupCount} selected
@@ -73,22 +75,23 @@ export const SheetSelector = memo(function SheetSelector({
           >
             <div className="sheet-card-top">
               <span className="sheet-title">{group.label}</span>
-              {selected && (
-                <span className="sheet-check-icon" aria-hidden="true">
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                </span>
-              )}
+              <span
+                className={`sheet-check-icon${selected ? " sheet-check-icon--visible" : ""}`}
+                aria-hidden="true"
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </span>
             </div>
             <span className="sheet-meta">
               {allCached ? (

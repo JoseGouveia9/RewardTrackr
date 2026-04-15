@@ -1,4 +1,5 @@
-﻿import { memo, useEffect, useRef, useState } from "react";
+﻿import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { FIAT_OPTIONS } from "../config/currencies";
 import "./fiat-dropdown.css";
 import type { ExtraFiatCurrency } from "../types";
@@ -13,8 +14,24 @@ export const FiatDropdown = memo(function FiatDropdown({ value, onChange }: Fiat
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState("");
   const [focusedIndex, setFocusedIndex] = useState(-1);
+  const [menuThemeClass, setMenuThemeClass] = useState<"theme-light" | "theme-dark">("theme-light");
+  const [menuAnchor, setMenuAnchor] = useState<{ left: number; top: number; width: number } | null>(
+    null,
+  );
   const wrapRef = useRef<HTMLSpanElement | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+
+  const updateMenuAnchor = useCallback(() => {
+    if (!wrapRef.current) return;
+    const rect = wrapRef.current.getBoundingClientRect();
+    setMenuAnchor({ left: rect.left, top: rect.top - 8, width: rect.width });
+  }, []);
+
+  const updateMenuThemeClass = useCallback(() => {
+    const pageEl = wrapRef.current?.closest(".page");
+    setMenuThemeClass(pageEl?.classList.contains("theme-dark") ? "theme-dark" : "theme-light");
+  }, []);
 
   const filtered = FIAT_OPTIONS.filter(({ currency, label }) => {
     const q = filter.toLowerCase();
@@ -34,12 +51,26 @@ export const FiatDropdown = memo(function FiatDropdown({ value, onChange }: Fiat
   useEffect(() => {
     if (!open) return;
     const handleClickOutside = (e: MouseEvent): void => {
-      if (!wrapRef.current || wrapRef.current.contains(e.target as Node)) return;
+      const target = e.target as Node;
+      if (wrapRef.current?.contains(target) || menuRef.current?.contains(target)) return;
       setOpen(false);
     };
+
+    updateMenuAnchor();
+    updateMenuThemeClass();
+
+    const handleViewportChange = () => updateMenuAnchor();
+
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [open]);
+    window.addEventListener("resize", handleViewportChange);
+    window.addEventListener("scroll", handleViewportChange, true);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("resize", handleViewportChange);
+      window.removeEventListener("scroll", handleViewportChange, true);
+    };
+  }, [open, updateMenuAnchor, updateMenuThemeClass]);
 
   // Closes the dropdown and resets the search filter.
   function close(): void {
@@ -76,52 +107,74 @@ export const FiatDropdown = memo(function FiatDropdown({ value, onChange }: Fiat
     }
   }
 
+  const menu =
+    open && menuAnchor
+      ? createPortal(
+          <div
+            className={`fiat-dropdown-menu fiat-dropdown-menu-portal ${menuThemeClass}`}
+            role="listbox"
+            aria-label="Extra fiat currency"
+            ref={(el) => {
+              listRef.current = el;
+              menuRef.current = el;
+            }}
+            style={{
+              left: menuAnchor.left,
+              top: menuAnchor.top,
+              minWidth: Math.max(300, menuAnchor.width),
+            }}
+          >
+            <input
+              className="fiat-dropdown-search"
+              type="text"
+              placeholder="Search currency..."
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              onKeyDown={handleKeyDown}
+              autoFocus
+              aria-label="Search currencies"
+            />
+            {filtered.map(({ currency, label }, idx) => (
+              <div
+                key={currency}
+                role="option"
+                aria-selected={value === currency}
+                className={`fiat-dropdown-option ${value === currency ? "selected" : ""} ${focusedIndex === idx ? "focused" : ""}`}
+                onClick={() => selectOption(currency)}
+                onMouseEnter={() => setFocusedIndex(idx)}
+              >
+                <span className="fiat-option-title">{currency}</span>
+                <span className="fiat-option-subtitle">{label}</span>
+                {value === currency && <span className="fiat-option-check">✓</span>}
+              </div>
+            ))}
+          </div>,
+          document.body,
+        )
+      : null;
+
   return (
     <span className="fiat-dropdown-wrap" ref={wrapRef}>
       <button
         type="button"
         className="fiat-dropdown-trigger"
-        onClick={() => setOpen((prev) => !prev)}
+        onClick={() => {
+          setOpen((prev) => {
+            const next = !prev;
+            if (next) {
+              requestAnimationFrame(updateMenuAnchor);
+              requestAnimationFrame(updateMenuThemeClass);
+            }
+            return next;
+          });
+        }}
         aria-haspopup="listbox"
         aria-expanded={open}
       >
         <span>{value}</span>
         <span className={`fiat-dropdown-caret ${open ? "open" : ""}`}>⌃</span>
       </button>
-
-      {open && (
-        <div
-          className="fiat-dropdown-menu"
-          role="listbox"
-          aria-label="Extra fiat currency"
-          ref={listRef}
-        >
-          <input
-            className="fiat-dropdown-search"
-            type="text"
-            placeholder="Search currency..."
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            onKeyDown={handleKeyDown}
-            autoFocus
-            aria-label="Search currencies"
-          />
-          {filtered.map(({ currency, label }, idx) => (
-            <div
-              key={currency}
-              role="option"
-              aria-selected={value === currency}
-              className={`fiat-dropdown-option ${value === currency ? "selected" : ""} ${focusedIndex === idx ? "focused" : ""}`}
-              onClick={() => selectOption(currency)}
-              onMouseEnter={() => setFocusedIndex(idx)}
-            >
-              <span className="fiat-option-title">{currency}</span>
-              <span className="fiat-option-subtitle">{label}</span>
-              {value === currency && <span className="fiat-option-check">✓</span>}
-            </div>
-          ))}
-        </div>
-      )}
+      {menu}
     </span>
   );
 });

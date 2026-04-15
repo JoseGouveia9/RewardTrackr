@@ -1,6 +1,11 @@
 ﻿import { memo } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { FiatDropdown } from "./fiat-dropdown";
 import type { ExtraFiatCurrency } from "../types";
+
+const rowLayoutSpring = {
+  layout: { type: "spring" as const, stiffness: 220, damping: 28 },
+};
 
 interface ExtraFiatOptionsProps {
   includeExcelFiat: boolean;
@@ -37,8 +42,8 @@ export const ExtraFiatOptions = memo(function ExtraFiatOptions({
         </svg>
         Extra Fiat Conversion
       </p>
-      <div className="fiat-grid">
-        <label className="wallet-option-row">
+      <motion.div className="fiat-grid" layout transition={rowLayoutSpring}>
+        <motion.label className="wallet-option-row" layout="position" transition={rowLayoutSpring}>
           Include extra conversion column (USD is always included)
           <input
             type="checkbox"
@@ -46,14 +51,32 @@ export const ExtraFiatOptions = memo(function ExtraFiatOptions({
             checked={includeExcelFiat}
             onChange={(e) => onToggle(e.target.checked)}
           />
-        </label>
-        {includeExcelFiat && (
-          <label className="wallet-option-row wallet-currency-row">
-            Currency
-            <FiatDropdown value={currency} onChange={onChangeCurrency} />
-          </label>
-        )}
-      </div>
+        </motion.label>
+        <AnimatePresence mode="sync">
+          {includeExcelFiat && (
+            <motion.div
+              key="wallet-currency-row"
+              className="wallet-option-row wallet-currency-row"
+              initial={{ opacity: 0, x: 24, maxWidth: 0 }}
+              animate={{
+                opacity: 1,
+                x: 0,
+                maxWidth: 240,
+                transition: { duration: 0.2, ease: "easeOut" },
+              }}
+              exit={{
+                opacity: 0,
+                x: 24,
+                maxWidth: 0,
+                transition: { duration: 0.14, ease: "easeIn" },
+              }}
+            >
+              Currency
+              <FiatDropdown value={currency} onChange={onChangeCurrency} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
     </div>
   );
 });

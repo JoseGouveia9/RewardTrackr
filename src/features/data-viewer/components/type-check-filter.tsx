@@ -25,15 +25,18 @@ export function TypeCheckFilter({
                 onChange(e.target.checked ? [...selected, t] : selected.filter((x) => x !== t))
               }
             />
-            {t.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())}
+            {t}
           </label>
         ))}
       </div>
-      {selected.length > 0 && (
-        <button type="button" className="dv-filter-clear-link" onClick={() => onChange([])}>
-          Clear
-        </button>
-      )}
+      <button
+        type="button"
+        className="dv-filter-clear-button"
+        onClick={() => onChange([])}
+        disabled={selected.length === 0}
+      >
+        Clear
+      </button>
     </ColFilterWrap>
   );
 }

@@ -8,8 +8,8 @@ import "./export-options.css";
 
 const popVariants = {
   initial: { opacity: 0, scale: 0.95, y: -6 },
-  animate: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.18 } },
-  exit: { opacity: 0, scale: 0.95, y: -6, transition: { duration: 0.14 } },
+  animate: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.22 } },
+  exit: { opacity: 0, scale: 0.95, y: -6, transition: { duration: 0.32 } },
 };
 
 interface ExportOptionsProps {
@@ -40,7 +40,7 @@ export const ExportOptions = memo(function ExportOptions({
 }: ExportOptionsProps) {
   return (
     <>
-      <AnimatePresence>
+      <AnimatePresence mode="popLayout">
         {selectedKeys.includes("transactions") && (
           <motion.section
             key="tx-filter"
@@ -49,6 +49,9 @@ export const ExportOptions = memo(function ExportOptions({
             initial="initial"
             animate="animate"
             exit="exit"
+            layout
+            transition={{ layout: { type: "spring", stiffness: 220, damping: 28 } }}
+            style={{ overflow: "clip", isolation: "isolate" }}
           >
             <TransactionFilter
               selectedTxFromTypes={selectedTxFromTypes}
@@ -57,7 +60,7 @@ export const ExportOptions = memo(function ExportOptions({
           </motion.section>
         )}
       </AnimatePresence>
-      <AnimatePresence>
+      <AnimatePresence mode="popLayout">
         {walletSheetsSelected && (
           <motion.section
             key="wallet-pricing"
@@ -66,6 +69,9 @@ export const ExportOptions = memo(function ExportOptions({
             initial="initial"
             animate="animate"
             exit="exit"
+            layout="position"
+            transition={{ layout: { type: "spring", stiffness: 220, damping: 28 } }}
+            style={{ overflow: "clip" }}
           >
             <WalletPricingOptions
               includeWalletFiat={includeWalletFiat}
@@ -74,14 +80,18 @@ export const ExportOptions = memo(function ExportOptions({
           </motion.section>
         )}
       </AnimatePresence>
-      <section className="panel-glass">
+      <motion.section
+        className="panel-glass"
+        layout
+        transition={{ layout: { type: "spring", stiffness: 220, damping: 28 } }}
+      >
         <ExtraFiatOptions
           includeExcelFiat={includeExcelFiat}
           onToggle={onToggleExcelFiat}
           currency={excelFiatCurrency}
           onChangeCurrency={onChangeFiatCurrency}
         />
-      </section>
+      </motion.section>
     </>
   );
 });
