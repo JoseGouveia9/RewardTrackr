@@ -9,7 +9,13 @@ export function CommunityPage({ onClose }: { onClose: () => void }) {
   const [entries, setEntries] = useState<DirectoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const visibleEntries = entries.filter((entry) => entry.communityVisible !== false);
+  const visibleEntries = entries
+    .filter((entry) => entry.communityVisible !== false)
+    .sort(
+      (a, b) =>
+        (String(b.ownerId ?? "") === "3575344" ? 1 : 0) -
+        (String(a.ownerId ?? "") === "3575344" ? 1 : 0),
+    );
 
   useEffect(() => {
     fetchDirectory()
