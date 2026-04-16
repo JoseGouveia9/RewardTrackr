@@ -1,28 +1,55 @@
-﻿import { useCallback, useEffect, useMemo, useState, type KeyboardEvent } from "react";
+﻿import { useCallback, useEffect, useRef, useMemo, useState, type KeyboardEvent } from "react";
 import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
-import { AppNotice } from "@/components/app-notice";
+import { AppNotice } from "@/components/app-notice/app-notice";
 import { clearAllCacheEntries, loadAllCacheEntries } from "@/features/export/utils/cache";
 import { AuthPanel, HeaderUserMenu, useAuth } from "@/features/auth";
-import { SupportButton } from "@/components/support-button";
+import { SupportButton } from "@/components/support-button/support-button";
 import { SheetSelector, ExportOptions, useExport, useExportConfig } from "@/features/export";
 import type { CacheState, RewardKey } from "@/features/export";
-import { ReferralButton } from "@/components/referral-button";
+import { AnnouncementBanner } from "@/components/announcement-banner/announcement-banner";
+import { ReferralButton } from "@/components/referral-button/referral-button";
 import { DataViewerButton, DataViewer } from "@/features/data-viewer";
-import { ErrorBoundary } from "@/components/error-boundary";
+import {
+  ShareModal,
+  SharedBanner,
+  CommunityPage,
+  fetchSharedProfile,
+  fetchAnnouncement,
+} from "@/features/shared";
+import type { Announcement } from "@/features/shared";
+import type { SharedProfile } from "@/features/shared";
+import { ErrorBoundary } from "@/components/error-boundary/error-boundary";
 import { useTheme } from "./theme-context";
-import { MessageBanner } from "@/components/message-banner";
+import { MessageBanner } from "@/components/message-banner/message-banner";
 import {
   LS_KEY_EXPORT_CONFIG,
   LS_KEY_LAST_SYNC_USER,
   LS_KEY_NOTICE_RATE_LIMITS,
   LS_KEY_NOTICE_UNOFFICIAL,
   LS_KEY_NOTICE_OPENSOURCE,
+  LS_KEY_NOTICE_ANNOUNCEMENT_PREFIX,
   LS_KEY_REWARD_PREFIX,
 } from "@/lib/storage-keys";
 import logo from "/logo.webp";
 import "./App.css";
 
 const BASE_LAYOUT_SPRING = { layout: { type: "spring" as const, stiffness: 220, damping: 28 } };
+
+function getInitialRouteState(): {
+  view: "main" | "records" | "community";
+  shouldLoadShared: boolean;
+  sharedId: string | null;
+} {
+  const hash = window.location.hash;
+  if (hash.startsWith("#view=")) {
+    const id = hash.slice(6).trim();
+    if (id) return { view: "records", shouldLoadShared: true, sharedId: id };
+  }
+  if (hash === "#community") {
+    return { view: "community", shouldLoadShared: false, sharedId: null };
+  }
+  return { view: "main", shouldLoadShared: false, sharedId: null };
+}
 
 function WarningNoticeIcon() {
   return (
@@ -76,13 +103,18 @@ declare global {
 
 // Root application component: wires together auth, export config, cache, and view routing.
 function App() {
+  const initialRouteState = getInitialRouteState();
+  const initialSharedId = initialRouteState.sharedId;
   const [message, setMessage] = useState<string>("");
   const [cache, setCache] = useState<CacheState>(() => loadAllCacheEntries());
   const [supportOpen, setSupportOpen] = useState(false);
   const [referralOpen, setReferralOpen] = useState(false);
-  const [view, setView] = useState<"main" | "records">("main");
+  const [view, setView] = useState<"main" | "records" | "community">(initialRouteState.view);
   const [disableViewMotion, setDisableViewMotion] = useState(false);
   const [cacheVersion, setCacheVersion] = useState(0);
+  const [sharedProfile, setSharedProfile] = useState<SharedProfile | null>(null);
+  const [sharedLoading, setSharedLoading] = useState(initialRouteState.shouldLoadShared);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
   const [noticeRateLimitsDismissed, setNoticeRateLimitsDismissed] = useState(
     () => localStorage.getItem(LS_KEY_NOTICE_RATE_LIMITS) === "1",
   );
@@ -92,6 +124,18 @@ function App() {
   const [noticeOpenSourceDismissed, setNoticeOpenSourceDismissed] = useState(
     () => localStorage.getItem(LS_KEY_NOTICE_OPENSOURCE) === "1",
   );
+  const [announcement, setAnnouncement] = useState<Announcement | null>(null);
+  const [announcementDismissed, setAnnouncementDismissed] = useState(false);
+
+  useEffect(() => {
+    fetchAnnouncement().then((data) => {
+      if (!data) return;
+      const dismissed = localStorage.getItem(LS_KEY_NOTICE_ANNOUNCEMENT_PREFIX + data.id) === "1";
+      setAnnouncementDismissed(dismissed);
+      setAnnouncement(data);
+    });
+  }, []);
+
   // Persists a notice dismissal to localStorage and updates the local state.
   function dismissNotice(key: string, setter: (v: boolean) => void) {
     localStorage.setItem(key, "1");
@@ -171,6 +215,15 @@ function App() {
   });
 
   const displayAlias = syncedAlias || user?.alias?.trim() || "User";
+
+  const prevUserRef = useRef(user);
+  useEffect(() => {
+    if (prevUserRef.current !== null && user === null) {
+      setShareModalOpen(false);
+    }
+    prevUserRef.current = user;
+  }, [user]);
+
   const currentUserIdentity = user?.id
     ? `id:${user.id}`
     : user?.email
@@ -237,19 +290,82 @@ function App() {
     setCacheVersion((v) => v + 1);
   }, []);
 
+  const applyHashRoute = useCallback(() => {
+    const hash = window.location.hash;
+    if (hash.startsWith("#view=")) {
+      const id = hash.slice(6).trim();
+      if (!id) {
+        setSharedProfile(null);
+        setSharedLoading(false);
+        setView("main");
+        return;
+      }
+      setSharedLoading(true);
+      setSharedProfile(null);
+      setView("records");
+      fetchSharedProfile(id)
+        .then((profile) => setSharedProfile(profile))
+        .catch(() => setSharedProfile(null))
+        .finally(() => setSharedLoading(false));
+    } else if (hash === "#community") {
+      setSharedProfile(null);
+      setSharedLoading(false);
+      setView("community");
+    } else {
+      setSharedProfile(null);
+      setSharedLoading(false);
+      setView("main");
+    }
+  }, []);
+
+  // Load initial shared profile from URL hash without a second route pass.
+  useEffect(() => {
+    if (!initialSharedId) return;
+    setSharedLoading(true);
+    fetchSharedProfile(initialSharedId)
+      .then((profile) => setSharedProfile(profile))
+      .catch(() => setSharedProfile(null))
+      .finally(() => setSharedLoading(false));
+  }, [initialSharedId]);
+
+  // Handle manual hash edits after initial render.
+  useEffect(() => {
+    window.addEventListener("hashchange", applyHashRoute);
+    return () => window.removeEventListener("hashchange", applyHashRoute);
+  }, [applyHashRoute]);
+
   const layoutSpring = disableViewMotion ? { layout: { duration: 0 } } : BASE_LAYOUT_SPRING;
 
-  const swapView = useCallback((nextView: "main" | "records") => {
+  const swapView = useCallback((nextView: "main" | "records" | "community") => {
     setDisableViewMotion(true);
+    if (nextView !== "records") setSharedProfile(null);
     setView(nextView);
+    // Clear hash when navigating away from shared/community views
+    if (nextView === "main" && window.location.hash) {
+      history.replaceState(null, "", window.location.pathname + window.location.search);
+    }
     requestAnimationFrame(() => {
       setDisableViewMotion(false);
     });
   }, []);
 
   const handleToggleRecords = useCallback(() => {
+    const isSharedRecordContext =
+      view === "records" &&
+      (sharedProfile !== null || sharedLoading || window.location.hash.startsWith("#view="));
+
+    if (isSharedRecordContext) {
+      setSharedProfile(null);
+      setSharedLoading(false);
+      if (window.location.hash) {
+        history.replaceState(null, "", window.location.pathname + window.location.search);
+      }
+      setView("records");
+      return;
+    }
+
     swapView(view === "records" ? "main" : "records");
-  }, [swapView, view]);
+  }, [swapView, view, sharedProfile, sharedLoading]);
 
   const handleHeroTitleClick = useCallback(() => {
     swapView("main");
@@ -328,27 +444,70 @@ function App() {
                 onOpen={() => setSupportOpen(true)}
                 onClose={() => setSupportOpen(false)}
               />
-              <DataViewerButton
-                active={view === "records"}
-                onClick={handleToggleRecords}
-                hasNew={hasNewRecords}
-              />
-              {!user && (
-                <ReferralButton
-                  open={referralOpen}
-                  onOpen={() => setReferralOpen(true)}
-                  onClose={() => setReferralOpen(false)}
-                />
-              )}
-              {user && (
-                <HeaderUserMenu
-                  user={user}
-                  displayAlias={displayAlias}
-                  theme={theme}
-                  onToggleTheme={toggleTheme}
-                  onLogout={handleLogout}
-                />
-              )}
+              <button
+                type="button"
+                className={`sh-trigger-btn${view === "community" || sharedProfile || sharedLoading ? " sh-trigger-btn--active" : ""}`}
+                onClick={() => swapView(view === "community" ? "main" : "community")}
+                aria-label="Community"
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+                <span>Community</span>
+              </button>
+              <AnimatePresence initial={false}>
+                {hasCachedSheets ? (
+                  <motion.div
+                    key="records-trigger"
+                    className="dv-trigger-wrap"
+                    initial={{ opacity: 0, scale: 0.82 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.82 }}
+                    transition={{ duration: 0.2, ease: "easeOut" }}
+                  >
+                    <DataViewerButton
+                      active={view === "records" && !sharedProfile && !sharedLoading}
+                      onClick={handleToggleRecords}
+                      hasNew={hasNewRecords}
+                    />
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
+              <motion.div
+                layout
+                transition={{ duration: 0.2, ease: "easeOut" }}
+                className={`hero-profile-wrap${hasCachedSheets ? " hero-profile-wrap--narrow" : ""}`}
+              >
+                {!user && (
+                  <ReferralButton
+                    open={referralOpen}
+                    onOpen={() => setReferralOpen(true)}
+                    onClose={() => setReferralOpen(false)}
+                  />
+                )}
+                {user && (
+                  <HeaderUserMenu
+                    user={user}
+                    displayAlias={displayAlias}
+                    theme={theme}
+                    onToggleTheme={toggleTheme}
+                    onLogout={handleLogout}
+                  />
+                )}
+              </motion.div>
             </div>
           </div>
           {!user && (
@@ -358,6 +517,17 @@ function App() {
             </p>
           )}
         </header>
+
+        {announcement && (
+          <AnnouncementBanner
+            visible={!announcementDismissed}
+            message={announcement.message}
+            onDismiss={() => {
+              localStorage.setItem(LS_KEY_NOTICE_ANNOUNCEMENT_PREFIX + announcement.id, "1");
+              setAnnouncementDismissed(true);
+            }}
+          />
+        )}
 
         <AppNotice
           visible={!noticeRateLimitsDismissed}
@@ -396,10 +566,12 @@ function App() {
         </AppNotice>
 
         <LayoutGroup>
+          {view === "community" && <CommunityPage onClose={() => swapView("main")} />}
+
           {view === "records" && (
             <>
               <AnimatePresence mode="popLayout">
-                {message ? (
+                {message && !sharedProfile && !sharedLoading ? (
                   <motion.div layout transition={layoutSpring}>
                     <MessageBanner message={message} onClose={() => setMessage("")} />
                   </motion.div>
@@ -407,15 +579,46 @@ function App() {
               </AnimatePresence>
               <DataViewer
                 onClose={() => swapView("main")}
-                isFetching={loading}
+                isFetching={sharedLoading || (loading && !sharedProfile)}
                 cacheVersion={cacheVersion}
                 onTabSeen={handleTabSeen}
+                sharedData={sharedLoading ? {} : (sharedProfile?.sheets ?? null)}
+                title={sharedProfile || sharedLoading ? "Community" : "Records"}
+                banner={
+                  sharedProfile ? (
+                    <SharedBanner
+                      profile={sharedProfile}
+                      onClose={() => {
+                        setSharedProfile(null);
+                        swapView("main");
+                      }}
+                    />
+                  ) : undefined
+                }
+                onShare={
+                  user && hasCachedSheets && !sharedProfile && !sharedLoading
+                    ? () => setShareModalOpen(true)
+                    : undefined
+                }
               />
             </>
           )}
 
           {view === "main" && !user ? (
-            <AuthPanel onSync={handleCheckSync} />
+            <>
+              <AuthPanel onSync={handleCheckSync} />
+              <AnimatePresence mode="popLayout">
+                {message ? (
+                  <motion.div layout transition={layoutSpring}>
+                    <MessageBanner
+                      key={`auth-message-${message}`}
+                      message={message}
+                      onClose={() => setMessage("")}
+                    />
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
+            </>
           ) : view === "main" ? (
             <>
               <ErrorBoundary>
@@ -565,6 +768,17 @@ function App() {
           </motion.p>
         </LayoutGroup>
       </main>
+
+      <AnimatePresence>
+        {shareModalOpen && (
+          <ShareModal
+            cache={cache}
+            defaultAlias={displayAlias}
+            authToken={storedToken}
+            onClose={() => setShareModalOpen(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

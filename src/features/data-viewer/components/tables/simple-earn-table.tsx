@@ -1,6 +1,6 @@
 ﻿import { useEffect, useMemo, useRef, useState } from "react";
 import { loadCacheEntry } from "@/features/export/utils/cache";
-import type { RewardKey } from "@/features/export/types";
+import type { CacheEntry, RewardKey } from "@/features/export/types";
 import type { EarnView, DateRange } from "../../types";
 import { PAGE_SIZE } from "../../utils/constants";
 import {
@@ -11,8 +11,8 @@ import {
   fmtDateTime,
 } from "../../utils";
 import { AnyCurrencyIcon, UsdIcon, FiatIcon } from "../icons/currency-icons";
-import { DateRangeFilter } from "../date-range-filter";
-import { Pagination } from "../pagination";
+import { DateRangeFilter } from "../date-range-filter/date-range-filter";
+import { Pagination } from "../pagination/pagination";
 import { useSyncTableColumns } from "../../hooks/use-sync-table-columns";
 import { AnimatedLoadingRow } from "./animated-loading-row";
 
@@ -23,6 +23,7 @@ export function SimpleEarnTable({
   earnView,
   isFetching = false,
   cacheVersion = 0,
+  cacheEntry,
   groupByDay,
   dateRange,
   setDateRange,
@@ -32,6 +33,7 @@ export function SimpleEarnTable({
   earnView: EarnView;
   isFetching?: boolean;
   cacheVersion?: number;
+  cacheEntry?: CacheEntry | null;
   groupByDay: boolean;
   dateRange: DateRange;
   setDateRange: (v: DateRange) => void;
@@ -42,8 +44,8 @@ export function SimpleEarnTable({
   useSyncTableColumns(totalsRef, dataRef);
   const entry = useMemo(() => {
     void cacheVersion;
-    return loadCacheEntry(rewardKey);
-  }, [rewardKey, cacheVersion]);
+    return cacheEntry !== undefined ? cacheEntry : loadCacheEntry(rewardKey);
+  }, [rewardKey, cacheVersion, cacheEntry]);
 
   const rows = useMemo(() => {
     if (!entry?.records?.length) return [];

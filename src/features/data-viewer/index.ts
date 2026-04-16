@@ -1,1 +1,1 @@
-export { DataViewer, DataViewerButton } from "./data-viewer";
+export { DataViewer, DataViewerButton } from "./components/data-viewer/data-viewer";

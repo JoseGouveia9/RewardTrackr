@@ -1,6 +1,6 @@
 ﻿import { useEffect, useMemo, useRef, useState } from "react";
 import { loadCacheEntry } from "@/features/export/utils/cache";
-import type { RewardKey } from "@/features/export/types";
+import type { CacheEntry, RewardKey } from "@/features/export/types";
 import type { Currency, DateRange } from "../../types";
 import { PAGE_SIZE } from "../../utils/constants";
 import {
@@ -11,8 +11,8 @@ import {
   fmtDate,
 } from "../../utils";
 import { MiningCurrencyIcon } from "../icons/currency-icons";
-import { DateRangeFilter } from "../date-range-filter";
-import { Pagination } from "../pagination";
+import { DateRangeFilter } from "../date-range-filter/date-range-filter";
+import { Pagination } from "../pagination/pagination";
 import { useSyncTableColumns } from "../../hooks/use-sync-table-columns";
 import { AnimatedLoadingRow } from "./animated-loading-row";
 
@@ -23,6 +23,7 @@ export function MiningTable({
   fiatCode,
   isFetching = false,
   cacheVersion = 0,
+  cacheEntry,
   dateRange,
   setDateRange,
 }: {
@@ -31,6 +32,7 @@ export function MiningTable({
   fiatCode: string;
   isFetching?: boolean;
   cacheVersion?: number;
+  cacheEntry?: CacheEntry | null;
   dateRange: DateRange;
   setDateRange: (v: DateRange) => void;
 }) {
@@ -40,8 +42,8 @@ export function MiningTable({
   useSyncTableColumns(totalsRef, dataRef);
   const entry = useMemo(() => {
     void cacheVersion;
-    return loadCacheEntry(rewardKey);
-  }, [rewardKey, cacheVersion]);
+    return cacheEntry !== undefined ? cacheEntry : loadCacheEntry(rewardKey);
+  }, [rewardKey, cacheVersion, cacheEntry]);
 
   const rows = useMemo(() => {
     if (!entry?.records?.length) return [];
@@ -179,7 +181,7 @@ export function MiningTable({
                     ? new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(
                         row.totalPower,
                       ) + " TH"
-                    : "—"}
+                    : "-"}
                 </td>
                 <td>
                   <span className="dv-cell-with-icon">
@@ -193,7 +195,7 @@ export function MiningTable({
                     <MiningCurrencyIcon currency={currency} fiatCode={fiatCode} />
                   </span>
                 </td>
-                <td>{row.discount > 0 ? (row.discount * 100).toFixed(2) + "%" : "—"}</td>
+                <td>{row.discount > 0 ? (row.discount * 100).toFixed(2) + "%" : "-"}</td>
                 <td className="dv-cell-accent">
                   <span className="dv-cell-with-icon">
                     {formatMiningValue(row.reward, currency)}

@@ -39,6 +39,10 @@ interface UseAuthReturn {
   handleLogout: () => void;
 }
 
+function getCachedToken(): string {
+  return sessionStorage.getItem(LS_KEY_SYNC_TOKEN) || "";
+}
+
 // Hook
 
 // Manages authentication state: session restore, token sync from the extension, and logout.
@@ -63,15 +67,16 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
     (exp: number | null) => {
       clearExpiryTimer();
       if (!exp) return;
-      const msUntilExpiry = exp * 1000 - Date.now();
+      const msUntilExpiry = exp * 1000 - Date.now() - 10 * 60 * 1000;
       if (msUntilExpiry <= 0) return;
       expiryTimer.current = setTimeout(() => {
         sessionStorage.removeItem(LS_KEY_SYNC_TOKEN);
         setUser(null);
         setStoredToken("");
+        onMessage("Session expired. Please sync again via the extension.");
       }, msUntilExpiry);
     },
-    [clearExpiryTimer],
+    [clearExpiryTimer, onMessage],
   );
 
   // Validates and applies a token, updating user state and scheduling expiry.
@@ -79,6 +84,16 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
     (token: string, message?: string): boolean => {
       const userData = loginWithToken(token);
       if (!userData) return false;
+      if (userData.exp && userData.exp * 1000 - Date.now() <= 10 * 60 * 1000) {
+        clearExpiryTimer();
+        sessionStorage.removeItem(LS_KEY_SYNC_TOKEN);
+        setUser(null);
+        setStoredToken("");
+        onMessage(
+          "Your session is expiring soon. Please refresh your GoMining session and sync again.",
+        );
+        return false;
+      }
       const storedAlias = localStorage.getItem(LS_KEY_SYNC_ALIAS)?.trim() ?? null;
       if (storedAlias) userData.alias = storedAlias;
       sessionStorage.setItem(LS_KEY_SYNC_TOKEN, token);
@@ -88,12 +103,12 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
       if (message) onMessage(message);
       return true;
     },
-    [scheduleExpiry, onMessage],
+    [scheduleExpiry, clearExpiryTimer, onMessage],
   );
 
   // On mount: restore session from sessionStorage
   useEffect(() => {
-    const token = sessionStorage.getItem(LS_KEY_SYNC_TOKEN);
+    const token = getCachedToken();
     if (token) applyToken(token);
     return clearExpiryTimer;
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -112,7 +127,7 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
   useEffect(() => {
     if (user) return;
     const interval = setInterval(() => {
-      const token = sessionStorage.getItem(LS_KEY_SYNC_TOKEN);
+      const token = getCachedToken();
       if (token) applyToken(token, "Session synced from extension.");
     }, 1000);
     return () => clearInterval(interval);
@@ -120,7 +135,7 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
 
   // Manually checks sessionStorage for an extension-synced token and logs the user in if valid.
   const handleCheckSync = useCallback((): void => {
-    const syncToken = sessionStorage.getItem(LS_KEY_SYNC_TOKEN);
+    const syncToken = getCachedToken();
     if (syncToken) {
       const success = applyToken(syncToken);
       if (success) {

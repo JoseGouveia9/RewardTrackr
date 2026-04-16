@@ -1,154 +1,77 @@
+import { handleAnnouncementRoute } from "./routes/announcement.js";
+import { handleDefaultProxy, handleSeProxy } from "./routes/proxy.js";
+import { handleRateLimitRoutes } from "./routes/rate-limit.js";
+import { handleShareRoutes } from "./routes/share.js";
+
+// ── Shared profiles constants ──────────────────────────────────────────────
+const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
 const MAX_EXPORTS_PER_DAY = 1;
+const MAX_SHARES_PER_DAY = MAX_EXPORTS_PER_DAY;
 
-function getUserId(request) {
-  try {
-    const auth = request.headers.get("Authorization") ?? "";
-    const token = auth.startsWith("Bearer ") ? auth.slice(7) : null;
-    if (!token) return null;
-    const payload = token.split(".")[1];
-    if (!payload) return null;
-    const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
-    const json = new TextDecoder().decode(Uint8Array.from(atob(base64), (c) => c.charCodeAt(0)));
-    const decoded = JSON.parse(json);
-    const id = decoded.id ?? decoded.sub ?? null;
-    return id !== null ? String(id) : null;
-  } catch {
-    return null;
-  }
+const ALLOWED_ORIGINS = new Set([
+  "https://josegouveia9.github.io",
+  "http://localhost:5173",
+  "http://localhost:4173",
+]);
+
+function corsHeaders(request) {
+  const origin = request.headers.get("Origin") ?? "";
+  const allowed = ALLOWED_ORIGINS.has(origin) ? origin : "https://josegouveia9.github.io";
+  return {
+    "Access-Control-Allow-Origin": allowed,
+    "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
+    "Access-Control-Allow-Headers": "*",
+    "Access-Control-Max-Age": "86400",
+  };
 }
-
-const ALLOWED_ORIGIN = "https://josegouveia9.github.io";
-
-const CORS_HEADERS = {
-  "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-  "Access-Control-Allow-Headers": "*",
-  "Access-Control-Max-Age": "86400",
-};
 
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    const CORS_HEADERS = corsHeaders(request);
+    const jsonResponse = (body, status = 200) =>
+      new Response(JSON.stringify(body), {
+        status,
+        headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+      });
 
     if (request.method === "OPTIONS") {
       return new Response(null, { status: 204, headers: CORS_HEADERS });
     }
 
-    // Check + increment — called before export starts.
-    // Counter goes to 1 immediately to prevent abuse.
-    if (url.pathname === "/rl-check") {
-      const userId = getUserId(request);
-      if (!userId) {
-        return new Response(JSON.stringify({ allowed: false, message: "Unauthorized." }), {
-          status: 401,
-          headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
-        });
-      }
+    const announcementResponse = await handleAnnouncementRoute({ url, request, env, jsonResponse });
+    if (announcementResponse) return announcementResponse;
 
-      const day = new Date().toISOString().slice(0, 10);
-      const key = `rl_${userId}_${day}`;
-      const current = await env.RATE_LIMIT.get(key);
-      const count = current ? parseInt(current) : 0;
-
-      if (count >= MAX_EXPORTS_PER_DAY) {
-        return new Response(
-          JSON.stringify({
-            allowed: false,
-            message: "You have reached your daily export limit. Please try again tomorrow.",
-          }),
-          {
-            status: 429,
-            headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
-          },
-        );
-      }
-
-      try {
-        await env.RATE_LIMIT.put(key, String(count + 1), { expirationTtl: 86400 });
-      } catch {
-        // KV write failed, allow the export anyway
-      }
-
-      return new Response(
-        JSON.stringify({ allowed: true, used: count + 1, limit: MAX_EXPORTS_PER_DAY }),
-        {
-          status: 200,
-          headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
-        },
-      );
-    }
-
-    // Rollback — called only when the export fails after /rl-check already incremented.
-    // Decrements the counter back so the user can retry.
-    if (url.pathname === "/rl-rollback") {
-      const userId = getUserId(request);
-      if (!userId) {
-        return new Response(JSON.stringify({ message: "Unauthorized." }), {
-          status: 401,
-          headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
-        });
-      }
-
-      const day = new Date().toISOString().slice(0, 10);
-      const key = `rl_${userId}_${day}`;
-      const current = await env.RATE_LIMIT.get(key);
-      const count = current ? parseInt(current) : 0;
-
-      try {
-        const next = Math.max(0, count - 1);
-        if (next === 0) {
-          await env.RATE_LIMIT.delete(key);
-        } else {
-          await env.RATE_LIMIT.put(key, String(next), { expirationTtl: 86400 });
-        }
-      } catch {
-        // Non-fatal
-      }
-
-      return new Response(JSON.stringify({ rolled_back: true }), {
-        status: 200,
-        headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
-      });
-    }
-
-    // Requests under /se/ — proxy to api.se.gomining.com (strips the /se prefix)
-    if (url.pathname.startsWith("/se/")) {
-      const target = new URL("https://api.se.gomining.com" + url.pathname.slice(3) + url.search);
-
-      const apiRequest = new Request(target, {
-        method: request.method,
-        headers: request.headers,
-        body: request.method !== "GET" && request.method !== "HEAD" ? request.body : null,
-      });
-
-      const response = await fetch(apiRequest);
-
-      const newHeaders = new Headers(response.headers);
-      newHeaders.set("Access-Control-Allow-Origin", ALLOWED_ORIGIN);
-
-      return new Response(response.body, {
-        status: response.status,
-        headers: newHeaders,
-      });
-    }
-
-    // All other requests — proxy to GoMining API freely
-    const target = new URL("https://api.gomining.com" + url.pathname + url.search);
-
-    const apiRequest = new Request(target, {
-      method: request.method,
-      headers: request.headers,
-      body: request.method !== "GET" && request.method !== "HEAD" ? request.body : null,
+    const rateLimitResponse = await handleRateLimitRoutes({
+      url,
+      request,
+      env,
+      jsonResponse,
+      maxExportsPerDay: MAX_EXPORTS_PER_DAY,
     });
+    if (rateLimitResponse) return rateLimitResponse;
 
-    const response = await fetch(apiRequest);
+    const shareResponse = await handleShareRoutes({
+      url,
+      request,
+      env,
+      jsonResponse,
+      maxBytes: MAX_BYTES,
+      maxSharesPerDay: MAX_SHARES_PER_DAY,
+    });
+    if (shareResponse) return shareResponse;
 
-    const newHeaders = new Headers(response.headers);
-    newHeaders.set("Access-Control-Allow-Origin", ALLOWED_ORIGIN);
+    const seProxyResponse = await handleSeProxy({
+      url,
+      request,
+      corsHeaders: CORS_HEADERS,
+    });
+    if (seProxyResponse) return seProxyResponse;
 
-    return new Response(response.body, {
-      status: response.status,
-      headers: newHeaders,
+    return handleDefaultProxy({
+      url,
+      request,
+      corsHeaders: CORS_HEADERS,
     });
   },
 };

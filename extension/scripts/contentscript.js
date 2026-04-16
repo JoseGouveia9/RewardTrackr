@@ -18,6 +18,6 @@
     // a potentially stale token.
     await chrome.storage.local.remove(["rt_pending_token", "rt_pending_alias"]);
   } catch {
-    // Extension context unavailable (e.g. extension reloaded) — ignore.
+    // Extension context unavailable (e.g. extension reloaded): ignore.
   }
 })();

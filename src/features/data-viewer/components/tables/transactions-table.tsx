@@ -1,6 +1,6 @@
 ﻿import { useEffect, useMemo, useRef, useState } from "react";
 import { loadCacheEntry } from "@/features/export/utils/cache";
-import type { RewardKey } from "@/features/export/types";
+import type { CacheEntry, RewardKey } from "@/features/export/types";
 import type { TxView, DateRange } from "../../types";
 import { PAGE_SIZE } from "../../utils/constants";
 import {
@@ -11,9 +11,9 @@ import {
   fmtDateTime,
 } from "../../utils";
 import { GmtIcon, UsdIcon, FiatIcon } from "../icons/currency-icons";
-import { DateRangeFilter } from "../date-range-filter";
-import { TypeCheckFilter } from "../type-check-filter";
-import { Pagination } from "../pagination";
+import { DateRangeFilter } from "../date-range-filter/date-range-filter";
+import { TypeCheckFilter } from "../type-check-filter/type-check-filter";
+import { Pagination } from "../pagination/pagination";
 import { useSyncTableColumns } from "../../hooks/use-sync-table-columns";
 import { AnimatedLoadingRow } from "./animated-loading-row";
 
@@ -24,6 +24,7 @@ export function TransactionsTable({
   txView,
   isFetching = false,
   cacheVersion = 0,
+  cacheEntry,
   groupByDay,
   dateRange,
   setDateRange,
@@ -33,6 +34,7 @@ export function TransactionsTable({
   txView: TxView;
   isFetching?: boolean;
   cacheVersion?: number;
+  cacheEntry?: CacheEntry | null;
   groupByDay: boolean;
   dateRange: DateRange;
   setDateRange: (v: DateRange) => void;
@@ -44,8 +46,8 @@ export function TransactionsTable({
   useSyncTableColumns(totalsRef, dataRef);
   const entry = useMemo(() => {
     void cacheVersion;
-    return loadCacheEntry(rewardKey);
-  }, [rewardKey, cacheVersion]);
+    return cacheEntry !== undefined ? cacheEntry : loadCacheEntry(rewardKey);
+  }, [rewardKey, cacheVersion, cacheEntry]);
 
   const allRows = useMemo(() => {
     if (!entry?.records?.length) return [];
