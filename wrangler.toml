@@ -13,5 +13,5 @@ invocation_logs = false
 binding = "RATE_LIMIT"
 id = "be4396d2374d4fbb9ae1f782179f9fe5"
 
-# Secret required for the /share endpoint — set via CLI, never commit it:
+# Secret required for the /share endpoint: set via CLI, never commit it:
 # wrangler secret put GITHUB_TOKEN

@@ -1,8 +1,7 @@
 import type { DirectoryEntry, SharedProfile } from "./types";
 import type { CacheState } from "@/features/export/types";
 
-const RAW_BASE =
-  "https://raw.githubusercontent.com/JoseGouveia9/rewardtrackr-shared/main/shared";
+const RAW_BASE = "https://raw.githubusercontent.com/JoseGouveia9/rewardtrackr-shared/main/shared";
 
 const WORKER_URL = (import.meta.env.VITE_WORKER_URL as string | undefined) ?? "";
 
@@ -31,11 +30,13 @@ export async function fetchSharedProfile(id: string): Promise<SharedProfile> {
 export async function publishProfile(
   alias: string,
   sheets: Partial<CacheState>,
+  authToken: string,
 ): Promise<{ id: string; updatedAt: string }> {
   if (!WORKER_URL) throw new Error("Sharing is not configured for this deployment");
+  if (!authToken) throw new Error("You must be authenticated to share records");
   const res = await fetch(`${WORKER_URL}/share`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${authToken}` },
     body: JSON.stringify({ alias, data: sheets }),
   });
   if (!res.ok) {

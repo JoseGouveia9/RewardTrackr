@@ -268,6 +268,37 @@
   border-bottom-color: rgba(255, 255, 255, 0.04);
 }
 
+.sh-modal-sheet-row--check {
+  cursor: pointer;
+  gap: 10px;
+  transition: background 0.12s ease;
+}
+
+.sh-modal-sheet-row--check:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.page.theme-dark .sh-modal-sheet-row--check:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.sh-modal-sheet-row--check .sh-modal-sheet-name {
+  flex: 1;
+}
+
+.sh-modal-sheet-row--check:not(.sh-modal-sheet-row--checked) .sh-modal-sheet-name,
+.sh-modal-sheet-row--check:not(.sh-modal-sheet-row--checked) .sh-modal-sheet-meta {
+  opacity: 0.4;
+}
+
+.sh-modal-sheet-checkbox {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  accent-color: #f59e0b;
+  cursor: pointer;
+}
+
 .sh-modal-sheet-name {
   font-weight: 600;
   color: #22283a;

@@ -8,12 +8,7 @@ import { SheetSelector, ExportOptions, useExport, useExportConfig } from "@/feat
 import type { CacheState, RewardKey } from "@/features/export";
 import { ReferralButton } from "@/components/referral-button";
 import { DataViewerButton, DataViewer } from "@/features/data-viewer";
-import {
-  ShareModal,
-  SharedBanner,
-  CommunityPage,
-  fetchSharedProfile,
-} from "@/features/shared";
+import { ShareModal, SharedBanner, CommunityPage, fetchSharedProfile } from "@/features/shared";
 import type { SharedProfile } from "@/features/shared";
 import "@/features/shared/shared.css";
 import { ErrorBoundary } from "@/components/error-boundary";
@@ -263,7 +258,6 @@ function App() {
     } else if (hash === "#community") {
       setView("community");
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const layoutSpring = disableViewMotion ? { layout: { duration: 0 } } : BASE_LAYOUT_SPRING;
@@ -373,7 +367,17 @@ function App() {
                 onClick={() => swapView(view === "community" ? "main" : "community")}
                 aria-label="Community"
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
                   <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
                   <circle cx="9" cy="7" r="4" />
                   <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
@@ -381,23 +385,6 @@ function App() {
                 </svg>
                 <span>Community</span>
               </button>
-              {hasCachedSheets && (
-                <button
-                  type="button"
-                  className="sh-trigger-btn"
-                  onClick={() => setShareModalOpen(true)}
-                  aria-label="Share records"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <circle cx="18" cy="5" r="3" />
-                    <circle cx="6" cy="12" r="3" />
-                    <circle cx="18" cy="19" r="3" />
-                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
-                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-                  </svg>
-                  <span>Share</span>
-                </button>
-              )}
               {!user && (
                 <ReferralButton
                   open={referralOpen}
@@ -461,9 +448,7 @@ function App() {
         </AppNotice>
 
         <LayoutGroup>
-          {view === "community" && (
-            <CommunityPage onClose={() => swapView("main")} />
-          )}
+          {view === "community" && <CommunityPage onClose={() => swapView("main")} />}
 
           {view === "records" && (
             <>
@@ -489,9 +474,17 @@ function App() {
                     sharedProfile ? (
                       <SharedBanner
                         profile={sharedProfile}
-                        onClose={() => { setSharedProfile(null); swapView("main"); }}
+                        onClose={() => {
+                          setSharedProfile(null);
+                          swapView("main");
+                        }}
                       />
                     ) : undefined
+                  }
+                  onShare={
+                    user && hasCachedSheets && !sharedProfile
+                      ? () => setShareModalOpen(true)
+                      : undefined
                   }
                 />
               )}
@@ -654,6 +647,7 @@ function App() {
         <ShareModal
           cache={cache}
           defaultAlias={displayAlias}
+          authToken={storedToken}
           onClose={() => setShareModalOpen(false)}
         />
       )}
