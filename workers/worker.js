@@ -1,3 +1,4 @@
+import { handleAnnouncementRoute } from "./routes/announcement.js";
 import { handleDefaultProxy, handleSeProxy } from "./routes/proxy.js";
 import { handleRateLimitRoutes } from "./routes/rate-limit.js";
 import { handleShareRoutes } from "./routes/share.js";
@@ -37,6 +38,9 @@ export default {
     if (request.method === "OPTIONS") {
       return new Response(null, { status: 204, headers: CORS_HEADERS });
     }
+
+    const announcementResponse = await handleAnnouncementRoute({ url, request, env, jsonResponse });
+    if (announcementResponse) return announcementResponse;
 
     const rateLimitResponse = await handleRateLimitRoutes({
       url,
