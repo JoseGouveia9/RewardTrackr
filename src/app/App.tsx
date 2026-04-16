@@ -1,19 +1,18 @@
 ﻿import { useCallback, useEffect, useMemo, useState, type KeyboardEvent } from "react";
 import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
-import { AppNotice } from "@/components/app-notice";
+import { AppNotice } from "@/components/app-notice/app-notice";
 import { clearAllCacheEntries, loadAllCacheEntries } from "@/features/export/utils/cache";
 import { AuthPanel, HeaderUserMenu, useAuth } from "@/features/auth";
-import { SupportButton } from "@/components/support-button";
+import { SupportButton } from "@/components/support-button/support-button";
 import { SheetSelector, ExportOptions, useExport, useExportConfig } from "@/features/export";
 import type { CacheState, RewardKey } from "@/features/export";
-import { ReferralButton } from "@/components/referral-button";
+import { ReferralButton } from "@/components/referral-button/referral-button";
 import { DataViewerButton, DataViewer } from "@/features/data-viewer";
 import { ShareModal, SharedBanner, CommunityPage, fetchSharedProfile } from "@/features/shared";
 import type { SharedProfile } from "@/features/shared";
-import "@/features/shared/shared.css";
-import { ErrorBoundary } from "@/components/error-boundary";
+import { ErrorBoundary } from "@/components/error-boundary/error-boundary";
 import { useTheme } from "./theme-context";
-import { MessageBanner } from "@/components/message-banner";
+import { MessageBanner } from "@/components/message-banner/message-banner";
 import {
   LS_KEY_EXPORT_CONFIG,
   LS_KEY_LAST_SYNC_USER,

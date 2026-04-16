@@ -11,8 +11,8 @@ import {
   fmtDate,
 } from "../../utils";
 import { MiningCurrencyIcon } from "../icons/currency-icons";
-import { DateRangeFilter } from "../date-range-filter";
-import { Pagination } from "../pagination";
+import { DateRangeFilter } from "../date-range-filter/date-range-filter";
+import { Pagination } from "../pagination/pagination";
 import { useSyncTableColumns } from "../../hooks/use-sync-table-columns";
 import { AnimatedLoadingRow } from "./animated-loading-row";
 

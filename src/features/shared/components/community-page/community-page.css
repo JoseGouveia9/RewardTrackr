@@ -1,0 +1,70 @@
+.sh-community {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sh-community-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.sh-community-sub {
+  font-size: 0.82rem;
+  color: #6d7589;
+  margin: 0;
+}
+
+.page.theme-dark .sh-community-sub {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.sh-community-loading,
+.sh-community-empty {
+  font-size: 0.85rem;
+  color: #9fa5be;
+  padding: 24px 0;
+  text-align: center;
+}
+
+.sh-community-error {
+  font-size: 0.85rem;
+  color: #ef4444;
+}
+
+.sh-community-table-wrap {
+  overflow-x: auto;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.page.theme-dark .sh-community-table-wrap {
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.sh-community-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.sh-community-table thead th {
+  padding: 10px 16px;
+  text-align: left;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #9fa5be;
+  background: rgba(0, 0, 0, 0.02);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.page.theme-dark .sh-community-table thead th {
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+}

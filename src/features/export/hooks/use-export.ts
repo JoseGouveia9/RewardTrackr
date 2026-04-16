@@ -3,7 +3,7 @@ import * as Sentry from "@sentry/react";
 import { decodeJwt } from "@/lib/http";
 import { ALL_REWARD_KEYS } from "../config/reward-configs";
 import { clearAllCacheEntries } from "../utils/cache";
-import { executeExportFlow } from "../export-flow";
+import { executeExportFlow } from "../utils/export-flow";
 import type { CacheState, ExtraFiatCurrency, RewardKey } from "../types";
 
 // Types

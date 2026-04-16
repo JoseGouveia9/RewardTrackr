@@ -11,9 +11,9 @@ import {
   fmtDateTime,
 } from "../../utils";
 import { AnyCurrencyIcon, UsdIcon, FiatIcon } from "../icons/currency-icons";
-import { DateRangeFilter } from "../date-range-filter";
-import { TypeCheckFilter } from "../type-check-filter";
-import { Pagination } from "../pagination";
+import { DateRangeFilter } from "../date-range-filter/date-range-filter";
+import { TypeCheckFilter } from "../type-check-filter/type-check-filter";
+import { Pagination } from "../pagination/pagination";
 import { useSyncTableColumns } from "../../hooks/use-sync-table-columns";
 import { AnimatedLoadingRow } from "./animated-loading-row";
 

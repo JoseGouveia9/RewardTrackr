@@ -116,14 +116,20 @@ export async function handleShareRoutes({
       return jsonResponse({ error: "Invalid alias (letters, numbers, _ and - only; max 40 chars)" }, 400);
     }
 
-    const requestedId = alias.trim().toLowerCase().replace(/[^a-z0-9_-]/g, "");
-    const userProfileKey = `share_profile_${userId}`;
-    const existingProfileId = await env.RATE_LIMIT.get(userProfileKey);
-    const id = requestedId;
+    const id = alias.trim().toLowerCase().replace(/[^a-z0-9_-]/g, "");
     const now = new Date().toISOString();
+    const day = now.slice(0, 10);
 
+    const userProfileKey = `share_profile_${userId}`;
     const ownerKey = `share_owner_${id}`;
-    const existingOwnerId = await env.RATE_LIMIT.get(ownerKey);
+    const shareLimitKey = `share_${userId}_${day}`;
+
+    const [existingProfileId, existingOwnerId, current] = await Promise.all([
+      env.RATE_LIMIT.get(userProfileKey),
+      env.RATE_LIMIT.get(ownerKey),
+      env.RATE_LIMIT.get(shareLimitKey),
+    ]);
+
     if (existingOwnerId && existingOwnerId !== userId) {
       return jsonResponse({ error: "This alias is already locked to another user." }, 403);
     }
@@ -136,9 +142,6 @@ export async function handleShareRoutes({
       }
     }
 
-    const day = new Date().toISOString().slice(0, 10);
-    const shareLimitKey = `share_${userId}_${day}`;
-    const current = await env.RATE_LIMIT.get(shareLimitKey);
     const count = current ? parseInt(current) : 0;
     if (count >= maxSharesPerDay) {
       return jsonResponse(
