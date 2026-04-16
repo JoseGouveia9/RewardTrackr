@@ -1,5 +1,6 @@
 ﻿import { useEffect, useMemo, useRef, useState } from "react";
 import { loadCacheEntry } from "@/features/export/utils/cache";
+import type { CacheEntry } from "@/features/export/types";
 import type { PurchaseView, DateRange } from "../../types";
 import { PAGE_SIZE } from "../../utils/constants";
 import {
@@ -30,6 +31,8 @@ export function PurchasesTable({
   purchaseView: PurchaseView;
   isFetching?: boolean;
   cacheVersion?: number;
+  purchasesCacheEntry?: CacheEntry | null;
+  upgradesCacheEntry?: CacheEntry | null;
   groupByDay: boolean;
   dateRange: DateRange;
   setDateRange: (v: DateRange) => void;
@@ -42,12 +45,12 @@ export function PurchasesTable({
   useSyncTableColumns(totalsRef, dataRef);
   const purchasesEntry = useMemo(() => {
     void cacheVersion;
-    return loadCacheEntry("purchases");
-  }, [cacheVersion]);
+    return purchasesCacheEntry !== undefined ? purchasesCacheEntry : loadCacheEntry("purchases");
+  }, [cacheVersion, purchasesCacheEntry]);
   const upgradesEntry = useMemo(() => {
     void cacheVersion;
-    return loadCacheEntry("upgrades");
-  }, [cacheVersion]);
+    return upgradesCacheEntry !== undefined ? upgradesCacheEntry : loadCacheEntry("upgrades");
+  }, [cacheVersion, upgradesCacheEntry]);
 
   // Normalises a cache entry's records into the shape expected by this table.
   function parseEntry(entry: ReturnType<typeof loadCacheEntry>) {

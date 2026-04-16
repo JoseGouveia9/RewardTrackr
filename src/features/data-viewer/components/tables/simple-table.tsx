@@ -1,6 +1,6 @@
 ﻿import { useEffect, useMemo, useRef, useState } from "react";
 import { loadCacheEntry } from "@/features/export/utils/cache";
-import type { RewardKey } from "@/features/export/types";
+import type { CacheEntry, RewardKey } from "@/features/export/types";
 import type { SimpleView, DateRange } from "../../types";
 import { PAGE_SIZE } from "../../utils/constants";
 import {
@@ -32,6 +32,7 @@ export function SimpleTable({
   simpleView: SimpleView;
   isFetching?: boolean;
   cacheVersion?: number;
+  cacheEntry?: CacheEntry | null;
   groupByDay: boolean;
   dateRange: DateRange;
   setDateRange: (v: DateRange) => void;
@@ -43,8 +44,8 @@ export function SimpleTable({
   useSyncTableColumns(totalsRef, dataRef);
   const entry = useMemo(() => {
     void cacheVersion;
-    return loadCacheEntry(rewardKey);
-  }, [rewardKey, cacheVersion]);
+    return cacheEntry !== undefined ? cacheEntry : loadCacheEntry(rewardKey);
+  }, [rewardKey, cacheVersion, cacheEntry]);
 
   const rows = useMemo(() => {
     if (!entry?.records?.length) return [];

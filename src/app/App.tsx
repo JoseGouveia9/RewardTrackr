@@ -8,6 +8,14 @@ import { SheetSelector, ExportOptions, useExport, useExportConfig } from "@/feat
 import type { CacheState, RewardKey } from "@/features/export";
 import { ReferralButton } from "@/components/referral-button";
 import { DataViewerButton, DataViewer } from "@/features/data-viewer";
+import {
+  ShareModal,
+  SharedBanner,
+  CommunityPage,
+  fetchSharedProfile,
+} from "@/features/shared";
+import type { SharedProfile } from "@/features/shared";
+import "@/features/shared/shared.css";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { useTheme } from "./theme-context";
 import { MessageBanner } from "@/components/message-banner";
@@ -80,9 +88,12 @@ function App() {
   const [cache, setCache] = useState<CacheState>(() => loadAllCacheEntries());
   const [supportOpen, setSupportOpen] = useState(false);
   const [referralOpen, setReferralOpen] = useState(false);
-  const [view, setView] = useState<"main" | "records">("main");
+  const [view, setView] = useState<"main" | "records" | "community">("main");
   const [disableViewMotion, setDisableViewMotion] = useState(false);
   const [cacheVersion, setCacheVersion] = useState(0);
+  const [sharedProfile, setSharedProfile] = useState<SharedProfile | null>(null);
+  const [sharedLoading, setSharedLoading] = useState(false);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
   const [noticeRateLimitsDismissed, setNoticeRateLimitsDismissed] = useState(
     () => localStorage.getItem(LS_KEY_NOTICE_RATE_LIMITS) === "1",
   );
@@ -237,11 +248,34 @@ function App() {
     setCacheVersion((v) => v + 1);
   }, []);
 
+  // Handle #view=<id> and #community hash on initial load.
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash.startsWith("#view=")) {
+      const id = hash.slice(6).trim();
+      if (!id) return;
+      setSharedLoading(true);
+      setView("records");
+      fetchSharedProfile(id)
+        .then((profile) => setSharedProfile(profile))
+        .catch(() => setSharedProfile(null))
+        .finally(() => setSharedLoading(false));
+    } else if (hash === "#community") {
+      setView("community");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const layoutSpring = disableViewMotion ? { layout: { duration: 0 } } : BASE_LAYOUT_SPRING;
 
-  const swapView = useCallback((nextView: "main" | "records") => {
+  const swapView = useCallback((nextView: "main" | "records" | "community") => {
     setDisableViewMotion(true);
+    if (nextView !== "records") setSharedProfile(null);
     setView(nextView);
+    // Clear hash when navigating away from shared/community views
+    if (nextView === "main" && window.location.hash) {
+      history.replaceState(null, "", window.location.pathname + window.location.search);
+    }
     requestAnimationFrame(() => {
       setDisableViewMotion(false);
     });
@@ -333,6 +367,37 @@ function App() {
                 onClick={handleToggleRecords}
                 hasNew={hasNewRecords}
               />
+              <button
+                type="button"
+                className={`sh-trigger-btn${view === "community" ? " sh-trigger-btn--active" : ""}`}
+                onClick={() => swapView(view === "community" ? "main" : "community")}
+                aria-label="Community"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+                <span>Community</span>
+              </button>
+              {hasCachedSheets && (
+                <button
+                  type="button"
+                  className="sh-trigger-btn"
+                  onClick={() => setShareModalOpen(true)}
+                  aria-label="Share records"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <circle cx="18" cy="5" r="3" />
+                    <circle cx="6" cy="12" r="3" />
+                    <circle cx="18" cy="19" r="3" />
+                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                  </svg>
+                  <span>Share</span>
+                </button>
+              )}
               {!user && (
                 <ReferralButton
                   open={referralOpen}
@@ -396,21 +461,40 @@ function App() {
         </AppNotice>
 
         <LayoutGroup>
+          {view === "community" && (
+            <CommunityPage onClose={() => swapView("main")} />
+          )}
+
           {view === "records" && (
             <>
               <AnimatePresence mode="popLayout">
-                {message ? (
+                {message && !sharedProfile ? (
                   <motion.div layout transition={layoutSpring}>
                     <MessageBanner message={message} onClose={() => setMessage("")} />
                   </motion.div>
                 ) : null}
               </AnimatePresence>
-              <DataViewer
-                onClose={() => swapView("main")}
-                isFetching={loading}
-                cacheVersion={cacheVersion}
-                onTabSeen={handleTabSeen}
-              />
+              {sharedLoading ? (
+                <p style={{ textAlign: "center", padding: "40px 0", color: "#9fa5be" }}>
+                  Loading shared profile…
+                </p>
+              ) : (
+                <DataViewer
+                  onClose={() => swapView("main")}
+                  isFetching={loading && !sharedProfile}
+                  cacheVersion={cacheVersion}
+                  onTabSeen={handleTabSeen}
+                  sharedData={sharedProfile?.sheets ?? null}
+                  banner={
+                    sharedProfile ? (
+                      <SharedBanner
+                        profile={sharedProfile}
+                        onClose={() => { setSharedProfile(null); swapView("main"); }}
+                      />
+                    ) : undefined
+                  }
+                />
+              )}
             </>
           )}
 
@@ -565,6 +649,14 @@ function App() {
           </motion.p>
         </LayoutGroup>
       </main>
+
+      {shareModalOpen && (
+        <ShareModal
+          cache={cache}
+          defaultAlias={displayAlias}
+          onClose={() => setShareModalOpen(false)}
+        />
+      )}
     </div>
   );
 }

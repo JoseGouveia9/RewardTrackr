@@ -1,9 +1,10 @@
 ﻿import { memo, useEffect, useMemo, useRef } from "react";
+import type React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { loadCacheEntry } from "@/features/export/utils/cache";
 import { ErrorBoundary } from "@/components/error-boundary";
 import type { Currency, EarnView, TxView, SimpleView, PurchaseView } from "./types";
-import type { RewardKey } from "@/features/export/types";
+import type { CacheState, RewardKey } from "@/features/export/types";
 import { ALL_TABS } from "./utils/constants";
 import { loadFiatCode } from "./utils";
 import { useDataViewerState } from "./hooks/use-data-viewer-state";
@@ -19,6 +20,10 @@ interface DataViewerProps {
   isFetching?: boolean;
   cacheVersion?: number;
   onTabSeen?: (key: RewardKey) => void;
+  /** When set the viewer renders the supplied records instead of localStorage. */
+  sharedData?: Partial<CacheState> | null;
+  /** Optional banner rendered above the tabs (e.g. SharedBanner). */
+  banner?: React.ReactNode;
 }
 
 function TabList({
@@ -110,6 +115,8 @@ export const DataViewer = memo(function DataViewer({
   isFetching = false,
   cacheVersion = 0,
   onTabSeen,
+  sharedData,
+  banner,
 }: DataViewerProps) {
   const {
     activeKey,
@@ -136,7 +143,7 @@ export const DataViewer = memo(function DataViewer({
   const simpleDataInfo = useMemo(() => {
     void cacheVersion;
     if (!isSimpleTab) return { currencies: [] as string[], hasUsd: false, hasFiat: false };
-    const entry = loadCacheEntry(activeKey);
+    const entry = sharedData ? sharedData[activeKey] : loadCacheEntry(activeKey);
     if (!entry?.records?.length)
       return { currencies: [] as string[], hasUsd: false, hasFiat: false };
     const set = new Set<string>();
@@ -150,12 +157,12 @@ export const DataViewer = memo(function DataViewer({
       if (Number(rec.rewardInFiat ?? 0) !== 0) hasFiat = true;
     }
     return { currencies: [...set], hasUsd, hasFiat };
-  }, [activeKey, isSimpleTab, cacheVersion]);
+  }, [activeKey, isSimpleTab, cacheVersion, sharedData]);
 
   const txDataInfo = useMemo(() => {
     void cacheVersion;
     if (!isTxTab) return { hasUsd: false, hasFiat: false };
-    const entry = loadCacheEntry(activeKey);
+    const entry = sharedData ? sharedData[activeKey] : loadCacheEntry(activeKey);
     if (!entry?.records?.length) return { hasUsd: false, hasFiat: false };
     let hasUsd = false;
     let hasFiat = false;
@@ -165,9 +172,11 @@ export const DataViewer = memo(function DataViewer({
       if (Number(rec.rewardInFiat ?? 0) !== 0) hasFiat = true;
     }
     return { hasUsd, hasFiat };
-  }, [activeKey, isTxTab, cacheVersion]);
+  }, [activeKey, isTxTab, cacheVersion, sharedData]);
 
   const tabsWithNew = useMemo(() => {
+    // Never show "new" badges when viewing a shared profile
+    if (sharedData) return new Set<RewardKey>();
     void cacheVersion;
     const flagged = new Set<RewardKey>();
     for (const tab of ALL_TABS) {
@@ -179,10 +188,19 @@ export const DataViewer = memo(function DataViewer({
       if (count > 0) flagged.add(tab.key);
     }
     return flagged;
-  }, [cacheVersion]);
+  }, [cacheVersion, sharedData]);
 
   const hasActiveData = useMemo(() => {
     void cacheVersion;
+    if (sharedData) {
+      if (isPurchaseTab) {
+        return Boolean(
+          (sharedData["purchases"]?.records?.length ?? 0) > 0 ||
+          (sharedData["upgrades"]?.records?.length ?? 0) > 0,
+        );
+      }
+      return (sharedData[activeKey]?.records?.length ?? 0) > 0;
+    }
     if (isPurchaseTab) {
       return Boolean(
         (loadCacheEntry("purchases")?.records?.length ?? 0) > 0 ||
@@ -190,7 +208,7 @@ export const DataViewer = memo(function DataViewer({
       );
     }
     return (loadCacheEntry(activeKey)?.records?.length ?? 0) > 0;
-  }, [activeKey, cacheVersion, isPurchaseTab]);
+  }, [activeKey, cacheVersion, isPurchaseTab, sharedData]);
 
   // Derive per-tab effective views from sharedView, falling back to first option if unavailable
   const effectiveEarnView: EarnView = sharedView;
@@ -345,6 +363,8 @@ export const DataViewer = memo(function DataViewer({
         </div>
       </div>
 
+      {banner}
+
       {/* Tabs */}
       <TabList
         activeKey={activeKey}
@@ -372,6 +392,7 @@ export const DataViewer = memo(function DataViewer({
                   fiatCode={fiatCode}
                   isFetching={isFetching}
                   cacheVersion={cacheVersion}
+                  cacheEntry={sharedData ? (sharedData[activeKey] ?? null) : undefined}
                   dateRange={dateRange}
                   setDateRange={setDateRange}
                 />
@@ -383,6 +404,7 @@ export const DataViewer = memo(function DataViewer({
                   earnView={effectiveEarnView}
                   isFetching={isFetching}
                   cacheVersion={cacheVersion}
+                  cacheEntry={sharedData ? (sharedData[activeKey] ?? null) : undefined}
                   groupByDay={groupByDay}
                   dateRange={dateRange}
                   setDateRange={setDateRange}
@@ -395,6 +417,7 @@ export const DataViewer = memo(function DataViewer({
                   txView={effectiveTxView}
                   isFetching={isFetching}
                   cacheVersion={cacheVersion}
+                  cacheEntry={sharedData ? (sharedData[activeKey] ?? null) : undefined}
                   groupByDay={groupByDay}
                   dateRange={dateRange}
                   setDateRange={setDateRange}
@@ -406,6 +429,8 @@ export const DataViewer = memo(function DataViewer({
                   purchaseView={effectivePurchaseView}
                   isFetching={isFetching}
                   cacheVersion={cacheVersion}
+                  purchasesCacheEntry={sharedData ? (sharedData["purchases"] ?? null) : undefined}
+                  upgradesCacheEntry={sharedData ? (sharedData["upgrades"] ?? null) : undefined}
                   groupByDay={groupByDay}
                   dateRange={dateRange}
                   setDateRange={setDateRange}
@@ -418,6 +443,7 @@ export const DataViewer = memo(function DataViewer({
                   simpleView={effectiveSimpleView}
                   isFetching={isFetching}
                   cacheVersion={cacheVersion}
+                  cacheEntry={sharedData ? (sharedData[activeKey] ?? null) : undefined}
                   groupByDay={groupByDay}
                   dateRange={dateRange}
                   setDateRange={setDateRange}

@@ -1,0 +1,9 @@
+name = "rewardtrackr-worker"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+[vars]
+ALLOWED_ORIGIN = "https://josegouveia9.github.io"
+
+# Set the secret via CLI — never commit it:
+# wrangler secret put GITHUB_TOKEN

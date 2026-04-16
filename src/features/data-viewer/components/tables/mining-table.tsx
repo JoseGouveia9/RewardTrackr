@@ -1,6 +1,6 @@
 ﻿import { useEffect, useMemo, useRef, useState } from "react";
 import { loadCacheEntry } from "@/features/export/utils/cache";
-import type { RewardKey } from "@/features/export/types";
+import type { CacheEntry, RewardKey } from "@/features/export/types";
 import type { Currency, DateRange } from "../../types";
 import { PAGE_SIZE } from "../../utils/constants";
 import {
@@ -31,6 +31,7 @@ export function MiningTable({
   fiatCode: string;
   isFetching?: boolean;
   cacheVersion?: number;
+  cacheEntry?: CacheEntry | null;
   dateRange: DateRange;
   setDateRange: (v: DateRange) => void;
 }) {
@@ -40,8 +41,8 @@ export function MiningTable({
   useSyncTableColumns(totalsRef, dataRef);
   const entry = useMemo(() => {
     void cacheVersion;
-    return loadCacheEntry(rewardKey);
-  }, [rewardKey, cacheVersion]);
+    return cacheEntry !== undefined ? cacheEntry : loadCacheEntry(rewardKey);
+  }, [rewardKey, cacheVersion, cacheEntry]);
 
   const rows = useMemo(() => {
     if (!entry?.records?.length) return [];
