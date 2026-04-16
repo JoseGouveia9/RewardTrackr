@@ -6,9 +6,17 @@ import { AuthPanel, HeaderUserMenu, useAuth } from "@/features/auth";
 import { SupportButton } from "@/components/support-button/support-button";
 import { SheetSelector, ExportOptions, useExport, useExportConfig } from "@/features/export";
 import type { CacheState, RewardKey } from "@/features/export";
+import { AnnouncementBanner } from "@/components/announcement-banner/announcement-banner";
 import { ReferralButton } from "@/components/referral-button/referral-button";
 import { DataViewerButton, DataViewer } from "@/features/data-viewer";
-import { ShareModal, SharedBanner, CommunityPage, fetchSharedProfile } from "@/features/shared";
+import {
+  ShareModal,
+  SharedBanner,
+  CommunityPage,
+  fetchSharedProfile,
+  fetchAnnouncement,
+} from "@/features/shared";
+import type { Announcement } from "@/features/shared";
 import type { SharedProfile } from "@/features/shared";
 import { ErrorBoundary } from "@/components/error-boundary/error-boundary";
 import { useTheme } from "./theme-context";
@@ -19,12 +27,29 @@ import {
   LS_KEY_NOTICE_RATE_LIMITS,
   LS_KEY_NOTICE_UNOFFICIAL,
   LS_KEY_NOTICE_OPENSOURCE,
+  LS_KEY_NOTICE_ANNOUNCEMENT_PREFIX,
   LS_KEY_REWARD_PREFIX,
 } from "@/lib/storage-keys";
 import logo from "/logo.webp";
 import "./App.css";
 
 const BASE_LAYOUT_SPRING = { layout: { type: "spring" as const, stiffness: 220, damping: 28 } };
+
+function getInitialRouteState(): {
+  view: "main" | "records" | "community";
+  shouldLoadShared: boolean;
+  sharedId: string | null;
+} {
+  const hash = window.location.hash;
+  if (hash.startsWith("#view=")) {
+    const id = hash.slice(6).trim();
+    if (id) return { view: "records", shouldLoadShared: true, sharedId: id };
+  }
+  if (hash === "#community") {
+    return { view: "community", shouldLoadShared: false, sharedId: null };
+  }
+  return { view: "main", shouldLoadShared: false, sharedId: null };
+}
 
 function WarningNoticeIcon() {
   return (
@@ -78,15 +103,17 @@ declare global {
 
 // Root application component: wires together auth, export config, cache, and view routing.
 function App() {
+  const initialRouteState = getInitialRouteState();
+  const initialSharedId = initialRouteState.sharedId;
   const [message, setMessage] = useState<string>("");
   const [cache, setCache] = useState<CacheState>(() => loadAllCacheEntries());
   const [supportOpen, setSupportOpen] = useState(false);
   const [referralOpen, setReferralOpen] = useState(false);
-  const [view, setView] = useState<"main" | "records" | "community">("main");
+  const [view, setView] = useState<"main" | "records" | "community">(initialRouteState.view);
   const [disableViewMotion, setDisableViewMotion] = useState(false);
   const [cacheVersion, setCacheVersion] = useState(0);
   const [sharedProfile, setSharedProfile] = useState<SharedProfile | null>(null);
-  const [sharedLoading, setSharedLoading] = useState(false);
+  const [sharedLoading, setSharedLoading] = useState(initialRouteState.shouldLoadShared);
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [noticeRateLimitsDismissed, setNoticeRateLimitsDismissed] = useState(
     () => localStorage.getItem(LS_KEY_NOTICE_RATE_LIMITS) === "1",
@@ -97,6 +124,18 @@ function App() {
   const [noticeOpenSourceDismissed, setNoticeOpenSourceDismissed] = useState(
     () => localStorage.getItem(LS_KEY_NOTICE_OPENSOURCE) === "1",
   );
+  const [announcement, setAnnouncement] = useState<Announcement | null>(null);
+  const [announcementDismissed, setAnnouncementDismissed] = useState(false);
+
+  useEffect(() => {
+    fetchAnnouncement().then((data) => {
+      if (!data) return;
+      const dismissed = localStorage.getItem(LS_KEY_NOTICE_ANNOUNCEMENT_PREFIX + data.id) === "1";
+      setAnnouncementDismissed(dismissed);
+      setAnnouncement(data);
+    });
+  }, []);
+
   // Persists a notice dismissal to localStorage and updates the local state.
   function dismissNotice(key: string, setter: (v: boolean) => void) {
     localStorage.setItem(key, "1");
@@ -242,22 +281,49 @@ function App() {
     setCacheVersion((v) => v + 1);
   }, []);
 
-  // Handle #view=<id> and #community hash on initial load.
-  useEffect(() => {
+  const applyHashRoute = useCallback(() => {
     const hash = window.location.hash;
     if (hash.startsWith("#view=")) {
       const id = hash.slice(6).trim();
-      if (!id) return;
+      if (!id) {
+        setSharedProfile(null);
+        setSharedLoading(false);
+        setView("main");
+        return;
+      }
       setSharedLoading(true);
+      setSharedProfile(null);
       setView("records");
       fetchSharedProfile(id)
         .then((profile) => setSharedProfile(profile))
         .catch(() => setSharedProfile(null))
         .finally(() => setSharedLoading(false));
     } else if (hash === "#community") {
+      setSharedProfile(null);
+      setSharedLoading(false);
       setView("community");
+    } else {
+      setSharedProfile(null);
+      setSharedLoading(false);
+      setView("main");
     }
   }, []);
+
+  // Load initial shared profile from URL hash without a second route pass.
+  useEffect(() => {
+    if (!initialSharedId) return;
+    setSharedLoading(true);
+    fetchSharedProfile(initialSharedId)
+      .then((profile) => setSharedProfile(profile))
+      .catch(() => setSharedProfile(null))
+      .finally(() => setSharedLoading(false));
+  }, [initialSharedId]);
+
+  // Handle manual hash edits after initial render.
+  useEffect(() => {
+    window.addEventListener("hashchange", applyHashRoute);
+    return () => window.removeEventListener("hashchange", applyHashRoute);
+  }, [applyHashRoute]);
 
   const layoutSpring = disableViewMotion ? { layout: { duration: 0 } } : BASE_LAYOUT_SPRING;
 
@@ -275,8 +341,22 @@ function App() {
   }, []);
 
   const handleToggleRecords = useCallback(() => {
+    const isSharedRecordContext =
+      view === "records" &&
+      (sharedProfile !== null || sharedLoading || window.location.hash.startsWith("#view="));
+
+    if (isSharedRecordContext) {
+      setSharedProfile(null);
+      setSharedLoading(false);
+      if (window.location.hash) {
+        history.replaceState(null, "", window.location.pathname + window.location.search);
+      }
+      setView("records");
+      return;
+    }
+
     swapView(view === "records" ? "main" : "records");
-  }, [swapView, view]);
+  }, [swapView, view, sharedProfile, sharedLoading]);
 
   const handleHeroTitleClick = useCallback(() => {
     swapView("main");
@@ -355,14 +435,9 @@ function App() {
                 onOpen={() => setSupportOpen(true)}
                 onClose={() => setSupportOpen(false)}
               />
-              <DataViewerButton
-                active={view === "records"}
-                onClick={handleToggleRecords}
-                hasNew={hasNewRecords}
-              />
               <button
                 type="button"
-                className={`sh-trigger-btn${view === "community" ? " sh-trigger-btn--active" : ""}`}
+                className={`sh-trigger-btn${view === "community" || sharedProfile || sharedLoading ? " sh-trigger-btn--active" : ""}`}
                 onClick={() => swapView(view === "community" ? "main" : "community")}
                 aria-label="Community"
               >
@@ -384,6 +459,24 @@ function App() {
                 </svg>
                 <span>Community</span>
               </button>
+              <AnimatePresence initial={false}>
+                {hasCachedSheets ? (
+                  <motion.div
+                    key="records-trigger"
+                    className="dv-trigger-wrap"
+                    initial={{ opacity: 0, scale: 0.82 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.82 }}
+                    transition={{ duration: 0.2, ease: "easeOut" }}
+                  >
+                    <DataViewerButton
+                      active={view === "records" && !sharedProfile && !sharedLoading}
+                      onClick={handleToggleRecords}
+                      hasNew={hasNewRecords}
+                    />
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
               {!user && (
                 <ReferralButton
                   open={referralOpen}
@@ -409,6 +502,17 @@ function App() {
             </p>
           )}
         </header>
+
+        {announcement && (
+          <AnnouncementBanner
+            visible={!announcementDismissed}
+            message={announcement.message}
+            onDismiss={() => {
+              localStorage.setItem(LS_KEY_NOTICE_ANNOUNCEMENT_PREFIX + announcement.id, "1");
+              setAnnouncementDismissed(true);
+            }}
+          />
+        )}
 
         <AppNotice
           visible={!noticeRateLimitsDismissed}
@@ -452,46 +556,54 @@ function App() {
           {view === "records" && (
             <>
               <AnimatePresence mode="popLayout">
-                {message && !sharedProfile ? (
+                {message && !sharedProfile && !sharedLoading ? (
                   <motion.div layout transition={layoutSpring}>
                     <MessageBanner message={message} onClose={() => setMessage("")} />
                   </motion.div>
                 ) : null}
               </AnimatePresence>
-              {sharedLoading ? (
-                <p style={{ textAlign: "center", padding: "40px 0", color: "#9fa5be" }}>
-                  Loading shared profile…
-                </p>
-              ) : (
-                <DataViewer
-                  onClose={() => swapView("main")}
-                  isFetching={loading && !sharedProfile}
-                  cacheVersion={cacheVersion}
-                  onTabSeen={handleTabSeen}
-                  sharedData={sharedProfile?.sheets ?? null}
-                  banner={
-                    sharedProfile ? (
-                      <SharedBanner
-                        profile={sharedProfile}
-                        onClose={() => {
-                          setSharedProfile(null);
-                          swapView("main");
-                        }}
-                      />
-                    ) : undefined
-                  }
-                  onShare={
-                    user && hasCachedSheets && !sharedProfile
-                      ? () => setShareModalOpen(true)
-                      : undefined
-                  }
-                />
-              )}
+              <DataViewer
+                onClose={() => swapView("main")}
+                isFetching={sharedLoading || (loading && !sharedProfile)}
+                cacheVersion={cacheVersion}
+                onTabSeen={handleTabSeen}
+                sharedData={sharedLoading ? {} : (sharedProfile?.sheets ?? null)}
+                title={sharedProfile || sharedLoading ? "Community" : "Records"}
+                banner={
+                  sharedProfile ? (
+                    <SharedBanner
+                      profile={sharedProfile}
+                      onClose={() => {
+                        setSharedProfile(null);
+                        swapView("main");
+                      }}
+                    />
+                  ) : undefined
+                }
+                onShare={
+                  user && hasCachedSheets && !sharedProfile && !sharedLoading
+                    ? () => setShareModalOpen(true)
+                    : undefined
+                }
+              />
             </>
           )}
 
           {view === "main" && !user ? (
-            <AuthPanel onSync={handleCheckSync} />
+            <>
+              <AuthPanel onSync={handleCheckSync} />
+              <AnimatePresence mode="popLayout">
+                {message ? (
+                  <motion.div layout transition={layoutSpring}>
+                    <MessageBanner
+                      key={`auth-message-${message}`}
+                      message={message}
+                      onClose={() => setMessage("")}
+                    />
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
+            </>
           ) : view === "main" ? (
             <>
               <ErrorBoundary>
@@ -642,14 +754,16 @@ function App() {
         </LayoutGroup>
       </main>
 
-      {shareModalOpen && (
-        <ShareModal
-          cache={cache}
-          defaultAlias={displayAlias}
-          authToken={storedToken}
-          onClose={() => setShareModalOpen(false)}
-        />
-      )}
+      <AnimatePresence>
+        {shareModalOpen && (
+          <ShareModal
+            cache={cache}
+            defaultAlias={displayAlias}
+            authToken={storedToken}
+            onClose={() => setShareModalOpen(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

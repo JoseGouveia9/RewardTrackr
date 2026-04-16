@@ -17,9 +17,10 @@ function buildMyShareResponse(content, fallbackId) {
       id: fallbackId,
       alias: typeof parsed.alias === "string" ? parsed.alias : fallbackId,
       updatedAt: typeof parsed.updatedAt === "string" ? parsed.updatedAt : null,
+      communityVisible: parsed?.communityVisible !== false,
     };
   } catch {
-    return { exists: true, id: fallbackId, alias: fallbackId, updatedAt: null };
+    return { exists: true, id: fallbackId, alias: fallbackId, updatedAt: null, communityVisible: true };
   }
 }
 
@@ -31,6 +32,15 @@ export async function handleShareRoutes({
   maxBytes,
   maxSharesPerDay,
 }) {
+  if (url.pathname === "/share/directory" && request.method === "GET") {
+    try {
+      const { dir } = await readDirectoryEntries(env.GITHUB_TOKEN);
+      return jsonResponse(Array.isArray(dir) ? dir : []);
+    } catch (e) {
+      return jsonResponse({ error: e instanceof Error ? e.message : "Failed to load directory" }, 500);
+    }
+  }
+
   if (url.pathname === "/share/me" && request.method === "GET") {
     const userId = await resolveVerifiedUser(request);
     if (!userId) {
@@ -64,6 +74,25 @@ export async function handleShareRoutes({
     }
 
     return jsonResponse(buildMyShareResponse(content, id));
+  }
+
+  if (request.method === "GET" && url.pathname.startsWith("/share/")) {
+    const id = url.pathname.slice("/share/".length).toLowerCase().replace(/[^a-z0-9_-]/g, "");
+    if (!id || id === "directory") {
+      return null;
+    }
+
+    const path = `shared/${id}.json`;
+    const content = await readFile(env.GITHUB_TOKEN, path);
+    if (!content) {
+      return jsonResponse({ error: `No shared profile found for "${id}"` }, 404);
+    }
+
+    try {
+      return jsonResponse(JSON.parse(content));
+    } catch {
+      return jsonResponse({ error: "Shared profile data is invalid" }, 500);
+    }
   }
 
   if (url.pathname === "/share/me" && request.method === "DELETE") {
@@ -111,10 +140,12 @@ export async function handleShareRoutes({
       return jsonResponse({ error: "Invalid JSON body" }, 400);
     }
 
-    const { alias, data } = body;
+    const { alias, data, communityVisible } = body;
     if (typeof alias !== "string" || !/^[a-zA-Z0-9_-]{1,40}$/.test(alias.trim())) {
       return jsonResponse({ error: "Invalid alias (letters, numbers, _ and - only; max 40 chars)" }, 400);
     }
+
+    const isCommunityVisible = communityVisible !== false;
 
     const id = alias.trim().toLowerCase().replace(/[^a-z0-9_-]/g, "");
     const now = new Date().toISOString();
@@ -124,22 +155,13 @@ export async function handleShareRoutes({
     const ownerKey = `share_owner_${id}`;
     const shareLimitKey = `share_${userId}_${day}`;
 
-    const [existingProfileId, existingOwnerId, current] = await Promise.all([
-      env.RATE_LIMIT.get(userProfileKey),
+    const [existingOwnerId, current] = await Promise.all([
       env.RATE_LIMIT.get(ownerKey),
       env.RATE_LIMIT.get(shareLimitKey),
     ]);
 
     if (existingOwnerId && existingOwnerId !== userId) {
       return jsonResponse({ error: "This alias is already locked to another user." }, 403);
-    }
-
-    if (existingProfileId) {
-      const previousOwnerKey = `share_owner_${existingProfileId}`;
-      const previousOwnerId = await env.RATE_LIMIT.get(previousOwnerKey);
-      if (previousOwnerId && previousOwnerId !== userId) {
-        return jsonResponse({ error: "Current shared profile owner mismatch." }, 403);
-      }
     }
 
     const count = current ? parseInt(current) : 0;
@@ -163,6 +185,7 @@ export async function handleShareRoutes({
       id,
       ownerId: userId,
       updatedAt: now,
+      communityVisible: isCommunityVisible,
       sheets,
     });
 
@@ -180,19 +203,16 @@ export async function handleShareRoutes({
       const dataSha = await getFileSha(env.GITHUB_TOKEN, dataPath);
       await writeFile(env.GITHUB_TOKEN, dataPath, profileJson, dataSha);
 
-      if (existingProfileId && existingProfileId !== id) {
-        const previousDataPath = `shared/${existingProfileId}.json`;
-        const previousSha = await getFileSha(env.GITHUB_TOKEN, previousDataPath);
-        await deleteFile(env.GITHUB_TOKEN, previousDataPath, previousSha);
-        await env.RATE_LIMIT.delete(`share_owner_${existingProfileId}`);
-      }
-
       const { dirPath, dirSha, dir } = await readDirectoryEntries(env.GITHUB_TOKEN, { withSha: true });
 
-      const entry = { alias: alias.trim(), id, ownerId: userId, updatedAt: now };
-      const idx = dir.findIndex(
-        (e) => e.id === id || e.ownerId === userId || e.id === existingProfileId,
-      );
+      const entry = {
+        alias: alias.trim(),
+        id,
+        ownerId: userId,
+        updatedAt: now,
+        communityVisible: isCommunityVisible,
+      };
+      const idx = dir.findIndex((e) => e.id === id || e.ownerId === userId);
       if (idx >= 0) dir[idx] = entry;
       else dir.unshift(entry);
 
