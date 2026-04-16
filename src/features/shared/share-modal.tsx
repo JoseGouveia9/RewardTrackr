@@ -1,5 +1,10 @@
-import { useState } from "react";
-import { publishProfile, isWorkerConfigured } from "./api";
+import { useEffect, useState } from "react";
+import {
+  publishProfile,
+  isWorkerConfigured,
+  fetchMySharedProfile,
+  deleteMySharedProfile,
+} from "./api";
 import type { CacheState, RewardKey } from "@/features/export/types";
 import { ALL_REWARD_KEYS } from "@/features/export/config/reward-configs";
 import { formatAge } from "@/features/export/utils/cache";
@@ -21,6 +26,13 @@ export function ShareModal({
   const [error, setError] = useState("");
   const [result, setResult] = useState<{ id: string; updatedAt: string } | null>(null);
   const [copied, setCopied] = useState(false);
+  const [existingLoading, setExistingLoading] = useState(false);
+  const [existingProfile, setExistingProfile] = useState<{
+    id: string;
+    alias?: string;
+    updatedAt?: string | null;
+  } | null>(null);
+  const [deletingExisting, setDeletingExisting] = useState(false);
 
   const availableSheets = ALL_REWARD_KEYS.filter((k) => !!cache[k]);
   const [selectedKeys, setSelectedKeys] = useState<Set<RewardKey>>(new Set(availableSheets));
@@ -29,9 +41,39 @@ export function ShareModal({
   const shareLink = result
     ? `${window.location.origin}${window.location.pathname}#view=${result.id}`
     : "";
+  const existingShareLink = existingProfile
+    ? `${window.location.origin}${window.location.pathname}#view=${existingProfile.id}`
+    : "";
 
   const aliasValid = /^[a-zA-Z0-9_-]{1,40}$/.test(alias.trim());
   const workerReady = isWorkerConfigured();
+
+  useEffect(() => {
+    if (!workerReady || !authToken) return;
+    let alive = true;
+    setExistingLoading(true);
+    fetchMySharedProfile(authToken)
+      .then((data) => {
+        if (!alive) return;
+        if (data.exists && data.id) {
+          setExistingProfile({ id: data.id, alias: data.alias, updatedAt: data.updatedAt });
+        } else {
+          setExistingProfile(null);
+        }
+      })
+      .catch(() => {
+        if (!alive) return;
+        setExistingProfile(null);
+      })
+      .finally(() => {
+        if (!alive) return;
+        setExistingLoading(false);
+      });
+
+    return () => {
+      alive = false;
+    };
+  }, [authToken, workerReady]);
 
   function toggleSheet(k: RewardKey) {
     setSelectedKeys((prev) => {
@@ -50,6 +92,7 @@ export function ShareModal({
       const sheets: Partial<CacheState> = {};
       for (const k of sheetsToShare) sheets[k] = cache[k];
       const res = await publishProfile(alias.trim(), sheets, authToken);
+      setExistingProfile({ id: res.id, alias: alias.trim(), updatedAt: res.updatedAt });
       setResult(res);
       setStatus("done");
     } catch (e) {
@@ -62,6 +105,32 @@ export function ShareModal({
     navigator.clipboard.writeText(shareLink).catch(() => {});
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  }
+
+  function handleCopyExisting() {
+    if (!existingShareLink) return;
+    navigator.clipboard.writeText(existingShareLink).catch(() => {});
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  async function handleDeleteExisting() {
+    if (!authToken || !existingProfile) return;
+    if (!window.confirm("Delete your current shared profile link?")) return;
+
+    setDeletingExisting(true);
+    setError("");
+    try {
+      await deleteMySharedProfile(authToken);
+      setExistingProfile(null);
+      setResult(null);
+      setStatus("idle");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Unknown error");
+      setStatus("error");
+    } finally {
+      setDeletingExisting(false);
+    }
   }
 
   return (
@@ -92,6 +161,41 @@ export function ShareModal({
             <p className="sh-modal-desc">
               Your records will be publicly visible. Anyone with the link can view them, read-only.
             </p>
+
+            {existingLoading ? (
+              <p className="sh-modal-hint">Checking your current shared link…</p>
+            ) : existingProfile ? (
+              <div className="sh-modal-existing">
+                <p className="sh-modal-existing-title">Current shared link</p>
+                <div className="sh-modal-link-row">
+                  <input
+                    type="text"
+                    className="sh-modal-link-input"
+                    value={existingShareLink}
+                    readOnly
+                    onClick={(e) => (e.target as HTMLInputElement).select()}
+                  />
+                  <button
+                    type="button"
+                    className={`sh-modal-copy-btn${copied ? " sh-modal-copy-btn--done" : ""}`}
+                    onClick={handleCopyExisting}
+                    disabled={deletingExisting}
+                  >
+                    {copied ? "Copied!" : "Copy"}
+                  </button>
+                </div>
+                <div className="sh-modal-existing-actions">
+                  <button
+                    type="button"
+                    className="sh-modal-btn sh-modal-btn--danger"
+                    onClick={handleDeleteExisting}
+                    disabled={deletingExisting || status === "loading"}
+                  >
+                    {deletingExisting ? "Deleting…" : "Delete link"}
+                  </button>
+                </div>
+              </div>
+            ) : null}
 
             <label className="sh-modal-label" htmlFor="sh-alias-input">
               Display name
@@ -167,7 +271,8 @@ export function ShareModal({
                   !workerReady ||
                   !authToken ||
                   sheetsToShare.length === 0 ||
-                  status === "loading"
+                  status === "loading" ||
+                  deletingExisting
                 }
               >
                 {status === "loading" ? "Publishing…" : "Share"}

@@ -118,7 +118,7 @@
   border-radius: 20px;
   padding: 24px;
   width: 100%;
-  max-width: 440px;
+  max-width: 500px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
   display: flex;
   flex-direction: column;
@@ -361,6 +361,27 @@
   background: rgba(255, 255, 255, 0.12);
 }
 
+.sh-modal-btn--danger {
+  flex: 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(220, 38, 38, 0.12);
+  color: #b91c1c;
+}
+
+.sh-modal-btn--danger:not(:disabled):hover {
+  background: rgba(220, 38, 38, 0.18);
+}
+
+.page.theme-dark .sh-modal-btn--danger {
+  background: rgba(239, 68, 68, 0.18);
+  color: #fca5a5;
+}
+
+.page.theme-dark .sh-modal-btn--danger:not(:disabled):hover {
+  background: rgba(239, 68, 68, 0.28);
+}
+
 .sh-modal-success-msg {
   display: flex;
   align-items: center;
@@ -378,6 +399,39 @@
 .sh-modal-link-row {
   display: flex;
   gap: 8px;
+}
+
+.sh-modal-existing {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.page.theme-dark .sh-modal-existing {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.sh-modal-existing-title {
+  margin: 0;
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6d7589;
+}
+
+.page.theme-dark .sh-modal-existing-title {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.sh-modal-existing-actions {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .sh-modal-link-input {

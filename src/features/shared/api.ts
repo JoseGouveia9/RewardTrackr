@@ -45,3 +45,42 @@ export async function publishProfile(
   }
   return res.json() as Promise<{ id: string; updatedAt: string }>;
 }
+
+export async function fetchMySharedProfile(
+  authToken: string,
+): Promise<{ exists: boolean; id?: string; alias?: string; updatedAt?: string | null }> {
+  if (!WORKER_URL) throw new Error("Sharing is not configured for this deployment");
+  if (!authToken) throw new Error("You must be authenticated to view your shared link");
+
+  const res = await fetch(`${WORKER_URL}/share/me`, {
+    method: "GET",
+    headers: { Authorization: `Bearer ${authToken}` },
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+    throw new Error((err as { error?: string }).error ?? `HTTP ${res.status}`);
+  }
+  return res.json() as Promise<{
+    exists: boolean;
+    id?: string;
+    alias?: string;
+    updatedAt?: string | null;
+  }>;
+}
+
+export async function deleteMySharedProfile(
+  authToken: string,
+): Promise<{ deleted: boolean; id?: string }> {
+  if (!WORKER_URL) throw new Error("Sharing is not configured for this deployment");
+  if (!authToken) throw new Error("You must be authenticated to delete your shared link");
+
+  const res = await fetch(`${WORKER_URL}/share/me`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${authToken}` },
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+    throw new Error((err as { error?: string }).error ?? `HTTP ${res.status}`);
+  }
+  return res.json() as Promise<{ deleted: boolean; id?: string }>;
+}
