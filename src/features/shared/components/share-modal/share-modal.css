@@ -242,7 +242,6 @@
   opacity: 0.62;
 }
 
-
 .sh-modal-sheet-row--check.sh-modal-sheet-row--checked .sh-modal-sheet-name,
 .sh-modal-sheet-row--check.sh-modal-sheet-row--checked .sh-modal-sheet-meta {
   color: #c87510;
@@ -250,7 +249,7 @@
 }
 
 .page.theme-light .sh-modal-sheet-row--check.sh-modal-sheet-row--checked {
-  background: rgba(0, 0, 0, 0.04);
+  background: rgba(244, 247, 252, 0.9);
 }
 
 .page.theme-light .sh-modal-sheet-row--check.sh-modal-sheet-row--checked .sh-modal-sheet-name,
@@ -271,7 +270,15 @@
 .page.theme-light .sh-modal-sheet-row--check.sh-modal-sheet-row--checked .sheet-check-icon,
 .page.theme-light .sh-modal-sheet-row--check.sh-modal-sheet-row--checked .sheet-check-icon--visible,
 .page.theme-light .sh-modal-visibility-row.sh-modal-visibility-row--checked .sheet-check-icon,
-.page.theme-light .sh-modal-visibility-row.sh-modal-visibility-row--checked .sheet-check-icon--visible {
+.page.theme-light
+  .sh-modal-visibility-row.sh-modal-visibility-row--checked
+  .sheet-check-icon--visible,
+.page.theme-dark .sh-modal-sheet-row--check.sh-modal-sheet-row--checked .sheet-check-icon,
+.page.theme-dark .sh-modal-sheet-row--check.sh-modal-sheet-row--checked .sheet-check-icon--visible,
+.page.theme-dark .sh-modal-visibility-row.sh-modal-visibility-row--checked .sheet-check-icon,
+.page.theme-dark
+  .sh-modal-visibility-row.sh-modal-visibility-row--checked
+  .sheet-check-icon--visible {
   background: #f7931a;
   border-color: #f7931a;
   color: #ffffff;
@@ -391,8 +398,6 @@
   opacity: 0.62;
 }
 
-
-
 .page.theme-dark .sh-modal-visibility-row {
   border-color: rgba(255, 255, 255, 0.08);
   color: rgba(255, 255, 255, 0.88);
@@ -402,8 +407,6 @@
 .page.theme-dark .sh-modal-sheet-row--check.sh-modal-sheet-row--checked .sh-modal-sheet-meta {
   color: rgba(255, 255, 255, 0.94);
 }
-
-
 
 .page.theme-dark .sh-modal-visibility-row small {
   color: rgba(255, 255, 255, 0.55);
@@ -422,7 +425,9 @@
   font-weight: 600;
   cursor: pointer;
   border: none;
-  transition: background 0.14s, opacity 0.14s;
+  transition:
+    background 0.14s,
+    opacity 0.14s;
 }
 
 .sh-modal-btn:disabled {

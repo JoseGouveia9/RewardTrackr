@@ -45,6 +45,13 @@ export function ShareModal({
   authToken: string;
   onClose: () => void;
 }) {
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, []);
+
   const [alias, setAlias] = useState(defaultAlias || "");
   const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
   const [error, setError] = useState("");

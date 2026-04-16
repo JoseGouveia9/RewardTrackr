@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useState, type KeyboardEvent } from "react";
+﻿import { useCallback, useEffect, useRef, useMemo, useState, type KeyboardEvent } from "react";
 import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
 import { AppNotice } from "@/components/app-notice/app-notice";
 import { clearAllCacheEntries, loadAllCacheEntries } from "@/features/export/utils/cache";
@@ -215,6 +215,15 @@ function App() {
   });
 
   const displayAlias = syncedAlias || user?.alias?.trim() || "User";
+
+  const prevUserRef = useRef(user);
+  useEffect(() => {
+    if (prevUserRef.current !== null && user === null) {
+      setShareModalOpen(false);
+    }
+    prevUserRef.current = user;
+  }, [user]);
+
   const currentUserIdentity = user?.id
     ? `id:${user.id}`
     : user?.email

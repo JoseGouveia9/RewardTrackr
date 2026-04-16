@@ -67,15 +67,16 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
     (exp: number | null) => {
       clearExpiryTimer();
       if (!exp) return;
-      const msUntilExpiry = exp * 1000 - Date.now();
+      const msUntilExpiry = exp * 1000 - Date.now() - 10 * 60 * 1000;
       if (msUntilExpiry <= 0) return;
       expiryTimer.current = setTimeout(() => {
         sessionStorage.removeItem(LS_KEY_SYNC_TOKEN);
         setUser(null);
         setStoredToken("");
+        onMessage("Session expired. Please sync again via the extension.");
       }, msUntilExpiry);
     },
-    [clearExpiryTimer],
+    [clearExpiryTimer, onMessage],
   );
 
   // Validates and applies a token, updating user state and scheduling expiry.
