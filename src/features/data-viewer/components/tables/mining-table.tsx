@@ -181,7 +181,7 @@ export function MiningTable({
                     ? new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(
                         row.totalPower,
                       ) + " TH"
-                    : "—"}
+                    : "-"}
                 </td>
                 <td>
                   <span className="dv-cell-with-icon">
@@ -195,7 +195,7 @@ export function MiningTable({
                     <MiningCurrencyIcon currency={currency} fiatCode={fiatCode} />
                   </span>
                 </td>
-                <td>{row.discount > 0 ? (row.discount * 100).toFixed(2) + "%" : "—"}</td>
+                <td>{row.discount > 0 ? (row.discount * 100).toFixed(2) + "%" : "-"}</td>
                 <td className="dv-cell-accent">
                   <span className="dv-cell-with-icon">
                     {formatMiningValue(row.reward, currency)}

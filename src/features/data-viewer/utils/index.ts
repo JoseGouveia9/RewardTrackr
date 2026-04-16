@@ -5,7 +5,7 @@ import type { Currency, DateRange } from "../types";
 
 // Formats a numeric value for mining tabs, adapting decimal places to the selected currency.
 export function formatMiningValue(value: number, currency: Currency): string {
-  if (!Number.isFinite(value)) return "—";
+  if (!Number.isFinite(value)) return "-";
   if (currency === "BTC") {
     return new Intl.NumberFormat(undefined, {
       minimumFractionDigits: 8,
@@ -29,7 +29,7 @@ export function formatMiningValue(value: number, currency: Currency): string {
 
 // Formats a numeric value for simple tabs, adapting decimal places to avoid truncation to zero.
 export function formatCurrencyValue(value: number, currency: string): string {
-  if (!Number.isFinite(value)) return "—";
+  if (!Number.isFinite(value)) return "-";
   if (currency === "BTC") {
     return new Intl.NumberFormat(undefined, {
       minimumFractionDigits: 8,
