@@ -124,7 +124,7 @@ export function ShareModal({
     try {
       const sheets: Partial<CacheState> = {};
       for (const k of sheetsToShare) sheets[k] = cache[k];
-      const res = await publishProfile(activeAlias, sheets, authToken, shareInCommunity);
+      const res = await publishProfile(activeAlias!, sheets, authToken, shareInCommunity);
       setExistingProfile({
         id: res.id,
         alias: activeAlias,
