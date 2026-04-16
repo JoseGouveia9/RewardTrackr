@@ -81,6 +81,7 @@ export function useExport({
       });
       Sentry.logger.info("Export completed", { sheets: selectedKeys.length });
       onMessage(successMessage);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (error: unknown) {
       const msg = error instanceof Error ? error.message : "Export failed";
       const msgLower = msg.toLowerCase();

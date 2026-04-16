@@ -149,6 +149,11 @@
   overflow: clip;
 }
 
+.wallet-currency-wrap-mobile {
+  overflow: clip;
+  width: 100%;
+}
+
 /* Transaction filter grid */
 
 .transaction-filter-grid {

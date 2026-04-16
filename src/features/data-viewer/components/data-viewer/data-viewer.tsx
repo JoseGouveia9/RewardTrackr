@@ -208,6 +208,14 @@ export const DataViewer = memo(function DataViewer({
   ];
   const showSimpleSelector = simpleHasUsd || simpleHasFiat;
 
+  const hasViewSelector =
+    hasActiveData &&
+    (isMiningTab ||
+      isEarnTab ||
+      (isTxTab && showTxSelector) ||
+      isPurchaseTab ||
+      showSimpleSelector);
+
   const purchaseViews: { key: PurchaseView; label: string }[] = [
     { key: "NATIVE", label: "Native" },
     { key: "USD", label: "USD" },
@@ -309,7 +317,7 @@ export const DataViewer = memo(function DataViewer({
                 <span>Group by day</span>
               </button>
             )}
-            {hasActiveData && !isMiningTab && <span className="dv-toolbar-separator">·</span>}
+            {hasViewSelector && !isMiningTab && <span className="dv-toolbar-separator">·</span>}
             {hasActiveData && isMiningTab ? (
               <ViewSelector
                 views={currencies}

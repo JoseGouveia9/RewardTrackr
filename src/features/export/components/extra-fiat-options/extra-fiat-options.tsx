@@ -1,10 +1,52 @@
-﻿import { memo } from "react";
+import { memo, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { FiatDropdown } from "../fiat-dropdown/fiat-dropdown";
 import type { ExtraFiatCurrency } from "../../types";
 
 const rowLayoutSpring = {
   layout: { type: "spring" as const, stiffness: 220, damping: 28 },
+};
+
+const desktopWrapMotion = {
+  initial: { opacity: 0, x: 24, maxWidth: 0 },
+  animate: {
+    opacity: 1,
+    x: 0,
+    maxWidth: 240,
+    transition: { duration: 0.2, ease: "easeOut" as const },
+  },
+  exit: {
+    opacity: 0,
+    x: 24,
+    maxWidth: 0,
+    transition: { duration: 0.14, ease: "easeIn" as const },
+  },
+};
+
+const mobileWrapMotion = {
+  initial: { height: 0 },
+  animate: {
+    height: "auto" as const,
+    transition: { duration: 0.14, ease: "easeOut" as const },
+  },
+  exit: {
+    height: 0,
+    transition: { duration: 0.1, ease: "easeIn" as const },
+  },
+};
+
+const mobileContentMotion = {
+  initial: { opacity: 0, y: -10 },
+  animate: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.14, ease: "easeOut" as const, delay: 0.05 },
+  },
+  exit: {
+    opacity: 0,
+    y: -8,
+    transition: { duration: 0.08, ease: "easeIn" as const },
+  },
 };
 
 interface ExtraFiatOptionsProps {
@@ -21,6 +63,15 @@ export const ExtraFiatOptions = memo(function ExtraFiatOptions({
   currency,
   onChangeCurrency,
 }: ExtraFiatOptionsProps) {
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 640);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 640px)");
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+
   return (
     <div className="excel-options">
       <p className="options-section-title">
@@ -53,28 +104,37 @@ export const ExtraFiatOptions = memo(function ExtraFiatOptions({
           />
         </motion.label>
         <AnimatePresence mode="sync">
-          {includeExcelFiat && (
-            <motion.div
-              key="wallet-currency-row"
-              className="wallet-option-row wallet-currency-row"
-              initial={{ opacity: 0, x: 24, maxWidth: 0 }}
-              animate={{
-                opacity: 1,
-                x: 0,
-                maxWidth: 240,
-                transition: { duration: 0.2, ease: "easeOut" },
-              }}
-              exit={{
-                opacity: 0,
-                x: 24,
-                maxWidth: 0,
-                transition: { duration: 0.14, ease: "easeIn" },
-              }}
-            >
-              Currency
-              <FiatDropdown value={currency} onChange={onChangeCurrency} />
-            </motion.div>
-          )}
+          {includeExcelFiat &&
+            (isMobile ? (
+              <motion.div
+                key="wallet-currency-row-mobile"
+                className="wallet-currency-wrap-mobile"
+                initial={mobileWrapMotion.initial}
+                animate={mobileWrapMotion.animate}
+                exit={mobileWrapMotion.exit}
+              >
+                <motion.div
+                  className="wallet-option-row wallet-currency-row"
+                  initial={mobileContentMotion.initial}
+                  animate={mobileContentMotion.animate}
+                  exit={mobileContentMotion.exit}
+                >
+                  Currency
+                  <FiatDropdown value={currency} onChange={onChangeCurrency} />
+                </motion.div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="wallet-currency-row"
+                className="wallet-option-row wallet-currency-row"
+                initial={desktopWrapMotion.initial}
+                animate={desktopWrapMotion.animate}
+                exit={desktopWrapMotion.exit}
+              >
+                Currency
+                <FiatDropdown value={currency} onChange={onChangeCurrency} />
+              </motion.div>
+            ))}
         </AnimatePresence>
       </motion.div>
     </div>

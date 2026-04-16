@@ -34,28 +34,30 @@
 
 .dv-trigger-button--has-new {
   animation: dv-trigger-vibrate 1.6s ease-in-out infinite;
+  will-change: transform;
+  backface-visibility: hidden;
 }
 
 @keyframes dv-trigger-vibrate {
   0%,
   70%,
   100% {
-    transform: translateX(0) rotate(0deg);
+    transform: translate3d(0, 0, 0);
   }
   73% {
-    transform: translateX(-1px) rotate(-1deg);
+    transform: translate3d(-1px, 0, 0);
   }
   76% {
-    transform: translateX(1px) rotate(1deg);
+    transform: translate3d(1px, 0, 0);
   }
   79% {
-    transform: translateX(-1px) rotate(-1deg);
+    transform: translate3d(-1px, 0, 0);
   }
   82% {
-    transform: translateX(1px) rotate(1deg);
+    transform: translate3d(1px, 0, 0);
   }
   85% {
-    transform: translateX(0) rotate(0deg);
+    transform: translate3d(0, 0, 0);
   }
 }
 
@@ -1552,7 +1554,27 @@
     display: none;
   }
 
+  .dv-back-button {
+    padding: 6px;
+  }
+
   .dv-back-button span {
     display: none;
+  }
+
+  .dv-share-button {
+    padding: 6px;
+  }
+
+  .dv-share-button span {
+    display: none;
+  }
+
+  .dv-group-button {
+    padding: 5px;
+  }
+
+  .dv-currency-button {
+    padding: 5px;
   }
 }

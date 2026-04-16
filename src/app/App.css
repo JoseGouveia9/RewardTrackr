@@ -769,6 +769,14 @@ button:disabled {
     order: 1;
   }
 
+  .hero-actions .sh-trigger-btn {
+    flex: 0 0 100%;
+    order: 2;
+    justify-content: center;
+    padding-top: 9px;
+    padding-bottom: 9px;
+  }
+
   .hero-actions .dv-trigger-button {
     width: 100%;
     padding-top: 9px;
@@ -777,17 +785,21 @@ button:disabled {
   }
 
   .hero-actions .dv-trigger-wrap {
-    order: 2;
+    order: 3;
     flex: 0 0 calc(50% - 5px);
   }
 
-  .hero-actions .referral-button,
-  .hero-actions .user-menu-wrapper {
+  .hero-actions .hero-profile-wrap {
+    order: 4;
+    flex: 0 0 100%;
+  }
+
+  .hero-actions .hero-profile-wrap--narrow {
     flex: 0 0 calc(50% - 5px);
-    order: 3;
   }
 
   .hero-actions .referral-button {
+    width: 100%;
     padding-top: 9px;
     padding-bottom: 9px;
   }

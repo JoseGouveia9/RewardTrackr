@@ -186,6 +186,17 @@
   color: rgba(0, 0, 0, 0.45);
 }
 
+@media (max-width: 640px) {
+  .fiat-dropdown-wrap {
+    flex: 1;
+  }
+
+  .fiat-dropdown-trigger {
+    width: 100%;
+    min-width: unset;
+  }
+}
+
 /* Dark mode */
 
 .page.theme-dark .fiat-dropdown-trigger {

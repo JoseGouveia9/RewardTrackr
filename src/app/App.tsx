@@ -486,22 +486,28 @@ function App() {
                   </motion.div>
                 ) : null}
               </AnimatePresence>
-              {!user && (
-                <ReferralButton
-                  open={referralOpen}
-                  onOpen={() => setReferralOpen(true)}
-                  onClose={() => setReferralOpen(false)}
-                />
-              )}
-              {user && (
-                <HeaderUserMenu
-                  user={user}
-                  displayAlias={displayAlias}
-                  theme={theme}
-                  onToggleTheme={toggleTheme}
-                  onLogout={handleLogout}
-                />
-              )}
+              <motion.div
+                layout
+                transition={{ duration: 0.2, ease: "easeOut" }}
+                className={`hero-profile-wrap${hasCachedSheets ? " hero-profile-wrap--narrow" : ""}`}
+              >
+                {!user && (
+                  <ReferralButton
+                    open={referralOpen}
+                    onOpen={() => setReferralOpen(true)}
+                    onClose={() => setReferralOpen(false)}
+                  />
+                )}
+                {user && (
+                  <HeaderUserMenu
+                    user={user}
+                    displayAlias={displayAlias}
+                    theme={theme}
+                    onToggleTheme={toggleTheme}
+                    onLogout={handleLogout}
+                  />
+                )}
+              </motion.div>
             </div>
           </div>
           {!user && (
