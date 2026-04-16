@@ -24,6 +24,7 @@ export function TransactionsTable({
   txView,
   isFetching = false,
   cacheVersion = 0,
+  cacheEntry,
   groupByDay,
   dateRange,
   setDateRange,

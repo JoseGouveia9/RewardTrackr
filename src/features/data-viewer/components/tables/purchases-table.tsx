@@ -23,6 +23,8 @@ export function PurchasesTable({
   purchaseView,
   isFetching = false,
   cacheVersion = 0,
+  purchasesCacheEntry,
+  upgradesCacheEntry,
   groupByDay,
   dateRange,
   setDateRange,

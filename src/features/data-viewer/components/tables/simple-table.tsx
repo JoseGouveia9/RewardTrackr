@@ -23,6 +23,7 @@ export function SimpleTable({
   simpleView,
   isFetching = false,
   cacheVersion = 0,
+  cacheEntry,
   groupByDay,
   dateRange,
   setDateRange,

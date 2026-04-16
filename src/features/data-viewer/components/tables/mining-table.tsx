@@ -23,6 +23,7 @@ export function MiningTable({
   fiatCode,
   isFetching = false,
   cacheVersion = 0,
+  cacheEntry,
   dateRange,
   setDateRange,
 }: {

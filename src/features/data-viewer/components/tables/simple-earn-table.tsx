@@ -23,6 +23,7 @@ export function SimpleEarnTable({
   earnView,
   isFetching = false,
   cacheVersion = 0,
+  cacheEntry,
   groupByDay,
   dateRange,
   setDateRange,
