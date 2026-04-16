@@ -67,7 +67,7 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
     (exp: number | null) => {
       clearExpiryTimer();
       if (!exp) return;
-      const msUntilExpiry = exp * 1000 - Date.now() - 10 * 60 * 1000;
+      const msUntilExpiry = exp * 1000 - Date.now();
       if (msUntilExpiry <= 0) return;
       expiryTimer.current = setTimeout(() => {
         sessionStorage.removeItem(LS_KEY_SYNC_TOKEN);
@@ -84,16 +84,6 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
     (token: string, message?: string): boolean => {
       const userData = loginWithToken(token);
       if (!userData) return false;
-      if (userData.exp && userData.exp * 1000 - Date.now() <= 10 * 60 * 1000) {
-        clearExpiryTimer();
-        sessionStorage.removeItem(LS_KEY_SYNC_TOKEN);
-        setUser(null);
-        setStoredToken("");
-        onMessage(
-          "Your session is expiring soon. Please refresh your GoMining session and sync again.",
-        );
-        return false;
-      }
       const storedAlias = localStorage.getItem(LS_KEY_SYNC_ALIAS)?.trim() ?? null;
       if (storedAlias) userData.alias = storedAlias;
       sessionStorage.setItem(LS_KEY_SYNC_TOKEN, token);
@@ -103,7 +93,7 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
       if (message) onMessage(message);
       return true;
     },
-    [scheduleExpiry, clearExpiryTimer, onMessage],
+    [scheduleExpiry, onMessage],
   );
 
   // On mount: restore session from sessionStorage
