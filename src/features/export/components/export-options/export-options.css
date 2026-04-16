@@ -72,7 +72,7 @@
   padding-right: 0px;
   overflow: clip;
   white-space: nowrap;
-
+  border: none;
 }
 
 /* Fiat currency grid */
@@ -183,7 +183,7 @@
 .page.theme-light .wallet-option-row,
 .page.theme-light .transaction-filter-item {
   background: rgba(247, 147, 26, 0.13);
-  border-color: rgba(61, 74, 102, 0.14);
+  border: none;
 }
 
 .page.theme-light .wallet-warning {

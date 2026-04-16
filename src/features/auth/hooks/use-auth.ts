@@ -39,6 +39,10 @@ interface UseAuthReturn {
   handleLogout: () => void;
 }
 
+function getCachedToken(): string {
+  return sessionStorage.getItem(LS_KEY_SYNC_TOKEN) || "";
+}
+
 // Hook
 
 // Manages authentication state: session restore, token sync from the extension, and logout.
@@ -93,7 +97,7 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
 
   // On mount: restore session from sessionStorage
   useEffect(() => {
-    const token = sessionStorage.getItem(LS_KEY_SYNC_TOKEN);
+    const token = getCachedToken();
     if (token) applyToken(token);
     return clearExpiryTimer;
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -112,7 +116,7 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
   useEffect(() => {
     if (user) return;
     const interval = setInterval(() => {
-      const token = sessionStorage.getItem(LS_KEY_SYNC_TOKEN);
+      const token = getCachedToken();
       if (token) applyToken(token, "Session synced from extension.");
     }, 1000);
     return () => clearInterval(interval);
@@ -120,7 +124,7 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
 
   // Manually checks sessionStorage for an extension-synced token and logs the user in if valid.
   const handleCheckSync = useCallback((): void => {
-    const syncToken = sessionStorage.getItem(LS_KEY_SYNC_TOKEN);
+    const syncToken = getCachedToken();
     if (syncToken) {
       const success = applyToken(syncToken);
       if (success) {

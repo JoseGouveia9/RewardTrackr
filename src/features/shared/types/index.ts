@@ -4,6 +4,7 @@ export interface OwnedProfile {
   id: string;
   alias?: string;
   updatedAt?: string | null;
+  communityVisible?: boolean;
 }
 
 export interface DirectoryEntry {
@@ -11,6 +12,7 @@ export interface DirectoryEntry {
   id: string;
   ownerId?: string;
   updatedAt: string;
+  communityVisible?: boolean;
 }
 
 export interface SharedProfile {
@@ -18,5 +20,6 @@ export interface SharedProfile {
   id: string;
   ownerId?: string;
   updatedAt: string;
+  communityVisible?: boolean;
   sheets: Partial<CacheState>;
 }

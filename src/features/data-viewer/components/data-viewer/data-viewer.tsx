@@ -1,4 +1,4 @@
-﻿import { memo, useMemo } from "react";
+﻿import { memo, useEffect, useMemo } from "react";
 import type React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { loadCacheEntry } from "@/features/export/utils/cache";
@@ -22,6 +22,7 @@ interface DataViewerProps {
   isFetching?: boolean;
   cacheVersion?: number;
   onTabSeen?: (key: RewardKey) => void;
+  title?: string;
   /** When set the viewer renders the supplied records instead of localStorage. */
   sharedData?: Partial<CacheState> | null;
   /** Optional banner rendered above the dv-page (e.g. SharedBanner). */
@@ -35,6 +36,7 @@ export const DataViewer = memo(function DataViewer({
   isFetching = false,
   cacheVersion = 0,
   onTabSeen,
+  title = "Records",
   sharedData,
   banner,
   onShare,
@@ -54,7 +56,31 @@ export const DataViewer = memo(function DataViewer({
   } = useDataViewerState();
   const fiatCode = useMemo(() => loadFiatCode(), []);
 
-  const activeTab = ALL_TABS.find((t) => t.key === activeKey) ?? ALL_TABS[0];
+  const isSharedContext = sharedData !== null && sharedData !== undefined;
+
+  const visibleTabs = useMemo(() => {
+    if (!isSharedContext || isFetching) return ALL_TABS;
+
+    const filtered = ALL_TABS.filter((tab) => {
+      if (tab.key === "purchases") {
+        return (
+          (sharedData?.["purchases"]?.records?.length ?? 0) > 0 ||
+          (sharedData?.["upgrades"]?.records?.length ?? 0) > 0
+        );
+      }
+      return (sharedData?.[tab.key]?.records?.length ?? 0) > 0;
+    });
+
+    return filtered.length > 0 ? filtered : ALL_TABS;
+  }, [isFetching, isSharedContext, sharedData]);
+
+  useEffect(() => {
+    if (!visibleTabs.some((tab) => tab.key === activeKey)) {
+      setActiveKey(visibleTabs[0].key);
+    }
+  }, [activeKey, setActiveKey, visibleTabs]);
+
+  const activeTab = visibleTabs.find((t) => t.key === activeKey) ?? visibleTabs[0];
   const isMiningTab = activeTab.kind === "mining";
   const isEarnTab = activeTab.kind === "earn";
   const isTxTab = activeTab.kind === "tx";
@@ -224,7 +250,7 @@ export const DataViewer = memo(function DataViewer({
               </svg>
               <span>Back</span>
             </button>
-            <span className="dv-title">Records</span>
+            {title ? <span className="dv-title">{title}</span> : null}
             {onShare && (
               <button
                 type="button"
@@ -319,6 +345,7 @@ export const DataViewer = memo(function DataViewer({
 
         {/* Tabs */}
         <TabList
+          tabs={visibleTabs}
           activeKey={activeKey}
           onSelect={setActiveKey}
           tabsWithNew={tabsWithNew}
@@ -425,7 +452,7 @@ export const DataViewerButton = memo(function DataViewerButton({
   return (
     <button
       type="button"
-      className={`dv-trigger-button${active ? " dv-trigger-button--active" : ""}`}
+      className={`dv-trigger-button${active ? " dv-trigger-button--active" : ""}${hasNew && !active ? " dv-trigger-button--has-new" : ""}`}
       onClick={onClick}
       aria-label="View records"
     >

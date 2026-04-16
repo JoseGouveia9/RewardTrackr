@@ -176,7 +176,7 @@
 
 /* Light mode */
 .page.theme-light .referral-overlay {
-  background: transparent;
+  background: rgba(0, 0, 0, 0.45);
 }
 
 .page.theme-light .referral-button {

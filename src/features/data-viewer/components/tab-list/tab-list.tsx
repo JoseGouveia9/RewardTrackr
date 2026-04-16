@@ -1,15 +1,15 @@
 import { useEffect, useRef } from "react";
 import type { RewardKey } from "@/features/export/types";
-import { ALL_TABS } from "../../utils/constants";
 
 interface TabListProps {
+  tabs: { key: RewardKey; label: string }[];
   activeKey: RewardKey;
   onSelect: (key: RewardKey) => void;
   tabsWithNew: Set<RewardKey>;
   onTabSeen?: (key: RewardKey) => void;
 }
 
-export function TabList({ activeKey, onSelect, tabsWithNew, onTabSeen }: TabListProps) {
+export function TabList({ tabs, activeKey, onSelect, tabsWithNew, onTabSeen }: TabListProps) {
   const tabsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -22,7 +22,7 @@ export function TabList({ activeKey, onSelect, tabsWithNew, onTabSeen }: TabList
 
   return (
     <div ref={tabsRef} className="dv-tabs">
-      {ALL_TABS.map((tab) => (
+      {tabs.map((tab) => (
         <button
           key={tab.key}
           type="button"

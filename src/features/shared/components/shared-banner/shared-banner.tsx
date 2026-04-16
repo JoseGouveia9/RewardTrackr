@@ -1,5 +1,5 @@
+import type { KeyboardEvent } from "react";
 import type { DirectoryEntry } from "../../types";
-import { buildShareLink } from "../../api";
 import "./shared-banner.css";
 import { formatAge } from "@/features/export/utils/cache";
 
@@ -33,7 +33,7 @@ export function SharedBanner({
         <span>
           Viewing <strong>{profile.alias}</strong>'s records
         </span>
-        <span className="sh-banner-meta">· updated {age} · read only</span>
+        <span className="sh-banner-meta">· Updated {age} · Read only</span>
       </div>
       <button type="button" className="sh-banner-close" onClick={onClose} aria-label="Close">
         <svg
@@ -58,42 +58,35 @@ export function SharedBanner({
 // A row in the community directory table.
 export function DirectoryRow({ entry }: { entry: DirectoryEntry }) {
   const age = formatAge(new Date(entry.updatedAt).getTime());
-  const link = buildShareLink(entry.id);
+  const isDev = String(entry.ownerId ?? "") === "3575344";
 
   function handleView() {
     window.location.hash = `view=${entry.id}`;
-    window.location.reload();
   }
 
-  function handleCopy() {
-    navigator.clipboard.writeText(link).catch(() => {});
+  function handleRowKeyDown(event: KeyboardEvent<HTMLTableRowElement>) {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      handleView();
+    }
   }
 
   return (
-    <tr className="sh-dir-row">
-      <td className="sh-dir-alias">{entry.alias}</td>
-      <td className="sh-dir-updated">{age}</td>
-      <td className="sh-dir-actions">
-        <button type="button" className="sh-dir-view-btn" onClick={handleView}>
-          View
-        </button>
-        <button type="button" className="sh-dir-copy-btn" onClick={handleCopy} title="Copy link">
-          <svg
-            width="12"
-            height="12"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-          </svg>
-        </button>
+    <tr
+      className="sh-dir-row"
+      onClick={handleView}
+      onKeyDown={handleRowKeyDown}
+      role="button"
+      tabIndex={0}
+      aria-label={`View ${entry.alias} records`}
+    >
+      <td className="sh-dir-alias">
+        <span className="sh-dir-alias-content">
+          <span>{entry.alias}</span>
+          {isDev ? <span className="sh-dir-dev-badge">DEV</span> : null}
+        </span>
       </td>
+      <td className="sh-dir-updated">{age}</td>
     </tr>
   );
 }

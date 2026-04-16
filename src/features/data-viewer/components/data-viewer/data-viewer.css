@@ -32,6 +32,39 @@
   color: #cb7010;
 }
 
+.dv-trigger-button--has-new {
+  animation: dv-trigger-vibrate 1.6s ease-in-out infinite;
+}
+
+@keyframes dv-trigger-vibrate {
+  0%,
+  70%,
+  100% {
+    transform: translateX(0) rotate(0deg);
+  }
+  73% {
+    transform: translateX(-1px) rotate(-1deg);
+  }
+  76% {
+    transform: translateX(1px) rotate(1deg);
+  }
+  79% {
+    transform: translateX(-1px) rotate(-1deg);
+  }
+  82% {
+    transform: translateX(1px) rotate(1deg);
+  }
+  85% {
+    transform: translateX(0) rotate(0deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dv-trigger-button--has-new {
+    animation: none;
+  }
+}
+
 .page.theme-light .dv-trigger-button--active {
   background: #f7931a;
   border-color: #f7931a;
@@ -509,7 +542,7 @@
 
 .page.theme-light .dv-table-totals td,
 .page.theme-light .dv-table.dv-table-totals tbody tr:hover td {
-  background: rgba(0, 0, 0, 0.02);
+  background: rgba(0, 0, 0, 0.02) !important;
 }
 
 .page.theme-light .dv-table-totals .dv-totals-label {
@@ -543,7 +576,7 @@
 }
 
 .page.theme-light .dv-table.dv-table-totals tbody .dv-totals-row--clickable:hover td {
-  background: rgba(0, 0, 0, 0.05);
+  background: rgb(0 0 0 / 11%) !important;
 }
 
 .page.theme-dark .dv-totals-row--hidden td {
@@ -616,11 +649,15 @@
 }
 
 .dv-table tbody tr:hover td {
-  background: rgba(0, 0, 0, 0.02);
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.page.theme-light .dv-table tbody tr:hover td {
+  background: rgb(0 0 0 / 11%) !important;
 }
 
 .page.theme-dark .dv-table tbody tr:hover td {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .dv-cell-date {
