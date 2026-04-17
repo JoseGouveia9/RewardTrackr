@@ -193,6 +193,7 @@ export interface ExistingPriceRawRecord {
 
 export interface SimpleEarnAsset {
   asset: string;
+  price: string;
   apr?: number;
   vipLevelMultiplier?: number;
   reward: string;
@@ -201,6 +202,7 @@ export interface SimpleEarnAsset {
 
 export interface SimpleEarnRawRecord {
   createdAt: string;
+  assetToUsd: string;
   asset?: string;
   assets?: SimpleEarnAsset[];
 }
