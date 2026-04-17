@@ -20,15 +20,18 @@ function fromBase64(b64) {
 async function ghFetch(token, path, method, body) {
   return fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}`, {
     method,
+    cache: "no-store",
     headers: {
       Authorization: `Bearer ${token}`,
       Accept: "application/vnd.github.v3+json",
       "Content-Type": "application/json",
       "User-Agent": "RewardTrackr-Worker/1.0",
+      "Cache-Control": "no-cache",
     },
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
 }
+
 
 export async function getFileSha(token, path) {
   const res = await ghFetch(token, path, "GET");
@@ -37,27 +40,33 @@ export async function getFileSha(token, path) {
   return data.sha ?? null;
 }
 
-export async function readFile(token, path) {
+export async function readFile(token, path, { withSha = false } = {}) {
   const res = await ghFetch(token, path, "GET");
-  if (!res.ok) return null;
+  if (!res.ok) return withSha ? { content: null, sha: null } : null;
   const data = await res.json();
-  if (data.content) {
-    return fromBase64(data.content);
-  }
+  const sha = data.sha ?? null;
 
-  if (typeof data.download_url === "string" && data.download_url) {
-    const rawRes = await fetch(data.download_url, {
+  let content = null;
+  if (data.content) {
+    content = fromBase64(data.content);
+  } else if (sha) {
+    // File >1MB: content is null, fetch by blob SHA via Git API (content-addressed, no CDN caching)
+    const blobRes = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/git/blobs/${sha}`, {
+      cache: "no-store",
       headers: {
         Authorization: `Bearer ${token}`,
-        Accept: "application/vnd.github.raw+json",
+        Accept: "application/vnd.github.v3+json",
         "User-Agent": "RewardTrackr-Worker/1.0",
+        "Cache-Control": "no-cache",
       },
     });
-    if (!rawRes.ok) return null;
-    return await rawRes.text();
+    if (blobRes.ok) {
+      const blob = await blobRes.json();
+      if (blob.content) content = fromBase64(blob.content);
+    }
   }
 
-  return null;
+  return withSha ? { content, sha } : content;
 }
 
 export async function writeFile(token, path, content, sha) {
@@ -84,8 +93,9 @@ export async function deleteFile(token, path, sha) {
 export async function readDirectoryEntries(token, options = {}) {
   const { withSha = false } = options;
   const dirPath = "shared/directory.json";
-  const dirContent = await readFile(token, dirPath);
-  const dirSha = withSha ? await getFileSha(token, dirPath) : null;
+  const result = await readFile(token, dirPath, { withSha });
+  const dirContent = withSha ? result.content : result;
+  const dirSha = withSha ? result.sha : null;
 
   let dir = [];
   if (dirContent) {

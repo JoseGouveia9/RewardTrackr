@@ -52,8 +52,13 @@ export async function handleShareRoutes({
       return jsonResponse({ exists: false });
     }
 
-    const path = `shared/${id}.json`;
-    const content = await readFile(env.GITHUB_TOKEN, path);
+    const [{ dir }, content] = await Promise.all([
+      readDirectoryEntries(env.GITHUB_TOKEN),
+      readFile(env.GITHUB_TOKEN, `shared/${id}.json`),
+    ]);
+
+    const dirEntry = Array.isArray(dir) ? dir.find((e) => e.id === id || e.ownerId === userId) : null;
+
     if (!content) {
       const profileKey = `share_profile_${userId}`;
       await env.RATE_LIMIT.delete(profileKey);
@@ -64,16 +69,19 @@ export async function handleShareRoutes({
         return jsonResponse({ exists: false });
       }
 
-      const recoveredPath = `shared/${recoveredId}.json`;
-      const recoveredContent = await readFile(env.GITHUB_TOKEN, recoveredPath);
+      const recoveredContent = await readFile(env.GITHUB_TOKEN, `shared/${recoveredId}.json`);
       if (!recoveredContent) {
         return jsonResponse({ exists: false });
       }
 
-      return jsonResponse(buildMyShareResponse(recoveredContent, recoveredId));
+      const response = buildMyShareResponse(recoveredContent, recoveredId);
+      if (dirEntry?.updatedAt) response.updatedAt = dirEntry.updatedAt;
+      return jsonResponse(response);
     }
 
-    return jsonResponse(buildMyShareResponse(content, id));
+    const response = buildMyShareResponse(content, id);
+    if (dirEntry?.updatedAt) response.updatedAt = dirEntry.updatedAt;
+    return jsonResponse(response);
   }
 
   if (request.method === "GET" && url.pathname.startsWith("/share/")) {
@@ -82,14 +90,20 @@ export async function handleShareRoutes({
       return null;
     }
 
-    const path = `shared/${id}.json`;
-    const content = await readFile(env.GITHUB_TOKEN, path);
+    const [{ dir }, content] = await Promise.all([
+      readDirectoryEntries(env.GITHUB_TOKEN),
+      readFile(env.GITHUB_TOKEN, `shared/${id}.json`),
+    ]);
+
     if (!content) {
       return jsonResponse({ error: `No shared profile found for "${id}"` }, 404);
     }
 
     try {
-      return jsonResponse(JSON.parse(content));
+      const profile = JSON.parse(content);
+      const dirEntry = Array.isArray(dir) ? dir.find((e) => e.id === id) : null;
+      if (dirEntry?.updatedAt) profile.updatedAt = dirEntry.updatedAt;
+      return jsonResponse(profile);
     } catch {
       return jsonResponse({ error: "Shared profile data is invalid" }, 500);
     }
