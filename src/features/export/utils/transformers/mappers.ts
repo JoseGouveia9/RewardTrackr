@@ -254,8 +254,8 @@ export function transformSimpleEarn(
   fiatRate: number,
 ): SimpleEarnEnrichedRecord[] {
   return (raw.assets ?? []).map((a) => {
-    const reward = Number(a.reward) / 1e9;
-    const rewardInUSD = Number(a.rewardInUsd) / 1e9;
+    const reward = Number(a.reward) / 1e18;
+    const rewardInUSD = Number(a.rewardInUsd) / 1e18;
     const apr = (a.apr ?? 0) * (a.vipLevelMultiplier ?? 1);
     return {
       createdAt: raw.createdAt,
