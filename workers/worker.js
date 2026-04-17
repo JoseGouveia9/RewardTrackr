@@ -9,6 +9,7 @@ const MAX_EXPORTS_PER_DAY = 1;
 const MAX_SHARES_PER_DAY = MAX_EXPORTS_PER_DAY;
 
 const ALLOWED_ORIGINS = new Set([
+  "https://rewardtrackr.com",
   "https://josegouveia9.github.io",
   "http://localhost:5173",
   "http://localhost:4173",
@@ -16,7 +17,7 @@ const ALLOWED_ORIGINS = new Set([
 
 function corsHeaders(request) {
   const origin = request.headers.get("Origin") ?? "";
-  const allowed = ALLOWED_ORIGINS.has(origin) ? origin : "https://josegouveia9.github.io";
+  const allowed = ALLOWED_ORIGINS.has(origin) ? origin : "https://rewardtrackr.com";
   return {
     "Access-Control-Allow-Origin": allowed,
     "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",

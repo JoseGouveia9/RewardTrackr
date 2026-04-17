@@ -42,7 +42,7 @@ Your GoMining session token is used only inside your browser to fetch your data 
 1. Install the [RewardTrackr browser extension](https://chromewebstore.google.com/detail/hglbdmgkgidakkjbgndjebipocbgggkh?utm_source=item-share-cb)
 2. Open GoMining in your browser and make sure you're logged in
 3. Click the extension icon to sync your session
-4. Open the [RewardTrackr app](https://josegouveia9.github.io/RewardTrackr/)
+4. Open the [RewardTrackr app](https://rewardtrackr.com)
 5. Select the sheets you want and click **Build Excel**
 
 That's it, your file will download automatically.

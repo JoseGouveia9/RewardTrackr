@@ -1,7 +1,7 @@
 "use strict";
 
 (() => {
-  const EXPORTER_URL = "https://josegouveia9.github.io/RewardTrackr/";
+  const EXPORTER_URL = "https://rewardtrackr.com/";
 
   const INTRO_SEEN_KEY = "rt_intro_seen";
   const THEME_KEY = "rt_theme";
