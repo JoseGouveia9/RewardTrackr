@@ -202,7 +202,7 @@ function App() {
     setCacheVersion((v) => v + 1);
   }, []);
 
-  const { loading, handleExport, handleClearCache } = useExport({
+  const { loading, fetchingKeys, handleExport, handleClearCache } = useExport({
     storedToken,
     selectedKeys,
     cache,
@@ -580,6 +580,7 @@ function App() {
               <DataViewer
                 onClose={() => swapView("main")}
                 isFetching={sharedLoading || (loading && !sharedProfile)}
+                fetchingKeys={fetchingKeys}
                 cacheVersion={cacheVersion}
                 onTabSeen={handleTabSeen}
                 sharedData={sharedLoading ? {} : (sharedProfile?.sheets ?? null)}
@@ -611,7 +612,7 @@ function App() {
                 {message ? (
                   <motion.div layout transition={layoutSpring}>
                     <MessageBanner
-                      key={`auth-message-${message}`}
+                      key={`auth-message-${message.replace(/\b\d+s\b/g, "").replace(/\d+\/\d+/g, "")}`}
                       message={message}
                       onClose={() => setMessage("")}
                     />
@@ -744,7 +745,7 @@ function App() {
                   {message ? (
                     <motion.div layout transition={layoutSpring}>
                       <MessageBanner
-                        key={`main-message-${message}`}
+                        key={`main-message-${message.replace(/\b\d+s\b/g, "").replace(/\d+\/\d+/g, "")}`}
                         message={message}
                         onClose={() => setMessage("")}
                       />

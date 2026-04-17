@@ -22,6 +22,7 @@ interface UseExportParams {
 
 interface UseExportReturn {
   loading: boolean;
+  fetchingKeys: Set<RewardKey>;
   handleExport: () => Promise<void>;
   handleClearCache: () => void;
 }
@@ -41,6 +42,7 @@ export function useExport({
   onCacheUpdate,
 }: UseExportParams): UseExportReturn {
   const [loading, setLoading] = useState<boolean>(false);
+  const [fetchingKeys, setFetchingKeys] = useState<Set<RewardKey>>(new Set());
 
   // Clears all localStorage cache entries and resets the in-memory cache state.
   const handleClearCache = useCallback((): void => {
@@ -61,6 +63,8 @@ export function useExport({
 
     setLoading(true);
     onMessage("");
+    const pendingKeys = new Set(selectedKeys.filter((k) => !cache[k]) as RewardKey[]);
+    setFetchingKeys(pendingKeys);
 
     Sentry.logger.info("Export started", {
       sheets: selectedKeys.join(", "),
@@ -77,7 +81,16 @@ export function useExport({
         excelFiatCurrency,
         txFromTypeFilter: selectedKeys.includes("transactions") ? selectedTxFromTypes : undefined,
         onMessage,
-        onCacheUpdate,
+        onCacheUpdate: (newCache) => {
+          setFetchingKeys((prev) => {
+            const next = new Set(prev);
+            for (const k of prev) {
+              if (newCache[k]) next.delete(k);
+            }
+            return next;
+          });
+          onCacheUpdate(newCache);
+        },
       });
       Sentry.logger.info("Export completed", { sheets: selectedKeys.length });
       onMessage(successMessage);
@@ -111,6 +124,7 @@ export function useExport({
       );
     } finally {
       setLoading(false);
+      setFetchingKeys(new Set());
     }
   }, [
     storedToken,
@@ -124,5 +138,5 @@ export function useExport({
     onCacheUpdate,
   ]);
 
-  return { loading, handleExport, handleClearCache };
+  return { loading, fetchingKeys, handleExport, handleClearCache };
 }

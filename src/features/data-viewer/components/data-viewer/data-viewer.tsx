@@ -20,6 +20,7 @@ import "./data-viewer.css";
 interface DataViewerProps {
   onClose: () => void;
   isFetching?: boolean;
+  fetchingKeys?: Set<RewardKey>;
   cacheVersion?: number;
   onTabSeen?: (key: RewardKey) => void;
   title?: string;
@@ -34,6 +35,7 @@ interface DataViewerProps {
 export const DataViewer = memo(function DataViewer({
   onClose,
   isFetching = false,
+  fetchingKeys,
   cacheVersion = 0,
   onTabSeen,
   title = "Records",
@@ -57,6 +59,9 @@ export const DataViewer = memo(function DataViewer({
   const fiatCode = useMemo(() => loadFiatCode(), []);
 
   const isSharedContext = sharedData !== null && sharedData !== undefined;
+
+  const isActiveKeyFetching =
+    isFetching && (fetchingKeys === undefined || fetchingKeys.has(activeKey));
 
   const visibleTabs = useMemo(() => {
     if (!isSharedContext || isFetching) return ALL_TABS;
@@ -377,7 +382,7 @@ export const DataViewer = memo(function DataViewer({
                     rewardKey={activeKey}
                     currency={currency}
                     fiatCode={fiatCode}
-                    isFetching={isFetching}
+                    isFetching={isActiveKeyFetching}
                     cacheVersion={cacheVersion}
                     cacheEntry={sharedData ? (sharedData[activeKey] ?? null) : undefined}
                     dateRange={dateRange}
@@ -389,7 +394,7 @@ export const DataViewer = memo(function DataViewer({
                     rewardKey={activeKey}
                     fiatCode={fiatCode}
                     earnView={effectiveEarnView}
-                    isFetching={isFetching}
+                    isFetching={isActiveKeyFetching}
                     cacheVersion={cacheVersion}
                     cacheEntry={sharedData ? (sharedData[activeKey] ?? null) : undefined}
                     groupByDay={groupByDay}
@@ -402,7 +407,7 @@ export const DataViewer = memo(function DataViewer({
                     rewardKey={activeKey}
                     fiatCode={fiatCode}
                     txView={effectiveTxView}
-                    isFetching={isFetching}
+                    isFetching={isActiveKeyFetching}
                     cacheVersion={cacheVersion}
                     cacheEntry={sharedData ? (sharedData[activeKey] ?? null) : undefined}
                     groupByDay={groupByDay}
@@ -414,7 +419,7 @@ export const DataViewer = memo(function DataViewer({
                     key={activeKey}
                     fiatCode={fiatCode}
                     purchaseView={effectivePurchaseView}
-                    isFetching={isFetching}
+                    isFetching={isActiveKeyFetching}
                     cacheVersion={cacheVersion}
                     purchasesCacheEntry={sharedData ? (sharedData["purchases"] ?? null) : undefined}
                     upgradesCacheEntry={sharedData ? (sharedData["upgrades"] ?? null) : undefined}
@@ -428,7 +433,7 @@ export const DataViewer = memo(function DataViewer({
                     rewardKey={activeKey}
                     fiatCode={fiatCode}
                     simpleView={effectiveSimpleView}
-                    isFetching={isFetching}
+                    isFetching={isActiveKeyFetching}
                     cacheVersion={cacheVersion}
                     cacheEntry={sharedData ? (sharedData[activeKey] ?? null) : undefined}
                     groupByDay={groupByDay}
