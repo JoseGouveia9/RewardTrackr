@@ -18,9 +18,17 @@ export const ReferralButton = memo(function ReferralButton({
   useEscapeKey(onClose, open);
 
   useEffect(() => {
-    document.body.style.overflow = open ? "hidden" : "";
+    if (open) {
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+      document.body.style.paddingRight = "";
+    }
     return () => {
       document.body.style.overflow = "";
+      document.body.style.paddingRight = "";
     };
   }, [open]);
 

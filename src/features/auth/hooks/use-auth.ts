@@ -67,7 +67,7 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
     (exp: number | null) => {
       clearExpiryTimer();
       if (!exp) return;
-      const msUntilExpiry = exp * 1000 - Date.now();
+      const msUntilExpiry = exp * 1000 - Date.now() - 30_000;
       if (msUntilExpiry <= 0) return;
       expiryTimer.current = setTimeout(() => {
         sessionStorage.removeItem(LS_KEY_SYNC_TOKEN);
