@@ -21,6 +21,12 @@
   gap: 14px;
 }
 
+.sh-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
 .page.theme-dark .sh-modal {
   background: #1c1c1e;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
@@ -410,6 +416,24 @@
 
 .page.theme-dark .sh-modal-visibility-row small {
   color: rgba(255, 255, 255, 0.55);
+}
+
+.sh-modal-update-warning {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(247, 147, 26, 0.1);
+  border: 1px solid rgba(247, 147, 26, 0.3);
+  font-size: 0.82rem;
+  color: #f7931a;
+  line-height: 1.45;
+}
+
+.sh-modal-update-warning-actions {
+  display: flex;
+  gap: 8px;
 }
 
 .sh-modal-actions {

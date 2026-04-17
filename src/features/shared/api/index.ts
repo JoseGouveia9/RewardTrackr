@@ -48,32 +48,17 @@ export async function fetchSharedProfile(id: string): Promise<SharedProfile> {
   if (inFlight) return inFlight;
 
   const fetchPromise = (async () => {
-    let directoryUpdatedAt: string | undefined;
-
     if (WORKER_URL) {
-      try {
-        const dirRes = await fetch(`${WORKER_URL}/share/directory`, { cache: "no-store" });
-        if (dirRes.ok) {
-          const dirData: unknown = await dirRes.json();
-          if (Array.isArray(dirData)) {
-            const match = (dirData as DirectoryEntry[]).find((entry) => entry.id === safeId);
-            directoryUpdatedAt = match?.updatedAt;
-          }
-        }
-      } catch {
-        // Ignore worker directory errors and fall back to RAW source
-      }
+      const res = await fetch(`${WORKER_URL}/share/${safeId}`, { cache: "no-store" });
+      if (res.status === 404) throw new Error(`No shared profile found for "${id}"`);
+      if (!res.ok) throw new Error("Failed to load shared profile");
+      return res.json() as Promise<SharedProfile>;
     }
 
     const res = await fetch(`${RAW_BASE}/${safeId}.json`, { cache: "no-store" });
     if (res.status === 404) throw new Error(`No shared profile found for "${id}"`);
     if (!res.ok) throw new Error("Failed to load shared profile");
-
-    const profile = (await res.json()) as SharedProfile;
-    if (directoryUpdatedAt) {
-      return { ...profile, updatedAt: directoryUpdatedAt };
-    }
-    return profile;
+    return res.json() as Promise<SharedProfile>;
   })();
 
   inFlightProfiles.set(safeId, fetchPromise);

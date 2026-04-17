@@ -4,6 +4,7 @@ import {
   publishProfile,
   isWorkerConfigured,
   fetchMySharedProfile,
+  fetchSharedProfile,
   deleteMySharedProfile,
   buildShareLink,
 } from "../../api";
@@ -14,6 +15,16 @@ import { ALL_REWARD_KEYS } from "@/features/export/config/reward-configs";
 import { formatAge } from "@/features/export/utils/cache";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { AppNotice } from "@/components/app-notice/app-notice";
+
+const containerVariants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.06 } },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, scale: 0.95, y: -6 },
+  visible: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.22 } },
+};
 
 const SHARE_ERROR_ICON = (
   <svg
@@ -46,9 +57,12 @@ export function ShareModal({
   onClose: () => void;
 }) {
   useEffect(() => {
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    document.body.style.paddingRight = `${scrollbarWidth}px`;
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = "";
+      document.body.style.paddingRight = "";
     };
   }, []);
 
@@ -59,6 +73,7 @@ export function ShareModal({
   const [existingProfile, setExistingProfile] = useState<OwnedProfile | null>(null);
   const [deletingExisting, setDeletingExisting] = useState(false);
   const [shareInCommunity, setShareInCommunity] = useState(true);
+  const [confirmingUpdate, setConfirmingUpdate] = useState(false);
 
   const availableSheets = useMemo(() => ALL_REWARD_KEYS.filter((k) => !!cache[k]), [cache]);
   const [selectedKeys, setSelectedKeys] = useState<Set<RewardKey>>(new Set(availableSheets));
@@ -78,7 +93,7 @@ export function ShareModal({
     let alive = true;
     setExistingLoading(true);
     fetchMySharedProfile(authToken)
-      .then((data) => {
+      .then(async (data) => {
         if (!alive) return;
         if (data.exists && data.id) {
           const isVisible = data.communityVisible !== false;
@@ -89,6 +104,14 @@ export function ShareModal({
             communityVisible: isVisible,
           });
           setShareInCommunity(isVisible);
+          try {
+            const full = await fetchSharedProfile(data.id);
+            if (!alive) return;
+            const prevKeys = availableSheets.filter((k) => k in full.sheets);
+            if (prevKeys.length > 0) setSelectedKeys(new Set(prevKeys));
+          } catch {
+            // preselection is best-effort, fall back to all selected
+          }
         } else {
           setExistingProfile(null);
           setShareInCommunity(true);
@@ -106,7 +129,7 @@ export function ShareModal({
     return () => {
       alive = false;
     };
-  }, [authToken, workerReady]);
+  }, [authToken, workerReady]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function toggleSheet(k: RewardKey) {
     setSelectedKeys((prev) => {
@@ -194,265 +217,314 @@ export function ShareModal({
 
         {status !== "done" ? (
           <>
-            <p className="sh-modal-desc">
+            <motion.p
+              className="sh-modal-desc"
+              variants={itemVariants}
+              initial="hidden"
+              animate="visible"
+            >
               Your records will be publicly visible. Anyone with the link can view them, read-only.
-            </p>
+            </motion.p>
 
             {existingLoading ? (
               <p className="sh-modal-hint sh-modal-loading-inline" aria-live="polite">
                 <span className="sh-modal-spinner" aria-hidden="true" />
                 <span>Checking your current shared link...</span>
               </p>
-            ) : existingProfile ? (
-              <div className="sh-modal-existing">
-                <p className="sh-modal-existing-title">Current shared link</p>
-                <div className="sh-modal-link-actions">
-                  <div className="sh-modal-link-row">
-                    <input
-                      type="text"
-                      className="sh-modal-link-input"
-                      value={existingShareLink}
-                      readOnly
-                      onClick={(e) => (e.target as HTMLInputElement).select()}
-                    />
-                    <button
-                      type="button"
-                      className={`sh-modal-icon-btn${copiedExisting ? " sh-modal-icon-btn--done" : ""}`}
-                      onClick={() => copyExisting(existingShareLink)}
-                      disabled={deletingExisting}
-                      aria-label={copiedExisting ? "Copied" : "Copy link"}
-                      title={copiedExisting ? "Copied" : "Copy link"}
-                    >
-                      {copiedExisting ? (
-                        <svg
-                          width="14"
-                          height="14"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          aria-hidden="true"
+            ) : (
+              <motion.div
+                className="sh-modal-body"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+              >
+                <motion.div variants={itemVariants}>
+                  {existingProfile ? (
+                    <div className="sh-modal-existing">
+                      <p className="sh-modal-existing-title">Current shared link</p>
+                      <div className="sh-modal-link-actions">
+                        <div className="sh-modal-link-row">
+                          <input
+                            type="text"
+                            className="sh-modal-link-input"
+                            value={existingShareLink}
+                            readOnly
+                            onClick={(e) => (e.target as HTMLInputElement).select()}
+                          />
+                          <button
+                            type="button"
+                            className={`sh-modal-icon-btn${copiedExisting ? " sh-modal-icon-btn--done" : ""}`}
+                            onClick={() => copyExisting(existingShareLink)}
+                            disabled={deletingExisting}
+                            aria-label={copiedExisting ? "Copied" : "Copy link"}
+                            title={copiedExisting ? "Copied" : "Copy link"}
+                          >
+                            {copiedExisting ? (
+                              <svg
+                                width="14"
+                                height="14"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                aria-hidden="true"
+                              >
+                                <polyline points="20 6 9 17 4 12" />
+                              </svg>
+                            ) : (
+                              <svg
+                                width="14"
+                                height="14"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                aria-hidden="true"
+                              >
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                              </svg>
+                            )}
+                          </button>
+                        </div>
+                        <button
+                          type="button"
+                          className="sh-modal-icon-btn sh-modal-icon-btn--danger"
+                          onClick={handleDeleteExisting}
+                          disabled={deletingExisting || status === "loading"}
+                          aria-label={deletingExisting ? "Deleting" : "Delete link"}
+                          title={deletingExisting ? "Deleting" : "Delete link"}
                         >
-                          <polyline points="20 6 9 17 4 12" />
-                        </svg>
-                      ) : (
-                        <svg
-                          width="14"
-                          height="14"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2.2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          aria-hidden="true"
-                        >
-                          <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                        </svg>
+                          {deletingExisting ? (
+                            <svg
+                              width="14"
+                              height="14"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2.2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              aria-hidden="true"
+                            >
+                              <path d="M3 6h18" />
+                              <path d="M8 6V4h8v2" />
+                              <path d="M19 6l-1 14H6L5 6" />
+                            </svg>
+                          ) : (
+                            <svg
+                              width="14"
+                              height="14"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2.2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              aria-hidden="true"
+                            >
+                              <path d="M3 6h18" />
+                              <path d="M8 6V4h8v2" />
+                              <path d="M19 6l-1 14H6L5 6" />
+                              <path d="M10 11v6" />
+                              <path d="M14 11v6" />
+                            </svg>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <label className="sh-modal-label" htmlFor="sh-alias-input">
+                        Display name
+                      </label>
+                      <input
+                        id="sh-alias-input"
+                        type="text"
+                        className="sh-modal-input"
+                        value={alias}
+                        onChange={(e) => setAlias(e.target.value)}
+                        placeholder="e.g. Moustachio"
+                        maxLength={40}
+                        disabled={status === "loading"}
+                        autoFocus
+                      />
+                      {alias && !aliasValid && (
+                        <p className="sh-modal-hint sh-modal-hint--error">
+                          Letters, numbers, _ and - only (1–40 chars)
+                        </p>
                       )}
-                    </button>
-                  </div>
-                  <button
-                    type="button"
-                    className="sh-modal-icon-btn sh-modal-icon-btn--danger"
-                    onClick={handleDeleteExisting}
-                    disabled={deletingExisting || status === "loading"}
-                    aria-label={deletingExisting ? "Deleting" : "Delete link"}
-                    title={deletingExisting ? "Deleting" : "Delete link"}
+                    </>
+                  )}
+                </motion.div>
+
+                <motion.button
+                  variants={itemVariants}
+                  type="button"
+                  className={`sh-modal-visibility-row${shareInCommunity ? " sh-modal-visibility-row--checked" : ""}`}
+                  onClick={() => setShareInCommunity((prev) => !prev)}
+                  disabled={status === "loading" || deletingExisting}
+                  aria-pressed={shareInCommunity}
+                >
+                  <span
+                    className={`sheet-check-icon${shareInCommunity ? " sheet-check-icon--visible" : ""}`}
+                    aria-hidden="true"
                   >
-                    {deletingExisting ? (
-                      <svg
-                        width="14"
-                        height="14"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2.2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        aria-hidden="true"
-                      >
-                        <path d="M3 6h18" />
-                        <path d="M8 6V4h8v2" />
-                        <path d="M19 6l-1 14H6L5 6" />
-                      </svg>
-                    ) : (
-                      <svg
-                        width="14"
-                        height="14"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2.2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        aria-hidden="true"
-                      >
-                        <path d="M3 6h18" />
-                        <path d="M8 6V4h8v2" />
-                        <path d="M19 6l-1 14H6L5 6" />
-                        <path d="M10 11v6" />
-                        <path d="M14 11v6" />
-                      </svg>
-                    )}
-                  </button>
-                </div>
-              </div>
-            ) : null}
-
-            {!existingProfile && !existingLoading && (
-              <>
-                <label className="sh-modal-label" htmlFor="sh-alias-input">
-                  Display name
-                </label>
-                <input
-                  id="sh-alias-input"
-                  type="text"
-                  className="sh-modal-input"
-                  value={alias}
-                  onChange={(e) => setAlias(e.target.value)}
-                  placeholder="e.g. Moustachio"
-                  maxLength={40}
-                  disabled={status === "loading"}
-                  autoFocus
-                />
-                {alias && !aliasValid && (
-                  <p className="sh-modal-hint sh-modal-hint--error">
-                    Letters, numbers, _ and - only (1–40 chars)
-                  </p>
-                )}
-              </>
-            )}
-
-            <button
-              type="button"
-              className={`sh-modal-visibility-row${shareInCommunity ? " sh-modal-visibility-row--checked" : ""}`}
-              onClick={() => setShareInCommunity((prev) => !prev)}
-              disabled={status === "loading" || deletingExisting}
-              aria-pressed={shareInCommunity}
-            >
-              <span
-                className={`sheet-check-icon${shareInCommunity ? " sheet-check-icon--visible" : ""}`}
-                aria-hidden="true"
-              >
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-              </span>
-              <span>
-                Show in Community tab
-                <small>
-                  {shareInCommunity
-                    ? "Your profile will appear in the public community list."
-                    : "Your profile stays accessible only by direct link."}
-                </small>
-              </span>
-            </button>
-
-            <div className="sh-modal-sheets">
-              <span className="sh-modal-sheets-label">Sheets included</span>
-              <div className="sh-modal-sheet-list">
-                {availableSheets.map((k) => {
-                  const entry = cache[k]!;
-                  const checked = selectedKeys.has(k);
-                  return (
-                    <button
-                      key={k}
-                      type="button"
-                      className={`sh-modal-sheet-row sh-modal-sheet-row--check${checked ? " sh-modal-sheet-row--checked" : ""}`}
-                      onClick={() => toggleSheet(k)}
-                      disabled={status === "loading"}
-                      aria-pressed={checked}
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     >
-                      <span
-                        className={`sheet-check-icon${checked ? " sheet-check-icon--visible" : ""}`}
-                        aria-hidden="true"
-                      >
-                        <svg
-                          width="14"
-                          height="14"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  </span>
+                  <span>
+                    Show in Community tab
+                    <small>
+                      {shareInCommunity
+                        ? "Your profile will appear in the public community list."
+                        : "Your profile stays accessible only by direct link."}
+                    </small>
+                  </span>
+                </motion.button>
+
+                <motion.div variants={itemVariants} className="sh-modal-sheets">
+                  <span className="sh-modal-sheets-label">Sheets included</span>
+                  <div className="sh-modal-sheet-list">
+                    {availableSheets.map((k) => {
+                      const entry = cache[k]!;
+                      const checked = selectedKeys.has(k);
+                      return (
+                        <button
+                          key={k}
+                          type="button"
+                          className={`sh-modal-sheet-row sh-modal-sheet-row--check${checked ? " sh-modal-sheet-row--checked" : ""}`}
+                          onClick={() => toggleSheet(k)}
+                          disabled={status === "loading"}
+                          aria-pressed={checked}
                         >
-                          <polyline points="20 6 9 17 4 12" />
-                        </svg>
-                      </span>
-                      <span className="sh-modal-sheet-name">{entry.sheetName}</span>
-                      <span className="sh-modal-sheet-meta">
-                        {entry.records.length} records · {formatAge(entry.fetchedAt)}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+                          <span
+                            className={`sheet-check-icon${checked ? " sheet-check-icon--visible" : ""}`}
+                            aria-hidden="true"
+                          >
+                            <svg
+                              width="14"
+                              height="14"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                          </span>
+                          <span className="sh-modal-sheet-name">{entry.sheetName}</span>
+                          <span className="sh-modal-sheet-meta">
+                            {entry.records.length} records · {formatAge(entry.fetchedAt)}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </motion.div>
 
-            {!workerReady && (
-              <p className="sh-modal-hint sh-modal-hint--warn">
-                Sharing requires a Cloudflare Worker. See{" "}
-                <a
-                  href="https://github.com/JoseGouveia9/RewardTrackr#sharing-setup"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                {!workerReady && (
+                  <motion.p variants={itemVariants} className="sh-modal-hint sh-modal-hint--warn">
+                    Sharing requires a Cloudflare Worker. See{" "}
+                    <a
+                      href="https://github.com/JoseGouveia9/RewardTrackr#sharing-setup"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      setup guide
+                    </a>
+                    .
+                  </motion.p>
+                )}
+
+                <AppNotice
+                  visible={status === "error" && !!error}
+                  icon={SHARE_ERROR_ICON}
+                  onDismiss={() => {
+                    setError("");
+                    setStatus("idle");
+                  }}
                 >
-                  setup guide
-                </a>
-                .
-              </p>
+                  {error}
+                </AppNotice>
+
+                <motion.div variants={itemVariants}>
+                  {confirmingUpdate ? (
+                    <div className="sh-modal-update-warning">
+                      <span>
+                        This will update the data of your shared link with the currently selected
+                        options.
+                      </span>
+                      <div className="sh-modal-update-warning-actions">
+                        <button
+                          type="button"
+                          className="sh-modal-btn sh-modal-btn--primary"
+                          onClick={() => {
+                            setConfirmingUpdate(false);
+                            void handleShare();
+                          }}
+                        >
+                          Confirm Update
+                        </button>
+                        <button
+                          type="button"
+                          className="sh-modal-btn sh-modal-btn--ghost"
+                          onClick={() => setConfirmingUpdate(false)}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="sh-modal-actions">
+                      <button
+                        type="button"
+                        className="sh-modal-btn sh-modal-btn--primary"
+                        onClick={existingProfile ? () => setConfirmingUpdate(true) : handleShare}
+                        disabled={
+                          !aliasValid ||
+                          !workerReady ||
+                          !authToken ||
+                          sheetsToShare.length === 0 ||
+                          status === "loading" ||
+                          deletingExisting
+                        }
+                      >
+                        {status === "loading"
+                          ? "Publishing…"
+                          : existingProfile
+                            ? "Update Data"
+                            : "Share"}
+                      </button>
+                      <button
+                        type="button"
+                        className="sh-modal-btn sh-modal-btn--ghost"
+                        onClick={onClose}
+                        disabled={status === "loading"}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  )}
+                </motion.div>
+              </motion.div>
             )}
-
-            <AppNotice
-              visible={status === "error" && !!error}
-              icon={SHARE_ERROR_ICON}
-              onDismiss={() => {
-                setError("");
-                setStatus("idle");
-              }}
-            >
-              {error}
-            </AppNotice>
-
-            <div className="sh-modal-actions">
-              <button
-                type="button"
-                className="sh-modal-btn sh-modal-btn--primary"
-                onClick={handleShare}
-                disabled={
-                  !aliasValid ||
-                  !workerReady ||
-                  !authToken ||
-                  sheetsToShare.length === 0 ||
-                  status === "loading" ||
-                  deletingExisting
-                }
-              >
-                {status === "loading" ? "Publishing…" : "Share"}
-              </button>
-              <button
-                type="button"
-                className="sh-modal-btn sh-modal-btn--ghost"
-                onClick={onClose}
-                disabled={status === "loading"}
-              >
-                Cancel
-              </button>
-            </div>
           </>
         ) : (
           <>
