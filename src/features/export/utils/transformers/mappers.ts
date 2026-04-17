@@ -262,7 +262,7 @@ export function transformSimpleEarn(
       asset: a.asset ?? "BTC",
       apr,
       currency: raw.asset ?? "BTC",
-      reward,
+      reward: a.asset != "BTC" ? (reward * Number(a.price)) / Number(raw.assetToUsd) : reward,
       priceAtTime: reward > 0 ? rewardInUSD / reward : 0,
       rewardInUSD,
       rewardInFiat: rewardInUSD * fiatRate,
