@@ -128,9 +128,9 @@ export async function fetchCoinGeckoPrice(
       if (!response.ok || isRateLimited) {
         if (attempt < COINGECKO_MAX_RETRIES) {
           await sleepWithCountdown(COINGECKO_RETRY_WAIT_MS, (s) => {
-            const entrySuffix = entryProgress ? ` (entry ${entryProgress})` : "";
+            const entrySuffix = entryProgress ? `, entry ${entryProgress}` : "";
             onWait?.(
-              `CoinGecko rate limit hit. Retrying in ${s}s (attempt ${attempt} of ${COINGECKO_MAX_RETRIES})${entrySuffix}...`,
+              `CoinGecko rate limit hit. Retrying in ${s}s (attempt ${attempt}/${COINGECKO_MAX_RETRIES}${entrySuffix})...`,
             );
           });
           continue;
