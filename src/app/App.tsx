@@ -114,6 +114,8 @@ function App() {
   const [cacheVersion, setCacheVersion] = useState(0);
   const [sharedProfile, setSharedProfile] = useState<SharedProfile | null>(null);
   const [sharedLoading, setSharedLoading] = useState(initialRouteState.shouldLoadShared);
+  const [sharedReturnView, setSharedReturnView] = useState<"main" | "community">("main");
+  const viewRef = useRef<"main" | "records" | "community">(initialRouteState.view);
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [noticeRateLimitsDismissed, setNoticeRateLimitsDismissed] = useState(
     () => localStorage.getItem(LS_KEY_NOTICE_RATE_LIMITS) === "1",
@@ -300,6 +302,7 @@ function App() {
         setView("main");
         return;
       }
+      setSharedReturnView(viewRef.current === "community" ? "community" : "main");
       setSharedLoading(true);
       setSharedProfile(null);
       setView("records");
@@ -334,6 +337,10 @@ function App() {
     return () => window.removeEventListener("hashchange", applyHashRoute);
   }, [applyHashRoute]);
 
+  useEffect(() => {
+    viewRef.current = view;
+  }, [view]);
+
   const layoutSpring = disableViewMotion ? { layout: { duration: 0 } } : BASE_LAYOUT_SPRING;
 
   const swapView = useCallback((nextView: "main" | "records" | "community") => {
@@ -341,7 +348,7 @@ function App() {
     if (nextView !== "records") setSharedProfile(null);
     setView(nextView);
     // Clear hash when navigating away from shared/community views
-    if (nextView === "main" && window.location.hash) {
+    if ((nextView === "main" || nextView === "community") && window.location.hash) {
       history.replaceState(null, "", window.location.pathname + window.location.search);
     }
     requestAnimationFrame(() => {
@@ -578,20 +585,22 @@ function App() {
                 ) : null}
               </AnimatePresence>
               <DataViewer
-                onClose={() => swapView("main")}
+                onClose={() => swapView(sharedProfile || sharedLoading ? sharedReturnView : "main")}
                 isFetching={sharedLoading || (loading && !sharedProfile)}
-                fetchingKeys={fetchingKeys}
+                fetchingKeys={sharedLoading ? undefined : fetchingKeys}
                 cacheVersion={cacheVersion}
                 onTabSeen={handleTabSeen}
                 sharedData={sharedLoading ? {} : (sharedProfile?.sheets ?? null)}
                 title={sharedProfile || sharedLoading ? "Community" : "Records"}
                 banner={
-                  sharedProfile ? (
+                  sharedProfile || sharedLoading ? (
                     <SharedBanner
-                      profile={sharedProfile}
+                      profile={sharedProfile ?? undefined}
+                      loading={sharedLoading}
                       onClose={() => {
                         setSharedProfile(null);
-                        swapView("main");
+                        setSharedLoading(false);
+                        swapView(sharedReturnView);
                       }}
                     />
                   ) : undefined
