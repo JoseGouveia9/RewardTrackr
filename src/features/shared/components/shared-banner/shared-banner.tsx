@@ -6,12 +6,14 @@ import { formatAge } from "@/features/export/utils/cache";
 // Banner shown at the top of the DataViewer when viewing someone else's shared records.
 export function SharedBanner({
   profile,
+  loading,
   onClose,
 }: {
-  profile: { alias: string; updatedAt: string };
+  profile?: { alias: string; updatedAt: string };
+  loading?: boolean;
   onClose: () => void;
 }) {
-  const age = formatAge(new Date(profile.updatedAt).getTime());
+  const age = profile ? formatAge(new Date(profile.updatedAt).getTime()) : null;
 
   return (
     <div className="sh-banner">
@@ -30,10 +32,14 @@ export function SharedBanner({
           <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
           <circle cx="12" cy="12" r="3" />
         </svg>
-        <span>
-          Viewing <strong>{profile.alias}</strong>'s records
-        </span>
-        <span className="sh-banner-meta">· Updated {age} · Read only</span>
+        {loading ? (
+          <span>Loading profile...</span>
+        ) : (
+          <span>
+            Viewing <strong>{profile?.alias}</strong>'s records
+          </span>
+        )}
+        {age && <span className="sh-banner-meta">· Updated {age} · Read only</span>}
       </div>
       <button type="button" className="sh-banner-close" onClick={onClose} aria-label="Close">
         <svg
