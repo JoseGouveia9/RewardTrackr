@@ -31,26 +31,7 @@ h6 {
 /* Background decoration */
 
 .background-shape {
-  position: fixed;
-  border-radius: 999px;
-  pointer-events: none;
-  opacity: 0.22;
-}
-
-.background-shape-top {
-  width: 420px;
-  height: 420px;
-  background: radial-gradient(circle, rgba(247, 147, 26, 0.38), transparent 70%);
-  top: -140px;
-  right: -80px;
-}
-
-.background-shape-bottom {
-  width: 480px;
-  height: 480px;
-  background: radial-gradient(circle, rgba(247, 147, 26, 0.28), transparent 70%);
-  bottom: -220px;
-  left: -120px;
+  display: none;
 }
 
 /* Container */
