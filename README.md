@@ -29,6 +29,8 @@ You can also browse your data directly in the app before exporting, with filters
 ## Features
 
 - **Data Viewer** - browse your records in-app before exporting, with filters, date ranges, and currency toggles
+- **Share** - share your records with anyone via a personal read-only link, no account needed to view
+- **Community tab** - browse shared profiles from other RewardTrackr users
 - **Fiat conversion** - each row shows the USD and local currency value at the time the reward was received
 - **Browser cache** - data is cached after the first fetch, so subsequent exports only pull new records
 - **Dark & light mode** - follows your system preference with a manual toggle
@@ -43,7 +45,7 @@ Your GoMining session token is used only inside your browser to fetch your data 
 2. Open GoMining in your browser and make sure you're logged in
 3. Click the extension icon to sync your session
 4. Open the [RewardTrackr app](https://rewardtrackr.com)
-5. Select the sheets you want and click **Build Excel**
+5. Select the sheets you want and click **Build Report**
 
 That's it, your file will download automatically.
 
@@ -71,6 +73,18 @@ That's it, your file will download automatically.
 
 The folder structure follows a **feature-based layout** (`features/auth`, `features/export`, `features/data-viewer`) where each feature owns its components, hooks, types, and utilities. Shared utilities live in `src/lib`. There is no UI component library, all components are hand-built.
 
+### How does Share work?
+
+When you click Share, your in-browser data is sent to the Cloudflare Worker, which writes it as a JSON file to a private GitHub repository (`rewardtrackr-shared`) using the GitHub Contents API. Each profile is stored under a user-controlled alias (e.g. `moustachio.json`). The community directory is a single `directory.json` file in the same repo that lists all public profiles.
+
+When someone opens a shared link, the Worker reads the corresponding file from GitHub and returns it. The viewer never needs an account, they just load the data from the Worker and browse it read-only in the app.
+
+**Why GitHub as a database?**
+
+This is a deliberate tradeoff. GitHub acts as a zero-cost, persistent, auditable key-value store: files are content-addressed by SHA, changes are versioned, and reads are free. A real database would require either a paid service or self-hosted infrastructure with ongoing maintenance. For a project this size, GitHub fits perfectly: the Worker handles writes via the authenticated API, large profiles (>1MB) are fetched via the Git Blobs API (which bypasses CDN caching), and the whole thing runs at zero marginal cost.
+
+The downside is that GitHub has rate limits and is not designed for high write throughput. For a tool where each user shares at most once per day, this is not a problem in practice.
+
 ### Why no server-side backend?
 
 This was a deliberate choice, driven by two things:
@@ -79,7 +93,7 @@ This was a deliberate choice, driven by two things:
 
 **User trust** - your GoMining session token is the most sensitive piece of data in this flow. By keeping everything client-side, the token never leaves your browser. It is used directly to call the GoMining API from your machine, the resulting data is processed locally, and the final `.xlsx` file is assembled and downloaded entirely in-browser. There is no server that could log, store, or misuse it. You can verify this yourself by inspecting the source, what you read is exactly what runs.
 
-The Cloudflare Worker listed in the stack is a thin, stateless proxy used only to attach required headers to third-party API calls (CoinGecko, FX rates) that would otherwise be blocked by CORS. It never sees your token or your reward data.
+The Cloudflare Worker listed in the stack handles two things: acting as a thin CORS proxy for third-party API calls (CoinGecko, FX rates), and powering the Share feature by reading and writing profile JSON files to a private GitHub repository. It never sees your GoMining session token or processes your reward data directly. The Worker only receives the already-processed, already-in-browser data that you explicitly choose to share.
 
 ## Feedback & issues
 
