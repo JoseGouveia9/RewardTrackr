@@ -9,3 +9,6 @@ dist/
 *.xlsx
 release/
 *.zip
+
+# AI assistant artifacts
+.ai/
