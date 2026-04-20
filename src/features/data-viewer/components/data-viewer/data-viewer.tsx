@@ -30,6 +30,8 @@ interface DataViewerProps {
   banner?: React.ReactNode;
   /** When provided, a Share button is shown in the header. */
   onShare?: () => void;
+  /** Disables the share button and shows a tooltip when true. */
+  shareDisabled?: boolean;
 }
 
 export const DataViewer = memo(function DataViewer({
@@ -42,6 +44,7 @@ export const DataViewer = memo(function DataViewer({
   sharedData,
   banner,
   onShare,
+  shareDisabled = false,
 }: DataViewerProps) {
   const {
     activeKey,
@@ -267,9 +270,11 @@ export const DataViewer = memo(function DataViewer({
             {onShare && (
               <button
                 type="button"
-                className="dv-share-button"
-                onClick={onShare}
+                className={`dv-share-button${shareDisabled ? " dv-share-button--disabled" : ""}`}
+                onClick={shareDisabled ? undefined : onShare}
+                aria-disabled={shareDisabled}
                 aria-label="Share records"
+                title={shareDisabled ? "Export in progress — share after it completes" : undefined}
               >
                 <svg
                   width="14"
@@ -363,6 +368,7 @@ export const DataViewer = memo(function DataViewer({
           onSelect={setActiveKey}
           tabsWithNew={tabsWithNew}
           onTabSeen={onTabSeen}
+          fetchingKeys={fetchingKeys}
         />
 
         {/* Content */}

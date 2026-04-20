@@ -1,6 +1,15 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <script>
+      (function () {
+        var r = window.location.search.slice(1);
+        if (r.startsWith('/')) {
+          var decoded = r.split('&').map(function (s) { return s.replace(/~and~/g, '&'); }).join('?');
+          window.history.replaceState(null, null, decoded + window.location.hash);
+        }
+      })();
+    </script>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/webp" href="./logo.webp" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />

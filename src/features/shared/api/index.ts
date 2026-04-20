@@ -12,7 +12,7 @@ export function isWorkerConfigured(): boolean {
 }
 
 export function buildShareLink(profileId: string): string {
-  return `${window.location.origin}${window.location.pathname}#view=${profileId}`;
+  return `${window.location.origin}/view/${profileId}`;
 }
 
 // Fetches the public directory listing from the shared repo.

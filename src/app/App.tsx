@@ -1,7 +1,8 @@
-﻿import { useCallback, useEffect, useRef, useMemo, useState, type KeyboardEvent } from "react";
+import { useCallback, useEffect, useRef, useMemo, useState, type KeyboardEvent } from "react";
 import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
+import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router";
 import { AppNotice } from "@/components/app-notice/app-notice";
-import { clearAllCacheEntries, loadAllCacheEntries } from "@/features/export/utils/cache";
+import { loadAllCacheEntries } from "@/features/export/utils/cache";
 import { AuthPanel, HeaderUserMenu, useAuth } from "@/features/auth";
 import { SupportButton } from "@/components/support-button/support-button";
 import { SheetSelector, ExportOptions, useExport, useExportConfig } from "@/features/export";
@@ -9,47 +10,18 @@ import type { CacheState, RewardKey } from "@/features/export";
 import { AnnouncementBanner } from "@/components/announcement-banner/announcement-banner";
 import { ReferralButton } from "@/components/referral-button/referral-button";
 import { DataViewerButton, DataViewer } from "@/features/data-viewer";
-import {
-  ShareModal,
-  SharedBanner,
-  CommunityPage,
-  fetchSharedProfile,
-  fetchAnnouncement,
-} from "@/features/shared";
-import type { Announcement } from "@/features/shared";
-import type { SharedProfile } from "@/features/shared";
+import { ShareModal, CommunityPage } from "@/features/shared";
 import { ErrorBoundary } from "@/components/error-boundary/error-boundary";
 import { useTheme } from "./theme-context";
 import { MessageBanner } from "@/components/message-banner/message-banner";
-import {
-  LS_KEY_EXPORT_CONFIG,
-  LS_KEY_LAST_SYNC_USER,
-  LS_KEY_NOTICE_RATE_LIMITS,
-  LS_KEY_NOTICE_UNOFFICIAL,
-  LS_KEY_NOTICE_OPENSOURCE,
-  LS_KEY_NOTICE_ANNOUNCEMENT_PREFIX,
-  LS_KEY_REWARD_PREFIX,
-} from "@/lib/storage-keys";
+import { useNotices } from "./hooks/use-notices";
+import { useAccountSwitch } from "./hooks/use-account-switch";
+import { SharedView } from "./routes/shared-view";
+import { LS_KEY_REWARD_PREFIX } from "@/lib/storage-keys";
 import logo from "/logo.webp";
 import "./App.css";
 
-const BASE_LAYOUT_SPRING = { layout: { type: "spring" as const, stiffness: 220, damping: 28 } };
-
-function getInitialRouteState(): {
-  view: "main" | "records" | "community";
-  shouldLoadShared: boolean;
-  sharedId: string | null;
-} {
-  const hash = window.location.hash;
-  if (hash.startsWith("#view=")) {
-    const id = hash.slice(6).trim();
-    if (id) return { view: "records", shouldLoadShared: true, sharedId: id };
-  }
-  if (hash === "#community") {
-    return { view: "community", shouldLoadShared: false, sharedId: null };
-  }
-  return { view: "main", shouldLoadShared: false, sharedId: null };
-}
+const LAYOUT_SPRING = { layout: { type: "spring" as const, stiffness: 220, damping: 28 } };
 
 function WarningNoticeIcon() {
   return (
@@ -93,92 +65,18 @@ function ShieldNoticeIcon() {
   );
 }
 
-declare global {
-  interface Window {
-    kofiWidgetOverlay?: {
-      draw: (username: string, options: Record<string, string>) => void;
-    };
-  }
-}
-
-// Root application component: wires together auth, export config, cache, and view routing.
 function App() {
-  const initialRouteState = getInitialRouteState();
-  const initialSharedId = initialRouteState.sharedId;
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [message, setMessage] = useState<string>("");
   const [cache, setCache] = useState<CacheState>(() => loadAllCacheEntries());
-  const [supportOpen, setSupportOpen] = useState(false);
-  const [referralOpen, setReferralOpen] = useState(false);
-  const [view, setView] = useState<"main" | "records" | "community">(initialRouteState.view);
-  const [disableViewMotion, setDisableViewMotion] = useState(false);
   const [cacheVersion, setCacheVersion] = useState(0);
-  const [sharedProfile, setSharedProfile] = useState<SharedProfile | null>(null);
-  const [sharedLoading, setSharedLoading] = useState(initialRouteState.shouldLoadShared);
-  const [sharedReturnView, setSharedReturnView] = useState<"main" | "community">("main");
-  const viewRef = useRef<"main" | "records" | "community">(initialRouteState.view);
+  const [referralOpen, setReferralOpen] = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
-  const [noticeRateLimitsDismissed, setNoticeRateLimitsDismissed] = useState(
-    () => localStorage.getItem(LS_KEY_NOTICE_RATE_LIMITS) === "1",
-  );
-  const [noticeUnofficialDismissed, setNoticeUnofficialDismissed] = useState(
-    () => localStorage.getItem(LS_KEY_NOTICE_UNOFFICIAL) === "1",
-  );
-  const [noticeOpenSourceDismissed, setNoticeOpenSourceDismissed] = useState(
-    () => localStorage.getItem(LS_KEY_NOTICE_OPENSOURCE) === "1",
-  );
-  const [announcement, setAnnouncement] = useState<Announcement | null>(null);
-  const [announcementDismissed, setAnnouncementDismissed] = useState(false);
-
-  useEffect(() => {
-    fetchAnnouncement().then((data) => {
-      if (!data) return;
-      const dismissed = localStorage.getItem(LS_KEY_NOTICE_ANNOUNCEMENT_PREFIX + data.id) === "1";
-      setAnnouncementDismissed(dismissed);
-      setAnnouncement(data);
-    });
-  }, []);
-
-  // Persists a notice dismissal to localStorage and updates the local state.
-  function dismissNotice(key: string, setter: (v: boolean) => void) {
-    localStorage.setItem(key, "1");
-    setter(true);
-  }
-
-  useEffect(() => {
-    if (window.innerWidth <= 640) return;
-    const script = document.createElement("script");
-    script.src = "https://storage.ko-fi.com/cdn/scripts/overlay-widget.js";
-    script.async = true;
-    script.onload = () => {
-      window.kofiWidgetOverlay?.draw("moustachio", {
-        type: "floating-chat",
-        "floating-chat.donateButton.text": "Support the project",
-        "floating-chat.donateButton.background-color": "#F7931A",
-        "floating-chat.donateButton.text-color": "#fff",
-      });
-
-      const attachPopupObserver = (): void => {
-        const popup = document.querySelector(".floating-chat-kofi-popup-iframe");
-        if (!popup) return;
-        const observer = new MutationObserver(() => {
-          const el = popup as HTMLElement;
-          if (el.style.opacity === "1") {
-            setSupportOpen(true);
-          }
-        });
-        observer.observe(popup, { attributes: true, attributeFilter: ["style"] });
-      };
-
-      setTimeout(attachPopupObserver, 1000);
-      setTimeout(attachPopupObserver, 3000);
-    };
-    document.body.appendChild(script);
-    return () => {
-      document.body.removeChild(script);
-    };
-  }, []);
 
   const { theme, toggleTheme } = useTheme();
+  const notices = useNotices();
 
   const {
     selectedKeys,
@@ -198,6 +96,8 @@ function App() {
   } = useExportConfig();
 
   const { storedToken, user, syncedAlias, handleCheckSync, handleLogout } = useAuth(setMessage);
+
+  useAccountSwitch({ user, resetConfig, setCache, setCacheVersion, setMessage });
 
   const handleCacheUpdate = useCallback((nextCache: CacheState) => {
     setCache(nextCache);
@@ -226,31 +126,14 @@ function App() {
     prevUserRef.current = user;
   }, [user]);
 
-  const currentUserIdentity = user?.id
-    ? `id:${user.id}`
-    : user?.email
-      ? `email:${String(user.email).toLowerCase()}`
-      : null;
-
+  // Backward compat: old share links used #view=id hash format
   useEffect(() => {
-    if (!currentUserIdentity) return;
-
-    const lastUser = localStorage.getItem(LS_KEY_LAST_SYNC_USER);
-    const hasStablePrefix = (value: string) =>
-      value.startsWith("id:") || value.startsWith("email:");
-    const lastComparable = lastUser && hasStablePrefix(lastUser) ? lastUser : null;
-
-    if (lastComparable && lastComparable !== currentUserIdentity) {
-      clearAllCacheEntries();
-      localStorage.removeItem(LS_KEY_EXPORT_CONFIG);
-      resetConfig();
-      setCache(loadAllCacheEntries());
-      setCacheVersion((v) => v + 1);
-      setMessage("Different account detected. Cache and export options were reset.");
+    const hash = window.location.hash;
+    if (hash.startsWith("#view=")) {
+      const id = hash.slice(6).trim();
+      if (id) void navigate(`/view/${id}`, { replace: true });
     }
-
-    localStorage.setItem(LS_KEY_LAST_SYNC_USER, currentUserIdentity);
-  }, [currentUserIdentity, resetConfig]);
+  }, [navigate]);
 
   const cachedCount = useMemo(
     () => selectedKeys.filter((k) => cache[k]).length,
@@ -258,6 +141,7 @@ function App() {
   );
 
   const hasCachedSheets = useMemo(() => Object.values(cache).some(Boolean), [cache]);
+
   const hasNewRecords = useMemo(() => {
     const purchasesNew =
       (cache["purchases"]?.newEntriesCount ?? 0) + (cache["upgrades"]?.newEntriesCount ?? 0);
@@ -279,113 +163,32 @@ function App() {
     setCache((prev) => {
       const entry = prev[key];
       if (!entry || (entry.newEntriesCount ?? 0) <= 0) return prev;
-
       const nextEntry = { ...entry, newEntriesCount: 0 };
       try {
         localStorage.setItem(LS_KEY_REWARD_PREFIX + key, JSON.stringify(nextEntry));
       } catch {
         // ignore storage write errors
       }
-
       return { ...prev, [key]: nextEntry };
     });
     setCacheVersion((v) => v + 1);
   }, []);
 
-  const applyHashRoute = useCallback(() => {
-    const hash = window.location.hash;
-    if (hash.startsWith("#view=")) {
-      const id = hash.slice(6).trim();
-      if (!id) {
-        setSharedProfile(null);
-        setSharedLoading(false);
-        setView("main");
-        return;
-      }
-      setSharedReturnView(viewRef.current === "community" ? "community" : "main");
-      setSharedLoading(true);
-      setSharedProfile(null);
-      setView("records");
-      fetchSharedProfile(id)
-        .then((profile) => setSharedProfile(profile))
-        .catch(() => setSharedProfile(null))
-        .finally(() => setSharedLoading(false));
-    } else if (hash === "#community") {
-      setSharedProfile(null);
-      setSharedLoading(false);
-      setView("community");
-    } else {
-      setSharedProfile(null);
-      setSharedLoading(false);
-      setView("main");
-    }
-  }, []);
-
-  // Load initial shared profile from URL hash without a second route pass.
-  useEffect(() => {
-    if (!initialSharedId) return;
-    setSharedLoading(true);
-    fetchSharedProfile(initialSharedId)
-      .then((profile) => setSharedProfile(profile))
-      .catch(() => setSharedProfile(null))
-      .finally(() => setSharedLoading(false));
-  }, [initialSharedId]);
-
-  // Handle manual hash edits after initial render.
-  useEffect(() => {
-    window.addEventListener("hashchange", applyHashRoute);
-    return () => window.removeEventListener("hashchange", applyHashRoute);
-  }, [applyHashRoute]);
-
-  useEffect(() => {
-    viewRef.current = view;
-  }, [view]);
-
-  const layoutSpring = disableViewMotion ? { layout: { duration: 0 } } : BASE_LAYOUT_SPRING;
-
-  const swapView = useCallback((nextView: "main" | "records" | "community") => {
-    setDisableViewMotion(true);
-    if (nextView !== "records") setSharedProfile(null);
-    setView(nextView);
-    // Clear hash when navigating away from shared/community views
-    if ((nextView === "main" || nextView === "community") && window.location.hash) {
-      history.replaceState(null, "", window.location.pathname + window.location.search);
-    }
-    requestAnimationFrame(() => {
-      setDisableViewMotion(false);
-    });
-  }, []);
-
-  const handleToggleRecords = useCallback(() => {
-    const isSharedRecordContext =
-      view === "records" &&
-      (sharedProfile !== null || sharedLoading || window.location.hash.startsWith("#view="));
-
-    if (isSharedRecordContext) {
-      setSharedProfile(null);
-      setSharedLoading(false);
-      if (window.location.hash) {
-        history.replaceState(null, "", window.location.pathname + window.location.search);
-      }
-      setView("records");
-      return;
-    }
-
-    swapView(view === "records" ? "main" : "records");
-  }, [swapView, view, sharedProfile, sharedLoading]);
+  const isRecords = location.pathname === "/records";
+  const isCommunity = location.pathname === "/community" || location.pathname.startsWith("/view/");
 
   const handleHeroTitleClick = useCallback(() => {
-    swapView("main");
-  }, [swapView]);
+    void navigate("/");
+  }, [navigate]);
 
   const handleHeroTitleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLDivElement>) => {
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
-        swapView("main");
+        void navigate("/");
       }
     },
-    [swapView],
+    [navigate],
   );
 
   return (
@@ -446,15 +249,11 @@ function App() {
               </div>
             </div>
             <div className="hero-actions">
-              <SupportButton
-                open={supportOpen}
-                onOpen={() => setSupportOpen(true)}
-                onClose={() => setSupportOpen(false)}
-              />
+              <SupportButton />
               <button
                 type="button"
-                className={`sh-trigger-btn${view === "community" || sharedProfile || sharedLoading ? " sh-trigger-btn--active" : ""}`}
-                onClick={() => swapView(view === "community" ? "main" : "community")}
+                className={`sh-trigger-btn${isCommunity ? " sh-trigger-btn--active" : ""}`}
+                onClick={() => void navigate(isCommunity ? "/" : "/community")}
                 aria-label="Community"
               >
                 <svg
@@ -486,8 +285,8 @@ function App() {
                     transition={{ duration: 0.2, ease: "easeOut" }}
                   >
                     <DataViewerButton
-                      active={view === "records" && !sharedProfile && !sharedLoading}
-                      onClick={handleToggleRecords}
+                      active={isRecords}
+                      onClick={() => void navigate(isRecords ? "/" : "/records")}
                       hasNew={hasNewRecords}
                     />
                   </motion.div>
@@ -525,20 +324,17 @@ function App() {
           )}
         </header>
 
-        {announcement && (
+        {notices.announcement && (
           <AnnouncementBanner
-            visible={!announcementDismissed}
-            message={announcement.message}
-            onDismiss={() => {
-              localStorage.setItem(LS_KEY_NOTICE_ANNOUNCEMENT_PREFIX + announcement.id, "1");
-              setAnnouncementDismissed(true);
-            }}
+            visible={!notices.announcementDismissed}
+            message={notices.announcement.message}
+            onDismiss={notices.dismissAnnouncement}
           />
         )}
 
         <AppNotice
-          visible={!noticeRateLimitsDismissed}
-          onDismiss={() => dismissNotice(LS_KEY_NOTICE_RATE_LIMITS, setNoticeRateLimitsDismissed)}
+          visible={!notices.noticeRateLimitsDismissed}
+          onDismiss={notices.dismissRateLimits}
           icon={<WarningNoticeIcon />}
         >
           This app currently runs on free-tier services (Cloudflare, CoinGecko, FX Rates API). If a
@@ -546,9 +342,9 @@ function App() {
         </AppNotice>
 
         <AppNotice
-          visible={!noticeUnofficialDismissed}
+          visible={!notices.noticeUnofficialDismissed}
           className="app-notice-unofficial"
-          onDismiss={() => dismissNotice(LS_KEY_NOTICE_UNOFFICIAL, setNoticeUnofficialDismissed)}
+          onDismiss={notices.dismissUnofficial}
           icon={<WarningNoticeIcon />}
         >
           This is an unofficial tool and is not affiliated with, endorsed by, or associated with the
@@ -556,9 +352,9 @@ function App() {
         </AppNotice>
 
         <AppNotice
-          visible={!user && !noticeOpenSourceDismissed}
+          visible={!user && !notices.noticeOpenSourceDismissed}
           className="app-notice-opensource"
-          onDismiss={() => dismissNotice(LS_KEY_NOTICE_OPENSOURCE, setNoticeOpenSourceDismissed)}
+          onDismiss={notices.dismissOpenSource}
           icon={<ShieldNoticeIcon />}
         >
           This app and extension were built with security and transparency in mind. The full source
@@ -573,157 +369,64 @@ function App() {
         </AppNotice>
 
         <LayoutGroup>
-          {view === "community" && <CommunityPage onClose={() => swapView("main")} />}
+          <Routes>
+            <Route
+              path="/community"
+              element={<CommunityPage onClose={() => void navigate("/")} />}
+            />
 
-          {view === "records" && (
-            <>
-              <AnimatePresence mode="popLayout">
-                {message && !sharedProfile && !sharedLoading ? (
-                  <motion.div layout transition={layoutSpring}>
-                    <MessageBanner message={message} onClose={() => setMessage("")} />
-                  </motion.div>
-                ) : null}
-              </AnimatePresence>
-              <DataViewer
-                onClose={() => swapView(sharedProfile || sharedLoading ? sharedReturnView : "main")}
-                isFetching={sharedLoading || (loading && !sharedProfile)}
-                fetchingKeys={sharedLoading ? undefined : fetchingKeys}
-                cacheVersion={cacheVersion}
-                onTabSeen={handleTabSeen}
-                sharedData={sharedLoading ? {} : (sharedProfile?.sheets ?? null)}
-                title={sharedProfile || sharedLoading ? "Community" : "Records"}
-                banner={
-                  sharedProfile || sharedLoading ? (
-                    <SharedBanner
-                      profile={sharedProfile ?? undefined}
-                      loading={sharedLoading}
-                      onClose={() => {
-                        setSharedProfile(null);
-                        setSharedLoading(false);
-                        swapView(sharedReturnView);
-                      }}
-                    />
-                  ) : undefined
-                }
-                onShare={
-                  user && hasCachedSheets && !sharedProfile && !sharedLoading
-                    ? () => setShareModalOpen(true)
-                    : undefined
-                }
-              />
-            </>
-          )}
-
-          {view === "main" && !user ? (
-            <>
-              <AuthPanel onSync={handleCheckSync} />
-              <AnimatePresence mode="popLayout">
-                {message ? (
-                  <motion.div layout transition={layoutSpring}>
-                    <MessageBanner
-                      key={`auth-message-${message.replace(/\b\d+s\b/g, "").replace(/\d+\/\d+/g, "")}`}
-                      message={message}
-                      onClose={() => setMessage("")}
-                    />
-                  </motion.div>
-                ) : null}
-              </AnimatePresence>
-            </>
-          ) : view === "main" ? (
-            <>
-              <ErrorBoundary>
-                <motion.section className="panel-glass" layout transition={layoutSpring}>
-                  <div className="actions-header">
-                    <h3>
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        aria-hidden="true"
-                        className="section-icon"
-                      >
-                        <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18" />
-                      </svg>
-                      Select Sheets
-                    </h3>
-                    {hasCachedSheets && (
-                      <button className="btn-danger btn-danger-small" onClick={handleClearCache}>
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="13"
-                          height="13"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          aria-hidden="true"
-                        >
-                          <path d="M3 6h18" />
-                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
-                          <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                        </svg>
-                        Clear Cache
-                      </button>
-                    )}
-                  </div>
-                  <SheetSelector
-                    cache={cache}
-                    onToggleGroup={toggleGroup}
-                    onToggleAll={toggleAll}
-                    isGroupSelected={isGroupSelected}
+            <Route
+              path="/records"
+              element={
+                <>
+                  <AnimatePresence mode="popLayout">
+                    {message ? (
+                      <motion.div layout transition={LAYOUT_SPRING}>
+                        <MessageBanner message={message} onClose={() => setMessage("")} />
+                      </motion.div>
+                    ) : null}
+                  </AnimatePresence>
+                  <DataViewer
+                    onClose={() => void navigate("/")}
+                    isFetching={loading}
+                    fetchingKeys={fetchingKeys}
+                    cacheVersion={cacheVersion}
+                    onTabSeen={handleTabSeen}
+                    sharedData={null}
+                    title="Records"
+                    banner={undefined}
+                    onShare={user && hasCachedSheets ? () => setShareModalOpen(true) : undefined}
+                    shareDisabled={loading}
                   />
-                </motion.section>
+                </>
+              }
+            />
 
-                <ExportOptions
-                  selectedKeys={selectedKeys}
-                  walletSheetsSelected={walletSheetsSelected}
-                  selectedTxFromTypes={selectedTxFromTypes}
-                  onToggleTxType={toggleTxType}
-                  includeWalletFiat={includeWalletFiat}
-                  onToggleWalletFiat={setIncludeWalletFiat}
-                  includeExcelFiat={includeExcelFiat}
-                  onToggleExcelFiat={setIncludeExcelFiat}
-                  excelFiatCurrency={excelFiatCurrency}
-                  onChangeFiatCurrency={setFiatCurrency}
-                />
+            <Route path="/view/:id" element={<SharedView />} />
 
-                <motion.section
-                  className="export-section panel-glass"
-                  layout
-                  transition={layoutSpring}
-                >
-                  <div className="export-meta-row">
-                    {cachedCount > 0 && cachedCount < selectedKeys.length && (
-                      <p className="subtle">
-                        {selectedKeys.length - cachedCount} sheet(s) will be fetched. {cachedCount}{" "}
-                        stored, will be probed for updates first.
-                      </p>
-                    )}
-                    {cachedCount === selectedKeys.length && selectedKeys.length > 0 && (
-                      <p className="subtle">
-                        All sheets stored. Will probe for updates before building.
-                      </p>
-                    )}
-                    <p className="export-limit-notice">Max 1 export per day.</p>
-                  </div>
-                  <div className="export-btn-wrapper">
-                    <button
-                      className="btn-primary btn-primary-large"
-                      disabled={loading || selectedKeys.length === 0}
-                      onClick={handleExport}
-                    >
-                      {loading ? (
-                        "Processing..."
-                      ) : (
-                        <>
+            <Route
+              path="/"
+              element={
+                !user ? (
+                  <>
+                    <AuthPanel onSync={handleCheckSync} />
+                    <AnimatePresence mode="popLayout">
+                      {message ? (
+                        <motion.div layout transition={LAYOUT_SPRING}>
+                          <MessageBanner
+                            key={`auth-message-${message.replace(/\b\d+s\b/g, "").replace(/\d+\/\d+/g, "")}`}
+                            message={message}
+                            onClose={() => setMessage("")}
+                          />
+                        </motion.div>
+                      ) : null}
+                    </AnimatePresence>
+                  </>
+                ) : (
+                  <ErrorBoundary>
+                    <motion.section className="panel-glass" layout transition={LAYOUT_SPRING}>
+                      <div className="actions-header">
+                        <h3>
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
                             width="16"
@@ -735,37 +438,136 @@ function App() {
                             strokeLinecap="round"
                             strokeLinejoin="round"
                             aria-hidden="true"
-                            className="btn-icon"
+                            className="section-icon"
                           >
-                            <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
-                            <path d="M14 2v4a2 2 0 0 0 2 2h4" />
-                            <path d="M8 18v-2" />
-                            <path d="M12 18v-4" />
-                            <path d="M16 18v-6" />
+                            <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18" />
                           </svg>
-                          Build Report
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </motion.section>
-
-                <AnimatePresence mode="popLayout">
-                  {message ? (
-                    <motion.div layout transition={layoutSpring}>
-                      <MessageBanner
-                        key={`main-message-${message.replace(/\b\d+s\b/g, "").replace(/\d+\/\d+/g, "")}`}
-                        message={message}
-                        onClose={() => setMessage("")}
+                          Select Sheets
+                        </h3>
+                        {hasCachedSheets && (
+                          <button
+                            className="btn-danger btn-danger-small"
+                            onClick={handleClearCache}
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="13"
+                              height="13"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              aria-hidden="true"
+                            >
+                              <path d="M3 6h18" />
+                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                              <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                            </svg>
+                            Clear Cache
+                          </button>
+                        )}
+                      </div>
+                      <SheetSelector
+                        cache={cache}
+                        onToggleGroup={toggleGroup}
+                        onToggleAll={toggleAll}
+                        isGroupSelected={isGroupSelected}
                       />
-                    </motion.div>
-                  ) : null}
-                </AnimatePresence>
-              </ErrorBoundary>
-            </>
-          ) : null}
+                    </motion.section>
 
-          <motion.p className="copyright" layout transition={layoutSpring}>
+                    <ExportOptions
+                      selectedKeys={selectedKeys}
+                      walletSheetsSelected={walletSheetsSelected}
+                      selectedTxFromTypes={selectedTxFromTypes}
+                      onToggleTxType={toggleTxType}
+                      includeWalletFiat={includeWalletFiat}
+                      onToggleWalletFiat={setIncludeWalletFiat}
+                      includeExcelFiat={includeExcelFiat}
+                      onToggleExcelFiat={setIncludeExcelFiat}
+                      excelFiatCurrency={excelFiatCurrency}
+                      onChangeFiatCurrency={setFiatCurrency}
+                    />
+
+                    <motion.section
+                      className="export-section panel-glass"
+                      layout
+                      transition={LAYOUT_SPRING}
+                    >
+                      <div className="export-meta-row">
+                        {cachedCount > 0 && cachedCount < selectedKeys.length && (
+                          <p className="subtle">
+                            {selectedKeys.length - cachedCount} sheet(s) will be fetched.{" "}
+                            {cachedCount} stored, will be probed for updates first.
+                          </p>
+                        )}
+                        {cachedCount === selectedKeys.length && selectedKeys.length > 0 && (
+                          <p className="subtle">
+                            All sheets stored. Will probe for updates before building.
+                          </p>
+                        )}
+                        <p className="export-limit-notice">Max 1 export per day.</p>
+                      </div>
+                      <div className="export-btn-wrapper">
+                        <button
+                          className="btn-primary btn-primary-large"
+                          disabled={loading || selectedKeys.length === 0}
+                          onClick={() => {
+                            void navigate("/records");
+                            void handleExport();
+                          }}
+                        >
+                          {loading ? (
+                            "Processing..."
+                          ) : (
+                            <>
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                aria-hidden="true"
+                                className="btn-icon"
+                              >
+                                <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+                                <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+                                <path d="M8 18v-2" />
+                                <path d="M12 18v-4" />
+                                <path d="M16 18v-6" />
+                              </svg>
+                              Build Report
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </motion.section>
+
+                    <AnimatePresence mode="popLayout">
+                      {message ? (
+                        <motion.div layout transition={LAYOUT_SPRING}>
+                          <MessageBanner
+                            key={`main-message-${message.replace(/\b\d+s\b/g, "").replace(/\d+\/\d+/g, "")}`}
+                            message={message}
+                            onClose={() => setMessage("")}
+                          />
+                        </motion.div>
+                      ) : null}
+                    </AnimatePresence>
+                  </ErrorBoundary>
+                )
+              }
+            />
+
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+
+          <motion.p className="copyright" layout transition={LAYOUT_SPRING}>
             © 2026 José Gouveia · Moustachio ·{" "}
             <a
               className="copyright-link"

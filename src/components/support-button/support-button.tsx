@@ -145,19 +145,18 @@ function CopyButton({ value }: { value: string }) {
   );
 }
 
-interface SupportButtonProps {
-  open: boolean;
-  onOpen: () => void;
-  onClose: () => void;
+declare global {
+  interface Window {
+    kofiWidgetOverlay?: {
+      draw: (username: string, options: Record<string, string>) => void;
+    };
+  }
 }
 
-// Renders the support heart button and a modal with crypto donation addresses and Ko-fi.
-export const SupportButton = memo(function SupportButton({
-  open,
-  onOpen,
-  onClose,
-}: SupportButtonProps) {
-  useEscapeKey(onClose, open);
+export const SupportButton = memo(function SupportButton() {
+  const [open, setOpen] = useState(false);
+
+  useEscapeKey(() => setOpen(false), open);
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -166,12 +165,31 @@ export const SupportButton = memo(function SupportButton({
     };
   }, [open]);
 
+  useEffect(() => {
+    if (window.innerWidth <= 640) return;
+    const script = document.createElement("script");
+    script.src = "https://storage.ko-fi.com/cdn/scripts/overlay-widget.js";
+    script.async = true;
+    script.onload = () => {
+      window.kofiWidgetOverlay?.draw("moustachio", {
+        type: "floating-chat",
+        "floating-chat.donateButton.text": "Support the project",
+        "floating-chat.donateButton.background-color": "#F7931A",
+        "floating-chat.donateButton.text-color": "#fff",
+      });
+    };
+    document.body.appendChild(script);
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+
   return (
     <>
       <button
         type="button"
         className="support-button"
-        onClick={onOpen}
+        onClick={() => setOpen(true)}
         aria-label="Support the project"
       >
         <svg
@@ -193,7 +211,7 @@ export const SupportButton = memo(function SupportButton({
         {open && (
           <motion.div
             className="support-overlay"
-            onClick={onClose}
+            onClick={() => setOpen(false)}
             aria-modal="true"
             role="dialog"
             initial={{ opacity: 0 }}
@@ -229,7 +247,7 @@ export const SupportButton = memo(function SupportButton({
                 <button
                   type="button"
                   className="support-modal-close"
-                  onClick={onClose}
+                  onClick={() => setOpen(false)}
                   aria-label="Close"
                 >
                   <svg

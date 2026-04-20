@@ -1,4 +1,5 @@
 import type { KeyboardEvent } from "react";
+import { useNavigate } from "react-router";
 import type { DirectoryEntry } from "../../types";
 import "./shared-banner.css";
 import { formatAge } from "@/features/export/utils/cache";
@@ -65,9 +66,10 @@ export function SharedBanner({
 export function DirectoryRow({ entry }: { entry: DirectoryEntry }) {
   const age = formatAge(new Date(entry.updatedAt).getTime());
   const isDev = String(entry.ownerId ?? "") === "3575344";
+  const navigate = useNavigate();
 
   function handleView() {
-    window.location.hash = `view=${entry.id}`;
+    void navigate(`/view/${entry.id}`);
   }
 
   function handleRowKeyDown(event: KeyboardEvent<HTMLTableRowElement>) {

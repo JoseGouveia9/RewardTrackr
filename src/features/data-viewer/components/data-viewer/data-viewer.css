@@ -179,6 +179,22 @@
   color: rgba(255, 255, 255, 0.85);
 }
 
+.dv-share-button--disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: all;
+}
+
+.dv-share-button--disabled:hover {
+  background: transparent !important;
+  color: #6d7589 !important;
+}
+
+.page.theme-dark .dv-share-button--disabled:hover {
+  background: transparent !important;
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
 .dv-title {
   font-family: "Space Grotesk", sans-serif;
   font-size: 1rem;
@@ -325,10 +341,12 @@
 }
 
 .dv-tab {
-  padding: 6px 14px;
+  padding: 6px 0;
   border: 1px solid transparent;
   border-radius: 10px;
   position: relative;
+  display: inline-flex;
+  align-items: center;
   background: transparent;
   color: #6d7589;
   font-size: 0.82rem !important;
@@ -1493,6 +1511,12 @@
   border: 2px solid currentColor;
   border-right-color: transparent;
   animation: dv-spin 0.7s linear infinite;
+}
+
+.dv-tab-spinner {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
 }
 
 @keyframes dv-spin {

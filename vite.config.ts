@@ -23,7 +23,7 @@ export default defineConfig({
     // LightningCSS to emit the unprefixed property.
     cssTarget: "chrome100",
   },
-  base: "./",
+  base: "/",
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
