@@ -16,9 +16,9 @@ export function SharedView() {
     setLoading(true);
     fetchSharedProfile(id)
       .then((p) => setProfile(p))
-      .catch(() => setProfile(null))
+      .catch(() => void navigate("/", { replace: true }))
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, navigate]);
 
   const returnTo = (location.state as { from?: string } | null)?.from ?? "/";
 
