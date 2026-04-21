@@ -1,3 +1,4 @@
+// Renders "Native" as two spans (full/short) for responsive display; other labels render as-is.
 function NativeLabel({ label }: { label: string }) {
   if (label !== "Native") return <>{label}</>;
   return (
@@ -14,6 +15,7 @@ interface ViewSelectorProps<K extends string> {
   onSelect: (key: K) => void;
 }
 
+// Renders a currency/view toggle button group for the data viewer tabs.
 export function ViewSelector<K extends string>({
   views,
   activeKey,

@@ -61,6 +61,7 @@ export function toIsoOffset(offsetDays = 0): string {
   return d.toISOString().slice(0, 10);
 }
 
+// Zero-pads a number to at least 2 digits.
 export function zeroPad(n: number): string {
   return String(n).padStart(2, "0");
 }

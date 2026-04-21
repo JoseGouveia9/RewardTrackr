@@ -39,6 +39,7 @@ interface UseAuthReturn {
   handleLogout: () => void;
 }
 
+// Reads the stored JWT from sessionStorage.
 function getCachedToken(): string {
   return sessionStorage.getItem(LS_KEY_SYNC_TOKEN) || "";
 }

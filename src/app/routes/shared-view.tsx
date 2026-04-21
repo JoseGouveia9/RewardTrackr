@@ -4,6 +4,7 @@ import { DataViewer } from "@/features/data-viewer";
 import { SharedBanner, fetchSharedProfile } from "@/features/shared";
 import type { SharedProfile } from "@/features/shared";
 
+// Route component for /view/:id — fetches the shared profile and renders it in the DataViewer.
 export function SharedView() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();

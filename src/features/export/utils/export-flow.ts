@@ -530,6 +530,7 @@ export interface ExportFlowParams {
   txFromTypeFilter?: string[];
   onMessage: (msg: string) => void;
   onCacheUpdate: (cache: CacheState) => void;
+  onStarted?: () => void;
 }
 
 // Orchestrates the full export: probe → fetch → enrich → build Excel → download.
@@ -543,8 +544,10 @@ export async function executeExportFlow({
   txFromTypeFilter,
   onMessage,
   onCacheUpdate,
+  onStarted,
 }: ExportFlowParams): Promise<string> {
   await checkExportRateLimit(accessToken);
+  onStarted?.();
 
   try {
     const cachedKeys = selectedKeys.filter((k) => cache[k]);

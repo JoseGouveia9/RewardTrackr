@@ -18,7 +18,7 @@ interface UseExportParams {
   selectedTxFromTypes: string[];
   onMessage: (msg: string) => void;
   onCacheUpdate: (cache: CacheState) => void;
-  onStart?: () => void;
+  onStarted?: () => void;
 }
 
 interface UseExportReturn {
@@ -41,7 +41,7 @@ export function useExport({
   selectedTxFromTypes,
   onMessage,
   onCacheUpdate,
-  onStart,
+  onStarted,
 }: UseExportParams): UseExportReturn {
   const [loading, setLoading] = useState<boolean>(false);
   const [fetchingKeys, setFetchingKeys] = useState<Set<RewardKey>>(new Set());
@@ -63,7 +63,6 @@ export function useExport({
       return;
     }
 
-    onStart?.();
     setLoading(true);
     onMessage("");
     setFetchingKeys(new Set(selectedKeys));
@@ -83,6 +82,7 @@ export function useExport({
         excelFiatCurrency,
         txFromTypeFilter: selectedKeys.includes("transactions") ? selectedTxFromTypes : undefined,
         onMessage,
+        onStarted,
         onCacheUpdate: (newCache) => {
           setFetchingKeys((prev) => {
             const next = new Set(prev);
@@ -138,7 +138,7 @@ export function useExport({
     selectedTxFromTypes,
     onMessage,
     onCacheUpdate,
-    onStart,
+    onStarted,
   ]);
 
   return { loading, fetchingKeys, handleExport, handleClearCache };

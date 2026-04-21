@@ -23,6 +23,7 @@ import "./App.css";
 
 const LAYOUT_SPRING = { layout: { type: "spring" as const, stiffness: 220, damping: 28 } };
 
+// Renders a warning triangle SVG icon for app notices.
 function WarningNoticeIcon() {
   return (
     <svg
@@ -45,6 +46,7 @@ function WarningNoticeIcon() {
   );
 }
 
+// Renders a shield SVG icon for the open-source notice.
 function ShieldNoticeIcon() {
   return (
     <svg
@@ -65,6 +67,7 @@ function ShieldNoticeIcon() {
   );
 }
 
+// Root app component: wires auth, export config, cache state, routing, and banner notices.
 function App() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -114,6 +117,7 @@ function App() {
     selectedTxFromTypes,
     onMessage: setMessage,
     onCacheUpdate: handleCacheUpdate,
+    onStarted: useCallback(() => void navigate("/records"), [navigate]),
   });
 
   const displayAlias = syncedAlias || user?.alias?.trim() || "User";
@@ -514,7 +518,6 @@ function App() {
                           className="btn-primary btn-primary-large"
                           disabled={loading || selectedKeys.length === 0}
                           onClick={() => {
-                            void navigate("/records");
                             void handleExport();
                           }}
                         >
