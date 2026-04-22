@@ -16,7 +16,6 @@ import { Pagination } from "../pagination/pagination";
 import { useSyncTableColumns } from "../../hooks/use-sync-table-columns";
 import { AnimatedLoadingRow } from "./animated-loading-row";
 
-// Renders a paged reward table for non-mining sheets with per-currency totals and optional group-by-day.
 export function SimpleTable({
   rewardKey,
   fiatCode,
@@ -105,7 +104,6 @@ export function SimpleTable({
     [finalRows, page],
   );
 
-  // One totals row per distinct currency
   const currencyTotals = useMemo(() => {
     const map = new Map<string, { reward: number; rewardInUSD: number; rewardInFiat: number }>();
     for (const row of filteredRows) {
@@ -158,7 +156,6 @@ export function SimpleTable({
   const valueLabel =
     rewardKey === "deposits" ? "Deposited" : rewardKey === "withdrawals" ? "Withdrawn" : "Reward";
 
-  // Returns the display value and currency label for a row based on the active simpleView.
   function rowValue(row: {
     reward: number;
     rewardInUSD: number;
@@ -173,7 +170,7 @@ export function SimpleTable({
   return (
     <>
       <div className="dv-tables-wrap">
-        {/* Totals - one row per currency */}
+        {}
         <table ref={totalsRef} className="dv-table dv-table-totals">
           <colgroup>
             <col className="dv-column-date" />
@@ -235,7 +232,7 @@ export function SimpleTable({
           </tbody>
         </table>
 
-        {/* Data table */}
+        {}
         <table ref={dataRef} className="dv-table dv-table-data">
           <colgroup>
             <col className="dv-column-date" />

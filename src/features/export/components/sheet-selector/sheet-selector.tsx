@@ -11,7 +11,6 @@ interface SheetSelectorProps {
   isGroupSelected: (group: RewardGroup) => boolean;
 }
 
-// Renders sheet-selection cards with cache age badges and a select-all toggle.
 export const SheetSelector = memo(function SheetSelector({
   cache,
   onToggleGroup,

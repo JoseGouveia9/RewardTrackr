@@ -5,7 +5,6 @@ import { isDateRangeActive } from "../../utils";
 import { MiniCalendar, CAL_MONTHS } from "../mini-calendar/mini-calendar";
 import { useOutsideClick } from "../../hooks/use-outside-click";
 
-// A styled custom dropdown matching the fiat-dropdown look, for small option sets.
 function CalSelect({
   value,
   options,
@@ -49,7 +48,6 @@ function CalSelect({
   );
 }
 
-// Renders a date-range filter button that opens a calendar picker with presets and apply/clear actions.
 export function DateRangeFilter({
   value,
   onChange,
@@ -174,7 +172,7 @@ export function DateRangeFilter({
       {open && (
         <div className="dv-column-filter-dropdown">
           <div className="dv-filter-date-layout">
-            {/* Left: presets + actions */}
+            {}
             <div className="dv-filter-date-presets">
               <div className="dv-filter-presets-list">
                 {DATE_PRESETS.map((p) => (
@@ -198,7 +196,7 @@ export function DateRangeFilter({
               </div>
             </div>
 
-            {/* Right: single calendar with selects */}
+            {}
             <div className="dv-filter-calendars">
               <div className="dv-cal-header">
                 <CalSelect value={calMonth} options={monthOptions} onChange={setCalMonth} />

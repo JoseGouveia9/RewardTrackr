@@ -1,7 +1,6 @@
 ﻿import { CURRENCY_COLORS } from "../../utils/constants";
 import type { Currency } from "../../types";
 
-// Renders the Bitcoin (BTC) circular logo SVG icon.
 export function BtcIcon() {
   return (
     <svg
@@ -29,7 +28,6 @@ export function BtcIcon() {
   );
 }
 
-// Renders the GoMining Token (GMT) circular logo SVG icon.
 export function GmtIcon() {
   return (
     <svg
@@ -51,7 +49,6 @@ export function GmtIcon() {
   );
 }
 
-// Renders a green circular USD ($) icon.
 export function UsdIcon() {
   return (
     <svg
@@ -77,7 +74,6 @@ export function UsdIcon() {
   );
 }
 
-// Returns the locale currency symbol for an ISO 4217 code, falling back to the first letter.
 function getCurrencySymbol(code: string): string {
   try {
     const parts = new Intl.NumberFormat(undefined, {
@@ -92,7 +88,6 @@ function getCurrencySymbol(code: string): string {
   }
 }
 
-// Renders an indigo circular icon showing the locale currency symbol for the given ISO 4217 code.
 export function FiatIcon({ code }: { code: string }) {
   const symbol = getCurrencySymbol(code);
   const long = symbol.length > 1;
@@ -120,7 +115,6 @@ export function FiatIcon({ code }: { code: string }) {
   );
 }
 
-// Renders the Tether (USDT) circular logo SVG icon.
 export function UsdtIcon() {
   return (
     <svg
@@ -141,7 +135,6 @@ export function UsdtIcon() {
   );
 }
 
-// Renders the TON circular logo SVG icon.
 export function TonIcon() {
   return (
     <svg
@@ -162,7 +155,6 @@ export function TonIcon() {
   );
 }
 
-// Renders the Solana (SOL) circular logo SVG icon.
 export function SolIcon() {
   return (
     <svg
@@ -200,7 +192,6 @@ export function SolIcon() {
   );
 }
 
-// Renders the Ethereum (ETH) circular logo SVG icon.
 export function EthIcon() {
   return (
     <svg
@@ -247,7 +238,6 @@ export function EthIcon() {
   );
 }
 
-// Renders the BNB circular logo SVG icon.
 export function BnbIcon() {
   return (
     <svg
@@ -269,7 +259,6 @@ export function BnbIcon() {
   );
 }
 
-// Renders the appropriate icon for any currency: real logos for known coins, FiatIcon for ISO 4217, or a coloured letter badge.
 export function AnyCurrencyIcon({ currency }: { currency: string }) {
   if (currency === "BTC") return <BtcIcon />;
   if (currency === "GMT") return <GmtIcon />;
@@ -279,14 +268,13 @@ export function AnyCurrencyIcon({ currency }: { currency: string }) {
   if (currency === "ETH") return <EthIcon />;
   if (currency === "BNB") return <BnbIcon />;
   if (currency === "USD") return <UsdIcon />;
-  // Any valid ISO 4217 currency code gets the FiatIcon with its symbol
+
   let isValidFiat = false;
   try {
     new Intl.NumberFormat(undefined, { style: "currency", currency }).format(0);
     isValidFiat = true;
-  } catch {
-    // not a valid fiat code
-  }
+    // eslint-disable-next-line no-empty
+  } catch {}
   if (isValidFiat) return <FiatIcon code={currency} />;
   const color = CURRENCY_COLORS[currency] ?? "#6b7280";
   const label = currency.slice(0, 3);
@@ -315,7 +303,6 @@ export function AnyCurrencyIcon({ currency }: { currency: string }) {
   );
 }
 
-// Renders the currency icon for the mining-tab selector (BTC, GMT, USD, or the configured fiat).
 export function MiningCurrencyIcon({
   currency,
   fiatCode,

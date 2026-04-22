@@ -17,7 +17,6 @@ import { Pagination } from "../pagination/pagination";
 import { useSyncTableColumns } from "../../hooks/use-sync-table-columns";
 import { AnimatedLoadingRow } from "./animated-loading-row";
 
-// Renders a paged purchases and upgrades table combining both sheets, with type/date filters.
 export function PurchasesTable({
   fiatCode,
   purchaseView,
@@ -54,7 +53,6 @@ export function PurchasesTable({
     return upgradesCacheEntry !== undefined ? upgradesCacheEntry : loadCacheEntry("upgrades");
   }, [cacheVersion, upgradesCacheEntry]);
 
-  // Normalises a cache entry's records into the shape expected by this table.
   function parseEntry(entry: ReturnType<typeof loadCacheEntry>) {
     if (!entry?.records?.length) return [];
     return entry.records.map((r) => {
@@ -166,7 +164,6 @@ export function PurchasesTable({
     <FiatIcon code={fiatCode} />
   );
 
-  // Returns the display value and currency label for a totals row based on the active purchaseView.
   function totalValue(
     t: { nativeAmount: number; valueUsd: number; valueFiat: number },
     currency: string,
@@ -194,7 +191,7 @@ export function PurchasesTable({
   return (
     <>
       <div className="dv-tables-wrap">
-        {/* Totals per currency */}
+        {}
         <table ref={totalsRef} className="dv-table dv-table-totals">
           <colgroup>
             <col className="dv-column-date" />
@@ -259,7 +256,7 @@ export function PurchasesTable({
           </tbody>
         </table>
 
-        {/* Data table */}
+        {}
         <table ref={dataRef} className="dv-table dv-table-data">
           <colgroup>
             <col className="dv-column-date" />

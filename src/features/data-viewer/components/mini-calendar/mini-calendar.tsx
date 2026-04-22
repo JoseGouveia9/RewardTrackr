@@ -17,7 +17,6 @@ export const CAL_MONTHS = [
   "December",
 ];
 
-// Renders a 6×7 calendar grid for a single month, highlighting the selected date range.
 export function MiniCalendar({
   year,
   month,
@@ -40,7 +39,7 @@ export function MiniCalendar({
   onDayHover: (iso: string) => void;
 }) {
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const firstDow = (new Date(year, month, 1).getDay() + 6) % 7; // Mon=0
+  const firstDow = (new Date(year, month, 1).getDay() + 6) % 7;
   const prevMonthDays = new Date(year, month, 0).getDate();
 
   const rangeEnd = picking && hover ? hover : pending.to;
@@ -49,7 +48,6 @@ export function MiniCalendar({
   const rangeEndNorm =
     pending.from && rangeEnd ? (pending.from <= rangeEnd ? rangeEnd : pending.from) : pending.from;
 
-  // Build 42-cell grid (6 rows × 7 cols)
   const cells: { day: number; iso: string; out: boolean }[] = [];
   for (let i = firstDow - 1; i >= 0; i--) {
     const d = prevMonthDays - i;

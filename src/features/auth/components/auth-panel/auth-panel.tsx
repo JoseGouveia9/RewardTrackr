@@ -10,7 +10,6 @@ interface AuthPanelProps {
   onSync: () => void;
 }
 
-// Renders the step-by-step instructions panel for connecting via the RewardTrackr browser extension.
 export const AuthPanel = memo(function AuthPanel({ onSync }: AuthPanelProps) {
   return (
     <section className="panel-glass panel-auth">

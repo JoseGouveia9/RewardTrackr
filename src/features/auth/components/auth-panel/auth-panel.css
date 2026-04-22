@@ -1,12 +1,8 @@
-﻿/* Panel layout */
-
-.panel-auth {
+﻿.panel-auth {
   display: flex;
   flex-direction: column;
   gap: 24px;
 }
-
-/* Auth steps */
 
 .auth-steps {
   display: flex;
@@ -64,8 +60,6 @@
   margin-top: 2px;
 }
 
-/* Preview image */
-
 .auth-preview-img {
   max-width: 50%;
   border-radius: 10px;
@@ -73,8 +67,6 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
   margin-left: 34px;
 }
-
-/* Update hint */
 
 .auth-update-hint {
   font-size: 0.75rem;
@@ -86,8 +78,6 @@
 .page.theme-dark .auth-update-hint {
   color: rgba(255, 255, 255, 0.45);
 }
-
-/* Mobile */
 
 @media (max-width: 640px) {
   .auth-preview-img {

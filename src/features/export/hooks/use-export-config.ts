@@ -4,8 +4,6 @@ import { WALLET_TX_KEYS } from "../config/wallet-types";
 import { LS_KEY_EXPORT_CONFIG } from "@/lib/storage-keys";
 import type { ExtraFiatCurrency, RewardGroup, RewardKey } from "../types";
 
-// Types
-
 interface ExportConfigState {
   selectedKeys: RewardKey[];
   selectedTxFromTypes: string[];
@@ -23,8 +21,6 @@ type ExportConfigAction =
   | { type: "SET_FIAT_CURRENCY"; currency: ExtraFiatCurrency }
   | { type: "RESET" };
 
-// Initial state & helpers
-
 const initialState: ExportConfigState = {
   selectedKeys: [],
   selectedTxFromTypes: [],
@@ -33,7 +29,6 @@ const initialState: ExportConfigState = {
   excelFiatCurrency: "EUR",
 };
 
-// Loads the persisted export configuration from localStorage, falling back to initialState.
 function loadSavedConfig(): ExportConfigState {
   try {
     const raw = localStorage.getItem(LS_KEY_EXPORT_CONFIG);
@@ -58,7 +53,6 @@ function loadSavedConfig(): ExportConfigState {
   }
 }
 
-// Pure reducer for all export-configuration state transitions.
 function exportConfigReducer(
   state: ExportConfigState,
   action: ExportConfigAction,
@@ -97,21 +91,16 @@ function exportConfigReducer(
   }
 }
 
-// Hook
-
-// Manages export configuration state (selected sheets, fiat options, tx filters) with localStorage persistence.
 export function useExportConfig() {
   const [state, dispatch] = useReducer(exportConfigReducer, undefined, loadSavedConfig);
 
   useEffect(() => {
     try {
       localStorage.setItem(LS_KEY_EXPORT_CONFIG, JSON.stringify(state));
-    } catch {
-      // QuotaExceededError, skip silently
-    }
+      // eslint-disable-next-line no-empty
+    } catch {}
   }, [state]);
 
-  // Returns true if every key in the group is currently selected.
   const isGroupSelected = useCallback(
     (group: RewardGroup): boolean => group.keys.every((k) => state.selectedKeys.includes(k)),
     [state.selectedKeys],

@@ -1,6 +1,5 @@
 import { useEffect, useRef, type RefObject } from "react";
 
-// Calls onClose when a mousedown occurs outside of ref. Only listens when open is true.
 export function useOutsideClick(
   ref: RefObject<Element | null>,
   onClose: () => void,

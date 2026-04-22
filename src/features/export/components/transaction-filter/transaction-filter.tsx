@@ -6,7 +6,6 @@ interface TransactionFilterProps {
   onToggleTxType: (fromTypes: string[], checked: boolean) => void;
 }
 
-// Renders toggle checkboxes for each wallet-transaction type to include in the export.
 export const TransactionFilter = memo(function TransactionFilter({
   selectedTxFromTypes,
   onToggleTxType,

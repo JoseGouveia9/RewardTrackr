@@ -5,8 +5,6 @@ import { LS_KEY_PRICE_CACHE, LS_KEY_REWARD_PREFIX } from "@/lib/storage-keys";
 import { parseJsonSafe } from "@/lib/parse-json-safe";
 import type { CacheEntry, CacheState, RewardKey, RewardRecord } from "../types";
 
-// Types
-
 type PriceCacheValue = {
   price: number;
   currency?: string;
@@ -14,17 +12,11 @@ type PriceCacheValue = {
   priceTimestamp: string | null;
 };
 
-// Private helpers
-
-// Coerces an unknown value to a finite number, returning 0 for non-finite results.
 function asNumber(value: unknown): number {
   const parsed = Number(value ?? 0);
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-// Cache I/O
-
-// Reads a single sheet's cache entry from localStorage. Returns null if missing or corrupt.
 export function loadCacheEntry(key: RewardKey): CacheEntry | null {
   try {
     const raw = localStorage.getItem(LS_KEY_REWARD_PREFIX + key);
@@ -48,7 +40,6 @@ export function loadCacheEntry(key: RewardKey): CacheEntry | null {
   }
 }
 
-// Writes a sheet's enriched records and metadata to localStorage.
 export function saveCacheEntry(
   key: RewardKey,
   sheetName: string,
@@ -61,12 +52,10 @@ export function saveCacheEntry(
       LS_KEY_REWARD_PREFIX + key,
       JSON.stringify({ sheetName, records, totalCount, fetchedAt: Date.now(), ...extras }),
     );
-  } catch {
-    // QuotaExceededError, skip silently
-  }
+    // eslint-disable-next-line no-empty
+  } catch {}
 }
 
-// Loads cache entries for all reward keys and returns them as a keyed map.
 export function loadAllCacheEntries(): CacheState {
   const state = {} as CacheState;
   ALL_REWARD_KEYS.forEach((key) => {
@@ -75,14 +64,10 @@ export function loadAllCacheEntries(): CacheState {
   return state;
 }
 
-// Removes all cached sheet data from localStorage.
 export function clearAllCacheEntries(): void {
   ALL_REWARD_KEYS.forEach((key) => localStorage.removeItem(LS_KEY_REWARD_PREFIX + key));
 }
 
-// Price cache
-
-// Saves CoinGecko price data from enriched wallet-tx records to localStorage for future reuse.
 export function persistPriceCache(key: RewardKey, records: RewardRecord[]): void {
   if (!WALLET_TX_KEYS.has(key) || !records.length) return;
   try {
@@ -121,12 +106,10 @@ export function persistPriceCache(key: RewardKey, records: RewardRecord[]): void
     }
 
     localStorage.setItem(LS_KEY_PRICE_CACHE, JSON.stringify(store));
-  } catch {
-    // ignore
-  }
+    // eslint-disable-next-line no-empty
+  } catch {}
 }
 
-// Returns true if any wallet-tx records in the cache entry are missing their fiat price.
 export function hasMissingPrices(
   cacheEntry: CacheEntry | null,
   key: RewardKey,
@@ -141,10 +124,6 @@ export function hasMissingPrices(
   });
 }
 
-// Record filtering
-
-// Removes records with "created" reinvestment status (pending entries not yet finalised).
-// Returns the filtered records, adjusted count, and how many were removed.
 export function filterCacheableRecords(
   key: RewardKey,
   records: RewardRecord[],
@@ -175,9 +154,6 @@ export function filterCacheableRecords(
   return { records: filtered, totalCount: cachedTotalCount, removedCreated };
 }
 
-// Formatting
-
-// Formats a timestamp as a human-readable age string (e.g. "5m ago").
 export function formatAge(fetchedAt: number): string {
   const seconds = Math.floor((Date.now() - fetchedAt) / 1000);
   if (seconds < 60) return `<1m ago`;

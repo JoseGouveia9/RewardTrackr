@@ -4,7 +4,6 @@ import type { DirectoryEntry } from "../../types";
 import { DirectoryRow } from "../shared-banner/shared-banner";
 import "./community-page.css";
 
-// Full-page community directory listing all shared profiles.
 export function CommunityPage({ onClose }: { onClose: () => void }) {
   const [entries, setEntries] = useState<DirectoryEntry[]>([]);
   const [loading, setLoading] = useState(true);

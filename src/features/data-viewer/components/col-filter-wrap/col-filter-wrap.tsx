@@ -2,7 +2,6 @@ import { useRef, useState } from "react";
 import type React from "react";
 import { useOutsideClick } from "../../hooks/use-outside-click";
 
-// Wraps column-filter content in a toggle button + absolute dropdown.
 export function ColFilterWrap({
   label,
   active,
