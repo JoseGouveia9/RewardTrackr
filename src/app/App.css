@@ -1,6 +1,4 @@
-﻿/* Page root */
-
-.page {
+﻿.page {
   min-height: 100vh;
   position: relative;
   overflow-x: hidden;
@@ -28,13 +26,9 @@ h6 {
   font-family: "Space Grotesk", sans-serif;
 }
 
-/* Background decoration */
-
 .background-shape {
   display: none;
 }
-
-/* Container */
 
 .container {
   max-width: 1120px;
@@ -43,8 +37,6 @@ h6 {
   position: relative;
   z-index: 1;
 }
-
-/* Hero */
 
 .hero {
   background: transparent;
@@ -141,8 +133,6 @@ h3,
   line-height: inherit;
 }
 
-/* Copyright */
-
 .copyright {
   margin: 12px 0 0;
   font-size: 0.72rem;
@@ -161,8 +151,6 @@ h3,
 .copyright-link:hover {
   color: #f7931a;
 }
-
-/* App notices */
 
 .app-notice {
   display: flex;
@@ -251,8 +239,6 @@ h3,
   color: #ffc94d;
 }
 
-/* Panels */
-
 .panel {
   background: #ffffff;
   border: 1px solid #e6e9f2;
@@ -282,8 +268,6 @@ h3,
   color: #6d7589;
 }
 
-/* Forms */
-
 textarea {
   width: 100%;
   resize: vertical;
@@ -302,8 +286,6 @@ textarea:focus {
   outline: 2px solid rgba(247, 147, 26, 0.28);
   border-color: #fbb060;
 }
-
-/* Buttons */
 
 button {
   border: 1px solid transparent;
@@ -353,8 +335,6 @@ button:disabled {
   width: 100%;
   margin-top: 2px;
 }
-
-/* Export section */
 
 .export-section {
   margin-top: 16px;
@@ -440,8 +420,6 @@ button:disabled {
   font-size: 0.8rem !important;
 }
 
-/* Panel actions */
-
 .panel-actions {
   display: flex;
   flex-direction: column;
@@ -462,8 +440,6 @@ button:disabled {
   margin: 0;
 }
 
-/* Utility icons */
-
 .section-icon {
   color: #f7931a;
   flex-shrink: 0;
@@ -476,8 +452,6 @@ button:disabled {
 .btn-icon {
   flex-shrink: 0;
 }
-
-/* Messages */
 
 .message {
   display: flex;
@@ -513,7 +487,9 @@ button:disabled {
   line-height: 22px;
   font-weight: 700;
   opacity: 0.75;
-  transition: opacity 0.12s ease, background 0.12s ease;
+  transition:
+    opacity 0.12s ease,
+    background 0.12s ease;
 }
 
 .message-close:hover {
@@ -577,8 +553,6 @@ button:disabled {
   border-color: rgba(203, 213, 225, 0.15);
 }
 
-/* Divider & misc */
-
 .divider {
   margin: 16px 0;
   border: 0;
@@ -592,8 +566,6 @@ button:disabled {
   text-align: center;
   line-height: 1.5;
 }
-
-/* Dark mode */
 
 .page.theme-dark {
   background: #121214;
@@ -711,8 +683,6 @@ button:disabled {
   box-shadow: 0 10px 22px rgba(40, 52, 84, 0.05);
 }
 
-/* Mobile */
-
 @media (max-width: 640px) {
   .container {
     padding: 14px;
@@ -792,8 +762,6 @@ button:disabled {
     justify-content: center;
   }
 }
-
-/* ── Community / Share trigger button ─────────────────────────── */
 
 .sh-trigger-btn {
   display: inline-flex;

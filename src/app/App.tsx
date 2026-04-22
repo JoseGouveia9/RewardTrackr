@@ -130,7 +130,6 @@ function App() {
     prevUserRef.current = user;
   }, [user]);
 
-  // Backward compat: old share links used #view=id hash format
   useEffect(() => {
     const hash = window.location.hash;
     if (hash.startsWith("#view=")) {
@@ -170,9 +169,8 @@ function App() {
       const nextEntry = { ...entry, newEntriesCount: 0 };
       try {
         localStorage.setItem(LS_KEY_REWARD_PREFIX + key, JSON.stringify(nextEntry));
-      } catch {
-        // ignore storage write errors
-      }
+        // eslint-disable-next-line no-empty
+      } catch {}
       return { ...prev, [key]: nextEntry };
     });
     setCacheVersion((v) => v + 1);
