@@ -4,7 +4,6 @@ import type { DirectoryEntry } from "../../types";
 import "./shared-banner.css";
 import { formatAge } from "@/features/export/utils/cache";
 
-// Banner shown at the top of the DataViewer when viewing someone else's shared records.
 export function SharedBanner({
   profile,
   loading,
