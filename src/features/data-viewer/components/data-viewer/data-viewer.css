@@ -1,6 +1,4 @@
-﻿/* Trigger button */
-
-.dv-trigger-button {
+﻿.dv-trigger-button {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -90,15 +88,11 @@
   color: #fbb060;
 }
 
-/* Page */
-
 .dv-page {
   display: flex;
   flex-direction: column;
   margin-top: 16px;
 }
-
-/* Header */
 
 .dv-header {
   display: flex;
@@ -206,8 +200,6 @@
   color: #f0f4ff;
 }
 
-/* Toolbar (group button + currency selector) */
-
 .dv-toolbar {
   display: flex;
   align-items: center;
@@ -271,8 +263,6 @@
   color: #ffffff;
 }
 
-/* Currency selector */
-
 .dv-currency-selector {
   display: flex;
   gap: 4px;
@@ -320,8 +310,6 @@
   border-color: rgba(255, 255, 255, 0.25);
   color: #ffffff;
 }
-
-/* Tabs */
 
 .dv-tabs {
   display: flex;
@@ -386,7 +374,6 @@
   right: -6px;
 }
 
-
 .dv-tab:not(.dv-tab--active):hover {
   background: rgba(0, 0, 0, 0.05);
   color: #22283a;
@@ -418,8 +405,6 @@
   border-color: rgba(247, 147, 26, 0.3);
   color: #fbb060;
 }
-
-/* Totals row */
 
 .dv-total-cell-label {
   display: block;
@@ -485,8 +470,6 @@
   color: #fbb060 !important;
 }
 
-/* Tables */
-
 .dv-content {
   flex: 1;
 }
@@ -506,19 +489,14 @@
   table-layout: fixed;
 }
 
-/* Mining (6-col): on mobile the fixed width forces horizontal scroll;
-   on desktop (≥641px) let it stretch to 100% via the override below */
 .dv-tables-wrap--wide .dv-table {
   width: 750px;
 }
 
-/* Simple Earn (4-col): on mobile the hook fits all columns in the viewport;
-   on desktop stretch to 100% */
 .dv-tables-wrap--scroll .dv-table {
   width: 560px;
 }
 
-/* On desktop both tables should fill the full container width */
 @media (min-width: 641px) {
   .dv-tables-wrap--wide .dv-table,
   .dv-tables-wrap--scroll .dv-table {
@@ -526,7 +504,6 @@
   }
 }
 
-/* Totals table */
 .dv-table-totals {
   border: 1px solid rgba(247, 147, 26, 0.4);
   border-radius: 14px;
@@ -581,7 +558,6 @@
   color: #f7931a;
 }
 
-/* Clickable totals rows (currency filter toggle) */
 .dv-totals-row--clickable {
   cursor: pointer;
   user-select: none;
@@ -615,7 +591,6 @@
   text-decoration: line-through;
 }
 
-/* Data table */
 .dv-table-data {
   border: 1px solid rgba(0, 0, 0, 0.06);
   border-radius: 14px;
@@ -694,15 +669,12 @@
   color: #fbb060 !important;
 }
 
-/* Type column: wrap at word boundaries; only break inside a word as last resort.
-   Use .dv-table td.dv-cell-type for higher specificity than .dv-table td */
 .dv-table td.dv-cell-type {
   white-space: normal;
   overflow-wrap: break-word;
   max-width: 130px;
 }
 
-/* Responsive label: full text on desktop, short on mobile */
 .dv-label--short {
   display: none;
 }
@@ -716,13 +688,30 @@
   }
 }
 
-/* Currency icons */
-
 .dv-cell-with-icon {
   display: inline-flex;
   align-items: center;
   gap: 5px;
   vertical-align: middle;
+}
+
+.dv-th-sub {
+  display: block;
+  font-size: 0.6rem;
+  font-weight: inherit;
+  color: inherit;
+  margin-top: 1px;
+  text-transform: none;
+  letter-spacing: 0;
+  opacity: 0.35;
+}
+
+.dv-cell-sub {
+  font-size: 0.62rem;
+  color: #b0b7cc;
+  opacity: 0.7;
+  margin-top: 1px;
+  line-height: 1.2;
 }
 
 .dv-currency-icon {
@@ -772,8 +761,6 @@
 .page.theme-light .dv-totals-currency-label {
   color: #22283a;
 }
-
-/* Pagination */
 
 .dv-pagination {
   display: flex;
@@ -851,14 +838,11 @@
   color: rgba(255, 255, 255, 0.45);
 }
 
-/* Column filters */
-
 .dv-column-filter {
   position: relative;
   display: inline-block;
 }
 
-/* Matches thead th styling exactly */
 .dv-column-filter-button {
   display: inline-flex;
   align-items: center;
@@ -892,7 +876,6 @@
   color: #fbb060 !important;
 }
 
-/* Dropdown panel - glass card style */
 .dv-column-filter-dropdown {
   position: absolute;
   top: calc(100% + 4px);
@@ -925,13 +908,11 @@
     0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
-/* Date two-column layout */
 .dv-filter-date-layout {
   display: flex;
   gap: 16px;
 }
 
-/* Left: presets + actions */
 .dv-filter-date-presets {
   display: flex;
   flex-direction: column;
@@ -993,7 +974,6 @@
   color: #fbb060;
 }
 
-/* Apply / Cancel actions */
 .dv-filter-actions {
   display: flex;
   flex-direction: column;
@@ -1087,14 +1067,12 @@
   background: rgba(255, 255, 255, 0.06);
 }
 
-/* Right: calendar column */
 .dv-filter-calendars {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-/* Calendar month/year custom selects */
 .dv-cal-header {
   display: flex;
   gap: 6px;
@@ -1201,7 +1179,6 @@
   font-size: 0.85rem;
 }
 
-/* Light theme */
 .page.theme-light .dv-cal-sel-menu {
   background: rgba(255, 255, 255, 0.97);
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
@@ -1231,7 +1208,6 @@
   color: #e07d10;
 }
 
-/* Dark theme */
 .page.theme-dark .dv-cal-sel-trigger {
   background: rgba(255, 255, 255, 0.08);
   color: rgba(255, 255, 255, 0.85);
@@ -1245,7 +1221,6 @@
   color: #fbb060;
 }
 
-/* Calendar grid */
 .dv-cal-grid {
   display: grid;
   grid-template-columns: repeat(7, 30px);
@@ -1357,7 +1332,6 @@
   color: #ffffff !important;
 }
 
-/* Checkbox list */
 .dv-filter-checks {
   display: flex;
   flex-direction: column;
@@ -1393,7 +1367,6 @@
   background: rgba(255, 255, 255, 0.05);
 }
 
-/* Custom checkbox */
 .dv-filter-checkbox {
   appearance: none;
   -webkit-appearance: none;
@@ -1438,7 +1411,6 @@
   border-color: #f7931a;
 }
 
-/* Clear link (TypeCheckFilter) */
 .dv-filter-clear-link {
   align-self: flex-start;
   background: transparent;
@@ -1460,8 +1432,6 @@
 .page.theme-dark .dv-filter-clear-link {
   color: #fbb060;
 }
-
-/* Empty state */
 
 .dv-empty {
   padding: 40px 20px;
@@ -1524,8 +1494,6 @@
     transform: rotate(360deg);
   }
 }
-
-/* Mobile */
 
 @media (max-width: 640px) {
   .dv-column-filter-dropdown {

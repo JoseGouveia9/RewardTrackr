@@ -24,13 +24,13 @@ interface DataViewerProps {
   cacheVersion?: number;
   onTabSeen?: (key: RewardKey) => void;
   title?: string;
-  /** When set the viewer renders the supplied records instead of localStorage. */
+
   sharedData?: Partial<CacheState> | null;
-  /** Optional banner rendered above the dv-page (e.g. SharedBanner). */
+
   banner?: React.ReactNode;
-  /** When provided, a Share button is shown in the header. */
+
   onShare?: () => void;
-  /** Disables the share button and shows a tooltip when true. */
+
   shareDisabled?: boolean;
 }
 
@@ -130,7 +130,6 @@ export const DataViewer = memo(function DataViewer({
   }, [activeKey, isTxTab, cacheVersion, sharedData]);
 
   const tabsWithNew = useMemo(() => {
-    // Never show "new" badges when viewing a shared profile
     if (sharedData) return new Set<RewardKey>();
     void cacheVersion;
     const flagged = new Set<RewardKey>();
@@ -165,7 +164,6 @@ export const DataViewer = memo(function DataViewer({
     return (loadCacheEntry(activeKey)?.records?.length ?? 0) > 0;
   }, [activeKey, cacheVersion, isPurchaseTab, sharedData]);
 
-  // Derive per-tab effective views from sharedView, falling back to first option if unavailable
   const effectiveEarnView: EarnView = sharedView;
   const effectiveTxView: TxView =
     sharedView === "USD" && !txDataInfo.hasUsd
@@ -246,7 +244,7 @@ export const DataViewer = memo(function DataViewer({
     <>
       {banner}
       <div className="dv-page">
-        {/* Header */}
+        {}
         <div className="dv-header">
           <div className="dv-header-left">
             <button type="button" className="dv-back-button" onClick={onClose} aria-label="Back">
@@ -298,7 +296,7 @@ export const DataViewer = memo(function DataViewer({
             )}
           </div>
 
-          {/* Toolbar: group button + currency selector */}
+          {}
           <div className="dv-toolbar">
             {hasActiveData && !isMiningTab && (
               <button
@@ -361,7 +359,7 @@ export const DataViewer = memo(function DataViewer({
           </div>
         </div>
 
-        {/* Tabs */}
+        {}
         <TabList
           tabs={visibleTabs}
           activeKey={activeKey}
@@ -371,7 +369,7 @@ export const DataViewer = memo(function DataViewer({
           fetchingKeys={fetchingKeys}
         />
 
-        {/* Content */}
+        {}
         <div className="dv-content">
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
@@ -462,7 +460,6 @@ interface DataViewerButtonProps {
   hasNew?: boolean;
 }
 
-// Renders the header button that toggles the data-viewer panel open and closed.
 export const DataViewerButton = memo(function DataViewerButton({
   active,
   onClick,

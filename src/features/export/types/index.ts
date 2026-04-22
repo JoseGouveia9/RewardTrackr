@@ -1,5 +1,3 @@
-// Reward keys and sheet types
-
 export type RewardKey =
   | "solo-mining"
   | "minerwars"
@@ -30,8 +28,6 @@ export type EnrichType =
   | "upgrade"
   | "simple-earn";
 
-// API pagination and request bodies
-
 export interface RewardRequestBody {
   pagination?: { cursor?: number; skip?: number; limit?: number; cursorCreatedAt?: string };
   limit?: number;
@@ -42,8 +38,6 @@ export interface CursorPaginationItem {
   createdAt: string;
   [key: string]: unknown;
 }
-
-// Reward config
 
 interface RewardConfigBase {
   key: RewardKey;
@@ -74,8 +68,6 @@ export interface DateCursorRewardConfig extends RewardConfigBase {
 
 export type RewardConfig = SkipRewardConfig | CursorRewardConfig | DateCursorRewardConfig;
 
-// Options
-
 export type ExtraFiatCurrency = string;
 
 export interface FiatOptions {
@@ -94,8 +86,6 @@ export interface FetchRewardsOptions {
   incremental?: IncrementalFetchOptions;
 }
 
-// GoMining API responses
-
 export interface GoMiningDataArray<TRecord = unknown> {
   array?: TRecord[];
   count?: number;
@@ -106,8 +96,6 @@ export interface GoMiningApiResponse<TRecord = unknown> {
   message?: string;
   error?: string;
 }
-
-// FX and CoinGecko types
 
 export interface FxLatestResponse {
   rates?: { EUR?: number; [currency: string]: number | undefined };
@@ -137,8 +125,6 @@ export interface CoinGeckoPriceResult {
 }
 
 export type CoinGeckoPriceCacheValue = CoinGeckoPriceResult | number | null;
-
-// Raw record shapes from the API
 
 export interface SoloIncomeListItem {
   metaData?: { poolReward?: number; maintenanceInBtc?: number };
@@ -222,8 +208,6 @@ export interface UpgradeRawRecord {
   providerCurrencyValue?: number;
 }
 
-// Enriched record shapes
-
 export interface MiningEnrichedRecord {
   createdAt: string;
   currency: string;
@@ -243,6 +227,9 @@ export interface MiningEnrichedRecord {
   reinvested: boolean;
   totalPower: number;
   discount: number;
+  satsPerTh?: number;
+  btcPriceAtTime?: number;
+  btcPriceGmt?: number;
 }
 
 export interface WalletTxEnrichedRecord {
@@ -294,8 +281,6 @@ export type EnrichedRecord =
   | SimpleEarnEnrichedRecord
   | Record<string, unknown>;
 
-// Sheet payload
-
 export interface RewardSheetPayload {
   key: RewardKey;
   sheetName: string;
@@ -305,8 +290,6 @@ export interface RewardSheetPayload {
 }
 
 export type ProbeCountsMap = Record<string, number | null>;
-
-// UI and cache types
 
 export type PricingMode = "fiat-on" | "fiat-off";
 

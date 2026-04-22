@@ -16,7 +16,6 @@ import { Pagination } from "../pagination/pagination";
 import { useSyncTableColumns } from "../../hooks/use-sync-table-columns";
 import { AnimatedLoadingRow } from "./animated-loading-row";
 
-// Renders a paged mining-rewards data table with date-range filter and running totals.
 export function MiningTable({
   rewardKey,
   currency,
@@ -56,6 +55,14 @@ export function MiningTable({
         reward: getRecordField(rec, currency, "reward"),
         totalPower: Number(rec.totalPower ?? 0),
         discount: Number(rec.discount ?? 0),
+        satsPerTh: rec.satsPerTh != null ? Number(rec.satsPerTh) : undefined,
+        btcPriceAtTime: rec.btcPriceAtTime != null ? Number(rec.btcPriceAtTime) : undefined,
+        btcPriceGmt: rec.btcPriceGmt != null ? Number(rec.btcPriceGmt) : undefined,
+        btcPriceFiat: (() => {
+          const pr = Number(rec.poolReward ?? 0);
+          const pf = Number(rec.poolRewardFiat ?? 0);
+          return pr > 0 && pf > 0 ? pf / pr : undefined;
+        })(),
       };
     });
   }, [entry, currency]);
@@ -165,7 +172,13 @@ export function MiningTable({
                 />
               </th>
               <th>Power</th>
-              <th>Pool Reward</th>
+              <th>
+                Pool Reward
+                {currency === "BTC" && <span className="dv-th-sub">SATS/TH</span>}
+                {currency === "GMT" && <span className="dv-th-sub">PRICE</span>}
+                {currency === "USD" && <span className="dv-th-sub">PRICE</span>}
+                {currency === "FIAT" && <span className="dv-th-sub">PRICE</span>}
+              </th>
               <th>Maintenance</th>
               <th>Discount</th>
               <th>Reward</th>
@@ -188,6 +201,31 @@ export function MiningTable({
                     {formatMiningValue(row.poolReward, currency)}
                     <MiningCurrencyIcon currency={currency} fiatCode={fiatCode} />
                   </span>
+                  {currency === "BTC" && row.satsPerTh != null && (
+                    <div className="dv-cell-sub">Sats/TH: {Math.round(row.satsPerTh)} Sats</div>
+                  )}
+                  {currency === "GMT" && row.btcPriceGmt != null && (
+                    <div className="dv-cell-sub">
+                      {"Price: " +
+                        row.btcPriceGmt.toLocaleString(undefined, { maximumFractionDigits: 0 }) +
+                        " GMT"}
+                    </div>
+                  )}
+                  {currency === "USD" && row.btcPriceAtTime != null && (
+                    <div className="dv-cell-sub">
+                      {"Price: " +
+                        row.btcPriceAtTime.toLocaleString(undefined, { maximumFractionDigits: 0 }) +
+                        " USD"}
+                    </div>
+                  )}
+                  {currency === "FIAT" && row.btcPriceFiat != null && (
+                    <div className="dv-cell-sub">
+                      {"Price: " +
+                        row.btcPriceFiat.toLocaleString(undefined, { maximumFractionDigits: 0 }) +
+                        " " +
+                        fiatCode}
+                    </div>
+                  )}
                 </td>
                 <td>
                   <span className="dv-cell-with-icon">
