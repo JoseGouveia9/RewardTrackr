@@ -4,9 +4,6 @@ import { decodeJwt } from "@/lib/http";
 import { LS_KEY_SYNC_ALIAS, LS_KEY_SYNC_TOKEN } from "@/lib/storage-keys";
 import type { AuthUser } from "../types";
 
-// Private helpers
-
-// Decodes and validates a JWT token, returning an AuthUser or null if expired/invalid.
 function loginWithToken(token: string): AuthUser | null {
   const decoded = decodeJwt(token);
   if (!decoded || typeof decoded !== "object") return null;
@@ -44,9 +41,6 @@ function getCachedToken(): string {
   return sessionStorage.getItem(LS_KEY_SYNC_TOKEN) || "";
 }
 
-// Hook
-
-// Manages authentication state: session restore, token sync from the extension, and logout.
 export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
   const [storedToken, setStoredToken] = useState<string>("");
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -55,7 +49,6 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
   );
   const expiryTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Cancels the pending token-expiry timer, if any.
   const clearExpiryTimer = useCallback(() => {
     if (expiryTimer.current) {
       clearTimeout(expiryTimer.current);
@@ -63,7 +56,6 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
     }
   }, []);
 
-  // Schedules automatic logout at the JWT expiry time.
   const scheduleExpiry = useCallback(
     (exp: number | null) => {
       clearExpiryTimer();
@@ -80,7 +72,6 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
     [clearExpiryTimer, onMessage],
   );
 
-  // Validates and applies a token, updating user state and scheduling expiry.
   const applyToken = useCallback(
     (token: string, message?: string): boolean => {
       const userData = loginWithToken(token);
@@ -97,14 +88,12 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
     [scheduleExpiry, onMessage],
   );
 
-  // On mount: restore session from sessionStorage
   useEffect(() => {
     const token = getCachedToken();
     if (token) applyToken(token);
     return clearExpiryTimer;
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Storage event: extension injected a new token into this tab
   useEffect(() => {
     const handleStorage = (e: StorageEvent): void => {
       if (e.key !== LS_KEY_SYNC_TOKEN || !e.newValue) return;
@@ -114,7 +103,6 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
     return () => window.removeEventListener("storage", handleStorage);
   }, [applyToken]);
 
-  // Poll when logged out, fallback to pick up extension re-sync
   useEffect(() => {
     if (user) return;
     const interval = setInterval(() => {
@@ -124,7 +112,6 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
     return () => clearInterval(interval);
   }, [user, applyToken]);
 
-  // Manually checks sessionStorage for an extension-synced token and logs the user in if valid.
   const handleCheckSync = useCallback((): void => {
     const syncToken = getCachedToken();
     if (syncToken) {
@@ -141,7 +128,6 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
     }
   }, [applyToken, onMessage]);
 
-  // Clears the stored token and resets auth state, logging the user out.
   const handleLogout = useCallback((): void => {
     clearExpiryTimer();
     sessionStorage.removeItem(LS_KEY_SYNC_TOKEN);

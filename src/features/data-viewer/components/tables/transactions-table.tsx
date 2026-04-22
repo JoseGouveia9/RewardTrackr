@@ -17,7 +17,6 @@ import { Pagination } from "../pagination/pagination";
 import { useSyncTableColumns } from "../../hooks/use-sync-table-columns";
 import { AnimatedLoadingRow } from "./animated-loading-row";
 
-// Renders a paged GMT wallet-transactions table with type filter, date filter and optional group-by-day.
 export function TransactionsTable({
   rewardKey,
   fiatCode,
@@ -114,7 +113,6 @@ export function TransactionsTable({
   const rewardIcon =
     txView === "GMT" ? <GmtIcon /> : txView === "USD" ? <UsdIcon /> : <FiatIcon code={fiatCode} />;
 
-  // Returns the display value and currency label for a row based on the active txView.
   function rowValue(row: { reward: number; rewardInUSD: number; rewardInFiat: number }) {
     if (txView === "USD") return { v: row.rewardInUSD, c: "USD" };
     if (txView === "FIAT") return { v: row.rewardInFiat, c: "FIAT" };
@@ -154,7 +152,7 @@ export function TransactionsTable({
   return (
     <>
       <div className="dv-tables-wrap">
-        {/* Totals */}
+        {}
         <table ref={totalsRef} className="dv-table dv-table-totals">
           <colgroup>
             <col className="dv-column-date" />
@@ -176,7 +174,7 @@ export function TransactionsTable({
           </tbody>
         </table>
 
-        {/* Data table */}
+        {}
         <table ref={dataRef} className="dv-table dv-table-data">
           <colgroup>
             <col className="dv-column-date" />

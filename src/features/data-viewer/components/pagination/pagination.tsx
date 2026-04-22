@@ -1,7 +1,6 @@
 ﻿import type { MouseEvent } from "react";
 import { PAGE_SIZE } from "../../utils/constants";
 
-// Renders previous/next page buttons; returns null when there is only one page.
 export function Pagination({
   page,
   total,

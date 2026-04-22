@@ -16,7 +16,6 @@ import { Pagination } from "../pagination/pagination";
 import { useSyncTableColumns } from "../../hooks/use-sync-table-columns";
 import { AnimatedLoadingRow } from "./animated-loading-row";
 
-// Renders a paged Simple Earn table with asset, APR, reward and optional group-by-day aggregation.
 export function SimpleEarnTable({
   rewardKey,
   fiatCode,
@@ -150,7 +149,6 @@ export function SimpleEarnTable({
     <FiatIcon code={fiatCode} />
   );
 
-  // Returns the display value and currency label for a row based on the active earnView.
   function earnRowValue(row: {
     reward: number;
     rewardInUSD: number;
@@ -180,7 +178,7 @@ export function SimpleEarnTable({
   return (
     <>
       <div className="dv-tables-wrap dv-tables-wrap--scroll">
-        {/* Grand total */}
+        {}
         <table ref={totalsRef} className="dv-table dv-table-totals">
           <colgroup>
             <col className="dv-column-date" />
@@ -209,7 +207,7 @@ export function SimpleEarnTable({
           </tbody>
         </table>
 
-        {/* Data table */}
+        {}
         <table ref={dataRef} className="dv-table dv-table-data">
           <colgroup>
             <col className="dv-column-date" />

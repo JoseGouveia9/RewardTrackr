@@ -32,7 +32,6 @@ interface WalletPricingOptionsProps {
   onToggle: (checked: boolean) => void;
 }
 
-// Renders the wallet-fiat pricing toggle and rate-limit warning for wallet-tx sheets.
 export const WalletPricingOptions = memo(function WalletPricingOptions({
   includeWalletFiat,
   onToggle,

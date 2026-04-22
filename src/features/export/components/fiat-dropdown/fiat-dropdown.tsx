@@ -9,7 +9,6 @@ interface FiatDropdownProps {
   onChange: (currency: ExtraFiatCurrency) => void;
 }
 
-// Renders a searchable fiat-currency dropdown with keyboard navigation.
 export const FiatDropdown = memo(function FiatDropdown({ value, onChange }: FiatDropdownProps) {
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState("");
@@ -72,19 +71,16 @@ export const FiatDropdown = memo(function FiatDropdown({ value, onChange }: Fiat
     };
   }, [open, updateMenuAnchor, updateMenuThemeClass]);
 
-  // Closes the dropdown and resets the search filter.
   function close(): void {
     setOpen(false);
     setFilter("");
   }
 
-  // Notifies the parent of the selected currency and closes the dropdown.
   function selectOption(currency: string): void {
     onChange(currency as ExtraFiatCurrency);
     close();
   }
 
-  // Handles Escape, ArrowUp/Down, and Enter keyboard events on the search input.
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>): void {
     if (e.key === "Escape") {
       close();

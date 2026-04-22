@@ -109,9 +109,8 @@ export function ShareModal({
             if (!alive) return;
             const prevKeys = availableSheets.filter((k) => k in full.sheets);
             if (prevKeys.length > 0) setSelectedKeys(new Set(prevKeys));
-          } catch {
-            // preselection is best-effort, fall back to all selected
-          }
+            // eslint-disable-next-line no-empty
+          } catch {}
         } else {
           setExistingProfile(null);
           setShareInCommunity(true);

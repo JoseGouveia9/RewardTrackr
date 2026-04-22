@@ -17,7 +17,6 @@ export function buildShareLink(profileId: string): string {
   return `${window.location.origin}/view/${profileId}`;
 }
 
-// Fetches the public directory listing from the shared repo.
 export async function fetchDirectory(): Promise<DirectoryEntry[]> {
   if (inFlightDirectory) return inFlightDirectory;
 
@@ -43,7 +42,6 @@ export async function fetchDirectory(): Promise<DirectoryEntry[]> {
   }
 }
 
-// Fetches a single shared profile by its id slug.
 export async function fetchSharedProfile(id: string): Promise<SharedProfile> {
   const safeId = id.toLowerCase().replace(/[^a-z0-9_-]/g, "");
   const inFlight = inFlightProfiles.get(safeId);
@@ -71,7 +69,6 @@ export async function fetchSharedProfile(id: string): Promise<SharedProfile> {
   }
 }
 
-// POSTs the user's records to the Cloudflare Worker which writes them to the shared repo.
 export async function publishProfile(
   alias: string,
   sheets: Partial<CacheState>,

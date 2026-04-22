@@ -1,9 +1,6 @@
 ﻿import { LS_KEY_EXPORT_CONFIG } from "@/lib/storage-keys";
 import type { Currency, DateRange } from "../types";
 
-// Number formatting
-
-// Formats a numeric value for mining tabs, adapting decimal places to the selected currency.
 export function formatMiningValue(value: number, currency: Currency): string {
   if (!Number.isFinite(value)) return "-";
   if (currency === "BTC") {
@@ -12,7 +9,7 @@ export function formatMiningValue(value: number, currency: Currency): string {
       maximumFractionDigits: 8,
     }).format(value);
   }
-  // GMT, USD, FIAT: adaptive like formatCurrencyValue
+
   let decimals = 2;
   while (
     decimals < 18 &&
@@ -27,7 +24,6 @@ export function formatMiningValue(value: number, currency: Currency): string {
   }).format(value);
 }
 
-// Formats a numeric value for simple tabs, adapting decimal places to avoid truncation to zero.
 export function formatCurrencyValue(value: number, currency: string): string {
   if (!Number.isFinite(value)) return "-";
   if (currency === "BTC") {
@@ -36,8 +32,7 @@ export function formatCurrencyValue(value: number, currency: string): string {
       maximumFractionDigits: 8,
     }).format(value);
   }
-  // All other currencies: 2 decimals, unless that truncates to 0.00, then find the first significant decimal
-  // Uses floor (truncation) so e.g. 0.005 stays "0.005" instead of rounding up to "0.01"
+
   let decimals = 2;
   while (
     decimals < 18 &&
@@ -52,9 +47,6 @@ export function formatCurrencyValue(value: number, currency: string): string {
   }).format(value);
 }
 
-// Date helpers
-
-// Returns today's ISO date string offset by the given number of days.
 export function toIsoOffset(offsetDays = 0): string {
   const d = new Date();
   d.setDate(d.getDate() + offsetDays);
@@ -66,12 +58,10 @@ export function zeroPad(n: number): string {
   return String(n).padStart(2, "0");
 }
 
-// Builds an ISO date string (YYYY-MM-DD) from year, 0-based month, and day.
 export function buildIsoDate(year: number, month: number, day: number): string {
   return `${year}-${zeroPad(month + 1)}-${zeroPad(day)}`;
 }
 
-// Returns the min and max ISO date strings from an array of dated rows.
 export function getDateBounds(rows: Array<{ date: string }>): {
   minDate?: string;
   maxDate?: string;
@@ -87,7 +77,6 @@ export function getDateBounds(rows: Array<{ date: string }>): {
   return { minDate: min, maxDate: max };
 }
 
-// Returns true if the ISO date falls within the given DateRange (inclusive, open-ended if blank).
 export function matchesDateRange(isoDate: string, range: DateRange): boolean {
   if (!range.from && !range.to) return true;
   const d = isoDate.slice(0, 10);
@@ -96,9 +85,6 @@ export function matchesDateRange(isoDate: string, range: DateRange): boolean {
   return true;
 }
 
-// Storage
-
-// Reads the saved fiat currency code from the export config in localStorage, defaulting to "EUR".
 export function loadFiatCode(): string {
   try {
     const raw = localStorage.getItem(LS_KEY_EXPORT_CONFIG);
@@ -110,14 +96,10 @@ export function loadFiatCode(): string {
   }
 }
 
-// Returns true if the DateRange has at least one bound set.
 export function isDateRangeActive(r: DateRange): boolean {
   return !!(r.from || r.to);
 }
 
-// Record accessors
-
-// Returns the numeric field value for the given currency view (BTC/GMT/USD/FIAT) from a record.
 export function getRecordField(
   record: Record<string, unknown>,
   currency: Currency,
@@ -134,9 +116,6 @@ export function getRecordField(
   return Number.isFinite(n) ? n : 0;
 }
 
-// Display formatting
-
-// Formats an ISO date string as a short locale date (e.g. "Mar 30, 2026").
 export function fmtDate(iso: string): string {
   try {
     return new Date(iso).toLocaleDateString(undefined, {
@@ -149,7 +128,6 @@ export function fmtDate(iso: string): string {
   }
 }
 
-// Formats an ISO datetime string as a short locale date+time (e.g. "Mar 30, 2026, 14:05").
 export function fmtDateTime(iso: string): string {
   try {
     return new Date(iso).toLocaleString(undefined, {

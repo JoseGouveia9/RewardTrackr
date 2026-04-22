@@ -24,17 +24,12 @@ import {
   saveCacheEntry,
 } from "./cache";
 
-// Constants
-
 const WORKER_URL =
   (import.meta.env.VITE_WORKER_URL as string | undefined)?.replace(/\/$/, "") ?? "";
 
 const MAX_RETRIES = 5;
 const RETRY_DELAY_MS = 60_000;
 
-// Rate limit helpers
-
-// Calls the worker's rate-limit check endpoint and throws if the user has exceeded their daily quota.
 async function checkExportRateLimit(token: string): Promise<void> {
   if (!WORKER_URL) return;
   const response = await fetch(`${WORKER_URL}/rl-check`, {
@@ -47,20 +42,14 @@ async function checkExportRateLimit(token: string): Promise<void> {
   }
 }
 
-// Rolls back the rate-limit counter on the worker if the export ultimately failed.
 async function rollbackExportRateLimit(token: string): Promise<void> {
   if (!WORKER_URL) return;
   await fetch(`${WORKER_URL}/rl-rollback`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
-  }).catch(() => {
-    // Non-fatal
-  });
+  }).catch(() => {});
 }
 
-// Download helper
-
-// Triggers a browser download of the given ArrayBuffer as an .xlsx file.
 function triggerFileDownload(buffer: ArrayBuffer, fileName: string): void {
   const blob = new Blob([buffer], {
     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -75,9 +64,6 @@ function triggerFileDownload(buffer: ArrayBuffer, fileName: string): void {
   URL.revokeObjectURL(url);
 }
 
-// Fetch helpers
-
-// Wraps an async fetch call with retry logic, retrying up to MAX_RETRIES times on timeout.
 async function fetchWithRetry<T>(
   fn: () => Promise<T>,
   onProgress?: (msg: string) => void,
@@ -121,7 +107,6 @@ function buildRequestBody(config: RewardConfig, pointer: number | string): Rewar
   }
 }
 
-// Fetches all paginated records for a sheet config, supporting incremental (new-only) mode.
 async function fetchAllPages(
   config: RewardConfig,
   accessToken: string,
@@ -211,9 +196,6 @@ async function fetchAllPages(
   return { records: all, totalCount };
 }
 
-// Cache helpers
-
-// Returns the cache metadata extras (pricingMode + currency) for a given sheet key.
 function cacheExtras(key: RewardKey, includeWalletFiat: boolean, currency: ExtraFiatCurrency) {
   const pricingMode = WALLET_TX_KEYS.has(key)
     ? ((includeWalletFiat ? "fiat-on" : "fiat-off") as "fiat-on" | "fiat-off")
@@ -223,7 +205,6 @@ function cacheExtras(key: RewardKey, includeWalletFiat: boolean, currency: Extra
     : { extraFiatCurrency: currency };
 }
 
-// Parses a createdAt string into epoch milliseconds, supporting API timestamps with spaces and +00 suffix.
 function toEpoch(createdAt: string | undefined | null): number {
   if (!createdAt) return Number.NaN;
   const normalized = createdAt
@@ -234,7 +215,6 @@ function toEpoch(createdAt: string | undefined | null): number {
   return new Date(normalized).getTime();
 }
 
-// Builds a stable key for cached Simple Earn rows.
 function simpleEarnCachedKey(record: RewardRecord): string | null {
   const createdAt = typeof record?.createdAt === "string" ? record.createdAt : "";
   const asset = typeof record?.asset === "string" ? record.asset : "";
@@ -243,7 +223,6 @@ function simpleEarnCachedKey(record: RewardRecord): string | null {
   return `${createdAt}|${asset}|${rewardInUsd}`;
 }
 
-// Builds row-level keys from a raw Simple Earn API item (one key per asset entry).
 function simpleEarnRawKeys(raw: unknown): string[] {
   const item = raw as Record<string, unknown>;
   const createdAt = typeof item?.createdAt === "string" ? item.createdAt : "";
@@ -259,10 +238,6 @@ function simpleEarnRawKeys(raw: unknown): string[] {
     .filter(Boolean);
 }
 
-// Incremental fetch for Simple Earn when API count is unreliable:
-// - Fetch newest page (limit=50)
-// - Keep only records that contain at least one unseen asset-row key
-// - Stop requesting more pages once known records appear in the current page.
 async function fetchSimpleEarnIncremental(
   config: RewardConfig,
   accessToken: string,
@@ -338,8 +313,6 @@ async function fetchSimpleEarnIncremental(
       );
     }
 
-    // User-requested behavior: if current page already contains known records,
-    // avoid requesting the next page.
     if (hasKnownInPage) break;
     if (page.length < config.pageSize) break;
 
@@ -352,7 +325,6 @@ async function fetchSimpleEarnIncremental(
   return { records: all, totalCount };
 }
 
-// Returns the latest createdAt timestamp found in records, or NaN when unavailable.
 function latestRecordEpoch(records: RewardRecord[]): number {
   let latest = Number.NaN;
   for (const record of records) {
@@ -374,7 +346,6 @@ type CacheFreshnessDecision = {
   currencyChanged: boolean;
 };
 
-// Fetches lightweight live snapshots (count + newest createdAt) for each key using limit=1 probes.
 async function fetchLiveCounts(
   accessToken: string,
   keys: RewardKey[],
@@ -482,7 +453,6 @@ function evaluateCacheFreshness(
   return { isStale: false, useIncremental: false, currencyChanged };
 }
 
-// Merges incoming records into existing ones, deduplicating by createdAt and sorting newest first.
 function mergeRecords(existing: RewardRecord[], incoming: RewardRecord[]): RewardRecord[] {
   const seen = new Set<string>();
   const merged: RewardRecord[] = [];
@@ -518,8 +488,6 @@ function mergeRecords(existing: RewardRecord[], incoming: RewardRecord[]): Rewar
   );
 }
 
-// Public API
-
 export interface ExportFlowParams {
   accessToken: string;
   selectedKeys: RewardKey[];
@@ -533,7 +501,6 @@ export interface ExportFlowParams {
   onStarted?: () => void;
 }
 
-// Orchestrates the full export: probe → fetch → enrich → build Excel → download.
 export async function executeExportFlow({
   accessToken,
   selectedKeys,
@@ -588,8 +555,6 @@ export async function executeExportFlow({
 
     const priceCache = getSessionPriceCache();
 
-    // Phase 1: Fetch all raw records from GoMining API before any CoinGecko work,
-    // so the auth token is not at risk of expiring during long enrichment waits.
     type RawFetch = {
       config: RewardConfig;
       rawRecords: unknown[];
@@ -624,8 +589,6 @@ export async function executeExportFlow({
       fetched.push({ config, rawRecords, totalCount, useIncremental });
     }
 
-    // Phase 1.5: Re-enrich currency-change-only keys using existing cached USD values.
-    // Count is unchanged so no GoMining fetch is needed, just recompute fiat fields.
     for (const key of currencyChangeKeys) {
       const currentEntry = updatedCache[key];
       if (!currentEntry) continue;
@@ -649,8 +612,6 @@ export async function executeExportFlow({
       onCacheUpdate(updatedCache);
     }
 
-    // Phase 2: Enrich all fetched records (CoinGecko + EUR rates).
-    // Process non-CoinGecko sheets first so they are cached before any CoinGecko rate limiting.
     const fetchedOrdered = [
       ...fetched.filter((f) => f.config.enrichType !== "wallet-tx-coingecko"),
       ...fetched.filter((f) => f.config.enrichType === "wallet-tx-coingecko"),

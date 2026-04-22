@@ -56,7 +56,6 @@ interface ExtraFiatOptionsProps {
   onChangeCurrency: (v: ExtraFiatCurrency) => void;
 }
 
-// Renders the extra fiat conversion toggle and currency selector for the Excel export.
 export const ExtraFiatOptions = memo(function ExtraFiatOptions({
   includeExcelFiat,
   onToggle,

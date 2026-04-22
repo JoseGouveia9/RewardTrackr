@@ -15,7 +15,6 @@ body {
   padding: 0;
 }
 
-/* Ko-fi overlay widget width override */
 .floatingchat-container-wrap,
 .floatingchat-container-wrap-mobi {
   width: 280px !important;

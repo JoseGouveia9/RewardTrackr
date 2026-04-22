@@ -2,20 +2,12 @@
 import { LS_KEY_FX_CACHE } from "@/lib/storage-keys";
 import type { ExtraFiatCurrency, FxLatestResponse, FxTimeseriesResponse } from "../types";
 
-// Constants
-
 const FX_TIMESERIES_API = "https://api.fxratesapi.com/timeseries";
 const FX_LATEST_API = "https://api.exchangerate-api.com/v4/latest/USD";
 
-// Session cache
-
-// Cache key format: "YYYY-MM-DD_CURRENCY" (e.g. "2024-01-15_GBP")
 const rateCache = new Map<string, number>();
 let cacheSeeded = false;
 
-// Cache I/O
-
-// Loads previously saved USD→fiat rates from localStorage into memory (runs once per session).
 export function seedFxCache(): void {
   if (cacheSeeded) return;
   cacheSeeded = true;
@@ -26,25 +18,19 @@ export function seedFxCache(): void {
     for (const [k, v] of Object.entries(obj)) {
       if (typeof v === "number" && Number.isFinite(v) && v > 0) rateCache.set(k, v);
     }
-  } catch {
-    // ignore corrupt storage
-  }
+    // eslint-disable-next-line no-empty
+  } catch {}
 }
 
-// Writes the current in-memory rate cache back to localStorage.
 export function persistFxCache(): void {
   try {
     const obj: Record<string, number> = {};
     for (const [k, v] of rateCache.entries()) obj[k] = v;
     localStorage.setItem(LS_KEY_FX_CACHE, JSON.stringify(obj));
-  } catch {
-    // ignore quota errors
-  }
+    // eslint-disable-next-line no-empty
+  } catch {}
 }
 
-// Private helpers
-
-// Fetches historical USD→currency rates for a date range from the FX timeseries API.
 async function fetchRatesForRange(
   startDate: string,
   endDate: string,
@@ -66,10 +52,6 @@ async function fetchRatesForRange(
   return rates;
 }
 
-// Public API
-
-// Ensures USD→currency rates are cached for an additional currency without clearing other cached currencies.
-// Use this when you need rates for multiple currencies simultaneously (e.g. purchase currency + extraFiat).
 export async function prefetchAdditionalRates(
   rawDates: unknown[],
   currency: string,
@@ -112,8 +94,6 @@ export async function prefetchAdditionalRates(
   persistFxCache();
 }
 
-// Ensures USD→currency rates are cached for all provided ISO dates, fetching any that are missing.
-// Clears rates for any other currency to avoid stale accumulation when the user switches currency.
 export async function prefetchExchangeRates(rawDates: unknown[], currency: string): Promise<void> {
   seedFxCache();
 
@@ -162,7 +142,6 @@ export async function prefetchExchangeRates(rawDates: unknown[], currency: strin
   persistFxCache();
 }
 
-// Returns the cached USD→currency rate for the given date, falling back to the nearest prior date.
 export async function getRate(createdAtIso: string, currency: string): Promise<number> {
   const dateKey = String(createdAtIso || "").split("T")[0];
   if (!dateKey || dateKey.length !== 10) throw new Error(`Invalid date: ${createdAtIso}`);
@@ -183,7 +162,6 @@ export async function getRate(createdAtIso: string, currency: string): Promise<n
   throw new Error(`No exchange rate available for ${dateKey} (${currency})`);
 }
 
-// Fetches the latest live USD→currency rate (e.g. USD→EUR = 0.92).
 export async function fetchLatestRate(currency: ExtraFiatCurrency | "EUR"): Promise<number> {
   const data = await getJson<FxLatestResponse>(FX_LATEST_API);
   const rate = data?.rates?.[currency];

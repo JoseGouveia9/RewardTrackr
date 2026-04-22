@@ -1,6 +1,4 @@
-﻿/* Trigger button */
-
-.user-menu-wrapper {
+﻿.user-menu-wrapper {
   position: relative;
 }
 
@@ -53,8 +51,6 @@
   margin-left: 2px;
 }
 
-/* Dropdown */
-
 .user-menu-dropdown {
   position: absolute;
   top: calc(100% + 8px);
@@ -68,8 +64,6 @@
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(20px) saturate(160%);
 }
-
-/* User info rows */
 
 .user-menu-info-row {
   display: flex;
@@ -110,8 +104,6 @@
   background: rgba(255, 255, 255, 0.07);
   margin: 16px 0;
 }
-
-/* Actions */
 
 .user-menu-action {
   display: flex;
@@ -156,8 +148,6 @@
   background: rgba(255, 40, 70, 0.22);
 }
 
-/* Mobile */
-
 @media (max-width: 640px) {
   .user-menu-wrapper {
     width: 100%;
@@ -168,8 +158,6 @@
     justify-content: center;
   }
 }
-
-/* Light mode */
 
 .page.theme-light .user-menu-button {
   background: rgba(255, 255, 255, 0.72);

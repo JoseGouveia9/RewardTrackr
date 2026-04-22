@@ -1,6 +1,4 @@
-﻿/* Fallback UI */
-
-.error-boundary-fallback {
+﻿.error-boundary-fallback {
   padding: 2rem;
   text-align: center;
 }
@@ -13,8 +11,6 @@
 .error-boundary-retry {
   margin-top: 1rem;
 }
-
-/* Dark mode */
 
 .page.theme-dark .error-boundary-message {
   color: rgba(255, 255, 255, 0.5);

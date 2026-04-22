@@ -24,7 +24,6 @@ interface AppNoticeProps {
   children: React.ReactNode;
 }
 
-// Renders a dismissible animated notice banner with an icon and arbitrary content.
 export function AppNotice({ visible, className, icon, onDismiss, children }: AppNoticeProps) {
   return (
     <AnimatePresence>

@@ -182,8 +182,8 @@
         setButtonState("Not Ready", null, { disabled: true, notReady: true });
       } else {
         // has token but expired
-        setStatus("Session expired. Click below to refresh and sync.", "error");
-        setButtonState("Refresh & Sync", refreshAndSync);
+        setStatus("Session expired. Please log in again.", "error");
+        setButtonState("Not Ready", null, { disabled: true, notReady: true });
       }
     } catch {
       setStatus("Not ready to sync.", "error");
@@ -233,34 +233,6 @@
     }
   }
 
-  // Session refresh
-
-  // Uses the refresh_token cookie to obtain a new access token from GoMining, then re-runs syncProfile.
-  async function refreshAndSync() {
-    setButtonState("Refreshing…", null, { disabled: true });
-    setStatus("Refreshing session…", "loading");
-    try {
-      const refreshCookie = await chrome.cookies.get({ url: GOMINING_URL, name: "refresh_token" });
-      if (!refreshCookie?.value) throw new Error("No refresh token found. Please log in to app.gomining.com.");
-
-      const response = await fetch(`${GOMINING_URL.replace("app.", "api.")}/api/auth/refresh`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "ngsw-bypass": "true", "x-device-type": "desktop" },
-        body: JSON.stringify({ refreshToken: refreshCookie.value }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error("Failed to refresh session. Please log in again.");
-
-      const newToken = data?.data?.accessToken ?? data?.accessToken;
-      if (!newToken) throw new Error("Unexpected refresh response.");
-
-      await chrome.cookies.set({ url: GOMINING_URL, name: "access_token", value: newToken, path: "/", secure: true });
-      await syncProfile();
-    } catch (err) {
-      setStatus(`Error: ${err instanceof Error ? err.message : "Unexpected error"}`, "error");
-      setButtonState("Refresh & Sync", refreshAndSync);
-    }
-  }
 
   // Sync profile
 
@@ -276,8 +248,8 @@
       if (!cookie?.value) throw new Error("access_token cookie not found. Log in at app.gomining.com first.");
 
       if (isTokenExpired(cookie.value)) {
-        setStatus("Session expired. Click below to refresh and sync.", "error");
-        setButtonState("Refresh & Sync", refreshAndSync);
+        setStatus("Session expired. Please log in again.", "error");
+        setButtonState("Not Ready", null, { disabled: true, notReady: true });
         return;
       }
 
