@@ -58,7 +58,11 @@ export const DataViewer = memo(function DataViewer({
     setGroupByDay,
     dateRange,
     setDateRange,
+    miningPage,
+    setMiningPage,
   } = useDataViewerState();
+
+  useEffect(() => setMiningPage(0), [activeKey, dateRange, setMiningPage]);
   const fiatCode = useMemo(() => loadFiatCode(), []);
 
   const isSharedContext = sharedData !== null && sharedData !== undefined;
@@ -391,6 +395,8 @@ export const DataViewer = memo(function DataViewer({
                     cacheEntry={sharedData ? (sharedData[activeKey] ?? null) : undefined}
                     dateRange={dateRange}
                     setDateRange={setDateRange}
+                    page={miningPage}
+                    setPage={setMiningPage}
                   />
                 ) : isEarnTab ? (
                   <SimpleEarnTable

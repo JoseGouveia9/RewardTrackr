@@ -9,6 +9,7 @@ export function useDataViewerState() {
   const [sharedView, setSharedView] = useState<"NATIVE" | "USD" | "FIAT">("NATIVE");
   const [groupByDay, setGroupByDay] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange>(EMPTY_DATE_RANGE);
+  const [miningPage, setMiningPage] = useState(0);
 
   function setView(v: "NATIVE" | "USD" | "FIAT") {
     setSharedView(v);
@@ -29,5 +30,7 @@ export function useDataViewerState() {
     setGroupByDay,
     dateRange,
     setDateRange,
+    miningPage,
+    setMiningPage,
   };
 }

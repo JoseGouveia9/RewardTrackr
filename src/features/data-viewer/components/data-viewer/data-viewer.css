@@ -695,6 +695,131 @@
   vertical-align: middle;
 }
 
+.dv-info-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  margin-left: 3px;
+  vertical-align: middle;
+}
+
+.dv-info-icon {
+  cursor: default;
+  opacity: 0.4;
+  color: inherit;
+  line-height: 0;
+  transition: opacity 0.12s;
+}
+
+.dv-info-wrap:hover .dv-info-icon {
+  opacity: 0.9;
+}
+
+.dv-formula-tooltip {
+  display: none;
+  position: absolute;
+  top: calc(100% + 7px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1a1a1c;
+  color: #dde1f0;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  border-radius: 8px;
+  padding: 10px 13px;
+  width: max-content;
+  white-space: normal;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.65;
+  z-index: 200;
+  pointer-events: none;
+  text-align: left;
+  overflow-wrap: break-word;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+
+.dv-formula-tooltip::before {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-bottom-color: var(--border-color, rgba(255, 255, 255, 0.1));
+}
+
+.dv-formula-tooltip--right {
+  left: auto;
+  right: 0;
+  transform: none;
+}
+
+.dv-formula-tooltip--right::before {
+  left: auto;
+  right: 5px;
+  transform: none;
+}
+
+.dv-info-wrap:hover .dv-formula-tooltip {
+  display: block;
+}
+
+.dv-math-line {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+  font-size: 11px;
+}
+
+.dv-math-line:last-child {
+  margin-bottom: 0;
+}
+
+.dv-math-frac {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  vertical-align: middle;
+  margin: 0 2px;
+  line-height: 1.25;
+}
+
+.dv-math-num {
+  border-bottom: 1px solid currentColor;
+  padding: 0 3px 2px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.dv-math-den {
+  padding: 2px 3px 0;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.dv-math-label {
+  font-weight: 600;
+  font-size: 11.5px;
+  margin-bottom: 8px;
+  opacity: 0.9;
+  text-align: center;
+}
+
+.dv-math-sep {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 6px 0 8px;
+}
+
+.dv-math-var {
+  font-style: italic;
+  opacity: 0.75;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
 .dv-th-sub {
   display: block;
   font-size: 0.6rem;
