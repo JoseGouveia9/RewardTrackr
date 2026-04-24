@@ -4,15 +4,14 @@ import type { CacheState } from "@/features/export/types";
 const RAW_BASE = "https://raw.githubusercontent.com/JoseGouveia9/rewardtrackr-shared/main/shared";
 
 const WORKER_URL = (import.meta.env.VITE_WORKER_URL as string | undefined) ?? "";
+// Deduplicates concurrent callers — only one in-flight request per resource at a time
 let inFlightDirectory: Promise<DirectoryEntry[]> | null = null;
 const inFlightProfiles = new Map<string, Promise<SharedProfile>>();
 
-// Returns true if the Cloudflare Worker URL is configured in this deployment.
 export function isWorkerConfigured(): boolean {
   return !!WORKER_URL;
 }
 
-// Builds the public share URL for a given profile id slug.
 export function buildShareLink(profileId: string): string {
   return `${window.location.origin}/view/${profileId}`;
 }
@@ -89,7 +88,6 @@ export async function publishProfile(
   return res.json() as Promise<{ id: string; updatedAt: string }>;
 }
 
-// Fetches the authenticated user's own shared profile metadata from the worker.
 export async function fetchMySharedProfile(authToken: string): Promise<{
   exists: boolean;
   id?: string;
@@ -123,7 +121,6 @@ export interface Announcement {
   message: string;
 }
 
-// Fetches the current announcement from the worker, returning null if none is active.
 export async function fetchAnnouncement(): Promise<Announcement | null> {
   if (!WORKER_URL) return null;
   try {
@@ -137,7 +134,6 @@ export async function fetchAnnouncement(): Promise<Announcement | null> {
   }
 }
 
-// Deletes the authenticated user's shared profile via the worker.
 export async function deleteMySharedProfile(
   authToken: string,
 ): Promise<{ deleted: boolean; id?: string }> {

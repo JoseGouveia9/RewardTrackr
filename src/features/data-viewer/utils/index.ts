@@ -10,6 +10,7 @@ export function formatMiningValue(value: number, currency: Currency): string {
     }).format(value);
   }
 
+  // Expand decimal places until the first non-zero digit appears (handles near-zero crypto amounts)
   let decimals = 2;
   while (
     decimals < 18 &&
@@ -53,7 +54,6 @@ export function toIsoOffset(offsetDays = 0): string {
   return d.toISOString().slice(0, 10);
 }
 
-// Zero-pads a number to at least 2 digits.
 export function zeroPad(n: number): string {
   return String(n).padStart(2, "0");
 }

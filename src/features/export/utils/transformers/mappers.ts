@@ -75,6 +75,7 @@ export function transformSoloMining(
       ? (maintenanceGMTDirect * gmtPrice) / btcPrice
       : 0;
 
+  // When maintenance is paid in GMT, raw.value is already the net reward (no maintenance deducted)
   const poolReward = hasGmtMaintenance ? rawValue : rawValue + maintenanceBtc;
   const reward = poolReward - maintenanceBtc;
 
@@ -129,6 +130,7 @@ export function transformMinerWars(
   const maintenanceBtc = c1Btc + c2Btc;
 
   const netReward = raw.totalReward ?? 0;
+  // When maintenanceByGmt is true, totalReward is already net (maintenance deducted server-side)
   const poolReward = maintenanceByGmt ? netReward : netReward + maintenanceBtc;
   const reward = poolReward - maintenanceBtc;
 

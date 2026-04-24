@@ -156,6 +156,7 @@ export function filterCacheableRecords(
     };
   }
 
+  // "created" means the reinvestment hasn't executed yet — exclude to avoid double-counting
   const filtered = records.filter(
     (r) => String(r?.reinvestmentStatus || "").toLowerCase() !== "created",
   );

@@ -84,6 +84,7 @@ export async function fetchCoinGeckoPrice(
   }
 
   const targetMs = d.getTime();
+  // ±3h window: CoinGecko's hourly granularity means an exact timestamp may fall between data points
   const fromSec = Math.floor((targetMs - 3 * 60 * 60 * 1000) / 1000);
   const toSec = Math.floor((targetMs + 3 * 60 * 60 * 1000) / 1000);
   const url =

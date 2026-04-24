@@ -1,6 +1,5 @@
 import { motion } from "framer-motion";
 
-// Classifies a message string as success, error, or loading based on keyword matching.
 function getMessageType(msg: string): "success" | "error" | "loading" {
   const lower = msg.toLowerCase();
   if (
@@ -30,7 +29,6 @@ interface MessageBannerProps {
   onClose?: () => void;
 }
 
-// Renders an animated status banner with success, error, or loading styles and optional close button.
 export function MessageBanner({ message, onClose }: MessageBannerProps) {
   const type = getMessageType(message);
   const canClose = type === "success" || type === "error";

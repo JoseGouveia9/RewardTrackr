@@ -73,6 +73,7 @@ export async function prefetchAdditionalRates(
   if (missing.length === 0) return;
 
   const rangeStart = new Date(`${missing[0]}T00:00:00Z`);
+  // Fetch 7 days before oldest missing date to cover weekends/holidays with no rate data
   rangeStart.setUTCDate(rangeStart.getUTCDate() - 7);
   const todayKey = new Date().toISOString().split("T")[0];
   const needsToday = dates.some((d) => d >= todayKey) && !rateCache.has(`${todayKey}_${currency}`);
@@ -97,6 +98,7 @@ export async function prefetchAdditionalRates(
 export async function prefetchExchangeRates(rawDates: unknown[], currency: string): Promise<void> {
   seedFxCache();
 
+  // Only one fiat currency is active at a time; evict stale keys to keep cache size bounded
   let deletedAny = false;
   for (const k of [...rateCache.keys()]) {
     if (!k.endsWith(`_${currency}`)) {
@@ -121,6 +123,7 @@ export async function prefetchExchangeRates(rawDates: unknown[], currency: strin
   if (missing.length === 0) return;
 
   const rangeStart = new Date(`${missing[0]}T00:00:00Z`);
+  // Fetch 7 days before oldest missing date to cover weekends/holidays with no rate data
   rangeStart.setUTCDate(rangeStart.getUTCDate() - 7);
   const todayKey = new Date().toISOString().split("T")[0];
   const needsToday = dates.some((d) => d >= todayKey) && !rateCache.has(`${todayKey}_${currency}`);
@@ -150,6 +153,7 @@ export async function getRate(createdAtIso: string, currency: string): Promise<n
   const exact = rateCache.get(key);
   if (Number.isFinite(exact) && (exact ?? 0) > 0) return exact!;
 
+  // Fall back to the most recent earlier date — FX APIs don't publish rates for weekends
   const candidates = [...rateCache.keys()]
     .filter((k) => k.endsWith(`_${currency}`) && k.slice(0, 10) <= dateKey)
     .sort();

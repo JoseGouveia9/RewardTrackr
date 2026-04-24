@@ -36,7 +36,6 @@ interface UseAuthReturn {
   handleLogout: () => void;
 }
 
-// Reads the stored JWT from sessionStorage.
 function getCachedToken(): string {
   return sessionStorage.getItem(LS_KEY_SYNC_TOKEN) || "";
 }
@@ -60,6 +59,7 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
     (exp: number | null) => {
       clearExpiryTimer();
       if (!exp) return;
+      // Log out 30s before actual expiry to avoid a mid-export auth failure
       const msUntilExpiry = exp * 1000 - Date.now() - 30_000;
       if (msUntilExpiry <= 0) return;
       expiryTimer.current = setTimeout(() => {
@@ -103,6 +103,7 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
     return () => window.removeEventListener("storage", handleStorage);
   }, [applyToken]);
 
+  // Polls sessionStorage for a token written by the browser extension (cross-context write)
   useEffect(() => {
     if (user) return;
     const interval = setInterval(() => {

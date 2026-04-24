@@ -73,6 +73,7 @@ async function fetchWithRetry<T>(
     try {
       return await fn();
     } catch (err) {
+      // Only retry on AbortError (request timeout) — API/network errors are not retried
       const isTimeout = err instanceof Error && err.name === "AbortError";
       if (!isTimeout || attempt > MAX_RETRIES) throw err;
       onProgress?.(`Request timed out. Retrying in 60s... (attempt ${attempt}/${MAX_RETRIES})`);
@@ -123,6 +124,7 @@ async function fetchAllPages(
   const knownCreatedAt = new Set(
     incremental?.knownCreatedAt?.filter((v): v is string => typeof v === "string") ?? [],
   );
+  // Tracks dates seen in this run so newly-fetched items aren't mistaken for "already known"
   const currentRunDates = new Set<string>();
   const knownTotalCount =
     typeof incremental?.knownTotalCount === "number" ? incremental.knownTotalCount : null;
@@ -209,6 +211,7 @@ function cacheExtras(key: RewardKey, includeWalletFiat: boolean, currency: Extra
 
 function toEpoch(createdAt: string | undefined | null): number {
   if (!createdAt) return Number.NaN;
+  // GoMining dates use non-standard formats: space instead of T, sub-ms precision, "+00" suffix
   const normalized = createdAt
     .trim()
     .replace(/^(\d{4}-\d{2}-\d{2})\s+/, "$1T")
@@ -473,6 +476,7 @@ function mergeRecords(existing: RewardRecord[], incoming: RewardRecord[]): Rewar
     return [createdAt, currency, asset, type, txType, fromType, reward].join("|");
   };
 
+  // incoming first so newer records win when the same key appears in both
   for (const item of [...incoming, ...existing]) {
     const key = dedupeKey(item);
     if (!key) {
@@ -614,6 +618,7 @@ export async function executeExportFlow({
       onCacheUpdate(updatedCache);
     }
 
+    // wallet-tx enrichment makes slow, rate-limited CoinGecko calls — process last to not block others
     const fetchedOrdered = [
       ...fetched.filter((f) => f.config.enrichType !== "wallet-tx-coingecko"),
       ...fetched.filter((f) => f.config.enrichType === "wallet-tx-coingecko"),
