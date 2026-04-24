@@ -31,7 +31,7 @@ export const SheetSelector = memo(function SheetSelector({
     <div className="sheet-selector">
       <button
         type="button"
-        className={`sheet-card sheet-card-all ${allSelected ? "selected" : ""}`}
+        className={`sheet-card sheet-card-all${allSelected ? " sheet-card--selected" : ""}`}
         onClick={onToggleAll}
         aria-pressed={allSelected}
       >
@@ -68,7 +68,7 @@ export const SheetSelector = memo(function SheetSelector({
           <button
             key={group.id}
             type="button"
-            className={`sheet-card ${selected ? "selected" : ""}`}
+            className={`sheet-card${selected ? " sheet-card--selected" : ""}`}
             onClick={() => onToggleGroup(group)}
             aria-pressed={selected}
           >

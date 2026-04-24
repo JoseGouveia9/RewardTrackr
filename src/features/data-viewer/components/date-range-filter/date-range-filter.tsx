@@ -23,14 +23,14 @@ function CalSelect({
     <div ref={wrapRef} className="dv-cal-sel-wrap">
       <button type="button" className="dv-cal-sel-trigger" onClick={() => setOpen((p) => !p)}>
         <span>{selectedLabel}</span>
-        <span className={`dv-cal-sel-caret${open ? " open" : ""}`}>⌃</span>
+        <span className={`dv-cal-sel-caret${open ? " dv-cal-sel-caret--open" : ""}`}>⌃</span>
       </button>
       {open && (
         <div className="dv-cal-sel-menu">
           {options.map((o) => (
             <div
               key={o.value}
-              className={`dv-cal-sel-option${o.value === value ? " selected" : ""}${o.disabled ? " disabled" : ""}`}
+              className={`dv-cal-sel-option${o.value === value ? " dv-cal-sel-option--selected" : ""}${o.disabled ? " dv-cal-sel-option--disabled" : ""}`}
               onClick={() => {
                 if (!o.disabled) {
                   onChange(o.value);

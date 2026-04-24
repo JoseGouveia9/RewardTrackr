@@ -1,4 +1,8 @@
-﻿.fiat-dropdown-wrap {
+﻿/* ============================
+   Trigger
+   ============================ */
+
+.fiat-dropdown-wrap {
   position: relative;
   display: inline-flex;
   flex-direction: column;
@@ -25,9 +29,13 @@
   transition: transform 0.16s ease;
 }
 
-.fiat-dropdown-caret.open {
+.fiat-dropdown-caret--open {
   transform: rotate(180deg);
 }
+
+/* ============================
+   Menu & Scrollbar
+   ============================ */
 
 .fiat-dropdown-menu {
   position: absolute;
@@ -74,6 +82,10 @@
   background: linear-gradient(180deg, #e8850f 0%, #cb7010 100%);
 }
 
+/* ============================
+   Search & Options
+   ============================ */
+
 .fiat-dropdown-search {
   width: 100%;
   box-sizing: border-box;
@@ -103,7 +115,7 @@
 }
 
 .fiat-dropdown-option:hover,
-.fiat-dropdown-option.focused {
+.fiat-dropdown-option--focused {
   background: rgba(255, 255, 255, 0.06);
 }
 
@@ -127,6 +139,10 @@
   color: #f7931a;
   font-size: 1.1rem;
 }
+
+/* ============================
+   Theme Overrides
+   ============================ */
 
 .page.theme-light .fiat-dropdown-menu,
 .fiat-dropdown-menu.theme-light {
@@ -161,9 +177,9 @@
 }
 
 .page.theme-light .fiat-dropdown-option:hover,
-.page.theme-light .fiat-dropdown-option.focused,
+.page.theme-light .fiat-dropdown-option--focused,
 .fiat-dropdown-menu.theme-light .fiat-dropdown-option:hover,
-.fiat-dropdown-menu.theme-light .fiat-dropdown-option.focused {
+.fiat-dropdown-menu.theme-light .fiat-dropdown-option--focused {
   background: rgba(0, 0, 0, 0.04);
 }
 

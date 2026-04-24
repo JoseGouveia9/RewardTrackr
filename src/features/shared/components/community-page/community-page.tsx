@@ -24,8 +24,8 @@ export function CommunityPage({ onClose }: { onClose: () => void }) {
   }, []);
 
   return (
-    <div className="sh-community">
-      <div className="sh-community-header">
+    <div className="community">
+      <div className="community-header">
         <button type="button" className="dv-back-button" onClick={onClose} aria-label="Back">
           <svg
             width="16"
@@ -46,28 +46,28 @@ export function CommunityPage({ onClose }: { onClose: () => void }) {
         <span className="dv-title">Community</span>
       </div>
 
-      <p className="sh-community-sub">
+      <p className="community-sub">
         Shared profiles from RewardTrackr users. Click any row to view their records.
       </p>
 
-      {error && <p className="sh-community-error">{error}</p>}
+      {error && <p className="community-error">{error}</p>}
 
       {loading && (
-        <div className="sh-community-loading">
-          <span className="sh-community-loading-inline">
-            <span className="sh-community-spinner" aria-hidden="true" />
+        <div className="community-loading">
+          <span className="community-loading-inline">
+            <span className="community-spinner" aria-hidden="true" />
             <span>Fetching community profiles...</span>
           </span>
         </div>
       )}
 
       {!loading && !error && visibleEntries.length === 0 && (
-        <p className="sh-community-empty">No shared profiles yet. Be the first!</p>
+        <p className="community-empty">No shared profiles yet. Be the first!</p>
       )}
 
       {!loading && visibleEntries.length > 0 && (
-        <div className="sh-community-table-wrap">
-          <table className="sh-community-table">
+        <div className="community-table-wrap">
+          <table className="community-table">
             <thead>
               <tr>
                 <th>User</th>

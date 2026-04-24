@@ -23,7 +23,6 @@ import "./App.css";
 
 const LAYOUT_SPRING = { layout: { type: "spring" as const, stiffness: 220, damping: 28 } };
 
-// Renders a warning triangle SVG icon for app notices.
 function WarningNoticeIcon() {
   return (
     <svg
@@ -46,7 +45,6 @@ function WarningNoticeIcon() {
   );
 }
 
-// Renders a shield SVG icon for the open-source notice.
 function ShieldNoticeIcon() {
   return (
     <svg
@@ -67,7 +65,6 @@ function ShieldNoticeIcon() {
   );
 }
 
-// Root app component: wires auth, export config, cache state, routing, and banner notices.
 function App() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -130,6 +127,7 @@ function App() {
     prevUserRef.current = user;
   }, [user]);
 
+  // Backwards compat: migrate old "#view=<id>" hash URLs to the "/view/<id>" route
   useEffect(() => {
     const hash = window.location.hash;
     if (hash.startsWith("#view=")) {
@@ -254,7 +252,7 @@ function App() {
               <SupportButton />
               <button
                 type="button"
-                className={`sh-trigger-btn${isCommunity ? " sh-trigger-btn--active" : ""}`}
+                className={`community-button${isCommunity ? " community-button--active" : ""}`}
                 onClick={() => void navigate(isCommunity ? "/" : "/community")}
                 aria-label="Community"
               >
@@ -297,7 +295,7 @@ function App() {
               <motion.div
                 layout
                 transition={{ duration: 0.2, ease: "easeOut" }}
-                className={`hero-profile-wrap${hasCachedSheets ? " hero-profile-wrap--narrow" : ""}`}
+                className={`hero-profile-wrapper${hasCachedSheets ? " hero-profile-wrapper--narrow" : ""}`}
               >
                 {!user && (
                   <ReferralButton
@@ -415,6 +413,7 @@ function App() {
                     <AnimatePresence mode="popLayout">
                       {message ? (
                         <motion.div layout transition={LAYOUT_SPRING}>
+                          {/* Key strips changing numbers (countdowns, "X of Y") to prevent remount on each tick */}
                           <MessageBanner
                             key={`auth-message-${message.replace(/\b\d+s\b/g, "").replace(/\d+\/\d+/g, "")}`}
                             message={message}
@@ -511,7 +510,7 @@ function App() {
                         )}
                         <p className="export-limit-notice">Max 1 export per day.</p>
                       </div>
-                      <div className="export-btn-wrapper">
+                      <div className="export-button-wrapper">
                         <button
                           className="btn-primary btn-primary-large"
                           disabled={loading || selectedKeys.length === 0}
@@ -552,6 +551,7 @@ function App() {
                     <AnimatePresence mode="popLayout">
                       {message ? (
                         <motion.div layout transition={LAYOUT_SPRING}>
+                          {/* Key strips changing numbers (countdowns, "X of Y") to prevent remount on each tick */}
                           <MessageBanner
                             key={`main-message-${message.replace(/\b\d+s\b/g, "").replace(/\d+\/\d+/g, "")}`}
                             message={message}

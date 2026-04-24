@@ -1,4 +1,8 @@
-﻿.sheet-selector {
+﻿/* ============================
+   Grid Layout
+   ============================ */
+
+.sheet-selector {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
   gap: 6px;
@@ -31,6 +35,10 @@
   width: 100%;
 }
 
+/* ============================
+   Card States
+   ============================ */
+
 .sheet-check-icon {
   display: flex;
   align-items: center;
@@ -59,7 +67,7 @@
   transform: translateY(0);
 }
 
-.sheet-card.selected {
+.sheet-card--selected {
   border: none;
   background: linear-gradient(90deg, #f7931a 0%, #e07d10 100%);
   box-shadow:
@@ -68,14 +76,18 @@
   transform: translateY(1px);
 }
 
-.sheet-card.selected .sheet-title,
-.sheet-card.selected .sheet-meta {
+.sheet-card--selected .sheet-title,
+.sheet-card--selected .sheet-meta {
   color: rgba(255, 255, 255, 0.9);
 }
 
 .sheet-card-all {
   grid-column: 1 / -1;
 }
+
+/* ============================
+   Content
+   ============================ */
 
 .sheet-title {
   display: block;
@@ -104,6 +116,10 @@
   }
 }
 
+/* ============================
+   Theme Overrides
+   ============================ */
+
 .page.theme-dark .sheet-card {
   border: none;
   background: rgba(255, 255, 255, 0.05);
@@ -115,7 +131,7 @@
   background: rgba(255, 255, 255, 0.1);
 }
 
-.page.theme-dark .sheet-card.selected {
+.page.theme-dark .sheet-card--selected {
   border: none;
   background: linear-gradient(90deg, #f7931a 0%, #e07d10 100%);
   box-shadow:
@@ -123,7 +139,7 @@
     0 2px 8px rgba(4, 8, 22, 0.45);
 }
 
-.page.theme-dark .sheet-card.selected:hover {
+.page.theme-dark .sheet-card--selected:hover {
   background: linear-gradient(90deg, #e8850f 0%, #cb7010 100%);
 }
 

@@ -16,8 +16,8 @@ export function SharedBanner({
   const age = profile ? formatAge(new Date(profile.updatedAt).getTime()) : null;
 
   return (
-    <div className="sh-banner">
-      <div className="sh-banner-left">
+    <div className="shared-banner">
+      <div className="shared-banner-left">
         <svg
           width="14"
           height="14"
@@ -39,9 +39,9 @@ export function SharedBanner({
             Viewing <strong>{profile?.alias}</strong>'s records
           </span>
         )}
-        {age && <span className="sh-banner-meta">· Updated {age} · Read only</span>}
+        {age && <span className="shared-banner-meta">· Updated {age} · Read only</span>}
       </div>
-      <button type="button" className="sh-banner-close" onClick={onClose} aria-label="Close">
+      <button type="button" className="shared-banner-close" onClick={onClose} aria-label="Close">
         <svg
           width="13"
           height="13"
@@ -80,20 +80,20 @@ export function DirectoryRow({ entry }: { entry: DirectoryEntry }) {
 
   return (
     <tr
-      className="sh-dir-row"
+      className="directory-row"
       onClick={handleView}
       onKeyDown={handleRowKeyDown}
       role="button"
       tabIndex={0}
       aria-label={`View ${entry.alias} records`}
     >
-      <td className="sh-dir-alias">
-        <span className="sh-dir-alias-content">
+      <td className="directory-row-alias">
+        <span className="directory-row-alias-content">
           <span>{entry.alias}</span>
-          {isDev ? <span className="sh-dir-dev-badge">DEV</span> : null}
+          {isDev ? <span className="directory-row-dev-badge">DEV</span> : null}
         </span>
       </td>
-      <td className="sh-dir-updated">{age}</td>
+      <td className="directory-row-updated">{age}</td>
     </tr>
   );
 }

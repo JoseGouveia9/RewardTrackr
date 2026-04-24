@@ -135,7 +135,7 @@ export const FiatDropdown = memo(function FiatDropdown({ value, onChange }: Fiat
                 key={currency}
                 role="option"
                 aria-selected={value === currency}
-                className={`fiat-dropdown-option ${value === currency ? "selected" : ""} ${focusedIndex === idx ? "focused" : ""}`}
+                className={`fiat-dropdown-option${focusedIndex === idx ? " fiat-dropdown-option--focused" : ""}`}
                 onClick={() => selectOption(currency)}
                 onMouseEnter={() => setFocusedIndex(idx)}
               >
@@ -168,7 +168,7 @@ export const FiatDropdown = memo(function FiatDropdown({ value, onChange }: Fiat
         aria-expanded={open}
       >
         <span>{value}</span>
-        <span className={`fiat-dropdown-caret ${open ? "open" : ""}`}>⌃</span>
+        <span className={`fiat-dropdown-caret${open ? " fiat-dropdown-caret--open" : ""}`}>⌃</span>
       </button>
       {menu}
     </span>

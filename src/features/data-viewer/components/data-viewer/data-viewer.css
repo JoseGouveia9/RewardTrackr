@@ -1,4 +1,8 @@
-﻿.dv-trigger-button {
+﻿/* ============================
+   Trigger Button
+   ============================ */
+
+.dv-trigger-button {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -87,6 +91,10 @@
   border-color: rgba(247, 147, 26, 0.35);
   color: #fbb060;
 }
+
+/* ============================
+   Page Layout
+   ============================ */
 
 .dv-page {
   display: flex;
@@ -216,6 +224,10 @@
   color: rgba(255, 255, 255, 0.2);
 }
 
+/* ============================
+   Group & Currency Controls
+   ============================ */
+
 .dv-group-button {
   display: flex;
   align-items: center;
@@ -310,6 +322,10 @@
   border-color: rgba(255, 255, 255, 0.25);
   color: #ffffff;
 }
+
+/* ============================
+   Tabs
+   ============================ */
 
 .dv-tabs {
   display: flex;
@@ -406,6 +422,10 @@
   color: #fbb060;
 }
 
+/* ============================
+   Totals Table
+   ============================ */
+
 .dv-total-cell-label {
   display: block;
   font-size: 0.68rem;
@@ -469,6 +489,10 @@
 .page.theme-dark .dv-totals-label {
   color: #fbb060 !important;
 }
+
+/* ============================
+   Data Table
+   ============================ */
 
 .dv-content {
   flex: 1;
@@ -695,6 +719,10 @@
   vertical-align: middle;
 }
 
+/* ============================
+   Formula Tooltip
+   ============================ */
+
 .dv-info-wrap {
   position: relative;
   display: inline-flex;
@@ -820,6 +848,10 @@
   white-space: nowrap;
 }
 
+/* ============================
+   Sub-labels & Currency Icons
+   ============================ */
+
 .dv-th-sub {
   display: block;
   font-size: 0.6rem;
@@ -886,6 +918,10 @@
 .page.theme-light .dv-totals-currency-label {
   color: #22283a;
 }
+
+/* ============================
+   Pagination
+   ============================ */
 
 .dv-pagination {
   display: flex;
@@ -962,6 +998,10 @@
 .page.theme-dark .dv-pagination-info {
   color: rgba(255, 255, 255, 0.45);
 }
+
+/* ============================
+   Date Filter
+   ============================ */
 
 .dv-column-filter {
   position: relative;
@@ -1198,6 +1238,10 @@
   gap: 8px;
 }
 
+/* ============================
+   Calendar Select
+   ============================ */
+
 .dv-cal-header {
   display: flex;
   gap: 6px;
@@ -1237,7 +1281,7 @@
   transition: transform 0.15s ease;
 }
 
-.dv-cal-sel-caret.open {
+.dv-cal-sel-caret--open {
   transform: rotate(180deg);
 }
 
@@ -1281,15 +1325,15 @@
   position: relative;
 }
 
-.dv-cal-sel-option:hover:not(.disabled) {
+.dv-cal-sel-option:hover:not(.dv-cal-sel-option--disabled) {
   background: rgba(255, 255, 255, 0.06);
 }
 
-.dv-cal-sel-option.selected {
+.dv-cal-sel-option--selected {
   color: #f7931a;
 }
 
-.dv-cal-sel-option.disabled {
+.dv-cal-sel-option--disabled {
   opacity: 0.28;
   cursor: default;
   pointer-events: none;
@@ -1325,7 +1369,7 @@
   background: rgba(0, 0, 0, 0.05);
 }
 
-.page.theme-light .dv-cal-sel-option.selected {
+.page.theme-light .dv-cal-sel-option--selected {
   color: #e07d10;
 }
 
@@ -1345,6 +1389,10 @@
 .page.theme-dark .dv-cal-sel-caret {
   color: #fbb060;
 }
+
+/* ============================
+   Calendar Grid
+   ============================ */
 
 .dv-cal-grid {
   display: grid;
@@ -1457,6 +1505,10 @@
   color: #ffffff !important;
 }
 
+/* ============================
+   Filter Checkboxes
+   ============================ */
+
 .dv-filter-checks {
   display: flex;
   flex-direction: column;
@@ -1558,6 +1610,10 @@
   color: #fbb060;
 }
 
+/* ============================
+   Loading & Empty States
+   ============================ */
+
 .dv-empty {
   padding: 40px 20px;
   text-align: center;
@@ -1619,6 +1675,10 @@
     transform: rotate(360deg);
   }
 }
+
+/* ============================
+   Mobile Overrides
+   ============================ */
 
 @media (max-width: 640px) {
   .dv-column-filter-dropdown {
