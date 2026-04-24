@@ -9,7 +9,6 @@ import {
 import { parseJsonSafe } from "@/lib/parse-json-safe";
 import type { CacheEntry, CacheState, RewardKey, RewardRecord } from "../types";
 
-const MINING_KEYS = new Set(["solo-mining", "minerwars"]);
 export const MINING_SCHEMA_VERSION = 1;
 
 type PriceCacheValue = {
@@ -31,7 +30,7 @@ export function loadCacheEntry(key: RewardKey): CacheEntry | null {
     const parsed = JSON.parse(raw) as Partial<CacheEntry>;
     if (!parsed || typeof parsed !== "object") return null;
     if (!Array.isArray(parsed.records) || typeof parsed.sheetName !== "string") return null;
-    if (MINING_KEYS.has(key) && (parsed.schemaVersion ?? 0) < MINING_SCHEMA_VERSION) {
+    if (key === "solo-mining" && (parsed.schemaVersion ?? 0) < MINING_SCHEMA_VERSION) {
       localStorage.removeItem(LS_KEY_REWARD_PREFIX + key);
       localStorage.setItem(LS_KEY_MIGRATED_PREFIX + key, "1");
       return null;
