@@ -18,6 +18,7 @@ import type {
   RewardSheetPayload,
 } from "../types";
 import {
+  MINING_SCHEMA_VERSION,
   hasMissingPrices,
   filterCacheableRecords,
   persistPriceCache,
@@ -200,9 +201,10 @@ function cacheExtras(key: RewardKey, includeWalletFiat: boolean, currency: Extra
   const pricingMode = WALLET_TX_KEYS.has(key)
     ? ((includeWalletFiat ? "fiat-on" : "fiat-off") as "fiat-on" | "fiat-off")
     : undefined;
+  const schemaVersion = MINING_SCHEMA_VERSION;
   return pricingMode
-    ? { pricingMode, extraFiatCurrency: currency }
-    : { extraFiatCurrency: currency };
+    ? { pricingMode, extraFiatCurrency: currency, schemaVersion }
+    : { extraFiatCurrency: currency, schemaVersion };
 }
 
 function toEpoch(createdAt: string | undefined | null): number {

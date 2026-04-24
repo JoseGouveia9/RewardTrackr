@@ -12,3 +12,4 @@ release/
 
 # AI assistant artifacts
 .ai/
+context-snapshot.json
