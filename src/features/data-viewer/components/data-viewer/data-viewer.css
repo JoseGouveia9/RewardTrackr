@@ -861,14 +861,133 @@
   text-transform: none;
   letter-spacing: 0;
   opacity: 0.35;
+  overflow: hidden;
 }
 
 .dv-cell-sub {
   font-size: 0.62rem;
-  color: #b0b7cc;
-  opacity: 0.7;
+  color: rgba(176, 183, 204, 0.7);
   margin-top: 1px;
-  line-height: 1.2;
+  line-height: 1.4;
+  overflow: hidden;
+}
+
+/* ============================
+   Trends Toggle
+   ============================ */
+
+.dv-trends-toggle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  background: transparent;
+  color: #6d7589;
+  cursor: pointer;
+  font-size: 0.75rem !important;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition:
+    background 0.12s ease,
+    color 0.12s ease,
+    border-color 0.12s ease;
+}
+
+.dv-trends-toggle:not(.dv-trends-toggle--active):hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #22283a;
+}
+
+.dv-trends-toggle--active {
+  background: rgba(22, 163, 74, 0.08);
+  border-color: rgba(22, 163, 74, 0.25);
+  color: #16a34a;
+}
+
+.page.theme-dark .dv-trends-toggle {
+  border-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.page.theme-dark .dv-trends-toggle:not(.dv-trends-toggle--active):hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.page.theme-dark .dv-trends-toggle--active {
+  background: rgba(74, 222, 128, 0.1);
+  border-color: rgba(74, 222, 128, 0.25);
+  color: #4ade80;
+}
+
+/* ============================
+   Trend Arrow
+   ============================ */
+
+.dv-trends-active .dv-cell-sub,
+.dv-trends-active .dv-th-sub {
+  animation: dv-bop-in 0.22s ease both;
+}
+
+.dv-trends-exiting .dv-cell-sub,
+.dv-trends-exiting .dv-th-sub {
+  animation: dv-bop-out 0.18s ease both;
+}
+
+@keyframes dv-bop-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-6px);
+    max-height: 0;
+  }
+  65% {
+    transform: translateY(1px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 24px;
+  }
+}
+
+@keyframes dv-bop-out {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 24px;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-6px);
+    max-height: 0;
+  }
+}
+
+.dv-trend {
+  display: inline;
+  font-size: 0.58rem;
+  font-weight: 700;
+  margin-left: 4px;
+  letter-spacing: 0.01em;
+}
+
+.dv-trend--up {
+  color: #16a34a;
+}
+
+.dv-trend--down {
+  color: #dc2626;
+}
+
+.page.theme-dark .dv-trend--up {
+  color: #4ade80;
+}
+
+.page.theme-dark .dv-trend--down {
+  color: #f87171;
 }
 
 .dv-currency-icon {

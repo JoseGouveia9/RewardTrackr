@@ -1,4 +1,4 @@
-﻿import { memo, useEffect, useMemo } from "react";
+﻿import { memo, useEffect, useMemo, useRef, useState } from "react";
 import type React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { loadCacheEntry } from "@/features/export/utils/cache";
@@ -218,6 +218,24 @@ export const DataViewer = memo(function DataViewer({
   ];
   const showSimpleSelector = simpleHasUsd || simpleHasFiat;
 
+  const [showTrends, setShowTrends] = useState(false);
+  const [trendsExiting, setTrendsExiting] = useState(false);
+  const exitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const toggleTrends = () => {
+    if (exitTimer.current) clearTimeout(exitTimer.current);
+    if (!showTrends) {
+      setTrendsExiting(false);
+      setShowTrends(true);
+    } else {
+      setTrendsExiting(true);
+      exitTimer.current = setTimeout(() => {
+        setShowTrends(false);
+        setTrendsExiting(false);
+      }, 180);
+    }
+  };
+
   const hasViewSelector =
     hasActiveData &&
     (isMiningTab ||
@@ -330,6 +348,33 @@ export const DataViewer = memo(function DataViewer({
               </button>
             )}
             {hasViewSelector && !isMiningTab && <span className="dv-toolbar-separator">·</span>}
+            {hasActiveData && isMiningTab && activeKey == "solo-mining" && (
+              <>
+                <button
+                  type="button"
+                  className={`dv-trends-toggle${showTrends && !trendsExiting ? " dv-trends-toggle--active" : ""}`}
+                  onClick={toggleTrends}
+                  aria-pressed={showTrends && !trendsExiting}
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+                    <polyline points="16 7 22 7 22 13" />
+                  </svg>
+                  Trends
+                </button>
+                <span className="dv-toolbar-separator">·</span>
+              </>
+            )}
             {hasActiveData && isMiningTab ? (
               <ViewSelector
                 views={currencies}
@@ -397,6 +442,8 @@ export const DataViewer = memo(function DataViewer({
                     setDateRange={setDateRange}
                     page={miningPage}
                     setPage={setMiningPage}
+                    showTrends={showTrends}
+                    trendsExiting={trendsExiting}
                   />
                 ) : isEarnTab ? (
                   <SimpleEarnTable

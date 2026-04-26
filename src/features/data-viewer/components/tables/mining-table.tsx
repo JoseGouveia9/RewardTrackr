@@ -35,6 +35,27 @@ const INFO_ICON = (
   </svg>
 );
 
+function TrendArrow({
+  current,
+  prev,
+  integer,
+}: {
+  current: number | undefined;
+  prev: number | undefined;
+  integer?: boolean;
+}) {
+  if (current == null || prev == null) return null;
+  const a = integer ? Math.round(current) : current;
+  const b = integer ? Math.round(prev) : prev;
+  const delta = a - b;
+  if (delta === 0) return null;
+  return (
+    <span className={`dv-trend${delta > 0 ? " dv-trend--up" : " dv-trend--down"}`}>
+      {delta > 0 ? "▲" : "▼"}
+    </span>
+  );
+}
+
 function Frac({ num, den }: { num: ReactNode; den: ReactNode }) {
   return (
     <span className="dv-math-frac">
@@ -98,13 +119,13 @@ function buildFormulas(currency: Currency, fiatCode: string) {
       <div className="dv-math-line">
         <span className="dv-math-var">Electricity</span>=
         <Frac num="kWh cost × 24" den="1,000" />
-        <span>× efficiency × TH × {fiatCode}/USD RATE − discount%</span>
+        <span>× efficiency × TH × USD/{fiatCode} RATE − discount%</span>
       </div>
     ) : currency === "GMT" ? (
       <div className="dv-math-line">
         <span className="dv-math-var">Electricity</span>=
         <Frac num="kWh cost × 24" den="1,000" />
-        <span>× efficiency × TH × GMT/USD RATE − discount%</span>
+        <span>× efficiency × TH × USD/GMT RATE − discount%</span>
       </div>
     ) : (
       <div className="dv-math-line">
@@ -121,11 +142,11 @@ function buildFormulas(currency: Currency, fiatCode: string) {
       </div>
     ) : currency === "FIAT" ? (
       <div className="dv-math-line">
-        <span className="dv-math-var">Service</span>= 0.0089 × TH × {fiatCode}/USD RATE − discount%
+        <span className="dv-math-var">Service</span>= 0.0089 × TH × USD/{fiatCode} RATE − discount%
       </div>
     ) : currency === "GMT" ? (
       <div className="dv-math-line">
-        <span className="dv-math-var">Service</span>= 0.0089 × TH × GMT/USD RATE − discount%
+        <span className="dv-math-var">Service</span>= 0.0089 × TH × USD/GMT RATE − discount%
       </div>
     ) : (
       <div className="dv-math-line">
@@ -158,6 +179,8 @@ export function MiningTable({
   setDateRange,
   page,
   setPage,
+  showTrends,
+  trendsExiting,
 }: {
   rewardKey: RewardKey;
   currency: Currency;
@@ -169,6 +192,8 @@ export function MiningTable({
   setDateRange: (v: DateRange) => void;
   page: number;
   setPage: (p: number) => void;
+  showTrends: boolean;
+  trendsExiting: boolean;
 }) {
   const formulas = useMemo(() => buildFormulas(currency, fiatCode), [currency, fiatCode]);
   const totalsRef = useRef<HTMLTableElement>(null);
@@ -224,6 +249,11 @@ export function MiningTable({
     return false;
   }, [rewardKey, currency, rows]);
 
+  const hasSatsLabel = useMemo(
+    () => rewardKey !== "minerwars" && rows.some((r) => r.satsPerTh != null),
+    [rewardKey, rows],
+  );
+
   const totals = useMemo(
     () =>
       filteredRows.reduce(
@@ -256,7 +286,9 @@ export function MiningTable({
 
   return (
     <>
-      <div className="dv-tables-wrap dv-tables-wrap--wide">
+      <div
+        className={`dv-tables-wrap dv-tables-wrap--wide${showTrends && !trendsExiting ? " dv-trends-active" : trendsExiting ? " dv-trends-exiting" : ""}`}
+      >
         <table ref={totalsRef} className="dv-table dv-table-totals">
           <colgroup>
             <col className="dv-column-date" />
@@ -319,8 +351,16 @@ export function MiningTable({
               <th>
                 Pool Reward
                 {rewardKey !== "minerwars" && <InfoTooltip>{formulas.poolReward}</InfoTooltip>}
-                {hasSubLabel && currency === "BTC" && <span className="dv-th-sub">SATS/TH</span>}
-                {hasSubLabel && currency !== "BTC" && <span className="dv-th-sub">BTC PRICE</span>}
+                {showTrends && hasSubLabel && currency === "BTC" && (
+                  <span className="dv-th-sub">SATS/TH</span>
+                )}
+                {showTrends && currency !== "BTC" && (hasSubLabel || hasSatsLabel) && (
+                  <span className="dv-th-sub">
+                    {hasSubLabel ? "BTC PRICE" : ""}
+                    {hasSubLabel && hasSatsLabel ? " · " : ""}
+                    {hasSatsLabel ? "SATS/TH" : ""}
+                  </span>
+                )}
               </th>
               <th>
                 Maintenance
@@ -337,66 +377,111 @@ export function MiningTable({
           </thead>
           <tbody>
             <AnimatedLoadingRow show={isFetching && filteredRows.length > 0} colSpan={6} />
-            {pageRows.map((row, i) => (
-              <tr key={`${row.date}-${i}`}>
-                <td className="dv-cell-date">{fmtDate(row.date)}</td>
-                <td>
-                  {row.totalPower > 0
-                    ? new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(
-                        row.totalPower,
-                      ) + " TH"
-                    : "-"}
-                </td>
-                <td>
-                  <span className="dv-cell-with-icon">
-                    {formatMiningValue(row.poolReward, currency)}
-                    <MiningCurrencyIcon currency={currency} fiatCode={fiatCode} />
-                  </span>
-                  {rewardKey !== "minerwars" && currency === "BTC" && row.satsPerTh != null && (
-                    <div className="dv-cell-sub">Sats/TH: {Math.round(row.satsPerTh)} Sats</div>
-                  )}
-                  {rewardKey !== "minerwars" && currency === "GMT" && row.btcPriceGmt != null && (
-                    <div className="dv-cell-sub">
-                      {"BTC Price: " +
-                        row.btcPriceGmt.toLocaleString(undefined, { maximumFractionDigits: 0 }) +
-                        " GMT"}
-                    </div>
-                  )}
-                  {rewardKey !== "minerwars" &&
-                    currency === "USD" &&
-                    row.btcPriceAtTime != null && (
-                      <div className="dv-cell-sub">
-                        {"BTC Price: " +
-                          row.btcPriceAtTime.toLocaleString(undefined, {
+            {pageRows.map((row, i) => {
+              const prevRow = filteredRows[page * PAGE_SIZE + i + 1];
+              return (
+                <tr key={`${row.date}-${i}`}>
+                  <td className="dv-cell-date">{fmtDate(row.date)}</td>
+                  <td>
+                    {row.totalPower > 0
+                      ? new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(
+                          row.totalPower,
+                        ) + " TH"
+                      : "-"}
+                  </td>
+                  <td>
+                    <span className="dv-cell-with-icon">
+                      {formatMiningValue(row.poolReward, currency)}
+                      <MiningCurrencyIcon currency={currency} fiatCode={fiatCode} />
+                    </span>
+                    {showTrends &&
+                      rewardKey !== "minerwars" &&
+                      currency === "BTC" &&
+                      row.satsPerTh != null && (
+                        <div className="dv-cell-sub">
+                          Sats/TH: {Math.round(row.satsPerTh)} Sats
+                          <TrendArrow current={row.satsPerTh} prev={prevRow?.satsPerTh} integer />
+                        </div>
+                      )}
+                    {showTrends &&
+                      rewardKey !== "minerwars" &&
+                      currency === "GMT" &&
+                      row.btcPriceGmt != null && (
+                        <div className="dv-cell-sub">
+                          BTC Price:{" "}
+                          {row.btcPriceGmt.toLocaleString(undefined, { maximumFractionDigits: 0 })}{" "}
+                          GMT
+                          <TrendArrow current={row.btcPriceGmt} prev={prevRow?.btcPriceGmt} />
+                        </div>
+                      )}
+                    {showTrends &&
+                      rewardKey !== "minerwars" &&
+                      currency === "GMT" &&
+                      row.satsPerTh != null && (
+                        <div className="dv-cell-sub">
+                          Sats/TH: {Math.round(row.satsPerTh)} Sats
+                          <TrendArrow current={row.satsPerTh} prev={prevRow?.satsPerTh} integer />
+                        </div>
+                      )}
+                    {showTrends &&
+                      rewardKey !== "minerwars" &&
+                      currency === "USD" &&
+                      row.btcPriceAtTime != null && (
+                        <div className="dv-cell-sub">
+                          BTC Price:{" "}
+                          {row.btcPriceAtTime.toLocaleString(undefined, {
                             maximumFractionDigits: 0,
-                          }) +
-                          " USD"}
-                      </div>
-                    )}
-                  {rewardKey !== "minerwars" && currency === "FIAT" && row.btcPriceFiat != null && (
-                    <div className="dv-cell-sub">
-                      {"BTC Price: " +
-                        row.btcPriceFiat.toLocaleString(undefined, { maximumFractionDigits: 0 }) +
-                        " " +
-                        fiatCode}
-                    </div>
-                  )}
-                </td>
-                <td>
-                  <span className="dv-cell-with-icon">
-                    {formatMiningValue(row.maintenance, currency)}
-                    <MiningCurrencyIcon currency={currency} fiatCode={fiatCode} />
-                  </span>
-                </td>
-                <td>{row.discount > 0 ? (row.discount * 100).toFixed(2) + "%" : "-"}</td>
-                <td className="dv-cell-accent">
-                  <span className="dv-cell-with-icon">
-                    {formatMiningValue(row.reward, currency)}
-                    <MiningCurrencyIcon currency={currency} fiatCode={fiatCode} />
-                  </span>
-                </td>
-              </tr>
-            ))}
+                          })}{" "}
+                          USD
+                          <TrendArrow current={row.btcPriceAtTime} prev={prevRow?.btcPriceAtTime} />
+                        </div>
+                      )}
+                    {showTrends &&
+                      rewardKey !== "minerwars" &&
+                      currency === "USD" &&
+                      row.satsPerTh != null && (
+                        <div className="dv-cell-sub">
+                          Sats/TH: {Math.round(row.satsPerTh)} Sats
+                          <TrendArrow current={row.satsPerTh} prev={prevRow?.satsPerTh} integer />
+                        </div>
+                      )}
+                    {showTrends &&
+                      rewardKey !== "minerwars" &&
+                      currency === "FIAT" &&
+                      row.btcPriceFiat != null && (
+                        <div className="dv-cell-sub">
+                          BTC Price:{" "}
+                          {row.btcPriceFiat.toLocaleString(undefined, { maximumFractionDigits: 0 })}{" "}
+                          {fiatCode}
+                          <TrendArrow current={row.btcPriceFiat} prev={prevRow?.btcPriceFiat} />
+                        </div>
+                      )}
+                    {showTrends &&
+                      rewardKey !== "minerwars" &&
+                      currency === "FIAT" &&
+                      row.satsPerTh != null && (
+                        <div className="dv-cell-sub">
+                          Sats/TH: {Math.round(row.satsPerTh)} Sats
+                          <TrendArrow current={row.satsPerTh} prev={prevRow?.satsPerTh} integer />
+                        </div>
+                      )}
+                  </td>
+                  <td>
+                    <span className="dv-cell-with-icon">
+                      {formatMiningValue(row.maintenance, currency)}
+                      <MiningCurrencyIcon currency={currency} fiatCode={fiatCode} />
+                    </span>
+                  </td>
+                  <td>{row.discount > 0 ? (row.discount * 100).toFixed(2) + "%" : "-"}</td>
+                  <td className="dv-cell-accent">
+                    <span className="dv-cell-with-icon">
+                      {formatMiningValue(row.reward, currency)}
+                      <MiningCurrencyIcon currency={currency} fiatCode={fiatCode} />
+                    </span>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
