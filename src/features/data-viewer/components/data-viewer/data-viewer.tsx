@@ -2,6 +2,10 @@
 import type React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { loadCacheEntry } from "@/features/export/utils/cache";
+import {
+  fetchDifficultyAdjustments,
+  type DifficultyEntry,
+} from "@/features/export/api/difficulty-adjustments";
 import { ErrorBoundary } from "@/components/error-boundary/error-boundary";
 import type { Currency, EarnView, TxView, SimpleView, PurchaseView } from "../../types";
 import type { CacheState, RewardKey } from "@/features/export/types";
@@ -219,15 +223,21 @@ export const DataViewer = memo(function DataViewer({
   const showSimpleSelector = simpleHasUsd || simpleHasFiat;
 
   const [showTrends, setShowTrends] = useState(false);
+  const [trendsAnimating, setTrendsAnimating] = useState(false);
   const [trendsExiting, setTrendsExiting] = useState(false);
   const exitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const animTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const toggleTrends = () => {
     if (exitTimer.current) clearTimeout(exitTimer.current);
+    if (animTimer.current) clearTimeout(animTimer.current);
     if (!showTrends) {
       setTrendsExiting(false);
+      setTrendsAnimating(true);
       setShowTrends(true);
+      animTimer.current = setTimeout(() => setTrendsAnimating(false), 220);
     } else {
+      setTrendsAnimating(false);
       setTrendsExiting(true);
       exitTimer.current = setTimeout(() => {
         setShowTrends(false);
@@ -235,6 +245,11 @@ export const DataViewer = memo(function DataViewer({
       }, 180);
     }
   };
+
+  const [difficultyMap, setDifficultyMap] = useState<Map<string, DifficultyEntry>>(new Map());
+  useEffect(() => {
+    void fetchDifficultyAdjustments().then(setDifficultyMap);
+  }, []);
 
   const hasViewSelector =
     hasActiveData &&
@@ -443,7 +458,9 @@ export const DataViewer = memo(function DataViewer({
                     page={miningPage}
                     setPage={setMiningPage}
                     showTrends={showTrends}
+                    trendsAnimating={trendsAnimating}
                     trendsExiting={trendsExiting}
+                    difficultyMap={difficultyMap}
                   />
                 ) : isEarnTab ? (
                   <SimpleEarnTable

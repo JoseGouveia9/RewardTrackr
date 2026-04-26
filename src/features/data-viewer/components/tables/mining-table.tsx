@@ -1,6 +1,7 @@
 ﻿import { useMemo, useRef, type ReactNode } from "react";
 import { loadCacheEntry, wasCacheMigrated } from "@/features/export/utils/cache";
 import type { CacheEntry, RewardKey } from "@/features/export/types";
+import type { DifficultyEntry } from "@/features/export/api/difficulty-adjustments";
 import type { Currency, DateRange } from "../../types";
 import { PAGE_SIZE } from "../../utils/constants";
 import {
@@ -49,10 +50,18 @@ function TrendArrow({
   const b = integer ? Math.round(prev) : prev;
   const delta = a - b;
   if (delta === 0) return null;
+  const up = delta > 0;
   return (
-    <span className={`dv-trend${delta > 0 ? " dv-trend--up" : " dv-trend--down"}`}>
-      {delta > 0 ? "▲" : "▼"}
-    </span>
+    <svg
+      className={`dv-trend${up ? " dv-trend--up" : " dv-trend--down"}`}
+      width="8"
+      height="8"
+      viewBox="0 0 10 10"
+      fill="currentColor"
+      aria-hidden="true"
+    >
+      {up ? <polygon points="5,1 9,9 1,9" /> : <polygon points="1,1 9,1 5,9" />}
+    </svg>
   );
 }
 
@@ -180,7 +189,9 @@ export function MiningTable({
   page,
   setPage,
   showTrends,
+  trendsAnimating,
   trendsExiting,
+  difficultyMap = new Map(),
 }: {
   rewardKey: RewardKey;
   currency: Currency;
@@ -193,7 +204,9 @@ export function MiningTable({
   page: number;
   setPage: (p: number) => void;
   showTrends: boolean;
+  trendsAnimating: boolean;
   trendsExiting: boolean;
+  difficultyMap?: Map<string, DifficultyEntry>;
 }) {
   const formulas = useMemo(() => buildFormulas(currency, fiatCode), [currency, fiatCode]);
   const totalsRef = useRef<HTMLTableElement>(null);
@@ -287,7 +300,7 @@ export function MiningTable({
   return (
     <>
       <div
-        className={`dv-tables-wrap dv-tables-wrap--wide${showTrends && !trendsExiting ? " dv-trends-active" : trendsExiting ? " dv-trends-exiting" : ""}`}
+        className={`dv-tables-wrap dv-tables-wrap--wide${trendsExiting ? " dv-trends-exiting" : trendsAnimating ? " dv-trends-active" : showTrends ? " dv-trends-visible" : ""}`}
       >
         <table ref={totalsRef} className="dv-table dv-table-totals">
           <colgroup>
@@ -379,6 +392,8 @@ export function MiningTable({
             <AnimatedLoadingRow show={isFetching && filteredRows.length > 0} colSpan={6} />
             {pageRows.map((row, i) => {
               const prevRow = filteredRows[page * PAGE_SIZE + i + 1];
+              const diffEntry = difficultyMap.get(row.date.slice(0, 10));
+              const isDiffDay = diffEntry != null;
               return (
                 <tr key={`${row.date}-${i}`}>
                   <td className="dv-cell-date">{fmtDate(row.date)}</td>
@@ -399,8 +414,10 @@ export function MiningTable({
                       currency === "BTC" &&
                       row.satsPerTh != null && (
                         <div className="dv-cell-sub">
-                          Sats/TH: {Math.round(row.satsPerTh)} Sats
-                          <TrendArrow current={row.satsPerTh} prev={prevRow?.satsPerTh} integer />
+                          Sats/TH: {row.satsPerTh.toFixed(2)} Sats
+                          {isDiffDay && (
+                            <TrendArrow current={row.satsPerTh} prev={prevRow?.satsPerTh} />
+                          )}
                         </div>
                       )}
                     {showTrends &&
@@ -419,8 +436,10 @@ export function MiningTable({
                       currency === "GMT" &&
                       row.satsPerTh != null && (
                         <div className="dv-cell-sub">
-                          Sats/TH: {Math.round(row.satsPerTh)} Sats
-                          <TrendArrow current={row.satsPerTh} prev={prevRow?.satsPerTh} integer />
+                          Sats/TH: {row.satsPerTh.toFixed(2)} Sats
+                          {isDiffDay && (
+                            <TrendArrow current={row.satsPerTh} prev={prevRow?.satsPerTh} />
+                          )}
                         </div>
                       )}
                     {showTrends &&
@@ -441,8 +460,10 @@ export function MiningTable({
                       currency === "USD" &&
                       row.satsPerTh != null && (
                         <div className="dv-cell-sub">
-                          Sats/TH: {Math.round(row.satsPerTh)} Sats
-                          <TrendArrow current={row.satsPerTh} prev={prevRow?.satsPerTh} integer />
+                          Sats/TH: {row.satsPerTh.toFixed(2)} Sats
+                          {isDiffDay && (
+                            <TrendArrow current={row.satsPerTh} prev={prevRow?.satsPerTh} />
+                          )}
                         </div>
                       )}
                     {showTrends &&
@@ -461,8 +482,10 @@ export function MiningTable({
                       currency === "FIAT" &&
                       row.satsPerTh != null && (
                         <div className="dv-cell-sub">
-                          Sats/TH: {Math.round(row.satsPerTh)} Sats
-                          <TrendArrow current={row.satsPerTh} prev={prevRow?.satsPerTh} integer />
+                          Sats/TH: {row.satsPerTh.toFixed(2)} Sats
+                          {isDiffDay && (
+                            <TrendArrow current={row.satsPerTh} prev={prevRow?.satsPerTh} />
+                          )}
                         </div>
                       )}
                   </td>

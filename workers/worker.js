@@ -4,8 +4,8 @@ import { handleRateLimitRoutes } from "./routes/rate-limit.js";
 import { handleShareRoutes } from "./routes/share.js";
 
 const MAX_BYTES = 5 * 1024 * 1024;
-const MAX_EXPORTS_PER_DAY = 1;
-const MAX_SHARES_PER_DAY = MAX_EXPORTS_PER_DAY;
+const MAX_EXPORTS_PER_DAY = 3;
+const MAX_SHARES_PER_DAY = 3;
 
 const ALLOWED_ORIGINS = new Set([
   "https://rewardtrackr.com",

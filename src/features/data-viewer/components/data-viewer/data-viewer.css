@@ -684,6 +684,29 @@
   font-size: 0.78rem;
 }
 
+.dv-diff-adj {
+  font-size: 0.68rem;
+  font-weight: 600;
+  margin-top: 2px;
+  letter-spacing: 0.01em;
+}
+
+.dv-diff-adj--up {
+  color: #e05252;
+}
+
+.dv-diff-adj--down {
+  color: #4caf7d;
+}
+
+.page.theme-dark .dv-diff-adj--up {
+  color: #f87171;
+}
+
+.page.theme-dark .dv-diff-adj--down {
+  color: #6ee7a0;
+}
+
 .dv-cell-accent {
   color: #f7931a !important;
   font-weight: 600;
@@ -958,6 +981,13 @@
   animation: dv-bop-in 0.22s ease both;
 }
 
+.dv-trends-visible .dv-cell-sub,
+.dv-trends-visible .dv-th-sub {
+  opacity: 1;
+  max-height: 24px;
+  transform: translateY(0);
+}
+
 .dv-trends-exiting .dv-cell-sub,
 .dv-trends-exiting .dv-th-sub {
   animation: dv-bop-out 0.18s ease both;
@@ -994,8 +1024,7 @@
 
 .dv-trend {
   display: inline;
-  font-size: 0.58rem;
-  font-weight: 700;
+  vertical-align: middle;
   margin-left: 4px;
   letter-spacing: 0.01em;
 }
