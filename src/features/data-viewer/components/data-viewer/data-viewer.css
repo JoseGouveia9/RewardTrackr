@@ -766,6 +766,17 @@
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
 }
 
+.page.theme-light .dv-formula-tooltip {
+  background: #ffffff;
+  color: #22283a;
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.page.theme-light .dv-formula-tooltip::before {
+  border-bottom-color: rgba(0, 0, 0, 0.1);
+}
+
 .dv-formula-tooltip::before {
   content: "";
   position: absolute;
@@ -790,6 +801,11 @@
 
 .dv-info-wrap:hover .dv-formula-tooltip {
   display: block;
+}
+
+.dv-table-data thead th:has(.dv-info-wrap:hover),
+.dv-table-data thead th:has(.dv-column-filter-dropdown) {
+  z-index: 3;
 }
 
 .dv-math-line {
@@ -839,6 +855,10 @@
   height: 1px;
   background: rgba(255, 255, 255, 0.1);
   margin: 6px 0 8px;
+}
+
+.page.theme-light .dv-math-sep {
+  background: rgba(0, 0, 0, 0.1);
 }
 
 .dv-math-var {
@@ -905,6 +925,12 @@
   background: rgba(22, 163, 74, 0.08);
   border-color: rgba(22, 163, 74, 0.25);
   color: #16a34a;
+}
+
+.page.theme-light .dv-trends-toggle--active {
+  background: #16a34a;
+  border-color: #16a34a;
+  color: #ffffff;
 }
 
 .page.theme-dark .dv-trends-toggle {
@@ -1229,7 +1255,7 @@
     color 0.1s ease;
 }
 
-.dv-filter-preset-button:hover {
+.dv-filter-preset-button:not(.dv-filter-preset-button--active):hover {
   background: rgba(0, 0, 0, 0.05);
   border-color: rgba(0, 0, 0, 0.18);
   color: #22283a;
@@ -1246,7 +1272,7 @@
   color: rgba(255, 255, 255, 0.6);
 }
 
-.page.theme-dark .dv-filter-preset-button:hover {
+.page.theme-dark .dv-filter-preset-button:not(.dv-filter-preset-button--active):hover {
   background: rgba(255, 255, 255, 0.07);
   border-color: rgba(255, 255, 255, 0.22);
   color: rgba(255, 255, 255, 0.9);

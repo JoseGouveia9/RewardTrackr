@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { DateRange } from "../../types";
 import { EMPTY_DATE_RANGE, DATE_PRESETS } from "../../utils/constants";
 import { isDateRangeActive } from "../../utils";
@@ -39,7 +39,6 @@ function CalSelect({
               }}
             >
               {o.label}
-              {o.value === value && <span className="dv-cal-sel-check">✓</span>}
             </div>
           ))}
         </div>
@@ -65,6 +64,7 @@ export function DateRangeFilter({
   const [pending, setPending] = useState<DateRange>(EMPTY_DATE_RANGE);
   const [picking, setPicking] = useState(false);
   const [hover, setHover] = useState("");
+  const [activePreset, setActivePreset] = useState<string | null>(null);
   const initDate = maxDate ? new Date(maxDate + "T00:00:00") : new Date();
   const [calYear, setCalYear] = useState(initDate.getFullYear());
   const [calMonth, setCalMonth] = useState(initDate.getMonth());
@@ -76,6 +76,17 @@ export function DateRangeFilter({
     for (const d of dates) s.add(d.slice(0, 7));
     return s;
   }, [dates]);
+
+  const dateSet = useMemo(() => new Set(dates ?? []), [dates]);
+
+  const availablePresets = useMemo(() => {
+    if (!dates?.length) return DATE_PRESETS;
+    return DATE_PRESETS.filter((p) => {
+      const from = p.from();
+      const to = p.to();
+      return [...dateSet].some((d) => d >= from && d <= to);
+    });
+  }, [dateSet, dates]);
 
   const yearOptions = useMemo(() => {
     if (availableYearMonths.size > 0) {
@@ -90,17 +101,42 @@ export function DateRangeFilter({
   }, [availableYearMonths]);
 
   const monthOptions = useMemo(() => {
-    return CAL_MONTHS.map((m, i) => {
+    const all = CAL_MONTHS.map((m, i) => {
       const ym = `${calYear}-${String(i + 1).padStart(2, "0")}`;
-      const disabled = availableYearMonths.size > 0 && !availableYearMonths.has(ym);
-      return { label: m, value: i, disabled };
+      return { label: m, value: i, hasData: availableYearMonths.has(ym) };
     });
+    if (availableYearMonths.size === 0) return all.map(({ label, value }) => ({ label, value }));
+    const withData = all.filter((o) => o.hasData).map((o) => o.value);
+    if (withData.length === 0) return [];
+    const min = Math.min(...withData);
+    const max = Math.max(...withData);
+    return all
+      .filter((o) => o.value >= min && o.value <= max)
+      .map(({ label, value }) => ({ label, value }));
   }, [availableYearMonths, calYear]);
+
+  useEffect(() => {
+    if (monthOptions.length === 0) return;
+    if (!monthOptions.some((o) => o.value === calMonth)) {
+      setCalMonth(monthOptions[monthOptions.length - 1].value);
+    }
+  }, [monthOptions, calMonth]);
 
   useOutsideClick(ref, () => setOpen(false), open);
 
+  function handleYearChange(y: number) {
+    setCalYear(y);
+    if (availableYearMonths.size > 0) {
+      const months = [...availableYearMonths]
+        .filter((ym) => ym.startsWith(`${y}-`))
+        .map((ym) => Number(ym.slice(5, 7)) - 1);
+      if (months.length > 0) setCalMonth(Math.max(...months));
+    }
+  }
+
   function openPicker() {
     setPending({ ...value });
+    setActivePreset(null);
     setPicking(false);
     setHover("");
     setOpen(true);
@@ -114,17 +150,23 @@ export function DateRangeFilter({
   function handleClear() {
     onChange(EMPTY_DATE_RANGE);
     setPending(EMPTY_DATE_RANGE);
+    setActivePreset(null);
     setPicking(false);
     setHover("");
   }
 
   function handlePreset(p: (typeof DATE_PRESETS)[0]) {
-    const to = p.to();
-    setPending({ from: p.from(), to });
+    let from = p.from();
+    let to = p.to();
+    if (minDate && from < minDate) from = minDate;
+    if (maxDate && to > maxDate) to = maxDate;
+    setPending({ from, to });
+    setActivePreset(p.label);
     setPicking(false);
     setHover("");
-    if (to) {
-      const d = new Date(to + "T00:00:00");
+    const anchor = to || from;
+    if (anchor) {
+      const d = new Date(anchor + "T00:00:00");
       setCalYear(d.getFullYear());
       setCalMonth(d.getMonth());
     }
@@ -133,18 +175,17 @@ export function DateRangeFilter({
   function handleDayClick(d: string) {
     if (!picking) {
       setPending({ from: d, to: "" });
+      setActivePreset(null);
       setPicking(true);
       setHover(d);
     } else {
       const from = pending.from;
       setPending(d < from ? { from: d, to: from } : { from, to: d });
+      setActivePreset(null);
       setPicking(false);
       setHover("");
     }
   }
-
-  const activePreset =
-    DATE_PRESETS.find((p) => p.from() === pending.from && p.to() === pending.to)?.label ?? null;
 
   return (
     <div ref={ref} className="dv-column-filter">
@@ -175,7 +216,7 @@ export function DateRangeFilter({
             {}
             <div className="dv-filter-date-presets">
               <div className="dv-filter-presets-list">
-                {DATE_PRESETS.map((p) => (
+                {availablePresets.map((p) => (
                   <button
                     key={p.label}
                     type="button"
@@ -200,7 +241,7 @@ export function DateRangeFilter({
             <div className="dv-filter-calendars">
               <div className="dv-cal-header">
                 <CalSelect value={calMonth} options={monthOptions} onChange={setCalMonth} />
-                <CalSelect value={calYear} options={yearOptions} onChange={setCalYear} />
+                <CalSelect value={calYear} options={yearOptions} onChange={handleYearChange} />
               </div>
               <MiniCalendar
                 year={calYear}
