@@ -68,7 +68,7 @@ export function DirectoryRow({ entry }: { entry: DirectoryEntry }) {
   const navigate = useNavigate();
 
   function handleView() {
-    void navigate(`/view/${entry.id}`);
+    void navigate(`/view/${entry.id}`, { state: { from: "/community" } });
   }
 
   function handleRowKeyDown(event: KeyboardEvent<HTMLTableRowElement>) {
