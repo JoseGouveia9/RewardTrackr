@@ -1,4 +1,5 @@
-﻿import { WALLET_TX_KEYS } from "../config/wallet-types";
+﻿import i18n from "@/i18n";
+import { WALLET_TX_KEYS } from "../config/wallet-types";
 import { REWARD_CONFIG_MAP, ALL_REWARD_KEYS } from "../config/reward-configs";
 import { buildApiHeaders, postJson } from "@/lib/http";
 import { enrichRecords, reenrichFiatValues } from "./transformers";
@@ -31,6 +32,25 @@ const WORKER_URL =
 const MAX_RETRIES = 5;
 const RETRY_DELAY_MS = 60_000;
 
+const REWARD_KEY_I18N: Record<string, string> = {
+  "solo-mining": "tabs.soloMining",
+  minerwars: "tabs.minerWars",
+  bounty: "tabs.bounties",
+  referrals: "tabs.referrals",
+  ambassador: "tabs.ambassador",
+  deposits: "tabs.deposits",
+  withdrawals: "tabs.withdrawals",
+  purchases: "export.sheetPurchases",
+  upgrades: "export.sheetUpgrades",
+  transactions: "tabs.transactions",
+  "simple-earn": "tabs.simpleEarn",
+};
+
+function tSheetName(key: string, fallback: string): string {
+  const i18nKey = REWARD_KEY_I18N[key];
+  return i18nKey ? i18n.t(i18nKey, { defaultValue: fallback }) : fallback;
+}
+
 async function checkExportRateLimit(token: string): Promise<void> {
   if (!WORKER_URL) return;
   const response = await fetch(`${WORKER_URL}/rl-check`, {
@@ -39,7 +59,7 @@ async function checkExportRateLimit(token: string): Promise<void> {
   });
   if (!response.ok) {
     const data = (await response.json().catch(() => null)) as { message?: string } | null;
-    throw new Error(data?.message ?? "Export limit reached. Please try again tomorrow.");
+    throw new Error(data?.message ?? i18n.t("export.limitReached"));
   }
 }
 
@@ -76,7 +96,7 @@ async function fetchWithRetry<T>(
       // Only retry on AbortError (request timeout) — API/network errors are not retried
       const isTimeout = err instanceof Error && err.name === "AbortError";
       if (!isTimeout || attempt > MAX_RETRIES) throw err;
-      onProgress?.(`Request timed out. Retrying in 60s... (attempt ${attempt}/${MAX_RETRIES})`);
+      onProgress?.(i18n.t("export.requestTimeout", { attempt, max: MAX_RETRIES }));
       await new Promise<void>((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
     }
   }
@@ -172,7 +192,9 @@ async function fetchAllPages(
     }
 
     if (guard === 1 || guard % 5 === 0) {
-      onProgress?.(`${config.sheetName}: Loading page ${guard} (${all.length} records so far)...`);
+      onProgress?.(
+        i18n.t("export.loadingPage", { name: config.sheetName, page: guard, count: all.length }),
+      );
     }
 
     if (page.length < config.pageSize) break;
@@ -314,7 +336,7 @@ async function fetchSimpleEarnIncremental(
 
     if (guard === 1 || guard % 5 === 0) {
       onProgress?.(
-        `${config.sheetName}: Loading page ${guard} (${all.length} new records so far)...`,
+        i18n.t("export.loadingPageNew", { name: config.sheetName, page: guard, count: all.length }),
       );
     }
 
@@ -532,7 +554,7 @@ export async function executeExportFlow({
     const currencyChangeKeys = new Set<RewardKey>();
 
     if (cachedKeys.length > 0) {
-      onMessage(`Checking ${cachedKeys.length} cached sheet(s) for updates...`);
+      onMessage(i18n.t("export.checkingCached", { count: cachedKeys.length }));
       const counts = await fetchLiveCounts(accessToken, cachedKeys);
 
       staleKeys = cachedKeys.filter((k) => {
@@ -574,7 +596,13 @@ export async function executeExportFlow({
       const config = REWARD_CONFIG_MAP[key];
       if (!config) continue;
 
-      onMessage(`Fetching ${config.sheetName} (${i + 1} of ${keysToFetch.length})...`);
+      onMessage(
+        i18n.t("export.fetchingSheet", {
+          name: tSheetName(key, config.sheetName),
+          current: i + 1,
+          total: keysToFetch.length,
+        }),
+      );
 
       const currentEntry = updatedCache[key];
       const useIncremental = Boolean(currentEntry && incrementalKeys.has(key));
@@ -601,7 +629,12 @@ export async function executeExportFlow({
       const config = REWARD_CONFIG_MAP[key];
       if (!config) continue;
 
-      onMessage(`Applying ${excelFiatCurrency} rates to ${config.sheetName}...`);
+      onMessage(
+        i18n.t("export.applyingRates", {
+          currency: excelFiatCurrency,
+          name: tSheetName(key, config.sheetName),
+        }),
+      );
       const reEnriched = await reenrichFiatValues(config, currentEntry.records, excelFiatCurrency);
       const extras = {
         ...cacheExtras(key, includeWalletFiat, excelFiatCurrency),
@@ -627,7 +660,13 @@ export async function executeExportFlow({
       const { config, rawRecords, totalCount, useIncremental } = fetchedOrdered[i];
       const key = config.key;
 
-      onMessage(`Enriching ${config.sheetName} (${i + 1} of ${fetchedOrdered.length})...`);
+      onMessage(
+        i18n.t("export.enrichingSheet", {
+          name: tSheetName(key, config.sheetName),
+          current: i + 1,
+          total: fetchedOrdered.length,
+        }),
+      );
       const enriched = await enrichRecords(
         config,
         rawRecords,
@@ -642,7 +681,10 @@ export async function executeExportFlow({
 
       if (prepared.removedCreated > 0) {
         onMessage(
-          `${config.sheetName}: Skipped ${prepared.removedCreated} pending reinvestment ${prepared.removedCreated === 1 ? "entry" : "entries"}, will retry on next export.`,
+          i18n.t("export.skippedPending", {
+            name: tSheetName(key, config.sheetName),
+            count: prepared.removedCreated,
+          }),
         );
       }
 
@@ -679,7 +721,7 @@ export async function executeExportFlow({
       onCacheUpdate(updatedCache);
     }
 
-    onMessage("Building Excel file...");
+    onMessage(i18n.t("export.buildingExcel"));
     const sheetsPayload: RewardSheetPayload[] = selectedKeys.flatMap((key) => {
       const cached = updatedCache[key];
       if (!cached) return [];
@@ -711,11 +753,15 @@ export async function executeExportFlow({
 
     const freshCount = cachedKeys.length - staleKeys.length - currencyChangeKeys.size;
     const parts: string[] = [];
-    if (uncachedKeys.length > 0) parts.push(`${uncachedKeys.length} fetched`);
-    if (staleKeys.length > 0) parts.push(`${staleKeys.length} updated`);
-    if (currencyChangeKeys.size > 0) parts.push(`${currencyChangeKeys.size} re-enriched`);
-    if (freshCount > 0) parts.push(`${freshCount} from cache`);
-    return `Excel file downloaded! (${parts.join(", ") || "all from cache"})`;
+    if (uncachedKeys.length > 0)
+      parts.push(i18n.t("export.partFetched", { count: uncachedKeys.length }));
+    if (staleKeys.length > 0) parts.push(i18n.t("export.partUpdated", { count: staleKeys.length }));
+    if (currencyChangeKeys.size > 0)
+      parts.push(i18n.t("export.partReEnriched", { count: currencyChangeKeys.size }));
+    if (freshCount > 0) parts.push(i18n.t("export.partFromCache", { count: freshCount }));
+    return i18n.t("export.downloaded", {
+      details: parts.join(", ") || i18n.t("export.allFromCache"),
+    });
   } catch (err) {
     await rollbackExportRateLimit(accessToken);
     throw err;

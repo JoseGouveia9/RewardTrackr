@@ -93,7 +93,7 @@ export function useExport({
       onMessage(successMessage);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : "Export failed";
+      const msg = error instanceof Error ? error.message : t("export.failedGeneric");
       const msgLower = msg.toLowerCase();
       const isCors =
         msgLower.includes("failed to fetch") ||
@@ -114,10 +114,10 @@ export function useExport({
       });
       onMessage(
         isCors
-          ? "Network error: Failed to reach the GoMining API. Please try again later or report the issue [here](https://github.com/JoseGouveia9/RewardTrackr/issues)."
+          ? t("export.networkError")
           : isAuth
-            ? "Session expired. Please re-sync via the RewardTrackr extension."
-            : `Export failed: ${msg}`,
+            ? t("export.sessionExpired")
+            : t("export.failed", { details: msg }),
       );
     } finally {
       setLoading(false);
