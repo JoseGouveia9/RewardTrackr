@@ -207,11 +207,11 @@
     "selectLanguage": "Select language"
   },
   "txFilter": {
-    "veGoMiningReward": "veGoMining Reward",
-    "personalMinerWarsReward": "Personal MinerWars Reward",
-    "minerSale": "Miner Sale",
-    "liquidityReward": "Liquidity Reward",
-    "clanOwnershipReward": "Clan Ownership Reward",
+    "veGoMiningReward": "veGoMining reward",
+    "personalMinerWarsReward": "Personal MinerWars reward",
+    "minerSale": "Miner sale",
+    "liquidityReward": "Liquidity reward",
+    "clanOwnershipReward": "Clan ownership reward",
     "bonus": "Bonus"
   },
   "purchaseType": {

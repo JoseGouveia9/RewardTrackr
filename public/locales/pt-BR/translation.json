@@ -208,10 +208,10 @@
   },
   "txFilter": {
     "veGoMiningReward": "Recompensa veGoMining",
-    "personalMinerWarsReward": "Recompensa Pessoal MinerWars",
-    "minerSale": "Venda de Minerador",
-    "liquidityReward": "Recompensa de Liquidez",
-    "clanOwnershipReward": "Recompensa de Proprietário de Clã",
+    "personalMinerWarsReward": "Recompensa pessoal MinerWars",
+    "minerSale": "Venda de minerador",
+    "liquidityReward": "Recompensa de liquidez",
+    "clanOwnershipReward": "Recompensa de proprietário de clã",
     "bonus": "Bônus"
   },
   "purchaseType": {

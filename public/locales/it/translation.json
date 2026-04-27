@@ -209,7 +209,7 @@
   "txFilter": {
     "veGoMiningReward": "Ricompensa veGoMining",
     "personalMinerWarsReward": "Ricompensa personale MinerWars",
-    "minerSale": "Vendita Miner",
+    "minerSale": "Vendita miner",
     "liquidityReward": "Ricompensa liquidità",
     "clanOwnershipReward": "Ricompensa proprietario clan",
     "bonus": "Bonus"

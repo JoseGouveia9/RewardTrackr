@@ -134,6 +134,7 @@ async function fetchAllPages(
   accessToken: string,
   incremental?: IncrementalFetchOptions,
   onProgress?: (msg: string) => void,
+  displayName?: string,
 ): Promise<{ records: unknown[]; totalCount: number | null }> {
   const headers = buildApiHeaders(accessToken);
   const all: unknown[] = [];
@@ -193,7 +194,11 @@ async function fetchAllPages(
 
     if (guard === 1 || guard % 5 === 0) {
       onProgress?.(
-        i18n.t("export.loadingPage", { name: config.sheetName, page: guard, count: all.length }),
+        i18n.t("export.loadingPage", {
+          name: displayName ?? config.sheetName,
+          page: guard,
+          count: all.length,
+        }),
       );
     }
 
@@ -270,6 +275,7 @@ async function fetchSimpleEarnIncremental(
   accessToken: string,
   existingRecords: RewardRecord[],
   onProgress?: (msg: string) => void,
+  displayName?: string,
 ): Promise<{ records: unknown[]; totalCount: number | null }> {
   const headers = buildApiHeaders(accessToken);
   const cachedLatestEpoch = latestRecordEpoch(existingRecords);
@@ -336,7 +342,11 @@ async function fetchSimpleEarnIncremental(
 
     if (guard === 1 || guard % 5 === 0) {
       onProgress?.(
-        i18n.t("export.loadingPageNew", { name: config.sheetName, page: guard, count: all.length }),
+        i18n.t("export.loadingPageNew", {
+          name: displayName ?? config.sheetName,
+          page: guard,
+          count: all.length,
+        }),
       );
     }
 
@@ -616,10 +626,17 @@ export async function executeExportFlow({
             }
           : undefined;
 
+      const translatedName = tSheetName(key, config.sheetName);
       const { records: rawRecords, totalCount } =
         key === "simple-earn" && useIncremental && currentEntry
-          ? await fetchSimpleEarnIncremental(config, accessToken, currentEntry.records, onMessage)
-          : await fetchAllPages(config, accessToken, incrementalOptions, onMessage);
+          ? await fetchSimpleEarnIncremental(
+              config,
+              accessToken,
+              currentEntry.records,
+              onMessage,
+              translatedName,
+            )
+          : await fetchAllPages(config, accessToken, incrementalOptions, onMessage, translatedName);
       fetched.push({ config, rawRecords, totalCount, useIncremental });
     }
 
