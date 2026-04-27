@@ -4,6 +4,7 @@ import type { ExtraFiatCurrency, FxLatestResponse, FxTimeseriesResponse } from "
 
 const FX_TIMESERIES_API = "https://api.fxratesapi.com/timeseries";
 const FX_LATEST_API = "https://api.exchangerate-api.com/v4/latest/USD";
+const FRANKFURTER_API = "https://api.frankfurter.dev/v1";
 
 const rateCache = new Map<string, number>();
 let cacheSeeded = false;
@@ -31,25 +32,67 @@ export function persistFxCache(): void {
   } catch {}
 }
 
-async function fetchRatesForRange(
+function parseRatesObject(raw: Record<string, unknown>, currency: string): Record<string, number> {
+  const rates: Record<string, number> = {};
+  for (const [rawKey, value] of Object.entries(raw)) {
+    const dateKey = String(rawKey).substring(0, 10);
+    const rate = (value as Record<string, unknown>)?.[currency] as number | undefined;
+    if (Number.isFinite(rate) && (rate ?? 0) > 0) rates[dateKey] = rate!;
+  }
+  return rates;
+}
+
+async function fetchFxRatesApiRange(
   startDate: string,
   endDate: string,
   currency: string,
 ): Promise<Record<string, number>> {
   const url = `${FX_TIMESERIES_API}?start_date=${startDate}&end_date=${endDate}&base=USD&currencies=${currency}`;
   const data = await getJsonTolerant<FxTimeseriesResponse>(url);
-
   if (!data || data.success === false || !data.rates) {
     throw new Error(data?.description || "Invalid FX timeseries response");
   }
+  return parseRatesObject(data.rates as Record<string, unknown>, currency);
+}
 
-  const rates: Record<string, number> = {};
-  for (const [rawKey, value] of Object.entries(data.rates)) {
-    const dateKey = String(rawKey).substring(0, 10);
-    const rate = (value as Record<string, unknown>)?.[currency] as number | undefined;
-    if (Number.isFinite(rate) && (rate ?? 0) > 0) rates[dateKey] = rate!;
+async function fetchFrankfurterRange(
+  startDate: string,
+  endDate: string,
+  currency: string,
+): Promise<Record<string, number>> {
+  const url = `${FRANKFURTER_API}/${startDate}..${endDate}?from=USD&to=${currency}`;
+  const data = await getJsonTolerant<{ rates?: Record<string, unknown>; message?: string }>(url);
+  if (!data || data.message || !data.rates) return {};
+  return parseRatesObject(data.rates, currency);
+}
+
+async function fetchRatesForRange(
+  startDate: string,
+  endDate: string,
+  currency: string,
+): Promise<Record<string, number>> {
+  // fxratesapi free plan only supports the last 365 days
+  const cutoff = new Date();
+  cutoff.setUTCDate(cutoff.getUTCDate() - 365);
+  const cutoffDate = cutoff.toISOString().split("T")[0];
+
+  const results: Record<string, number> = {};
+
+  // Old dates: use Frankfurter (free, ECB data, unlimited history)
+  if (startDate < cutoffDate) {
+    const oldEnd = endDate < cutoffDate ? endDate : cutoffDate;
+    const oldRates = await fetchFrankfurterRange(startDate, oldEnd, currency);
+    Object.assign(results, oldRates);
   }
-  return rates;
+
+  // Recent dates: use fxratesapi
+  const recentStart = startDate < cutoffDate ? cutoffDate : startDate;
+  if (recentStart <= endDate) {
+    const recentRates = await fetchFxRatesApiRange(recentStart, endDate, currency);
+    Object.assign(results, recentRates);
+  }
+
+  return results;
 }
 
 export async function prefetchAdditionalRates(
