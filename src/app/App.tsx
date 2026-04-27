@@ -13,11 +13,13 @@ import { DataViewerButton, DataViewer } from "@/features/data-viewer";
 import { ShareModal, CommunityPage } from "@/features/shared";
 import { ErrorBoundary } from "@/components/error-boundary/error-boundary";
 import { useTheme } from "./theme-context";
+import { useTranslation } from "react-i18next";
 import { MessageBanner } from "@/components/message-banner/message-banner";
 import { useNotices } from "./hooks/use-notices";
 import { useAccountSwitch } from "./hooks/use-account-switch";
 import { SharedView } from "./routes/shared-view";
 import { LS_KEY_REWARD_PREFIX } from "@/lib/storage-keys";
+import { LanguagePicker } from "@/components/language-picker/language-picker";
 import logo from "/logo.webp";
 import "./App.css";
 
@@ -74,8 +76,10 @@ function App() {
   const [cacheVersion, setCacheVersion] = useState(0);
   const [referralOpen, setReferralOpen] = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [languagePickerOpen, setLanguagePickerOpen] = useState(false);
 
   const { theme, toggleTheme } = useTheme();
+  const { t } = useTranslation();
   const notices = useNotices();
 
   const {
@@ -205,7 +209,7 @@ function App() {
               tabIndex={0}
               onClick={handleHeroTitleClick}
               onKeyDown={handleHeroTitleKeyDown}
-              aria-label="Go to main page"
+              aria-label={t("app.goToMain")}
             >
               <img src={logo} alt="RewardTrackr logo" className="hero-logo" />
               <div>
@@ -252,9 +256,31 @@ function App() {
               <SupportButton />
               <button
                 type="button"
+                className="community-button"
+                onClick={() => setLanguagePickerOpen(true)}
+                aria-label={t("language.selectLanguage")}
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="2" y1="12" x2="22" y2="12" />
+                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                </svg>
+              </button>
+              <button
+                type="button"
                 className={`community-button${isCommunity ? " community-button--active" : ""}`}
                 onClick={() => void navigate(isCommunity ? "/" : "/community")}
-                aria-label="Community"
+                aria-label={t("app.community")}
               >
                 <svg
                   width="14"
@@ -272,7 +298,7 @@ function App() {
                   <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
                   <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                 </svg>
-                <span>Community</span>
+                <span>{t("app.community")}</span>
               </button>
               <AnimatePresence initial={false}>
                 {hasCachedSheets ? (
@@ -311,17 +337,13 @@ function App() {
                     theme={theme}
                     onToggleTheme={toggleTheme}
                     onLogout={handleLogout}
+                    onOpenLanguage={() => setLanguagePickerOpen(true)}
                   />
                 )}
               </motion.div>
             </div>
           </div>
-          {!user && (
-            <p className="hero-subtitle">
-              Connect your GoMining session and generate a complete all-rewards Excel report in one
-              click. Your token never leaves your browser.
-            </p>
-          )}
+          {!user && <p className="hero-subtitle">{t("app.heroSubtitle")}</p>}
         </header>
 
         {notices.announcement && (
@@ -337,8 +359,7 @@ function App() {
           onDismiss={notices.dismissRateLimits}
           icon={<WarningNoticeIcon />}
         >
-          This app currently runs on free-tier services (Cloudflare, CoinGecko, FX Rates API). If a
-          request fails due to rate limits, wait a moment and try again, or try again tomorrow.
+          {t("app.rateLimitsNotice")}
         </AppNotice>
 
         <AppNotice
@@ -347,8 +368,7 @@ function App() {
           onDismiss={notices.dismissUnofficial}
           icon={<WarningNoticeIcon />}
         >
-          This is an unofficial tool and is not affiliated with, endorsed by, or associated with the
-          GoMining team.
+          {t("app.unofficialNotice")}
         </AppNotice>
 
         <AppNotice
@@ -357,14 +377,13 @@ function App() {
           onDismiss={notices.dismissOpenSource}
           icon={<ShieldNoticeIcon />}
         >
-          This app and extension were built with security and transparency in mind. The full source
-          code is open source and accessible to anyone who wants to inspect it before using it.{" "}
+          {t("app.openSourceNotice")}{" "}
           <a
             href="https://github.com/JoseGouveia9/RewardTrackr"
             target="_blank"
             rel="noopener noreferrer"
           >
-            Check it here.
+            {t("app.checkItHere")}
           </a>
         </AppNotice>
 
@@ -393,7 +412,7 @@ function App() {
                     cacheVersion={cacheVersion}
                     onTabSeen={handleTabSeen}
                     sharedData={null}
-                    title="Records"
+                    title={t("app.records")}
                     banner={undefined}
                     onShare={user && hasCachedSheets ? () => setShareModalOpen(true) : undefined}
                     shareDisabled={loading}
@@ -443,7 +462,7 @@ function App() {
                           >
                             <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18" />
                           </svg>
-                          Select Sheets
+                          {t("app.selectSheets")}
                         </h3>
                         {hasCachedSheets && (
                           <button
@@ -466,7 +485,7 @@ function App() {
                               <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
                               <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                             </svg>
-                            Clear Cache
+                            {t("app.clearCache")}
                           </button>
                         )}
                       </div>
@@ -508,7 +527,9 @@ function App() {
                             All sheets stored. Will probe for updates before building.
                           </p>
                         )}
-                        <p className="export-limit-notice">Max 1 export per day.</p>
+                        <p className="export-limit-notice">
+                          {t("app.maxExportsPerDay", { max: 3 })}
+                        </p>
                       </div>
                       <div className="export-button-wrapper">
                         <button
@@ -519,7 +540,7 @@ function App() {
                           }}
                         >
                           {loading ? (
-                            "Processing..."
+                            t("app.processing")
                           ) : (
                             <>
                               <svg
@@ -541,7 +562,7 @@ function App() {
                                 <path d="M12 18v-4" />
                                 <path d="M16 18v-6" />
                               </svg>
-                              Build Report
+                              {t("app.buildReport")}
                             </>
                           )}
                         </button>
@@ -592,6 +613,8 @@ function App() {
           />
         )}
       </AnimatePresence>
+
+      <LanguagePicker open={languagePickerOpen} onClose={() => setLanguagePickerOpen(false)} />
     </div>
   );
 }

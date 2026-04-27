@@ -1,10 +1,12 @@
 ﻿import { memo, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEscapeKey } from "@/hooks/use-escape-key";
 import { createPortal } from "react-dom";
 import "./support-button.css";
 
 function KofiMobileButton() {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
 
   return (
@@ -16,7 +18,7 @@ function KofiMobileButton() {
           aria-hidden="true"
           className="support-kofi-icon"
         />
-        Support the project
+        {t("support.supportProject")}
       </button>
 
       {createPortal(
@@ -91,6 +93,7 @@ const ADDRESSES = [
 ];
 
 function CopyButton({ value }: { value: string }) {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -108,7 +111,7 @@ function CopyButton({ value }: { value: string }) {
       type="button"
       className="support-copy-button"
       onClick={handleCopy}
-      aria-label="Copy address"
+      aria-label={t("support.copyAddress")}
     >
       {copied ? (
         <svg
@@ -151,6 +154,7 @@ declare global {
 }
 
 export const SupportButton = memo(function SupportButton() {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
 
   useEscapeKey(() => setOpen(false), open);
@@ -187,7 +191,7 @@ export const SupportButton = memo(function SupportButton() {
         type="button"
         className="support-button"
         onClick={() => setOpen(true)}
-        aria-label="Support the project"
+        aria-label={t("support.supportProject")}
       >
         <svg
           className="support-heart-icon"
@@ -201,7 +205,7 @@ export const SupportButton = memo(function SupportButton() {
         >
           <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
         </svg>
-        <span className="support-button-label">Support the project</span>
+        <span className="support-button-label">{t("support.supportProject")}</span>
       </button>
 
       <AnimatePresence>
@@ -239,7 +243,7 @@ export const SupportButton = memo(function SupportButton() {
                   >
                     <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                   </svg>
-                  <span className="support-modal-title">Support the project</span>
+                  <span className="support-modal-title">{t("support.supportProject")}</span>
                 </div>
                 <button
                   type="button"
@@ -262,10 +266,7 @@ export const SupportButton = memo(function SupportButton() {
                 </button>
               </div>
 
-              <p className="support-modal-subtitle">
-                Tips help cover API costs and keep this tool free and unrestricted. Tip via crypto
-                below.
-              </p>
+              <p className="support-modal-subtitle">{t("support.tipsDescription")}</p>
 
               <div className="support-addresses">
                 {ADDRESSES.map(({ label, value }) => (
@@ -280,7 +281,7 @@ export const SupportButton = memo(function SupportButton() {
               </div>
 
               <div className="support-kofi-section">
-                <p className="support-kofi-label">Or tip via Ko-fi</p>
+                <p className="support-kofi-label">{t("support.orTipViaKofi")}</p>
                 <KofiMobileButton />
               </div>
             </motion.div>

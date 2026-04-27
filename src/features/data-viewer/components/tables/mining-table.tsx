@@ -1,4 +1,5 @@
 ﻿import { useMemo, useRef, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { loadCacheEntry, wasCacheMigrated } from "@/features/export/utils/cache";
 import type { CacheEntry, RewardKey } from "@/features/export/types";
 import type { DifficultyEntry } from "@/features/export/api/difficulty-adjustments";
@@ -208,6 +209,7 @@ export function MiningTable({
   trendsExiting: boolean;
   difficultyMap?: Map<string, DifficultyEntry>;
 }) {
+  const { t } = useTranslation();
   const formulas = useMemo(() => buildFormulas(currency, fiatCode), [currency, fiatCode]);
   const totalsRef = useRef<HTMLTableElement>(null);
   const dataRef = useRef<HTMLTableElement>(null);
@@ -286,12 +288,12 @@ export function MiningTable({
         {isFetching ? (
           <span className="dv-loading-inline">
             <span className="dv-spinner" aria-hidden="true" />
-            <span>Fetching data...</span>
+            <span>{t("dataViewer.fetchingData")}</span>
           </span>
         ) : wasCacheMigrated(rewardKey) ? (
-          "This table has a new structure. Please re-export to load the updated data."
+          t("dataViewer.newStructure")
         ) : (
-          "No cached data for this sheet. Export it first from the main panel."
+          t("dataViewer.noData")
         )}
       </div>
     );
@@ -313,17 +315,17 @@ export function MiningTable({
           </colgroup>
           <tbody>
             <tr>
-              <td className="dv-totals-label">Total</td>
+              <td className="dv-totals-label">{t("common.total")}</td>
               <td />
               <td>
-                <span className="dv-total-cell-label">Pool Reward</span>
+                <span className="dv-total-cell-label">{t("dataViewer.poolReward")}</span>
                 <span className="dv-total-cell-value dv-cell-with-icon">
                   {formatMiningValue(totals.poolReward, currency)}
                   <MiningCurrencyIcon currency={currency} fiatCode={fiatCode} />
                 </span>
               </td>
               <td>
-                <span className="dv-total-cell-label">Maintenance</span>
+                <span className="dv-total-cell-label">{t("dataViewer.maintenance")}</span>
                 <span className="dv-total-cell-value dv-cell-with-icon">
                   {formatMiningValue(totals.maintenance, currency)}
                   <MiningCurrencyIcon currency={currency} fiatCode={fiatCode} />
@@ -331,7 +333,7 @@ export function MiningTable({
               </td>
               <td />
               <td>
-                <span className="dv-total-cell-label">Reward</span>
+                <span className="dv-total-cell-label">{t("dataViewer.reward")}</span>
                 <span className="dv-total-cell-value dv-total-cell-value--accent dv-cell-with-icon">
                   {formatMiningValue(totals.reward, currency)}
                   <MiningCurrencyIcon currency={currency} fiatCode={fiatCode} />
@@ -360,9 +362,9 @@ export function MiningTable({
                   dates={rowDates}
                 />
               </th>
-              <th>Power</th>
+              <th>{t("common.power")}</th>
               <th>
-                Pool Reward
+                {t("dataViewer.poolReward")}
                 {rewardKey !== "minerwars" && <InfoTooltip>{formulas.poolReward}</InfoTooltip>}
                 {showTrends && hasSubLabel && currency === "BTC" && (
                   <span className="dv-th-sub">SATS/TH</span>
@@ -376,12 +378,12 @@ export function MiningTable({
                 )}
               </th>
               <th>
-                Maintenance
+                {t("dataViewer.maintenance")}
                 {rewardKey !== "minerwars" && <InfoTooltip>{formulas.maintenance}</InfoTooltip>}
               </th>
-              <th>Discount</th>
+              <th>{t("dataViewer.discount")}</th>
               <th>
-                Reward
+                {t("dataViewer.reward")}
                 {rewardKey !== "minerwars" && (
                   <InfoTooltip align="right">{formulas.reward}</InfoTooltip>
                 )}

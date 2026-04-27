@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import type { RewardKey } from "@/features/export/types";
 
 interface TabListProps {
@@ -19,6 +20,7 @@ export function TabList({
   onTabSeen,
   fetchingKeys,
 }: TabListProps) {
+  const { t } = useTranslation();
   const tabsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -54,7 +56,7 @@ export function TabList({
               onSelect(tab.key);
             }}
           >
-            <span>{tab.label}</span>
+            <span>{t(tab.label)}</span>
             <AnimatePresence>
               {fetchingKeys?.has(tab.key) && (
                 <motion.span
@@ -86,7 +88,7 @@ export function TabList({
               )}
             </AnimatePresence>
             {tabsWithNew.has(tab.key) ? (
-              <span className="dv-new-badge dv-new-badge--button">NEW</span>
+              <span className="dv-new-badge dv-new-badge--button">{t("common.new")}</span>
             ) : null}
           </motion.button>
         );

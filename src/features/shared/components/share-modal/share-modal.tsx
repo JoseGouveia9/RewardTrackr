@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import {
   publishProfile,
@@ -66,6 +67,7 @@ export function ShareModal({
     };
   }, []);
 
+  const { t } = useTranslation();
   const [alias, setAlias] = useState(defaultAlias || "");
   const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
   const [error, setError] = useState("");
@@ -195,8 +197,13 @@ export function ShareModal({
         transition={{ duration: 0.24, ease: "easeInOut" }}
       >
         <div className="share-modal-header">
-          <span className="share-modal-title">Share Records</span>
-          <button type="button" className="share-modal-close" onClick={onClose} aria-label="Close">
+          <span className="share-modal-title">{t("share.shareRecords")}</span>
+          <button
+            type="button"
+            className="share-modal-close"
+            onClick={onClose}
+            aria-label={t("common.close")}
+          >
             <svg
               width="14"
               height="14"
@@ -222,13 +229,13 @@ export function ShareModal({
               initial="hidden"
               animate="visible"
             >
-              Your records will be publicly visible. Anyone with the link can view them, read-only.
+              {t("share.publiclyVisible")}
             </motion.p>
 
             {existingLoading ? (
               <p className="share-modal-hint share-modal-loading-inline" aria-live="polite">
                 <span className="share-modal-spinner" aria-hidden="true" />
-                <span>Checking your current shared link...</span>
+                <span>{t("share.checkingSharedLink")}</span>
               </p>
             ) : (
               <motion.div
@@ -240,7 +247,7 @@ export function ShareModal({
                 <motion.div variants={itemVariants}>
                   {existingProfile ? (
                     <div className="share-modal-existing">
-                      <p className="share-modal-existing-title">Current shared link</p>
+                      <p className="share-modal-existing-title">{t("share.currentSharedLink")}</p>
                       <div className="share-modal-link-actions">
                         <div className="share-modal-link-row">
                           <input
@@ -255,8 +262,8 @@ export function ShareModal({
                             className={`share-modal-icon-button${copiedExisting ? " share-modal-icon-button--done" : ""}`}
                             onClick={() => copyExisting(existingShareLink)}
                             disabled={deletingExisting}
-                            aria-label={copiedExisting ? "Copied" : "Copy link"}
-                            title={copiedExisting ? "Copied" : "Copy link"}
+                            aria-label={copiedExisting ? t("common.copied") : t("share.copyLink")}
+                            title={copiedExisting ? t("common.copied") : t("share.copyLink")}
                           >
                             {copiedExisting ? (
                               <svg
@@ -295,8 +302,10 @@ export function ShareModal({
                           className="share-modal-icon-button share-modal-icon-button--danger"
                           onClick={handleDeleteExisting}
                           disabled={deletingExisting || status === "loading"}
-                          aria-label={deletingExisting ? "Deleting" : "Delete link"}
-                          title={deletingExisting ? "Deleting" : "Delete link"}
+                          aria-label={
+                            deletingExisting ? t("share.deleting") : t("share.deleteLink")
+                          }
+                          title={deletingExisting ? t("share.deleting") : t("share.deleteLink")}
                         >
                           {deletingExisting ? (
                             <svg
@@ -339,7 +348,7 @@ export function ShareModal({
                   ) : (
                     <>
                       <label className="share-modal-label" htmlFor="sh-alias-input">
-                        Display name
+                        {t("share.displayName")}
                       </label>
                       <input
                         id="sh-alias-input"
@@ -347,14 +356,14 @@ export function ShareModal({
                         className="share-modal-input"
                         value={alias}
                         onChange={(e) => setAlias(e.target.value)}
-                        placeholder="e.g. Moustachio"
+                        placeholder={t("share.displayNamePlaceholder")}
                         maxLength={40}
                         disabled={status === "loading"}
                         autoFocus
                       />
                       {alias && !aliasValid && (
                         <p className="share-modal-hint share-modal-hint--error">
-                          Letters, numbers, _ and - only (1–40 chars)
+                          {t("share.displayNameError")}
                         </p>
                       )}
                     </>
@@ -387,17 +396,15 @@ export function ShareModal({
                     </svg>
                   </span>
                   <span>
-                    Show in Community tab
+                    {t("share.showInCommunity")}
                     <small>
-                      {shareInCommunity
-                        ? "Your profile will appear in the public community list."
-                        : "Your profile stays accessible only by direct link."}
+                      {shareInCommunity ? t("share.communityPublic") : t("share.communityPrivate")}
                     </small>
                   </span>
                 </motion.button>
 
                 <motion.div variants={itemVariants} className="share-modal-sheets">
-                  <span className="share-modal-sheets-label">Sheets included</span>
+                  <span className="share-modal-sheets-label">{t("share.sheetsIncluded")}</span>
                   <div className="share-modal-sheet-list">
                     {availableSheets.map((k) => {
                       const entry = cache[k]!;
@@ -443,15 +450,7 @@ export function ShareModal({
                     variants={itemVariants}
                     className="share-modal-hint share-modal-hint--warn"
                   >
-                    Sharing requires a Cloudflare Worker. See{" "}
-                    <a
-                      href="https://github.com/JoseGouveia9/RewardTrackr#sharing-setup"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      setup guide
-                    </a>
-                    .
+                    {t("share.workerRequired", { link: t("share.setupGuide") })}
                   </motion.p>
                 )}
 
@@ -469,10 +468,7 @@ export function ShareModal({
                 <motion.div variants={itemVariants}>
                   {confirmingUpdate ? (
                     <div className="share-modal-update-warning">
-                      <span>
-                        This will update the data of your shared link with the currently selected
-                        options.
-                      </span>
+                      <span>{t("share.updateWarning")}</span>
                       <div className="share-modal-update-warning-actions">
                         <button
                           type="button"
@@ -482,14 +478,14 @@ export function ShareModal({
                             void handleShare();
                           }}
                         >
-                          Confirm Update
+                          {t("share.confirmUpdate")}
                         </button>
                         <button
                           type="button"
                           className="share-modal-button share-modal-button--ghost"
                           onClick={() => setConfirmingUpdate(false)}
                         >
-                          Cancel
+                          {t("common.cancel")}
                         </button>
                       </div>
                     </div>
@@ -509,10 +505,10 @@ export function ShareModal({
                         }
                       >
                         {status === "loading"
-                          ? "Publishing…"
+                          ? t("share.publishing")
                           : existingProfile
-                            ? "Update Data"
-                            : "Share"}
+                            ? t("share.updateData")
+                            : t("common.share")}
                       </button>
                       <button
                         type="button"
@@ -520,7 +516,7 @@ export function ShareModal({
                         onClick={onClose}
                         disabled={status === "loading"}
                       >
-                        Cancel
+                        {t("common.cancel")}
                       </button>
                     </div>
                   )}
@@ -545,7 +541,7 @@ export function ShareModal({
                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
                 <polyline points="22 4 12 14.01 9 11.01" />
               </svg>
-              Published! Share this link:
+              {t("share.published")}
             </p>
             <div className="share-modal-link-row">
               <input
@@ -559,8 +555,8 @@ export function ShareModal({
                 type="button"
                 className={`share-modal-icon-button${copiedNew ? " share-modal-icon-button--done" : ""}`}
                 onClick={() => copyNew(existingShareLink)}
-                aria-label={copiedNew ? "Copied" : "Copy link"}
-                title={copiedNew ? "Copied" : "Copy link"}
+                aria-label={copiedNew ? t("common.copied") : t("share.copyLink")}
+                title={copiedNew ? t("common.copied") : t("share.copyLink")}
               >
                 {copiedNew ? (
                   <svg
@@ -599,7 +595,7 @@ export function ShareModal({
               className="share-modal-button share-modal-button--ghost"
               onClick={onClose}
             >
-              Close
+              {t("common.close")}
             </button>
           </>
         )}

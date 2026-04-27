@@ -1,5 +1,6 @@
 import { memo, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { FiatDropdown } from "../fiat-dropdown/fiat-dropdown";
 import type { ExtraFiatCurrency } from "../../types";
 
@@ -62,6 +63,7 @@ export const ExtraFiatOptions = memo(function ExtraFiatOptions({
   currency,
   onChangeCurrency,
 }: ExtraFiatOptionsProps) {
+  const { t } = useTranslation();
   const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 640);
 
   useEffect(() => {
@@ -90,11 +92,11 @@ export const ExtraFiatOptions = memo(function ExtraFiatOptions({
           <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
           <path d="M2 12h20" />
         </svg>
-        Extra Fiat Conversion
+        {t("export.extraFiatConversion")}
       </p>
       <motion.div className="fiat-grid" layout transition={rowLayoutSpring}>
         <motion.label className="wallet-option-row" layout="position" transition={rowLayoutSpring}>
-          Include extra conversion column (USD is always included)
+          {t("export.includeExtraConversion")}
           <input
             type="checkbox"
             className="toggle-switch"
@@ -118,7 +120,7 @@ export const ExtraFiatOptions = memo(function ExtraFiatOptions({
                   animate={mobileContentMotion.animate}
                   exit={mobileContentMotion.exit}
                 >
-                  Currency
+                  {t("export.currency")}
                   <FiatDropdown value={currency} onChange={onChangeCurrency} />
                 </motion.div>
               </motion.div>
@@ -130,7 +132,7 @@ export const ExtraFiatOptions = memo(function ExtraFiatOptions({
                 animate={desktopWrapMotion.animate}
                 exit={desktopWrapMotion.exit}
               >
-                Currency
+                {t("export.currency")}
                 <FiatDropdown value={currency} onChange={onChangeCurrency} />
               </motion.div>
             ))}

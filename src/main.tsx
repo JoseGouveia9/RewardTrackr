@@ -1,7 +1,8 @@
-import { StrictMode } from "react";
+import { StrictMode, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import * as Sentry from "@sentry/react";
 import "./index.css";
+import "./i18n";
 import { Provider } from "./app/provider";
 
 Sentry.init({
@@ -20,6 +21,8 @@ Sentry.init({
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <Provider />
+    <Suspense>
+      <Provider />
+    </Suspense>
   </StrictMode>,
 );

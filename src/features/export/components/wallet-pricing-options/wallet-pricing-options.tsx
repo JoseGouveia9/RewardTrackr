@@ -1,5 +1,6 @@
 ﻿import { memo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 
 const warningWrapMotion = {
   initial: { height: 0 },
@@ -36,6 +37,7 @@ export const WalletPricingOptions = memo(function WalletPricingOptions({
   includeWalletFiat,
   onToggle,
 }: WalletPricingOptionsProps) {
+  const { t } = useTranslation();
   return (
     <div className="wallet-options">
       <p className="options-section-title">
@@ -54,14 +56,11 @@ export const WalletPricingOptions = memo(function WalletPricingOptions({
           <line x1="12" x2="12" y1="2" y2="22" />
           <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
         </svg>
-        Wallet Pricing
+        {t("export.walletPricing")}
       </p>
-      <p className="subtle wallet-note">
-        Applies only to Bounty, Deposits, Withdrawals and Transactions. GoMining API does not return
-        fiat pricing for these sheets, so we enrich them using CoinGecko during export.
-      </p>
+      <p className="subtle wallet-note">{t("export.walletPricingDesc")}</p>
       <label className="wallet-option-row">
-        Include fiat pricing (USD). Extra fiat is configured below.
+        {t("export.includeFiatPricing")}
         <input
           type="checkbox"
           className="toggle-switch"
@@ -101,8 +100,7 @@ export const WalletPricingOptions = memo(function WalletPricingOptions({
                 <path d="M12 9v4" />
                 <path d="M12 17h.01" />
               </svg>
-              This can take some time. CoinGecko free plan has rate limits, and each limit hit
-              triggers a 60s cooldown.
+              {t("export.rateLimitWarning")}
             </motion.p>
           </motion.div>
         )}

@@ -1,4 +1,5 @@
 ﻿import { memo, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { REWARD_GROUPS } from "../../config/reward-configs";
 import "./sheet-selector.css";
 import { formatAge } from "../../utils/cache";
@@ -17,6 +18,7 @@ export const SheetSelector = memo(function SheetSelector({
   onToggleAll,
   isGroupSelected,
 }: SheetSelectorProps) {
+  const { t } = useTranslation();
   const [, setTick] = useState(0);
   useEffect(() => {
     const interval = setInterval(() => setTick((t) => t + 1), 60_000);
@@ -36,7 +38,7 @@ export const SheetSelector = memo(function SheetSelector({
         aria-pressed={allSelected}
       >
         <div className="sheet-card-top">
-          <span className="sheet-title">Select All</span>
+          <span className="sheet-title">{t("export.selectAll")}</span>
           <span
             className={`sheet-check-icon${allSelected ? " sheet-check-icon--visible" : ""}`}
             aria-hidden="true"
@@ -56,7 +58,7 @@ export const SheetSelector = memo(function SheetSelector({
           </span>
         </div>
         <span className="sheet-meta">
-          {selectedGroupCount}/{totalGroupCount} selected
+          {t("export.selected", { selected: selectedGroupCount, total: totalGroupCount })}
         </span>
       </button>
 
@@ -73,7 +75,7 @@ export const SheetSelector = memo(function SheetSelector({
             aria-pressed={selected}
           >
             <div className="sheet-card-top">
-              <span className="sheet-title">{group.label}</span>
+              <span className="sheet-title">{t(group.label)}</span>
               <span
                 className={`sheet-check-icon${selected ? " sheet-check-icon--visible" : ""}`}
                 aria-hidden="true"
@@ -109,7 +111,9 @@ export const SheetSelector = memo(function SheetSelector({
                     <circle cx="12" cy="12" r="10" />
                     <polyline points="12 6 12 12 16 14" />
                   </svg>{" "}
-                  Stored {formatAge(Math.min(...group.keys.map((k) => cache[k]!.fetchedAt)))}
+                  {t("export.stored", {
+                    age: formatAge(Math.min(...group.keys.map((k) => cache[k]!.fetchedAt))),
+                  })}
                 </>
               ) : cachedGroupCount > 0 ? (
                 <>
@@ -127,10 +131,10 @@ export const SheetSelector = memo(function SheetSelector({
                     <circle cx="12" cy="12" r="10" />
                     <polyline points="12 6 12 12 16 14" />
                   </svg>{" "}
-                  Stored {cachedGroupCount}/{group.keys.length}
+                  {t("export.storedPartial", { count: cachedGroupCount, total: group.keys.length })}
                 </>
               ) : (
-                "Not stored"
+                t("export.notStored")
               )}
             </span>
           </button>

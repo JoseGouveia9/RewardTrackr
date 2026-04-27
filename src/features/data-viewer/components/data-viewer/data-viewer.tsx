@@ -1,6 +1,7 @@
 ﻿import { memo, useEffect, useMemo, useRef, useState } from "react";
 import type React from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { loadCacheEntry } from "@/features/export/utils/cache";
 import {
   fetchDifficultyAdjustments,
@@ -222,6 +223,7 @@ export const DataViewer = memo(function DataViewer({
   ];
   const showSimpleSelector = simpleHasUsd || simpleHasFiat;
 
+  const { t } = useTranslation();
   const [showTrends, setShowTrends] = useState(false);
   const [trendsAnimating, setTrendsAnimating] = useState(false);
   const [trendsExiting, setTrendsExiting] = useState(false);
@@ -284,7 +286,12 @@ export const DataViewer = memo(function DataViewer({
         {}
         <div className="dv-header">
           <div className="dv-header-left">
-            <button type="button" className="dv-back-button" onClick={onClose} aria-label="Back">
+            <button
+              type="button"
+              className="dv-back-button"
+              onClick={onClose}
+              aria-label={t("common.back")}
+            >
               <svg
                 width="16"
                 height="16"
@@ -299,7 +306,7 @@ export const DataViewer = memo(function DataViewer({
                 <path d="M19 12H5" />
                 <path d="M12 19l-7-7 7-7" />
               </svg>
-              <span>Back</span>
+              <span>{t("common.back")}</span>
             </button>
             {title ? <span className="dv-title">{title}</span> : null}
             {onShare && (
@@ -308,7 +315,7 @@ export const DataViewer = memo(function DataViewer({
                 className={`dv-share-button${shareDisabled ? " dv-share-button--disabled" : ""}`}
                 onClick={shareDisabled ? undefined : onShare}
                 aria-disabled={shareDisabled}
-                aria-label="Share records"
+                aria-label={t("dataViewer.shareRecordsLabel")}
                 title={shareDisabled ? "Export in progress — share after it completes" : undefined}
               >
                 <svg
@@ -328,7 +335,7 @@ export const DataViewer = memo(function DataViewer({
                   <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
                   <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
                 </svg>
-                <span>Share</span>
+                <span>{t("common.share")}</span>
               </button>
             )}
           </div>
@@ -340,7 +347,7 @@ export const DataViewer = memo(function DataViewer({
                 type="button"
                 className={`dv-group-button${groupByDay ? " dv-group-button--active" : ""}`}
                 onClick={() => setGroupByDay((v) => !v)}
-                title="Group by day"
+                title={t("dataViewer.groupByDay")}
                 aria-pressed={groupByDay}
               >
                 <svg
@@ -359,7 +366,7 @@ export const DataViewer = memo(function DataViewer({
                   <line x1="3" y1="18" x2="15" y2="18" />
                   <polyline points="17 15 20 18 23 15" />
                 </svg>
-                <span>Group by day</span>
+                <span>{t("dataViewer.groupByDay")}</span>
               </button>
             )}
             {hasViewSelector && !isMiningTab && <span className="dv-toolbar-separator">·</span>}
@@ -385,7 +392,7 @@ export const DataViewer = memo(function DataViewer({
                     <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
                     <polyline points="16 7 22 7 22 13" />
                   </svg>
-                  Trends
+                  {t("dataViewer.trends")}
                 </button>
                 <span className="dv-toolbar-separator">·</span>
               </>
@@ -535,12 +542,13 @@ export const DataViewerButton = memo(function DataViewerButton({
   onClick,
   hasNew = false,
 }: DataViewerButtonProps) {
+  const { t } = useTranslation();
   return (
     <button
       type="button"
       className={`dv-trigger-button${active ? " dv-trigger-button--active" : ""}${hasNew && !active ? " dv-trigger-button--has-new" : ""}`}
       onClick={onClick}
-      aria-label="View records"
+      aria-label={t("app.records")}
     >
       <svg
         width="16"
@@ -558,8 +566,8 @@ export const DataViewerButton = memo(function DataViewerButton({
         <rect x="3" y="14" width="7" height="7" rx="1" />
         <rect x="14" y="14" width="7" height="7" rx="1" />
       </svg>
-      <span>Records</span>
-      {hasNew ? <span className="dv-new-badge dv-new-badge--button">NEW</span> : null}
+      <span>{t("app.records")}</span>
+      {hasNew ? <span className="dv-new-badge dv-new-badge--button">{t("common.new")}</span> : null}
     </button>
   );
 });

@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { fetchDirectory } from "../../api";
 import type { DirectoryEntry } from "../../types";
 import { DirectoryRow } from "../shared-banner/shared-banner";
 import "./community-page.css";
 
 export function CommunityPage({ onClose }: { onClose: () => void }) {
+  const { t } = useTranslation();
   const [entries, setEntries] = useState<DirectoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -41,14 +43,12 @@ export function CommunityPage({ onClose }: { onClose: () => void }) {
             <path d="M19 12H5" />
             <path d="M12 19l-7-7 7-7" />
           </svg>
-          <span>Back</span>
+          <span>{t("common.back")}</span>
         </button>
-        <span className="dv-title">Community</span>
+        <span className="dv-title">{t("share.communityTitle")}</span>
       </div>
 
-      <p className="community-sub">
-        Shared profiles from RewardTrackr users. Click any row to view their records.
-      </p>
+      <p className="community-sub">{t("share.communitySubtitle")}</p>
 
       {error && <p className="community-error">{error}</p>}
 
@@ -56,13 +56,13 @@ export function CommunityPage({ onClose }: { onClose: () => void }) {
         <div className="community-loading">
           <span className="community-loading-inline">
             <span className="community-spinner" aria-hidden="true" />
-            <span>Fetching community profiles...</span>
+            <span>{t("share.fetchingProfiles")}</span>
           </span>
         </div>
       )}
 
       {!loading && !error && visibleEntries.length === 0 && (
-        <p className="community-empty">No shared profiles yet. Be the first!</p>
+        <p className="community-empty">{t("share.noProfiles")}</p>
       )}
 
       {!loading && visibleEntries.length > 0 && (
@@ -70,8 +70,8 @@ export function CommunityPage({ onClose }: { onClose: () => void }) {
           <table className="community-table">
             <thead>
               <tr>
-                <th>User</th>
-                <th>Updated</th>
+                <th>{t("common.user")}</th>
+                <th>{t("common.updated")}</th>
               </tr>
             </thead>
             <tbody>

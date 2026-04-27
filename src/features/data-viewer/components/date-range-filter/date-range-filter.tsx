@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { DateRange } from "../../types";
 import { EMPTY_DATE_RANGE, DATE_PRESETS } from "../../utils/constants";
 import { isDateRangeActive } from "../../utils";
@@ -60,6 +61,7 @@ export function DateRangeFilter({
   maxDate?: string;
   dates?: string[];
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState<DateRange>(EMPTY_DATE_RANGE);
   const [picking, setPicking] = useState(false);
@@ -207,7 +209,7 @@ export function DateRangeFilter({
         >
           <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
         </svg>
-        Date
+        {t("dataViewer.date")}
       </button>
 
       {open && (
@@ -223,16 +225,16 @@ export function DateRangeFilter({
                     className={`dv-filter-preset-button${activePreset === p.label ? " dv-filter-preset-button--active" : ""}`}
                     onClick={() => handlePreset(p)}
                   >
-                    {p.label}
+                    {t(p.label)}
                   </button>
                 ))}
               </div>
               <div className="dv-filter-actions">
                 <button type="button" className="dv-filter-apply-button" onClick={handleApply}>
-                  Apply
+                  {t("common.apply")}
                 </button>
                 <button type="button" className="dv-filter-clear-button" onClick={handleClear}>
-                  Clear
+                  {t("common.clear")}
                 </button>
               </div>
             </div>

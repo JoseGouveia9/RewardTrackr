@@ -18,8 +18,12 @@
     "@tailwindcss/vite": "^4.2.2",
     "exceljs": "^4.4.0",
     "framer-motion": "^12.38.0",
+    "i18next": "^26.0.8",
+    "i18next-browser-languagedetector": "^8.2.1",
+    "i18next-http-backend": "^3.0.6",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-i18next": "^17.0.4",
     "react-router": "^7.14.1",
     "tailwindcss": "^4.2.2"
   },

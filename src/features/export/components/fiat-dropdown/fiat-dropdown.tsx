@@ -1,5 +1,6 @@
 ﻿import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
 import { FIAT_OPTIONS } from "../../config/currencies";
 import "./fiat-dropdown.css";
 import type { ExtraFiatCurrency } from "../../types";
@@ -10,6 +11,7 @@ interface FiatDropdownProps {
 }
 
 export const FiatDropdown = memo(function FiatDropdown({ value, onChange }: FiatDropdownProps) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState("");
   const [focusedIndex, setFocusedIndex] = useState(-1);
@@ -109,7 +111,7 @@ export const FiatDropdown = memo(function FiatDropdown({ value, onChange }: Fiat
           <div
             className={`fiat-dropdown-menu fiat-dropdown-menu-portal ${menuThemeClass}`}
             role="listbox"
-            aria-label="Extra fiat currency"
+            aria-label={t("export.extraFiatCurrency")}
             ref={(el) => {
               listRef.current = el;
               menuRef.current = el;
@@ -123,12 +125,12 @@ export const FiatDropdown = memo(function FiatDropdown({ value, onChange }: Fiat
             <input
               className="fiat-dropdown-search"
               type="text"
-              placeholder="Search currency..."
+              placeholder={t("export.searchCurrency")}
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
               onKeyDown={handleKeyDown}
               autoFocus
-              aria-label="Search currencies"
+              aria-label={t("export.searchCurrencies")}
             />
             {filtered.map(({ currency, label }, idx) => (
               <div

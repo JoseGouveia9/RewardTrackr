@@ -1,4 +1,5 @@
 import type { KeyboardEvent } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
 import type { DirectoryEntry } from "../../types";
 import "./shared-banner.css";
@@ -13,6 +14,7 @@ export function SharedBanner({
   loading?: boolean;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   const age = profile ? formatAge(new Date(profile.updatedAt).getTime()) : null;
 
   return (
@@ -33,15 +35,18 @@ export function SharedBanner({
           <circle cx="12" cy="12" r="3" />
         </svg>
         {loading ? (
-          <span>Loading profile...</span>
+          <span>{t("share.loadingProfile")}</span>
         ) : (
-          <span>
-            Viewing <strong>{profile?.alias}</strong>'s records
-          </span>
+          <span>{t("share.viewingRecords", { alias: profile?.alias })}</span>
         )}
-        {age && <span className="shared-banner-meta">· Updated {age} · Read only</span>}
+        {age && <span className="shared-banner-meta">{t("share.updatedAge", { age })}</span>}
       </div>
-      <button type="button" className="shared-banner-close" onClick={onClose} aria-label="Close">
+      <button
+        type="button"
+        className="shared-banner-close"
+        onClick={onClose}
+        aria-label={t("common.close")}
+      >
         <svg
           width="13"
           height="13"
@@ -63,6 +68,7 @@ export function SharedBanner({
 
 // A row in the community directory table.
 export function DirectoryRow({ entry }: { entry: DirectoryEntry }) {
+  const { t } = useTranslation();
   const age = formatAge(new Date(entry.updatedAt).getTime());
   const isDev = String(entry.ownerId ?? "") === "3575344";
   const navigate = useNavigate();
@@ -85,7 +91,7 @@ export function DirectoryRow({ entry }: { entry: DirectoryEntry }) {
       onKeyDown={handleRowKeyDown}
       role="button"
       tabIndex={0}
-      aria-label={`View ${entry.alias} records`}
+      aria-label={t("dataViewer.viewRecords", { alias: entry.alias })}
     >
       <td className="directory-row-alias">
         <span className="directory-row-alias-content">
