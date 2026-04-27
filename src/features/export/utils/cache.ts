@@ -1,4 +1,5 @@
-﻿import { CURRENCY_TO_COINGECKO } from "../config/currencies";
+﻿import i18n from "@/i18n";
+import { CURRENCY_TO_COINGECKO } from "../config/currencies";
 import { WALLET_TX_KEYS } from "../config/wallet-types";
 import { ALL_REWARD_KEYS } from "../config/reward-configs";
 import {
@@ -172,11 +173,12 @@ export function filterCacheableRecords(
 }
 
 export function formatAge(fetchedAt: number): string {
+  const t = i18n.t.bind(i18n);
   const seconds = Math.floor((Date.now() - fetchedAt) / 1000);
-  if (seconds < 60) return `<1m ago`;
+  if (seconds < 60) return t("common.lessThanAMinuteAgo");
   const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
+  if (minutes < 60) return t("common.minutesAgo", { count: minutes });
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return `${Math.floor(hours / 24)}d ago`;
+  if (hours < 24) return t("common.hoursAgo", { count: hours });
+  return t("common.daysAgo", { count: Math.floor(hours / 24) });
 }

@@ -20,7 +20,12 @@
     "updated": "Actualizado",
     "records": "Registros",
     "date": "Fecha",
-    "power": "Potencia"
+    "power": "Potencia",
+    "lessThanAMinuteAgo": "hace <1m",
+    "minutesAgo": "hace {{count}}m",
+    "hoursAgo": "hace {{count}}h",
+    "daysAgo": "hace {{count}}d",
+    "transactionsFilter": "Filtro de transacciones"
   },
   "app": {
     "goToMain": "Ir a la página principal",
@@ -35,7 +40,10 @@
     "unofficialNotice": "Esta es una herramienta no oficial y no está afiliada, respaldada ni asociada con el equipo de GoMining.",
     "openSourceNotice": "Esta aplicación y extensión fueron creadas con seguridad y transparencia en mente. El código fuente completo es de código abierto y accesible para cualquiera que quiera inspeccionarlo antes de usarlo.",
     "checkItHere": "Compruébalo aquí.",
-    "maxExportsPerDay": "Máx. {{max}} exportación por día."
+    "maxExportsPerDay": "Máx. {{max}} exportación por día.",
+    "feedbackSuggestions": "Comentarios & Sugerencias",
+    "sheetsToFetch": "{{fetch}} hoja(s) se obtendrán. {{stored}} almacenadas, se comprobarán actualizaciones primero.",
+    "allSheetsStored": "Todas las hojas almacenadas. Se comprobarán actualizaciones antes de generar."
   },
   "auth": {
     "connectViaBrowserExtension": "Conectar mediante extensión del navegador",
@@ -53,7 +61,14 @@
     "lightMode": "Modo claro",
     "darkMode": "Modo oscuro",
     "logout": "Cerrar sesión",
-    "language": "Idioma"
+    "language": "Idioma",
+    "sessionExpired": "Sesión expirada. Por favor, sincroniza de nuevo a través de la extensión.",
+    "sessionRefreshed": "Sesión actualizada desde la extensión.",
+    "sessionSynced": "Sesión sincronizada desde la extensión.",
+    "syncedSuccessfully": "¡Sincronizado correctamente. Bienvenido!",
+    "tokenInvalid": "El token de la extensión no es válido o ha expirado.",
+    "noToken": "No se encontró ningún token. Por favor, sincroniza primero a través de la extensión RewardTrackr.",
+    "loggedOut": "Sesión cerrada."
   },
   "dataViewer": {
     "trends": "Tendencias",
@@ -105,7 +120,9 @@
     "stored": "Almacenado {{age}}",
     "storedPartial": "Almacenado {{count}}/{{total}}",
     "notStored": "No almacenado",
-    "selected": "{{selected}}/{{total}} seleccionado"
+    "selected": "{{selected}}/{{total}} seleccionado",
+    "cacheCleared": "Caché limpiada. La próxima exportación obtendrá datos nuevos.",
+    "sessionExpired": "Sesión expirada. Por favor, vuelve a sincronizar a través de la extensión RewardTrackr."
   },
   "share": {
     "shareRecords": "Compartir registros",

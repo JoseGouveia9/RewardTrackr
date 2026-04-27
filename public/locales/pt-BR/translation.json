@@ -20,7 +20,12 @@
     "updated": "Atualizado",
     "records": "Registros",
     "date": "Data",
-    "power": "Poder"
+    "power": "Poder",
+    "lessThanAMinuteAgo": "há <1m",
+    "minutesAgo": "há {{count}}m",
+    "hoursAgo": "há {{count}}h",
+    "daysAgo": "há {{count}}d",
+    "transactionsFilter": "Filtro de Transações"
   },
   "app": {
     "goToMain": "Ir para a página principal",
@@ -35,7 +40,10 @@
     "unofficialNotice": "Esta é uma ferramenta não oficial e não é afiliada, endossada ou associada à equipe GoMining.",
     "openSourceNotice": "Este aplicativo e extensão foram construídos com segurança e transparência em mente. O código fonte completo é open source e acessível a qualquer pessoa que queira inspecioná-lo antes de usar.",
     "checkItHere": "Confere aqui.",
-    "maxExportsPerDay": "Máx. {{max}} exportação por dia."
+    "maxExportsPerDay": "Máx. {{max}} exportação por dia.",
+    "feedbackSuggestions": "Comentários & Sugestões",
+    "sheetsToFetch": "{{fetch}} planilha(s) serão buscadas. {{stored}} armazenadas, serão verificadas por atualizações.",
+    "allSheetsStored": "Todas as planilhas armazenadas. Serão verificadas por atualizações antes de gerar."
   },
   "auth": {
     "connectViaBrowserExtension": "Conectar via Extensão do Navegador",
@@ -53,7 +61,14 @@
     "lightMode": "Modo Claro",
     "darkMode": "Modo Escuro",
     "logout": "Sair",
-    "language": "Idioma"
+    "language": "Idioma",
+    "sessionExpired": "Sessão expirada. Por favor, sincronize novamente através da extensão.",
+    "sessionRefreshed": "Sessão atualizada a partir da extensão.",
+    "sessionSynced": "Sessão sincronizada a partir da extensão.",
+    "syncedSuccessfully": "Sincronizado com sucesso. Bem-vindo!",
+    "tokenInvalid": "Token da extensão inválido ou expirado.",
+    "noToken": "Nenhum token encontrado. Por favor, sincronize primeiro através da extensão RewardTrackr.",
+    "loggedOut": "Sessão encerrada."
   },
   "dataViewer": {
     "trends": "Tendências",
@@ -105,7 +120,9 @@
     "stored": "Armazenado {{age}}",
     "storedPartial": "Armazenado {{count}}/{{total}}",
     "notStored": "Não armazenado",
-    "selected": "{{selected}}/{{total}} selecionados"
+    "selected": "{{selected}}/{{total}} selecionados",
+    "cacheCleared": "Cache limpa. A próxima exportação irá buscar dados novos.",
+    "sessionExpired": "Sessão expirada. Por favor, sincronize novamente através da extensão RewardTrackr."
   },
   "share": {
     "shareRecords": "Compartilhar Registros",

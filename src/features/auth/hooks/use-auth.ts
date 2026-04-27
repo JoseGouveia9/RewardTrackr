@@ -1,4 +1,5 @@
 ﻿import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import * as Sentry from "@sentry/react";
 import { decodeJwt } from "@/lib/http";
 import { LS_KEY_SYNC_ALIAS, LS_KEY_SYNC_TOKEN } from "@/lib/storage-keys";
@@ -41,6 +42,7 @@ function getCachedToken(): string {
 }
 
 export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
+  const { t } = useTranslation();
   const [storedToken, setStoredToken] = useState<string>("");
   const [user, setUser] = useState<AuthUser | null>(null);
   const [syncedAlias] = useState<string>(() =>
@@ -66,10 +68,10 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
         sessionStorage.removeItem(LS_KEY_SYNC_TOKEN);
         setUser(null);
         setStoredToken("");
-        onMessage("Session expired. Please sync again via the extension.");
+        onMessage(t("auth.sessionExpired"));
       }, msUntilExpiry);
     },
-    [clearExpiryTimer, onMessage],
+    [clearExpiryTimer, onMessage, t],
   );
 
   const applyToken = useCallback(
@@ -97,21 +99,21 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
   useEffect(() => {
     const handleStorage = (e: StorageEvent): void => {
       if (e.key !== LS_KEY_SYNC_TOKEN || !e.newValue) return;
-      applyToken(e.newValue, "Session refreshed from extension.");
+      applyToken(e.newValue, t("auth.sessionRefreshed"));
     };
     window.addEventListener("storage", handleStorage);
     return () => window.removeEventListener("storage", handleStorage);
-  }, [applyToken]);
+  }, [applyToken, t]);
 
   // Polls sessionStorage for a token written by the browser extension (cross-context write)
   useEffect(() => {
     if (user) return;
     const interval = setInterval(() => {
       const token = getCachedToken();
-      if (token) applyToken(token, "Session synced from extension.");
+      if (token) applyToken(token, t("auth.sessionSynced"));
     }, 1000);
     return () => clearInterval(interval);
-  }, [user, applyToken]);
+  }, [user, applyToken, t]);
 
   const handleCheckSync = useCallback((): void => {
     const syncToken = getCachedToken();
@@ -119,15 +121,15 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
       const success = applyToken(syncToken);
       if (success) {
         Sentry.logger.info("User synced via manual check");
-        onMessage("Synced successfully. Welcome!");
+        onMessage(t("auth.syncedSuccessfully"));
       } else {
         Sentry.logger.warn("Extension token invalid or expired on manual check");
-        onMessage("Extension token is invalid or expired.");
+        onMessage(t("auth.tokenInvalid"));
       }
     } else {
-      onMessage("No token found. Please sync via the RewardTrackr extension first.");
+      onMessage(t("auth.noToken"));
     }
-  }, [applyToken, onMessage]);
+  }, [applyToken, onMessage, t]);
 
   const handleLogout = useCallback((): void => {
     clearExpiryTimer();
@@ -135,8 +137,8 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
     setUser(null);
     setStoredToken("");
     Sentry.logger.info("User logged out");
-    onMessage("Logged out.");
-  }, [clearExpiryTimer, onMessage]);
+    onMessage(t("auth.loggedOut"));
+  }, [clearExpiryTimer, onMessage, t]);
 
   return { storedToken, user, syncedAlias, handleCheckSync, handleLogout };
 }

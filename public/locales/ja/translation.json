@@ -20,7 +20,12 @@
     "updated": "更新済み",
     "records": "レコード",
     "date": "日付",
-    "power": "パワー"
+    "power": "パワー",
+    "lessThanAMinuteAgo": "1分未満前",
+    "minutesAgo": "{{count}}分前",
+    "hoursAgo": "{{count}}時間前",
+    "daysAgo": "{{count}}日前",
+    "transactionsFilter": "取引フィルター"
   },
   "app": {
     "goToMain": "メインページへ",
@@ -35,7 +40,10 @@
     "unofficialNotice": "これは非公式ツールであり、GoMiningチームと提携、承認、関連していません。",
     "openSourceNotice": "このアプリと拡張機能は、セキュリティと透明性を念頭に置いて構築されました。完全なソースコードはオープンソースで、使用前に誰でも検査できます。",
     "checkItHere": "こちらでご確認ください。",
-    "maxExportsPerDay": "1日最大 {{max}} 回エクスポート。"
+    "maxExportsPerDay": "1日最大 {{max}} 回エクスポート。",
+    "feedbackSuggestions": "フィードバック & ご提案",
+    "sheetsToFetch": "{{fetch}} シートを取得します。{{stored}} 保存済み、先に更新を確認します。",
+    "allSheetsStored": "全シート保存済み。生成前に更新を確認します。"
   },
   "auth": {
     "connectViaBrowserExtension": "ブラウザ拡張機能で接続",
@@ -53,7 +61,14 @@
     "lightMode": "ライトモード",
     "darkMode": "ダークモード",
     "logout": "ログアウト",
-    "language": "言語"
+    "language": "言語",
+    "sessionExpired": "セッションが期限切れです。拡張機能を通じて再度同期してください。",
+    "sessionRefreshed": "拡張機能からセッションが更新されました。",
+    "sessionSynced": "拡張機能からセッションが同期されました。",
+    "syncedSuccessfully": "同期に成功しました。ようこそ！",
+    "tokenInvalid": "拡張機能のトークンが無効または期限切れです。",
+    "noToken": "トークンが見つかりません。まずRewardTrackr拡張機能で同期してください。",
+    "loggedOut": "ログアウトしました。"
   },
   "dataViewer": {
     "trends": "トレンド",
@@ -105,7 +120,9 @@
     "stored": "{{age}}に保存",
     "storedPartial": "{{count}}/{{total}} 保存済み",
     "notStored": "未保存",
-    "selected": "{{selected}}/{{total}} 選択済み"
+    "selected": "{{selected}}/{{total}} 選択済み",
+    "cacheCleared": "キャッシュをクリアしました。次のエクスポートでは新しいデータを取得します。",
+    "sessionExpired": "セッションが期限切れです。RewardTrackr拡張機能で再度同期してください。"
   },
   "share": {
     "shareRecords": "レコードを共有",

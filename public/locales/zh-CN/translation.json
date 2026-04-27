@@ -20,7 +20,12 @@
     "updated": "已更新",
     "records": "记录",
     "date": "日期",
-    "power": "算力"
+    "power": "算力",
+    "lessThanAMinuteAgo": "不到1分钟前",
+    "minutesAgo": "{{count}}分钟前",
+    "hoursAgo": "{{count}}小时前",
+    "daysAgo": "{{count}}天前",
+    "transactionsFilter": "交易筛选"
   },
   "app": {
     "goToMain": "返回主页",
@@ -35,7 +40,10 @@
     "unofficialNotice": "这是一个非官方工具，与 GoMining 团队没有任何关联、认可或隶属关系。",
     "openSourceNotice": "此应用和扩展程序以安全和透明为核心构建。完整源代码开源，任何人都可以在使用前查阅。",
     "checkItHere": "点击查看。",
-    "maxExportsPerDay": "每天最多 {{max}} 次导出。"
+    "maxExportsPerDay": "每天最多 {{max}} 次导出。",
+    "feedbackSuggestions": "反馈 & 建议",
+    "sheetsToFetch": "将获取{{fetch}}个表格。{{stored}}个已存储，先检查更新。",
+    "allSheetsStored": "所有表格已存储。生成前将检查更新。"
   },
   "auth": {
     "connectViaBrowserExtension": "通过浏览器扩展连接",
@@ -53,7 +61,14 @@
     "lightMode": "浅色模式",
     "darkMode": "深色模式",
     "logout": "退出登录",
-    "language": "语言"
+    "language": "语言",
+    "sessionExpired": "会话已过期。请通过扩展程序重新同步。",
+    "sessionRefreshed": "会话已从扩展程序刷新。",
+    "sessionSynced": "会话已从扩展程序同步。",
+    "syncedSuccessfully": "同步成功。欢迎！",
+    "tokenInvalid": "扩展程序令牌无效或已过期。",
+    "noToken": "未找到令牌。请先通过RewardTrackr扩展程序进行同步。",
+    "loggedOut": "已退出登录。"
   },
   "dataViewer": {
     "trends": "趋势",
@@ -105,7 +120,9 @@
     "stored": "已存储 {{age}}",
     "storedPartial": "已存储 {{count}}/{{total}}",
     "notStored": "未存储",
-    "selected": "已选 {{selected}}/{{total}}"
+    "selected": "已选 {{selected}}/{{total}}",
+    "cacheCleared": "缓存已清除。下次导出将获取最新数据。",
+    "sessionExpired": "会话已过期。请通过RewardTrackr扩展程序重新同步。"
   },
   "share": {
     "shareRecords": "分享记录",

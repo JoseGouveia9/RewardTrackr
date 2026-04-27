@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useParams, useNavigate, useLocation } from "react-router";
 import { DataViewer } from "@/features/data-viewer";
 import { SharedBanner, fetchSharedProfile } from "@/features/shared";
 import type { SharedProfile } from "@/features/shared";
 
 export function SharedView() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
@@ -35,7 +37,7 @@ export function SharedView() {
       cacheVersion={0}
       onTabSeen={() => {}}
       sharedData={loading ? {} : (profile?.sheets ?? null)}
-      title="Community"
+      title={t("share.communityTitle")}
       banner={
         <SharedBanner profile={profile ?? undefined} loading={loading} onClose={handleClose} />
       }

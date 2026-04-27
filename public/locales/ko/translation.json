@@ -20,7 +20,12 @@
     "updated": "업데이트됨",
     "records": "기록",
     "date": "날짜",
-    "power": "파워"
+    "power": "파워",
+    "lessThanAMinuteAgo": "1분 미만 전",
+    "minutesAgo": "{{count}}분 전",
+    "hoursAgo": "{{count}}시간 전",
+    "daysAgo": "{{count}}일 전",
+    "transactionsFilter": "거래 필터"
   },
   "app": {
     "goToMain": "메인 페이지로 이동",
@@ -35,7 +40,10 @@
     "unofficialNotice": "이 도구는 비공식 도구로 GoMining 팀과 제휴, 승인 또는 연관이 없습니다.",
     "openSourceNotice": "이 앱과 확장 프로그램은 보안과 투명성을 염두에 두고 제작되었습니다. 전체 소스 코드는 오픈 소스이며 사용 전 검사하고 싶은 모든 사람이 접근할 수 있습니다.",
     "checkItHere": "여기서 확인하세요.",
-    "maxExportsPerDay": "하루 최대 {{max}}회 내보내기."
+    "maxExportsPerDay": "하루 최대 {{max}}회 내보내기.",
+    "feedbackSuggestions": "피드백 & 제안",
+    "sheetsToFetch": "{{fetch}}개 시트를 가져옵니다. {{stored}}개 저장됨, 업데이트 먼저 확인합니다.",
+    "allSheetsStored": "모든 시트 저장됨. 생성 전 업데이트를 확인합니다."
   },
   "auth": {
     "connectViaBrowserExtension": "브라우저 확장 프로그램으로 연결",
@@ -53,7 +61,14 @@
     "lightMode": "라이트 모드",
     "darkMode": "다크 모드",
     "logout": "로그아웃",
-    "language": "언어"
+    "language": "언어",
+    "sessionExpired": "세션이 만료되었습니다. 확장 프로그램을 통해 다시 동기화해 주세요.",
+    "sessionRefreshed": "확장 프로그램에서 세션이 갱신되었습니다.",
+    "sessionSynced": "확장 프로그램에서 세션이 동기화되었습니다.",
+    "syncedSuccessfully": "성공적으로 동기화되었습니다. 환영합니다!",
+    "tokenInvalid": "확장 프로그램 토큰이 유효하지 않거나 만료되었습니다.",
+    "noToken": "토큰을 찾을 수 없습니다. 먼저 RewardTrackr 확장 프로그램을 통해 동기화해 주세요.",
+    "loggedOut": "로그아웃되었습니다."
   },
   "dataViewer": {
     "trends": "트렌드",
@@ -105,7 +120,9 @@
     "stored": "{{age}} 저장됨",
     "storedPartial": "{{count}}/{{total}} 저장됨",
     "notStored": "저장되지 않음",
-    "selected": "{{selected}}/{{total}} 선택됨"
+    "selected": "{{selected}}/{{total}} 선택됨",
+    "cacheCleared": "캐시가 지워졌습니다. 다음 내보내기는 새 데이터를 가져옵니다.",
+    "sessionExpired": "세션이 만료되었습니다. RewardTrackr 확장 프로그램을 통해 다시 동기화해 주세요."
   },
   "share": {
     "shareRecords": "기록 공유",

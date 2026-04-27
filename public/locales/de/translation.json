@@ -20,7 +20,12 @@
     "updated": "Aktualisiert",
     "records": "Datensätze",
     "date": "Datum",
-    "power": "Leistung"
+    "power": "Leistung",
+    "lessThanAMinuteAgo": "vor <1m",
+    "minutesAgo": "vor {{count}}m",
+    "hoursAgo": "vor {{count}}h",
+    "daysAgo": "vor {{count}}d",
+    "transactionsFilter": "Transaktionsfilter"
   },
   "app": {
     "goToMain": "Zur Hauptseite",
@@ -35,7 +40,10 @@
     "unofficialNotice": "Das ist ein inoffizielles Tool und steht in keiner Verbindung zum GoMining-Team.",
     "openSourceNotice": "Diese App und Erweiterung wurden mit Fokus auf Sicherheit und Transparenz entwickelt. Der vollständige Quellcode ist Open Source und für jeden einsehbar.",
     "checkItHere": "Hier ansehen.",
-    "maxExportsPerDay": "Max. {{max}} Export pro Tag."
+    "maxExportsPerDay": "Max. {{max}} Export pro Tag.",
+    "feedbackSuggestions": "Feedback & Vorschläge",
+    "sheetsToFetch": "{{fetch}} Tabelle(n) werden abgerufen. {{stored}} gespeichert, werden zuerst auf Updates geprüft.",
+    "allSheetsStored": "Alle Tabellen gespeichert. Werden vor der Erstellung auf Updates geprüft."
   },
   "auth": {
     "connectViaBrowserExtension": "Über Browser-Erweiterung verbinden",
@@ -53,7 +61,14 @@
     "lightMode": "Heller Modus",
     "darkMode": "Dunkler Modus",
     "logout": "Abmelden",
-    "language": "Sprache"
+    "language": "Sprache",
+    "sessionExpired": "Sitzung abgelaufen. Bitte erneut über die Erweiterung synchronisieren.",
+    "sessionRefreshed": "Sitzung von der Erweiterung aktualisiert.",
+    "sessionSynced": "Sitzung von der Erweiterung synchronisiert.",
+    "syncedSuccessfully": "Erfolgreich synchronisiert. Willkommen!",
+    "tokenInvalid": "Erweiterungs-Token ist ungültig oder abgelaufen.",
+    "noToken": "Kein Token gefunden. Bitte zuerst über die RewardTrackr-Erweiterung synchronisieren.",
+    "loggedOut": "Abgemeldet."
   },
   "dataViewer": {
     "trends": "Trends",
@@ -105,7 +120,9 @@
     "stored": "Gespeichert {{age}}",
     "storedPartial": "Gespeichert {{count}}/{{total}}",
     "notStored": "Nicht gespeichert",
-    "selected": "{{selected}}/{{total}} ausgewählt"
+    "selected": "{{selected}}/{{total}} ausgewählt",
+    "cacheCleared": "Cache geleert. Der nächste Export ruft neue Daten ab.",
+    "sessionExpired": "Sitzung abgelaufen. Bitte erneut über die RewardTrackr-Erweiterung synchronisieren."
   },
   "share": {
     "shareRecords": "Datensätze teilen",

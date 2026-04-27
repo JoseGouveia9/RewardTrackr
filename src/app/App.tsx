@@ -518,14 +518,14 @@ function App() {
                       <div className="export-meta-row">
                         {cachedCount > 0 && cachedCount < selectedKeys.length && (
                           <p className="subtle">
-                            {selectedKeys.length - cachedCount} sheet(s) will be fetched.{" "}
-                            {cachedCount} stored, will be probed for updates first.
+                            {t("app.sheetsToFetch", {
+                              fetch: selectedKeys.length - cachedCount,
+                              stored: cachedCount,
+                            })}
                           </p>
                         )}
                         {cachedCount === selectedKeys.length && selectedKeys.length > 0 && (
-                          <p className="subtle">
-                            All sheets stored. Will probe for updates before building.
-                          </p>
+                          <p className="subtle">{t("app.allSheetsStored")}</p>
                         )}
                         <p className="export-limit-notice">
                           {t("app.maxExportsPerDay", { max: 3 })}
@@ -597,7 +597,7 @@ function App() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              Feedback &amp; Suggestions
+              {t("app.feedbackSuggestions")}
             </a>
           </motion.p>
         </LayoutGroup>

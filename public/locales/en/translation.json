@@ -20,7 +20,12 @@
     "updated": "Updated",
     "records": "Records",
     "date": "Date",
-    "power": "Power"
+    "power": "Power",
+    "lessThanAMinuteAgo": "<1m ago",
+    "minutesAgo": "{{count}}m ago",
+    "hoursAgo": "{{count}}h ago",
+    "daysAgo": "{{count}}d ago",
+    "transactionsFilter": "Transactions Filter"
   },
   "app": {
     "goToMain": "Go to main page",
@@ -35,7 +40,10 @@
     "unofficialNotice": "This is an unofficial tool and is not affiliated with, endorsed by, or associated with the GoMining team.",
     "openSourceNotice": "This app and extension were built with security and transparency in mind. The full source code is open source and accessible to anyone who wants to inspect it before using it.",
     "checkItHere": "Check it here.",
-    "maxExportsPerDay": "Max {{max}} export per day."
+    "maxExportsPerDay": "Max {{max}} export per day.",
+    "feedbackSuggestions": "Feedback & Suggestions",
+    "sheetsToFetch": "{{fetch}} sheet(s) will be fetched. {{stored}} stored, will be probed for updates first.",
+    "allSheetsStored": "All sheets stored. Will probe for updates before building."
   },
   "auth": {
     "connectViaBrowserExtension": "Connect via Browser Extension",
@@ -53,7 +61,14 @@
     "lightMode": "Light Mode",
     "darkMode": "Dark Mode",
     "logout": "Logout",
-    "language": "Language"
+    "language": "Language",
+    "sessionExpired": "Session expired. Please sync again via the extension.",
+    "sessionRefreshed": "Session refreshed from extension.",
+    "sessionSynced": "Session synced from extension.",
+    "syncedSuccessfully": "Synced successfully. Welcome!",
+    "tokenInvalid": "Extension token is invalid or expired.",
+    "noToken": "No token found. Please sync via the RewardTrackr extension first.",
+    "loggedOut": "Logged out."
   },
   "dataViewer": {
     "trends": "Trends",
@@ -105,7 +120,9 @@
     "stored": "Stored {{age}}",
     "storedPartial": "Stored {{count}}/{{total}}",
     "notStored": "Not stored",
-    "selected": "{{selected}}/{{total}} selected"
+    "selected": "{{selected}}/{{total}} selected",
+    "cacheCleared": "Cache cleared. Next export will fetch fresh data.",
+    "sessionExpired": "Session expired. Please re-sync via the RewardTrackr extension."
   },
   "share": {
     "shareRecords": "Share Records",

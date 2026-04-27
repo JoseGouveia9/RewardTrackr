@@ -1,4 +1,5 @@
 ﻿import { useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
 import * as Sentry from "@sentry/react";
 import { decodeJwt } from "@/lib/http";
 import { ALL_REWARD_KEYS } from "../config/reward-configs";
@@ -38,21 +39,22 @@ export function useExport({
   onCacheUpdate,
   onStarted,
 }: UseExportParams): UseExportReturn {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState<boolean>(false);
   const [fetchingKeys, setFetchingKeys] = useState<Set<RewardKey>>(new Set());
 
   const handleClearCache = useCallback((): void => {
     clearAllCacheEntries();
     onCacheUpdate(Object.fromEntries(ALL_REWARD_KEYS.map((k) => [k, null])) as CacheState);
-    onMessage("Cache cleared. Next export will fetch fresh data.");
-  }, [onMessage, onCacheUpdate]);
+    onMessage(t("export.cacheCleared"));
+  }, [onMessage, onCacheUpdate, t]);
 
   const handleExport = useCallback(async (): Promise<void> => {
     if (selectedKeys.length === 0) return;
 
     const decoded = decodeJwt(storedToken);
     if (!decoded || (decoded.exp && Math.floor(Date.now() / 1000) >= decoded.exp)) {
-      onMessage("Session expired. Please re-sync via the RewardTrackr extension.");
+      onMessage(t("export.sessionExpired"));
       return;
     }
 
@@ -132,6 +134,7 @@ export function useExport({
     onMessage,
     onCacheUpdate,
     onStarted,
+    t,
   ]);
 
   return { loading, fetchingKeys, handleExport, handleClearCache };

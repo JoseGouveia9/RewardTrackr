@@ -20,7 +20,12 @@
     "updated": "Aggiornato",
     "records": "Record",
     "date": "Data",
-    "power": "Potenza"
+    "power": "Potenza",
+    "lessThanAMinuteAgo": "<1m fa",
+    "minutesAgo": "{{count}}m fa",
+    "hoursAgo": "{{count}}h fa",
+    "daysAgo": "{{count}}g fa",
+    "transactionsFilter": "Filtro transazioni"
   },
   "app": {
     "goToMain": "Vai alla pagina principale",
@@ -35,7 +40,10 @@
     "unofficialNotice": "Questo è uno strumento non ufficiale e non è affiliato, approvato o associato al team GoMining.",
     "openSourceNotice": "Questa app e l'estensione sono state costruite con la sicurezza e la trasparenza in mente. Il codice sorgente completo è open source e accessibile a chiunque voglia esaminarlo prima dell'uso.",
     "checkItHere": "Verificalo qui.",
-    "maxExportsPerDay": "Max {{max}} esportazione al giorno."
+    "maxExportsPerDay": "Max {{max}} esportazione al giorno.",
+    "feedbackSuggestions": "Feedback & Suggerimenti",
+    "sheetsToFetch": "{{fetch}} foglio/i verranno recuperati. {{stored}} salvati, verranno verificati per aggiornamenti.",
+    "allSheetsStored": "Tutti i fogli salvati. Verranno verificati per aggiornamenti prima della generazione."
   },
   "auth": {
     "connectViaBrowserExtension": "Connetti tramite estensione browser",
@@ -53,7 +61,14 @@
     "lightMode": "Modalità chiara",
     "darkMode": "Modalità scura",
     "logout": "Disconnetti",
-    "language": "Lingua"
+    "language": "Lingua",
+    "sessionExpired": "Sessione scaduta. Per favore, sincronizza di nuovo tramite l'estensione.",
+    "sessionRefreshed": "Sessione aggiornata dall'estensione.",
+    "sessionSynced": "Sessione sincronizzata dall'estensione.",
+    "syncedSuccessfully": "Sincronizzato con successo. Benvenuto!",
+    "tokenInvalid": "Il token dell'estensione non è valido o è scaduto.",
+    "noToken": "Nessun token trovato. Per favore, sincronizza prima tramite l'estensione RewardTrackr.",
+    "loggedOut": "Disconnesso."
   },
   "dataViewer": {
     "trends": "Tendenze",
@@ -105,7 +120,9 @@
     "stored": "Salvato {{age}}",
     "storedPartial": "Salvato {{count}}/{{total}}",
     "notStored": "Non salvato",
-    "selected": "{{selected}}/{{total}} selezionato"
+    "selected": "{{selected}}/{{total}} selezionato",
+    "cacheCleared": "Cache svuotata. La prossima esportazione recupererà nuovi dati.",
+    "sessionExpired": "Sessione scaduta. Per favore, risincronizza tramite l'estensione RewardTrackr."
   },
   "share": {
     "shareRecords": "Condividi record",

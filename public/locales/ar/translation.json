@@ -20,7 +20,12 @@
     "updated": "محدّث",
     "records": "السجلات",
     "date": "التاريخ",
-    "power": "الطاقة"
+    "power": "الطاقة",
+    "lessThanAMinuteAgo": "منذ أقل من دقيقة",
+    "minutesAgo": "منذ {{count}}د",
+    "hoursAgo": "منذ {{count}}س",
+    "daysAgo": "منذ {{count}}ي",
+    "transactionsFilter": "فلتر المعاملات"
   },
   "app": {
     "goToMain": "الذهاب إلى الصفحة الرئيسية",
@@ -35,7 +40,10 @@
     "unofficialNotice": "هذه أداة غير رسمية وليست تابعة لفريق GoMining أو مدعومة أو مرتبطة به.",
     "openSourceNotice": "تم بناء هذا التطبيق والامتداد مع مراعاة الأمان والشفافية. الكود المصدري الكامل مفتوح المصدر ومتاح لأي شخص يريد فحصه قبل الاستخدام.",
     "checkItHere": "تحقق منه هنا.",
-    "maxExportsPerDay": "الحد الأقصى {{max}} تصدير في اليوم."
+    "maxExportsPerDay": "الحد الأقصى {{max}} تصدير في اليوم.",
+    "feedbackSuggestions": "التعليقات والاقتراحات",
+    "sheetsToFetch": "سيتم جلب {{fetch}} ورقة. {{stored}} مخزنة، سيتم التحقق من التحديثات أولاً.",
+    "allSheetsStored": "جميع الأوراق مخزنة. سيتم التحقق من التحديثات قبل الإنشاء."
   },
   "auth": {
     "connectViaBrowserExtension": "الاتصال عبر امتداد المتصفح",
@@ -53,7 +61,14 @@
     "lightMode": "الوضع الفاتح",
     "darkMode": "الوضع الداكن",
     "logout": "تسجيل الخروج",
-    "language": "اللغة"
+    "language": "اللغة",
+    "sessionExpired": "انتهت صلاحية الجلسة. يرجى المزامنة مرة أخرى عبر الإضافة.",
+    "sessionRefreshed": "تم تحديث الجلسة من الإضافة.",
+    "sessionSynced": "تمت مزامنة الجلسة من الإضافة.",
+    "syncedSuccessfully": "تمت المزامنة بنجاح. مرحباً!",
+    "tokenInvalid": "رمز الإضافة غير صالح أو منتهي الصلاحية.",
+    "noToken": "لم يُعثر على رمز. يرجى المزامنة أولاً عبر إضافة RewardTrackr.",
+    "loggedOut": "تم تسجيل الخروج."
   },
   "dataViewer": {
     "trends": "الاتجاهات",
@@ -105,7 +120,9 @@
     "stored": "مخزن {{age}}",
     "storedPartial": "مخزن {{count}}/{{total}}",
     "notStored": "غير مخزن",
-    "selected": "{{selected}}/{{total}} محدد"
+    "selected": "{{selected}}/{{total}} محدد",
+    "cacheCleared": "تم مسح ذاكرة التخزين المؤقت. سيجلب التصدير التالي بيانات جديدة.",
+    "sessionExpired": "انتهت صلاحية الجلسة. يرجى إعادة المزامنة عبر إضافة RewardTrackr."
   },
   "share": {
     "shareRecords": "مشاركة السجلات",
