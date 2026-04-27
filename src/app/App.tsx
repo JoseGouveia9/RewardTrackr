@@ -246,7 +246,7 @@ function App() {
                       exit={{ opacity: 0, y: 6 }}
                       transition={{ duration: 0.25, ease: "easeOut" }}
                     >
-                      {`Hello ${displayAlias} 👋`}
+                      {t("common.greeting", { name: displayAlias })}
                     </motion.h1>
                   )}
                 </AnimatePresence>
