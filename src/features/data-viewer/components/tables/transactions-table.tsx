@@ -1,4 +1,5 @@
 ﻿import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { loadCacheEntry } from "@/features/export/utils/cache";
 import type { CacheEntry, RewardKey } from "@/features/export/types";
 import type { TxView, DateRange } from "../../types";
@@ -10,6 +11,7 @@ import {
   fmtDate,
   fmtDateTime,
 } from "../../utils";
+import { TX_LABEL_TO_KEY } from "@/features/export/config/wallet-types";
 import { GmtIcon, UsdIcon, FiatIcon } from "../icons/currency-icons";
 import { DateRangeFilter } from "../date-range-filter/date-range-filter";
 import { TypeCheckFilter } from "../type-check-filter/type-check-filter";
@@ -38,6 +40,7 @@ export function TransactionsTable({
   dateRange: DateRange;
   setDateRange: (v: DateRange) => void;
 }) {
+  const { t } = useTranslation();
   const [page, setPage] = useState(0);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const totalsRef = useRef<HTMLTableElement>(null);
@@ -138,10 +141,10 @@ export function TransactionsTable({
         {isFetching ? (
           <span className="dv-loading-inline">
             <span className="dv-spinner" aria-hidden="true" />
-            <span>Fetching data...</span>
+            <span>{t("dataViewer.fetchingData")}</span>
           </span>
         ) : (
-          "No cached data for this sheet. Export it first from the main panel."
+          t("dataViewer.noData")
         )}
       </div>
     );
@@ -161,10 +164,10 @@ export function TransactionsTable({
           </colgroup>
           <tbody>
             <tr>
-              <td className="dv-totals-label">Total</td>
+              <td className="dv-totals-label">{t("common.total")}</td>
               <td />
               <td>
-                <span className="dv-total-cell-label">Reward</span>
+                <span className="dv-total-cell-label">{t("dataViewer.reward")}</span>
                 <span className="dv-total-cell-value dv-total-cell-value--accent dv-cell-with-icon">
                   {formatCurrencyValue(totalV, totalC)}
                   {rewardIcon}
@@ -193,14 +196,17 @@ export function TransactionsTable({
               </th>
               <th>
                 <TypeCheckFilter
-                  label="Type"
+                  label={t("dataViewer.type")}
                   types={types}
                   selected={selectedTypes}
                   onChange={setSelectedTypes}
+                  renderOption={(type) => t(TX_LABEL_TO_KEY[type] ?? type, { defaultValue: type })}
                 />
               </th>
               <th>
-                <span className="dv-cell-with-icon">Reward {rewardIcon}</span>
+                <span className="dv-cell-with-icon">
+                  {t("dataViewer.reward")} {rewardIcon}
+                </span>
               </th>
             </tr>
           </thead>
@@ -213,7 +219,9 @@ export function TransactionsTable({
                   <td className="dv-cell-date">
                     {groupByDay ? fmtDate(row.date) : fmtDateTime(row.date)}
                   </td>
-                  <td className="dv-cell-type">{row.txType}</td>
+                  <td className="dv-cell-type">
+                    {t(TX_LABEL_TO_KEY[row.txType] ?? row.txType, { defaultValue: row.txType })}
+                  </td>
                   <td className="dv-cell-accent">
                     <span className="dv-cell-with-icon">
                       {formatCurrencyValue(v, c)}

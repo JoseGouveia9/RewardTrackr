@@ -37,8 +37,8 @@ export const TransactionFilter = memo(function TransactionFilter({
         {TX_CHECKBOX_OPTIONS.map((opt) => {
           const checked = opt.fromTypes.every((ft) => selectedTxFromTypes.includes(ft));
           return (
-            <label key={opt.label} className="transaction-filter-item">
-              <span className="transaction-filter-label">{opt.label}</span>
+            <label key={opt.labelKey} className="transaction-filter-item">
+              <span className="transaction-filter-label">{t(opt.labelKey)}</span>
               <input
                 type="checkbox"
                 className="toggle-switch"

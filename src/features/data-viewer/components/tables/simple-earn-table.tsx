@@ -1,4 +1,5 @@
 ﻿import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { loadCacheEntry } from "@/features/export/utils/cache";
 import type { CacheEntry, RewardKey } from "@/features/export/types";
 import type { EarnView, DateRange } from "../../types";
@@ -37,6 +38,7 @@ export function SimpleEarnTable({
   dateRange: DateRange;
   setDateRange: (v: DateRange) => void;
 }) {
+  const { t } = useTranslation();
   const [page, setPage] = useState(0);
   const totalsRef = useRef<HTMLTableElement>(null);
   const dataRef = useRef<HTMLTableElement>(null);
@@ -166,10 +168,10 @@ export function SimpleEarnTable({
         {isFetching ? (
           <span className="dv-loading-inline">
             <span className="dv-spinner" aria-hidden="true" />
-            <span>Fetching data...</span>
+            <span>{t("dataViewer.fetchingData")}</span>
           </span>
         ) : (
-          "No cached data for this sheet. Export it first from the main panel."
+          t("dataViewer.noData")
         )}
       </div>
     );
@@ -188,11 +190,11 @@ export function SimpleEarnTable({
           </colgroup>
           <tbody>
             <tr>
-              <td className="dv-totals-label">Total</td>
+              <td className="dv-totals-label">{t("common.total")}</td>
               <td />
               <td />
               <td>
-                <span className="dv-total-cell-label">Reward</span>
+                <span className="dv-total-cell-label">{t("dataViewer.reward")}</span>
                 <span className="dv-total-cell-value dv-total-cell-value--accent dv-cell-with-icon">
                   {isEarnNative
                     ? formatCurrencyValue(earnGrandTotal.reward, nativeCurrency)
@@ -225,9 +227,9 @@ export function SimpleEarnTable({
                   dates={rowDates}
                 />
               </th>
-              <th>Asset</th>
+              <th>{t("dataViewer.asset")}</th>
               <th>APR</th>
-              <th>Reward</th>
+              <th>{t("dataViewer.reward")}</th>
             </tr>
           </thead>
           <tbody>

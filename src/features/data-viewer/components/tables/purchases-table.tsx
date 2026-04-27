@@ -1,4 +1,5 @@
 ﻿import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { loadCacheEntry } from "@/features/export/utils/cache";
 import type { CacheEntry } from "@/features/export/types";
 import type { PurchaseView, DateRange } from "../../types";
@@ -38,6 +39,7 @@ export function PurchasesTable({
   dateRange: DateRange;
   setDateRange: (v: DateRange) => void;
 }) {
+  const { t } = useTranslation();
   const [page, setPage] = useState(0);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [hiddenCurrencies, setHiddenCurrencies] = useState<Set<string>>(new Set());
@@ -179,10 +181,10 @@ export function PurchasesTable({
         {isFetching ? (
           <span className="dv-loading-inline">
             <span className="dv-spinner" aria-hidden="true" />
-            <span>Fetching data...</span>
+            <span>{t("dataViewer.fetchingData")}</span>
           </span>
         ) : (
-          "No cached data for this sheet. Export it first from the main panel."
+          t("dataViewer.noData")
         )}
       </div>
     );
@@ -199,8 +201,8 @@ export function PurchasesTable({
             <col className="dv-column-value" />
           </colgroup>
           <tbody>
-            {currencyTotals.map(([currency, t]) => {
-              const { v, c } = totalValue(t, currency);
+            {currencyTotals.map(([currency, totals]) => {
+              const { v, c } = totalValue(totals, currency);
               const hidden = hiddenCurrencies.has(currency);
               const toggle = isSingleCurrency
                 ? undefined
@@ -219,7 +221,7 @@ export function PurchasesTable({
                 >
                   <td>
                     {isSingleCurrency ? (
-                      <span className="dv-totals-label">Total</span>
+                      <span className="dv-totals-label">{t("common.total")}</span>
                     ) : (
                       <span className="dv-totals-currency-cell">
                         <AnyCurrencyIcon currency={currency} />
@@ -240,7 +242,7 @@ export function PurchasesTable({
             })}
             {!isSingleCurrency && !isNative && (
               <tr>
-                <td className="dv-totals-label">Total</td>
+                <td className="dv-totals-label">{t("common.total")}</td>
                 <td />
                 <td>
                   <span className="dv-total-cell-value dv-total-cell-value--accent dv-cell-with-icon">
@@ -275,22 +277,29 @@ export function PurchasesTable({
               </th>
               <th>
                 <TypeCheckFilter
-                  label="Type"
+                  label={t("dataViewer.type")}
                   types={types}
                   selected={selectedTypes}
                   onChange={setSelectedTypes}
+                  renderOption={(type) => {
+                    if (type === "Purchase") return t("purchaseType.purchase");
+                    if (type === "Upgrade - Energy Efficiency")
+                      return t("purchaseType.upgradeEnergyEfficiency");
+                    if (type === "Upgrade - Power") return t("purchaseType.upgradePower");
+                    return type;
+                  }}
                 />
               </th>
               <th>
-                {purchaseView === "NATIVE" && "Bought"}
+                {purchaseView === "NATIVE" && t("dataViewer.bought")}
                 {purchaseView === "USD" && (
                   <span className="dv-cell-with-icon">
-                    Bought <UsdIcon />
+                    {t("dataViewer.bought")} <UsdIcon />
                   </span>
                 )}
                 {purchaseView === "FIAT" && (
                   <span className="dv-cell-with-icon">
-                    Bought <FiatIcon code={fiatCode} />
+                    {t("dataViewer.bought")} <FiatIcon code={fiatCode} />
                   </span>
                 )}
               </th>
@@ -311,7 +320,15 @@ export function PurchasesTable({
                   <td className="dv-cell-date">
                     {groupByDay ? fmtDate(row.date) : fmtDateTime(row.date)}
                   </td>
-                  <td className="dv-cell-type">{row.type}</td>
+                  <td className="dv-cell-type">
+                    {row.type === "Purchase"
+                      ? t("purchaseType.purchase")
+                      : row.type === "Upgrade - Energy Efficiency"
+                        ? t("purchaseType.upgradeEnergyEfficiency")
+                        : row.type === "Upgrade - Power"
+                          ? t("purchaseType.upgradePower")
+                          : row.type}
+                  </td>
                   <td className="dv-cell-accent">
                     <span className="dv-cell-with-icon">
                       {formatCurrencyValue(boughtVal, boughtCur)}
