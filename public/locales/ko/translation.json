@@ -14,7 +14,7 @@
     "tryAgain": "다시 시도",
     "confirm": "확인",
     "dismiss": "닫기",
-    "new": "신규",
+    "new": "NEW",
     "total": "합계",
     "user": "사용자",
     "updated": "업데이트됨",
@@ -25,7 +25,8 @@
     "minutesAgo": "{{count}}분 전",
     "hoursAgo": "{{count}}시간 전",
     "daysAgo": "{{count}}일 전",
-    "transactionsFilter": "거래 필터"
+    "transactionsFilter": "거래 필터",
+    "greeting": "안녕하세요 {{name}} 👋"
   },
   "app": {
     "goToMain": "메인 페이지로 이동",
@@ -91,23 +92,28 @@
     "last30Days": "최근 30일",
     "thisMonth": "이번 달",
     "thisYear": "올해",
-    "lastYear": "작년"
+    "lastYear": "작년",
+    "deposited": "입금",
+    "withdrawn": "출금",
+    "type": "유형",
+    "bought": "구매",
+    "asset": "자산"
   },
   "tabs": {
     "soloMining": "솔로 채굴",
     "minerWars": "마이너워즈",
-    "bounties": "포상금",
+    "bounties": "Bounties",
     "referrals": "추천",
     "ambassador": "앰배서더",
     "deposits": "입금",
     "withdrawals": "출금",
     "purchasesUpgrades": "구매 및 업그레이드",
-    "simpleEarn": "심플 어닝",
+    "simpleEarn": "Simple Earn",
     "transactions": "거래"
   },
   "export": {
     "walletPricing": "지갑 가격",
-    "walletPricingDesc": "포상금, 입금, 출금 및 거래에만 적용됩니다. GoMining API는 이러한 시트의 법정화폐 가격을 반환하지 않으므로 내보내기 시 CoinGecko를 사용하여 보강합니다.",
+    "walletPricingDesc": "Bounties, 입금, 출금 및 거래에만 적용됩니다. GoMining API는 이러한 시트의 법정화폐 가격을 반환하지 않으므로 내보내기 시 CoinGecko를 사용하여 보강합니다.",
     "includeFiatPricing": "법정화폐 가격 포함(USD). 추가 법정화폐는 아래에서 설정합니다.",
     "rateLimitWarning": "이 작업은 시간이 걸릴 수 있습니다. CoinGecko 무료 플랜에는 속도 제한이 있으며, 각 제한 도달 시 60초 쿨다운이 발생합니다.",
     "extraFiatConversion": "추가 법정화폐 변환",
@@ -122,7 +128,28 @@
     "notStored": "저장되지 않음",
     "selected": "{{selected}}/{{total}} 선택됨",
     "cacheCleared": "캐시가 지워졌습니다. 다음 내보내기는 새 데이터를 가져옵니다.",
-    "sessionExpired": "세션이 만료되었습니다. RewardTrackr 확장 프로그램을 통해 다시 동기화해 주세요."
+    "sessionExpired": "세션이 만료되었습니다. RewardTrackr 확장 프로그램을 통해 다시 동기화해 주세요.",
+    "checkingCached": "{{count}}개의 캐시된 시트를 업데이트 확인 중...",
+    "fetchingSheet": "{{name}} 가져오는 중 ({{current}}/{{total}})...",
+    "applyingRates": "{{name}}에 {{currency}} 환율 적용 중...",
+    "enrichingSheet": "{{name}} 처리 중 ({{current}}/{{total}})...",
+    "skippedPending": "{{name}}: 재투자 대기 중인 {{count}}개 항목 건너뜀, 다음 내보내기에서 재시도합니다.",
+    "buildingExcel": "Excel 파일 생성 중...",
+    "downloaded": "Excel 파일이 다운로드되었습니다! ({{details}})",
+    "allFromCache": "모두 캐시에서",
+    "partFetched": "{{count}}개 가져옴",
+    "partUpdated": "{{count}}개 업데이트됨",
+    "partReEnriched": "{{count}}개 재처리됨",
+    "partFromCache": "{{count}}개 캐시에서",
+    "limitReached": "내보내기 한도 도달. 내일 다시 시도하세요.",
+    "requestTimeout": "요청 시간 초과. 60초 후 재시도... (시도 {{attempt}}/{{max}})",
+    "loadingPage": "{{name}}: 페이지 {{page}} 로드 중 ({{count}}개)...",
+    "loadingPageNew": "{{name}}: 페이지 {{page}} 로드 중 (새 {{count}}개)...",
+    "sheetPurchases": "구매",
+    "sheetUpgrades": "업그레이드",
+    "failed": "내보내기 실패: {{details}}",
+    "failedGeneric": "내보내기 실패",
+    "networkError": "네트워크 오류: GoMining API에 연결하지 못했습니다. 나중에 다시 시도하거나 [여기](https://github.com/JoseGouveia9/RewardTrackr/issues)에서 문제를 보고하세요."
   },
   "share": {
     "shareRecords": "기록 공유",
@@ -178,5 +205,18 @@
   },
   "language": {
     "selectLanguage": "언어 선택"
+  },
+  "txFilter": {
+    "veGoMiningReward": "veGoMining 보상",
+    "personalMinerWarsReward": "개인 MinerWars 보상",
+    "minerSale": "마이너 판매",
+    "liquidityReward": "유동성 보상",
+    "clanOwnershipReward": "클랜 소유자 보상",
+    "bonus": "보너스"
+  },
+  "purchaseType": {
+    "purchase": "구매",
+    "upgradeEnergyEfficiency": "업그레이드 - 에너지 효율",
+    "upgradePower": "업그레이드 - 파워"
   }
 }

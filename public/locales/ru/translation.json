@@ -14,7 +14,7 @@
     "tryAgain": "Попробовать ещё",
     "confirm": "Подтвердить",
     "dismiss": "Закрыть",
-    "new": "НОВОЕ",
+    "new": "NEW",
     "total": "Итого",
     "user": "Пользователь",
     "updated": "Обновлено",
@@ -25,7 +25,8 @@
     "minutesAgo": "{{count}}м назад",
     "hoursAgo": "{{count}}ч назад",
     "daysAgo": "{{count}}д назад",
-    "transactionsFilter": "Фильтр транзакций"
+    "transactionsFilter": "Фильтр транзакций",
+    "greeting": "Привет {{name}} 👋"
   },
   "app": {
     "goToMain": "Перейти на главную",
@@ -91,23 +92,28 @@
     "last30Days": "Последние 30 дней",
     "thisMonth": "Этот месяц",
     "thisYear": "Этот год",
-    "lastYear": "Прошлый год"
+    "lastYear": "Прошлый год",
+    "deposited": "Внесено",
+    "withdrawn": "Снято",
+    "type": "Тип",
+    "bought": "Куплено",
+    "asset": "Актив"
   },
   "tabs": {
     "soloMining": "Соло майнинг",
     "minerWars": "MinerWars",
-    "bounties": "Награды",
+    "bounties": "Bounties",
     "referrals": "Рефералы",
     "ambassador": "Амбассадор",
     "deposits": "Депозиты",
     "withdrawals": "Выводы",
     "purchasesUpgrades": "Покупки и обновления",
-    "simpleEarn": "Простой заработок",
+    "simpleEarn": "Simple Earn",
     "transactions": "Транзакции"
   },
   "export": {
     "walletPricing": "Ценообразование кошелька",
-    "walletPricingDesc": "Применяется только к наградам, депозитам, выводам и транзакциям. GoMining API не возвращает цены в фиате для этих листов — обогащаем их через CoinGecko при экспорте.",
+    "walletPricingDesc": "Применяется только к Bounties, депозитам, выводам и транзакциям. GoMining API не возвращает цены в фиате для этих листов — обогащаем их через CoinGecko при экспорте.",
     "includeFiatPricing": "Включить цены в фиате (USD). Дополнительная валюта настраивается ниже.",
     "rateLimitWarning": "Это может занять немного времени. Бесплатный план CoinGecko имеет ограничения скорости — каждый раз при достижении лимита запускается 60-секундная пауза.",
     "extraFiatConversion": "Дополнительная конвертация в фиат",
@@ -122,7 +128,28 @@
     "notStored": "Не сохранено",
     "selected": "{{selected}}/{{total}} выбрано",
     "cacheCleared": "Кэш очищен. Следующий экспорт загрузит новые данные.",
-    "sessionExpired": "Сессия истекла. Пожалуйста, повторно синхронизируйтесь через расширение RewardTrackr."
+    "sessionExpired": "Сессия истекла. Пожалуйста, повторно синхронизируйтесь через расширение RewardTrackr.",
+    "checkingCached": "Проверка {{count}} кэшированных листов на обновления...",
+    "fetchingSheet": "Загрузка {{name}} ({{current}} из {{total}})...",
+    "applyingRates": "Применение курсов {{currency}} к {{name}}...",
+    "enrichingSheet": "Обработка {{name}} ({{current}} из {{total}})...",
+    "skippedPending": "{{name}}: Пропущено {{count}} ожидающих записей реинвестирования, повтор при следующем экспорте.",
+    "buildingExcel": "Создание файла Excel...",
+    "downloaded": "Файл Excel загружен! ({{details}})",
+    "allFromCache": "всё из кэша",
+    "partFetched": "{{count}} загружено",
+    "partUpdated": "{{count}} обновлено",
+    "partReEnriched": "{{count}} переобработано",
+    "partFromCache": "{{count}} из кэша",
+    "limitReached": "Лимит экспорта достигнут. Повторите попытку завтра.",
+    "requestTimeout": "Таймаут запроса. Повтор через 60с... (попытка {{attempt}}/{{max}})",
+    "loadingPage": "{{name}}: Загрузка страницы {{page}} ({{count}} записей)...",
+    "loadingPageNew": "{{name}}: Загрузка страницы {{page}} ({{count}} новых записей)...",
+    "sheetPurchases": "Покупки",
+    "sheetUpgrades": "Обновления",
+    "failed": "Ошибка экспорта: {{details}}",
+    "failedGeneric": "Ошибка экспорта",
+    "networkError": "Ошибка сети: не удалось подключиться к API GoMining. Попробуйте позже или сообщите о проблеме [здесь](https://github.com/JoseGouveia9/RewardTrackr/issues)."
   },
   "share": {
     "shareRecords": "Поделиться записями",
@@ -178,5 +205,18 @@
   },
   "language": {
     "selectLanguage": "Выбрать язык"
+  },
+  "txFilter": {
+    "veGoMiningReward": "Награда veGoMining",
+    "personalMinerWarsReward": "Личная награда MinerWars",
+    "minerSale": "Продажа майнера",
+    "liquidityReward": "Награда за ликвидность",
+    "clanOwnershipReward": "Награда владельца клана",
+    "bonus": "Бонус"
+  },
+  "purchaseType": {
+    "purchase": "Покупка",
+    "upgradeEnergyEfficiency": "Улучшение - Энергоэффективность",
+    "upgradePower": "Улучшение - Мощность"
   }
 }

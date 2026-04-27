@@ -14,7 +14,7 @@
     "tryAgain": "重试",
     "confirm": "确认",
     "dismiss": "忽略",
-    "new": "新",
+    "new": "NEW",
     "total": "合计",
     "user": "用户",
     "updated": "已更新",
@@ -25,7 +25,8 @@
     "minutesAgo": "{{count}}分钟前",
     "hoursAgo": "{{count}}小时前",
     "daysAgo": "{{count}}天前",
-    "transactionsFilter": "交易筛选"
+    "transactionsFilter": "交易筛选",
+    "greeting": "你好 {{name}} 👋"
   },
   "app": {
     "goToMain": "返回主页",
@@ -50,9 +51,9 @@
     "installExtension": "安装 RewardTrackr 浏览器扩展",
     "compatible": "兼容 Chrome、Opera 和 Orion（iOS 移动版）。",
     "step1": "打开 GoMining 并点击扩展图标",
-    "step2": "当扩展显示"准备同步"时，点击"同步到导出器"",
-    "step3": "同步后，扩展显示"你好 [姓名] 👋"和"个人资料已同步"",
-    "step4": "点击"打开导出器"，您将被重定向至此处",
+    "step2": "当扩展显示\"准备同步\"时，点击\"同步到导出器\"",
+    "step3": "同步后，扩展显示\"你好 [姓名] 👋\"和\"个人资料已同步\"",
+    "step4": "点击\"打开导出器\"，您将被重定向至此处",
     "iVeSynced": "我已同步，打开导出器",
     "havingIssues": "同步遇到问题？",
     "latestVersion": "请确保您使用的是最新版本的扩展程序。",
@@ -91,23 +92,28 @@
     "last30Days": "最近30天",
     "thisMonth": "本月",
     "thisYear": "今年",
-    "lastYear": "去年"
+    "lastYear": "去年",
+    "deposited": "存入",
+    "withdrawn": "提取",
+    "type": "类型",
+    "bought": "购买",
+    "asset": "资产"
   },
   "tabs": {
     "soloMining": "独立挖矿",
     "minerWars": "矿工大战",
-    "bounties": "赏金",
+    "bounties": "Bounties",
     "referrals": "推荐",
     "ambassador": "大使",
     "deposits": "存款",
     "withdrawals": "提款",
     "purchasesUpgrades": "购买与升级",
-    "simpleEarn": "简单赚取",
+    "simpleEarn": "Simple Earn",
     "transactions": "交易"
   },
   "export": {
     "walletPricing": "钱包定价",
-    "walletPricingDesc": "仅适用于赏金、存款、提款和交易。GoMining API 不返回这些表格的法币定价，因此我们在导出时使用 CoinGecko 进行丰富。",
+    "walletPricingDesc": "仅适用于Bounties、存款、提款和交易。GoMining API 不返回这些表格的法币定价，因此我们在导出时使用 CoinGecko 进行丰富。",
     "includeFiatPricing": "包含法币定价（USD）。额外法币在下方配置。",
     "rateLimitWarning": "这可能需要一些时间。CoinGecko 免费计划有速率限制，每次达到限制会触发60秒冷却。",
     "extraFiatConversion": "额外法币转换",
@@ -122,7 +128,28 @@
     "notStored": "未存储",
     "selected": "已选 {{selected}}/{{total}}",
     "cacheCleared": "缓存已清除。下次导出将获取最新数据。",
-    "sessionExpired": "会话已过期。请通过RewardTrackr扩展程序重新同步。"
+    "sessionExpired": "会话已过期。请通过RewardTrackr扩展程序重新同步。",
+    "checkingCached": "正在检查 {{count}} 个缓存表格的更新...",
+    "fetchingSheet": "正在获取 {{name}} ({{current}}/{{total}})...",
+    "applyingRates": "正在将 {{currency}} 汇率应用到 {{name}}...",
+    "enrichingSheet": "正在处理 {{name}} ({{current}}/{{total}})...",
+    "skippedPending": "{{name}}：已跳过 {{count}} 条待再投资条目，将在下次导出时重试。",
+    "buildingExcel": "正在生成 Excel 文件...",
+    "downloaded": "Excel 文件已下载！({{details}})",
+    "allFromCache": "全部来自缓存",
+    "partFetched": "已获取 {{count}} 个",
+    "partUpdated": "已更新 {{count}} 个",
+    "partReEnriched": "已重新处理 {{count}} 个",
+    "partFromCache": "来自缓存 {{count}} 个",
+    "limitReached": "已达导出上限，请明天再试。",
+    "requestTimeout": "请求超时，60秒后重试... (第 {{attempt}}/{{max}} 次)",
+    "loadingPage": "{{name}}：正在加载第 {{page}} 页（已有 {{count}} 条记录）...",
+    "loadingPageNew": "{{name}}：正在加载第 {{page}} 页（{{count}} 条新记录）...",
+    "sheetPurchases": "购买",
+    "sheetUpgrades": "升级",
+    "failed": "导出失败：{{details}}",
+    "failedGeneric": "导出失败",
+    "networkError": "网络错误：无法连接到 GoMining API。请稍后重试或[点击此处](https://github.com/JoseGouveia9/RewardTrackr/issues)报告问题。"
   },
   "share": {
     "shareRecords": "分享记录",
@@ -178,5 +205,18 @@
   },
   "language": {
     "selectLanguage": "选择语言"
+  },
+  "txFilter": {
+    "veGoMiningReward": "veGoMining 奖励",
+    "personalMinerWarsReward": "个人 MinerWars 奖励",
+    "minerSale": "矿机出售",
+    "liquidityReward": "流动性奖励",
+    "clanOwnershipReward": "战队所有者奖励",
+    "bonus": "奖励"
+  },
+  "purchaseType": {
+    "purchase": "购买",
+    "upgradeEnergyEfficiency": "升级 - 能源效率",
+    "upgradePower": "升级 - 算力"
   }
 }

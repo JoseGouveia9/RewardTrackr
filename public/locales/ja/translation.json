@@ -14,7 +14,7 @@
     "tryAgain": "再試行",
     "confirm": "確認",
     "dismiss": "閉じる",
-    "new": "新着",
+    "new": "NEW",
     "total": "合計",
     "user": "ユーザー",
     "updated": "更新済み",
@@ -25,7 +25,8 @@
     "minutesAgo": "{{count}}分前",
     "hoursAgo": "{{count}}時間前",
     "daysAgo": "{{count}}日前",
-    "transactionsFilter": "取引フィルター"
+    "transactionsFilter": "取引フィルター",
+    "greeting": "こんにちは {{name}} 👋"
   },
   "app": {
     "goToMain": "メインページへ",
@@ -91,23 +92,28 @@
     "last30Days": "過去30日間",
     "thisMonth": "今月",
     "thisYear": "今年",
-    "lastYear": "昨年"
+    "lastYear": "昨年",
+    "deposited": "入金",
+    "withdrawn": "出金",
+    "type": "タイプ",
+    "bought": "購入",
+    "asset": "資産"
   },
   "tabs": {
     "soloMining": "ソロマイニング",
     "minerWars": "マイナーウォーズ",
-    "bounties": "バウンティ",
+    "bounties": "Bounties",
     "referrals": "紹介",
     "ambassador": "アンバサダー",
     "deposits": "入金",
     "withdrawals": "出金",
     "purchasesUpgrades": "購入・アップグレード",
-    "simpleEarn": "シンプルアーン",
+    "simpleEarn": "Simple Earn",
     "transactions": "取引"
   },
   "export": {
     "walletPricing": "ウォレット価格",
-    "walletPricingDesc": "バウンティ、入金、出金、取引にのみ適用されます。GoMining APIはこれらのシートの法定通貨価格を返さないため、エクスポート時にCoinGeckoで補完します。",
+    "walletPricingDesc": "Bounties、入金、出金、取引にのみ適用されます。GoMining APIはこれらのシートの法定通貨価格を返さないため、エクスポート時にCoinGeckoで補完します。",
     "includeFiatPricing": "法定通貨価格を含める（USD）。追加の法定通貨は以下で設定。",
     "rateLimitWarning": "これには時間がかかる場合があります。CoinGeckoの無料プランにはレート制限があり、制限に達するたびに60秒のクールダウンが発生します。",
     "extraFiatConversion": "追加法定通貨変換",
@@ -122,7 +128,28 @@
     "notStored": "未保存",
     "selected": "{{selected}}/{{total}} 選択済み",
     "cacheCleared": "キャッシュをクリアしました。次のエクスポートでは新しいデータを取得します。",
-    "sessionExpired": "セッションが期限切れです。RewardTrackr拡張機能で再度同期してください。"
+    "sessionExpired": "セッションが期限切れです。RewardTrackr拡張機能で再度同期してください。",
+    "checkingCached": "{{count}} 件のキャッシュシートを更新確認中...",
+    "fetchingSheet": "{{name}} を取得中 ({{current}}/{{total}})...",
+    "applyingRates": "{{name}} に {{currency}} レートを適用中...",
+    "enrichingSheet": "{{name}} を処理中 ({{current}}/{{total}})...",
+    "skippedPending": "{{name}}: 再投資待ちの {{count}} 件をスキップ、次回エクスポートで再試行します。",
+    "buildingExcel": "Excel ファイルを作成中...",
+    "downloaded": "Excel ファイルをダウンロードしました！({{details}})",
+    "allFromCache": "すべてキャッシュから",
+    "partFetched": "{{count}} 件取得",
+    "partUpdated": "{{count}} 件更新",
+    "partReEnriched": "{{count}} 件再処理",
+    "partFromCache": "{{count}} 件キャッシュから",
+    "limitReached": "エクスポート上限に達しました。明日再試行してください。",
+    "requestTimeout": "タイムアウト。60秒後に再試行... (試行 {{attempt}}/{{max}})",
+    "loadingPage": "{{name}}: ページ {{page}} 読み込み中 ({{count}} 件)...",
+    "loadingPageNew": "{{name}}: ページ {{page}} 読み込み中 (新規 {{count}} 件)...",
+    "sheetPurchases": "購入",
+    "sheetUpgrades": "アップグレード",
+    "failed": "エクスポート失敗: {{details}}",
+    "failedGeneric": "エクスポート失敗",
+    "networkError": "ネットワークエラー: GoMining APIに接続できませんでした。後でもう一度試すか、[こちら](https://github.com/JoseGouveia9/RewardTrackr/issues)から問題を報告してください。"
   },
   "share": {
     "shareRecords": "レコードを共有",
@@ -178,5 +205,18 @@
   },
   "language": {
     "selectLanguage": "言語を選択"
+  },
+  "txFilter": {
+    "veGoMiningReward": "veGoMining 報酬",
+    "personalMinerWarsReward": "個人 MinerWars 報酬",
+    "minerSale": "マイナー売却",
+    "liquidityReward": "流動性報酬",
+    "clanOwnershipReward": "クランオーナー報酬",
+    "bonus": "ボーナス"
+  },
+  "purchaseType": {
+    "purchase": "購入",
+    "upgradeEnergyEfficiency": "アップグレード - エネルギー効率",
+    "upgradePower": "アップグレード - パワー"
   }
 }

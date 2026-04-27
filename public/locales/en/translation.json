@@ -25,7 +25,8 @@
     "minutesAgo": "{{count}}m ago",
     "hoursAgo": "{{count}}h ago",
     "daysAgo": "{{count}}d ago",
-    "transactionsFilter": "Transactions Filter"
+    "transactionsFilter": "Transactions Filter",
+    "greeting": "Hello {{name}} 👋"
   },
   "app": {
     "goToMain": "Go to main page",
@@ -91,7 +92,12 @@
     "last30Days": "Last 30 days",
     "thisMonth": "This month",
     "thisYear": "This year",
-    "lastYear": "Last year"
+    "lastYear": "Last year",
+    "deposited": "Deposited",
+    "withdrawn": "Withdrawn",
+    "type": "Type",
+    "bought": "Bought",
+    "asset": "Asset"
   },
   "tabs": {
     "soloMining": "Solo Mining",
@@ -107,7 +113,7 @@
   },
   "export": {
     "walletPricing": "Wallet Pricing",
-    "walletPricingDesc": "Applies only to Bounty, Deposits, Withdrawals and Transactions. GoMining API does not return fiat pricing for these sheets, so we enrich them using CoinGecko during export.",
+    "walletPricingDesc": "Applies only to Bounties, Deposits, Withdrawals and Transactions. GoMining API does not return fiat pricing for these sheets, so we enrich them using CoinGecko during export.",
     "includeFiatPricing": "Include fiat pricing (USD). Extra fiat is configured below.",
     "rateLimitWarning": "This can take some time. CoinGecko free plan has rate limits, and each limit hit triggers a 60s cooldown.",
     "extraFiatConversion": "Extra Fiat Conversion",
@@ -122,7 +128,28 @@
     "notStored": "Not stored",
     "selected": "{{selected}}/{{total}} selected",
     "cacheCleared": "Cache cleared. Next export will fetch fresh data.",
-    "sessionExpired": "Session expired. Please re-sync via the RewardTrackr extension."
+    "sessionExpired": "Session expired. Please re-sync via the RewardTrackr extension.",
+    "checkingCached": "Checking {{count}} cached sheet(s) for updates...",
+    "fetchingSheet": "Fetching {{name}} ({{current}} of {{total}})...",
+    "applyingRates": "Applying {{currency}} rates to {{name}}...",
+    "enrichingSheet": "Enriching {{name}} ({{current}} of {{total}})...",
+    "skippedPending": "{{name}}: Skipped {{count}} pending reinvestment entr(y/ies), will retry on next export.",
+    "buildingExcel": "Building Excel file...",
+    "downloaded": "Excel file downloaded! ({{details}})",
+    "allFromCache": "all from cache",
+    "partFetched": "{{count}} fetched",
+    "partUpdated": "{{count}} updated",
+    "partReEnriched": "{{count}} re-enriched",
+    "partFromCache": "{{count}} from cache",
+    "limitReached": "Export limit reached. Please try again tomorrow.",
+    "requestTimeout": "Request timed out. Retrying in 60s... (attempt {{attempt}}/{{max}})",
+    "loadingPage": "{{name}}: Loading page {{page}} ({{count}} records so far)...",
+    "loadingPageNew": "{{name}}: Loading page {{page}} ({{count}} new records so far)...",
+    "sheetPurchases": "Purchases",
+    "sheetUpgrades": "Upgrades",
+    "failed": "Export failed: {{details}}",
+    "failedGeneric": "Export failed",
+    "networkError": "Network error: Failed to reach the GoMining API. Please try again later or report the issue [here](https://github.com/JoseGouveia9/RewardTrackr/issues)."
   },
   "share": {
     "shareRecords": "Share Records",
@@ -178,5 +205,18 @@
   },
   "language": {
     "selectLanguage": "Select language"
+  },
+  "txFilter": {
+    "veGoMiningReward": "veGoMining Reward",
+    "personalMinerWarsReward": "Personal MinerWars Reward",
+    "minerSale": "Miner Sale",
+    "liquidityReward": "Liquidity Reward",
+    "clanOwnershipReward": "Clan Ownership Reward",
+    "bonus": "Bonus"
+  },
+  "purchaseType": {
+    "purchase": "Purchase",
+    "upgradeEnergyEfficiency": "Upgrade - Energy Efficiency",
+    "upgradePower": "Upgrade - Power"
   }
 }

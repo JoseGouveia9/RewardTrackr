@@ -14,7 +14,7 @@
     "tryAgain": "Intentar de nuevo",
     "confirm": "Confirmar",
     "dismiss": "Descartar",
-    "new": "NUEVO",
+    "new": "NEW",
     "total": "Total",
     "user": "Usuario",
     "updated": "Actualizado",
@@ -25,7 +25,8 @@
     "minutesAgo": "hace {{count}}m",
     "hoursAgo": "hace {{count}}h",
     "daysAgo": "hace {{count}}d",
-    "transactionsFilter": "Filtro de transacciones"
+    "transactionsFilter": "Filtro de transacciones",
+    "greeting": "Hola {{name}} 👋"
   },
   "app": {
     "goToMain": "Ir a la página principal",
@@ -91,23 +92,28 @@
     "last30Days": "Últimos 30 días",
     "thisMonth": "Este mes",
     "thisYear": "Este año",
-    "lastYear": "Año pasado"
+    "lastYear": "Año pasado",
+    "deposited": "Depositado",
+    "withdrawn": "Retirado",
+    "type": "Tipo",
+    "bought": "Comprado",
+    "asset": "Activo"
   },
   "tabs": {
     "soloMining": "Minería en solitario",
     "minerWars": "MinerWars",
-    "bounties": "Recompensas",
+    "bounties": "Bounties",
     "referrals": "Referencias",
     "ambassador": "Embajador",
     "deposits": "Depósitos",
     "withdrawals": "Retiros",
     "purchasesUpgrades": "Compras y mejoras",
-    "simpleEarn": "Ganancias simples",
+    "simpleEarn": "Simple Earn",
     "transactions": "Transacciones"
   },
   "export": {
     "walletPricing": "Precios de billetera",
-    "walletPricingDesc": "Solo aplica a Recompensas, Depósitos, Retiros y Transacciones. La API de GoMining no devuelve precios en moneda fiat para estas hojas, por lo que los enriquecemos con CoinGecko durante la exportación.",
+    "walletPricingDesc": "Solo aplica a Bounties, Depósitos, Retiros y Transacciones. La API de GoMining no devuelve precios en moneda fiat para estas hojas, por lo que los enriquecemos con CoinGecko durante la exportación.",
     "includeFiatPricing": "Incluir precios en moneda fiat (USD). La moneda fiat adicional se configura abajo.",
     "rateLimitWarning": "Esto puede tardar un poco. El plan gratuito de CoinGecko tiene límites de tasa, y cada límite alcanzado activa un enfriamiento de 60 segundos.",
     "extraFiatConversion": "Conversión de moneda fiat adicional",
@@ -122,7 +128,28 @@
     "notStored": "No almacenado",
     "selected": "{{selected}}/{{total}} seleccionado",
     "cacheCleared": "Caché limpiada. La próxima exportación obtendrá datos nuevos.",
-    "sessionExpired": "Sesión expirada. Por favor, vuelve a sincronizar a través de la extensión RewardTrackr."
+    "sessionExpired": "Sesión expirada. Por favor, vuelve a sincronizar a través de la extensión RewardTrackr.",
+    "checkingCached": "Verificando {{count}} hoja(s) almacenadas para actualizaciones...",
+    "fetchingSheet": "Obteniendo {{name}} ({{current}} de {{total}})...",
+    "applyingRates": "Aplicando tasas {{currency}} a {{name}}...",
+    "enrichingSheet": "Enriqueciendo {{name}} ({{current}} de {{total}})...",
+    "skippedPending": "{{name}}: Se omitieron {{count}} entrada(s) de reinversión pendiente, se reintentará en el próximo exportado.",
+    "buildingExcel": "Generando archivo Excel...",
+    "downloaded": "Archivo Excel descargado! ({{details}})",
+    "allFromCache": "todo desde caché",
+    "partFetched": "{{count}} obtenidas",
+    "partUpdated": "{{count}} actualizadas",
+    "partReEnriched": "{{count}} re-enriquecidas",
+    "partFromCache": "{{count}} desde caché",
+    "limitReached": "Límite de exportación alcanzado. Por favor, inténtalo de nuevo mañana.",
+    "requestTimeout": "Tiempo de espera agotado. Reintentando en 60s... (intento {{attempt}}/{{max}})",
+    "loadingPage": "{{name}}: Cargando página {{page}} ({{count}} registros hasta ahora)...",
+    "loadingPageNew": "{{name}}: Cargando página {{page}} ({{count}} nuevos registros hasta ahora)...",
+    "sheetPurchases": "Compras",
+    "sheetUpgrades": "Mejoras",
+    "failed": "Error de exportación: {{details}}",
+    "failedGeneric": "Error de exportación",
+    "networkError": "Error de red: No se pudo acceder a la API de GoMining. Inténtalo de nuevo más tarde o reporta el problema [aquí](https://github.com/JoseGouveia9/RewardTrackr/issues)."
   },
   "share": {
     "shareRecords": "Compartir registros",
@@ -178,5 +205,18 @@
   },
   "language": {
     "selectLanguage": "Seleccionar idioma"
+  },
+  "txFilter": {
+    "veGoMiningReward": "Recompensa veGoMining",
+    "personalMinerWarsReward": "Recompensa personal MinerWars",
+    "minerSale": "Venta de Miner",
+    "liquidityReward": "Recompensa de liquidez",
+    "clanOwnershipReward": "Recompensa de propietario de clan",
+    "bonus": "Bono"
+  },
+  "purchaseType": {
+    "purchase": "Compra",
+    "upgradeEnergyEfficiency": "Mejora - Eficiencia energética",
+    "upgradePower": "Mejora - Potencia"
   }
 }

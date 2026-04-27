@@ -14,7 +14,7 @@
     "tryAgain": "حاول مرة أخرى",
     "confirm": "تأكيد",
     "dismiss": "رفض",
-    "new": "جديد",
+    "new": "NEW",
     "total": "المجموع",
     "user": "المستخدم",
     "updated": "محدّث",
@@ -25,7 +25,8 @@
     "minutesAgo": "منذ {{count}}د",
     "hoursAgo": "منذ {{count}}س",
     "daysAgo": "منذ {{count}}ي",
-    "transactionsFilter": "فلتر المعاملات"
+    "transactionsFilter": "فلتر المعاملات",
+    "greeting": "مرحباً {{name}} 👋"
   },
   "app": {
     "goToMain": "الذهاب إلى الصفحة الرئيسية",
@@ -91,23 +92,28 @@
     "last30Days": "آخر 30 يوماً",
     "thisMonth": "هذا الشهر",
     "thisYear": "هذا العام",
-    "lastYear": "العام الماضي"
+    "lastYear": "العام الماضي",
+    "deposited": "مُودَع",
+    "withdrawn": "مسحوب",
+    "type": "النوع",
+    "bought": "مُشترى",
+    "asset": "الأصل"
   },
   "tabs": {
     "soloMining": "التعدين الفردي",
     "minerWars": "حروب المعدِّنين",
-    "bounties": "المكافآت",
+    "bounties": "Bounties",
     "referrals": "الإحالات",
     "ambassador": "السفير",
     "deposits": "الإيداعات",
     "withdrawals": "السحوبات",
     "purchasesUpgrades": "المشتريات والترقيات",
-    "simpleEarn": "الكسب البسيط",
+    "simpleEarn": "Simple Earn",
     "transactions": "المعاملات"
   },
   "export": {
     "walletPricing": "تسعير المحفظة",
-    "walletPricingDesc": "ينطبق فقط على المكافآت والإيداعات والسحوبات والمعاملات. لا تُعيد واجهة برمجة تطبيقات GoMining أسعار العملات الورقية لهذه الأوراق، لذلك نُثريها باستخدام CoinGecko أثناء التصدير.",
+    "walletPricingDesc": "ينطبق فقط على Bounties والإيداعات والسحوبات والمعاملات. لا تُعيد واجهة برمجة تطبيقات GoMining أسعار العملات الورقية لهذه الأوراق، لذلك نُثريها باستخدام CoinGecko أثناء التصدير.",
     "includeFiatPricing": "تضمين أسعار العملات الورقية (USD). يتم تكوين العملة الورقية الإضافية أدناه.",
     "rateLimitWarning": "قد يستغرق هذا بعض الوقت. الخطة المجانية لـ CoinGecko لها حدود معدل، وكل ضربة حد تُشغّل تبريداً مدته 60 ثانية.",
     "extraFiatConversion": "تحويل عملة ورقية إضافي",
@@ -122,7 +128,28 @@
     "notStored": "غير مخزن",
     "selected": "{{selected}}/{{total}} محدد",
     "cacheCleared": "تم مسح ذاكرة التخزين المؤقت. سيجلب التصدير التالي بيانات جديدة.",
-    "sessionExpired": "انتهت صلاحية الجلسة. يرجى إعادة المزامنة عبر إضافة RewardTrackr."
+    "sessionExpired": "انتهت صلاحية الجلسة. يرجى إعادة المزامنة عبر إضافة RewardTrackr.",
+    "checkingCached": "جارٍ التحقق من {{count}} ورقة مخزنة للتحديثات...",
+    "fetchingSheet": "جارٍ جلب {{name}} ({{current}} من {{total}})...",
+    "applyingRates": "تطبيق أسعار {{currency}} على {{name}}...",
+    "enrichingSheet": "جارٍ إثراء {{name}} ({{current}} من {{total}})...",
+    "skippedPending": "{{name}}: تجاوزنا {{count}} إدخال معلق لإعادة الاستثمار، ستُعاد المحاولة عند التصدير التالي.",
+    "buildingExcel": "جارٍ إنشاء ملف Excel...",
+    "downloaded": "تم تنزيل ملف Excel! ({{details}})",
+    "allFromCache": "كل شيء من الذاكرة المؤقتة",
+    "partFetched": "{{count}} تم جلبها",
+    "partUpdated": "{{count}} تم تحديثها",
+    "partReEnriched": "{{count}} تمت إعادة إثرائها",
+    "partFromCache": "{{count}} من الذاكرة المؤقتة",
+    "limitReached": "تم الوصول إلى حد التصدير. يُرجى المحاولة مجددًا غدًا.",
+    "requestTimeout": "انتهت مهلة الطلب. جارٍ إعادة المحاولة خلال 60 ثانية... (المحاولة {{attempt}}/{{max}})",
+    "loadingPage": "{{name}}: تحميل الصفحة {{page}} ({{count}} سجلات حتى الآن)...",
+    "loadingPageNew": "{{name}}: تحميل الصفحة {{page}} ({{count}} سجلات جديدة حتى الآن)...",
+    "sheetPurchases": "المشتريات",
+    "sheetUpgrades": "الترقيات",
+    "failed": "فشل التصدير: {{details}}",
+    "failedGeneric": "فشل التصدير",
+    "networkError": "خطأ في الشبكة: تعذّر الوصول إلى واجهة GoMining API. يرجى المحاولة مجددًا لاحقًا أو الإبلاغ عن المشكلة [هنا](https://github.com/JoseGouveia9/RewardTrackr/issues)."
   },
   "share": {
     "shareRecords": "مشاركة السجلات",
@@ -178,5 +205,18 @@
   },
   "language": {
     "selectLanguage": "اختر اللغة"
+  },
+  "txFilter": {
+    "veGoMiningReward": "مكافأة veGoMining",
+    "personalMinerWarsReward": "مكافأة MinerWars الشخصية",
+    "minerSale": "بيع المُعدِّن",
+    "liquidityReward": "مكافأة السيولة",
+    "clanOwnershipReward": "مكافأة ملكية العشيرة",
+    "bonus": "مكافأة"
+  },
+  "purchaseType": {
+    "purchase": "شراء",
+    "upgradeEnergyEfficiency": "ترقية - كفاءة الطاقة",
+    "upgradePower": "ترقية - الطاقة"
   }
 }
