@@ -10,6 +10,20 @@ import {
   buildShareLink,
 } from "../../api";
 import type { CacheState, RewardKey } from "@/features/export/types";
+
+const SHEET_I18N_KEY: Record<string, string> = {
+  "solo-mining": "tabs.soloMining",
+  minerwars: "tabs.minerWars",
+  bounty: "tabs.bounties",
+  referrals: "tabs.referrals",
+  ambassador: "tabs.ambassador",
+  deposits: "tabs.deposits",
+  withdrawals: "tabs.withdrawals",
+  purchases: "export.sheetPurchases",
+  upgrades: "export.sheetUpgrades",
+  transactions: "tabs.transactions",
+  "simple-earn": "tabs.simpleEarn",
+};
 import type { OwnedProfile } from "../../types";
 import "./share-modal.css";
 import { ALL_REWARD_KEYS } from "@/features/export/config/reward-configs";
@@ -435,9 +449,12 @@ export function ShareModal({
                               <polyline points="20 6 9 17 4 12" />
                             </svg>
                           </span>
-                          <span className="share-modal-sheet-name">{entry.sheetName}</span>
+                          <span className="share-modal-sheet-name">
+                            {t(SHEET_I18N_KEY[k] ?? "", { defaultValue: entry.sheetName })}
+                          </span>
                           <span className="share-modal-sheet-meta">
-                            {entry.records.length} records · {formatAge(entry.fetchedAt)}
+                            {entry.records.length} {t("common.records").toLowerCase()} ·{" "}
+                            {formatAge(entry.fetchedAt)}
                           </span>
                         </button>
                       );
