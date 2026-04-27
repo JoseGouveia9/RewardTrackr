@@ -55,7 +55,9 @@
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  min-width: 240px;
+  min-width: 280px;
+  width: max-content;
+  max-width: min(420px, 90vw);
   background: rgba(28, 28, 30, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 16px;
@@ -94,8 +96,6 @@
 
 .user-menu-info-value {
   color: rgba(255, 255, 255, 0.85);
-  overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
