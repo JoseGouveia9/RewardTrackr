@@ -80,39 +80,44 @@ function InfoTooltip({
   align = "center",
 }: {
   children: ReactNode;
-  align?: "center" | "right";
+  align?: "center" | "right" | "left";
 }) {
+  const mod =
+    align === "right"
+      ? " dv-formula-tooltip--right"
+      : align === "left"
+        ? " dv-formula-tooltip--left"
+        : "";
   return (
     <span className="dv-info-wrap">
       {INFO_ICON}
-      <span
-        className={`dv-formula-tooltip${align === "right" ? " dv-formula-tooltip--right" : ""}`}
-      >
-        {children}
-      </span>
+      <span className={`dv-formula-tooltip${mod}`}>{children}</span>
     </span>
   );
 }
 
-function buildFormulas(currency: Currency, fiatCode: string) {
-  const btcLabel =
-    currency === "GMT"
-      ? "GMT/USD RATE"
-      : currency === "FIAT"
-        ? `BTC/${fiatCode} RATE`
-        : "BTC/USD RATE";
+function buildFormulas(
+  t: (key: string, options?: Record<string, unknown>) => string,
+  currency: Currency,
+  fiatCode: string,
+) {
+  const r = (pair: string) => t("dataViewer.rateLabel", { pair });
+  const disc = `${t("dataViewer.discount")}%`;
 
-  const poolRewardLabel = currency === "GMT" ? "BTC/GMT RATE" : btcLabel;
+  const btcLabel =
+    currency === "GMT" ? r("GMT/USD") : currency === "FIAT" ? r(`${fiatCode}/BTC`) : r("USD/BTC");
+
+  const poolRewardLabel = currency === "GMT" ? r("GMT/BTC") : btcLabel;
 
   const poolReward =
     currency === "BTC" ? (
       <div className="dv-math-line">
-        <span>Pool Reward =</span>
+        <span>{t("dataViewer.poolReward")} =</span>
         <Frac num="Sats/TH × TH" den="100,000,000" />
       </div>
     ) : (
       <div className="dv-math-line">
-        <span>Pool Reward =</span>
+        <span>{t("dataViewer.poolReward")} =</span>
         <Frac num="Sats/TH × TH" den="100,000,000" />
         <span>× {poolRewardLabel}</span>
       </div>
@@ -121,59 +126,77 @@ function buildFormulas(currency: Currency, fiatCode: string) {
   const elecLine =
     currency === "USD" ? (
       <div className="dv-math-line">
-        <span className="dv-math-var">Electricity</span>=
-        <Frac num="kWh cost × 24" den="1,000" />
-        <span>× efficiency × TH − discount%</span>
+        <span className="dv-math-var">{t("dataViewer.electricity")}</span>=
+        <Frac num={`${t("dataViewer.kwhCost")} × 24`} den="1,000" />
+        <span>
+          × {t("dataViewer.efficiency")} × TH − {disc}
+        </span>
       </div>
     ) : currency === "FIAT" ? (
       <div className="dv-math-line">
-        <span className="dv-math-var">Electricity</span>=
-        <Frac num="kWh cost × 24" den="1,000" />
-        <span>× efficiency × TH × USD/{fiatCode} RATE − discount%</span>
+        <span className="dv-math-var">{t("dataViewer.electricity")}</span>=
+        <Frac num={`${t("dataViewer.kwhCost")} × 24`} den={`1,000 x ${r(`USD/${fiatCode}`)}`} />
+        <span>
+          × {t("dataViewer.efficiency")} × TH − {disc}
+        </span>
       </div>
     ) : currency === "GMT" ? (
       <div className="dv-math-line">
-        <span className="dv-math-var">Electricity</span>=
-        <Frac num="kWh cost × 24" den="1,000" />
-        <span>× efficiency × TH × USD/GMT RATE − discount%</span>
+        <span className="dv-math-var">{t("dataViewer.electricity")}</span>=
+        <Frac num={`${t("dataViewer.kwhCost")} × 24`} den={`1,000 x ${r("USD/GMT")}`} />
+        <span>
+          × {t("dataViewer.efficiency")} × TH − {disc}
+        </span>
       </div>
     ) : (
       <div className="dv-math-line">
-        <span className="dv-math-var">Electricity</span>=
-        <Frac num="kWh cost × 24" den="1,000" />
-        <span>× efficiency × TH × {btcLabel} − discount%</span>
+        <span className="dv-math-var">{t("dataViewer.electricity")}</span>=
+        <Frac num={`${t("dataViewer.kwhCost")} × 24`} den={`1,000 x ${r("USD/BTC")}`} />
+        <span>
+          × {t("dataViewer.efficiency")} × TH − {disc}
+        </span>
       </div>
     );
 
   const svcLine =
     currency === "USD" ? (
       <div className="dv-math-line">
-        <span className="dv-math-var">Service</span>= 0.0089 × TH − discount%
+        <span className="dv-math-var">{t("dataViewer.service")}</span>= $0.0089 × TH − {disc}
       </div>
     ) : currency === "FIAT" ? (
       <div className="dv-math-line">
-        <span className="dv-math-var">Service</span>= 0.0089 × TH × USD/{fiatCode} RATE − discount%
+        <span className="dv-math-var">{t("dataViewer.service")}</span>=
+        <Frac num={`$0.0089`} den={`${r(`USD/${fiatCode}`)}`} /> × TH − {disc}
       </div>
     ) : currency === "GMT" ? (
       <div className="dv-math-line">
-        <span className="dv-math-var">Service</span>= 0.0089 × TH × USD/GMT RATE − discount%
+        <span className="dv-math-var">{t("dataViewer.service")}</span>=
+        <Frac num={`$0.0089`} den={`${r(`USD/GMT`)}`} /> × TH − {disc}
       </div>
     ) : (
       <div className="dv-math-line">
-        <span className="dv-math-var">Service</span>= 0.0089 × TH × {btcLabel} − discount%
+        <span className="dv-math-var">{t("dataViewer.service")}</span>=
+        <Frac num={`$0.0089`} den={`${r(`USD/BTC`)}`} /> × TH − {disc}
       </div>
     );
 
   const maintenance = (
     <>
-      <div className="dv-math-label">Maintenance = Electricity + Service</div>
+      <div className="dv-math-label">{`${t("dataViewer.maintenance")} = ${t("dataViewer.electricity")} + ${t("dataViewer.service")}`}</div>
       <div className="dv-math-sep" />
       {elecLine}
       {svcLine}
+      <div className="dv-math-sep" />
+      <div className="dv-math-note">{t("dataViewer.kwhCostNote")}</div>
+      {currency !== "USD" && (
+        <div className="dv-math-note">{t("dataViewer.maintenanceUsdNote")}</div>
+      )}
     </>
   );
 
-  const reward = <div className="dv-math-line">Reward = Pool Reward − Maintenance</div>;
+  const reward = (
+    <div className="dv-math-line">{`${t("dataViewer.reward")} = ${t("dataViewer.poolReward")} − ${t("dataViewer.maintenance")}`}</div>
+  );
 
   return { poolReward, maintenance, reward };
 }
@@ -209,8 +232,9 @@ export function MiningTable({
   trendsExiting: boolean;
   difficultyMap?: Map<string, DifficultyEntry>;
 }) {
-  const { t } = useTranslation();
-  const formulas = useMemo(() => buildFormulas(currency, fiatCode), [currency, fiatCode]);
+  const { t, i18n } = useTranslation();
+  const isRtl = i18n.dir() === "rtl";
+  const formulas = useMemo(() => buildFormulas(t, currency, fiatCode), [t, currency, fiatCode]);
   const totalsRef = useRef<HTMLTableElement>(null);
   const dataRef = useRef<HTMLTableElement>(null);
   useSyncTableColumns(totalsRef, dataRef);
@@ -385,7 +409,7 @@ export function MiningTable({
               <th>
                 {t("dataViewer.reward")}
                 {rewardKey !== "minerwars" && (
-                  <InfoTooltip align="right">{formulas.reward}</InfoTooltip>
+                  <InfoTooltip align={isRtl ? "left" : "right"}>{formulas.reward}</InfoTooltip>
                 )}
               </th>
             </tr>
