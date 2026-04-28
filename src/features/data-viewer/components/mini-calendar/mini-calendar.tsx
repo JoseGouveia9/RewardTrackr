@@ -1,21 +1,20 @@
-﻿import type { DateRange } from "../../types";
+﻿import { useTranslation } from "react-i18next";
+import type { DateRange } from "../../types";
 import { buildIsoDate } from "../../utils";
 
+// pt-PT Intl returns full day/month names for 'short'; use pt-BR which gives proper abbreviations
+const CAL_LOCALE_MAP: Record<string, string> = { "pt-PT": "pt-BR" };
+function calLocale(lang: string) {
+  return CAL_LOCALE_MAP[lang] ?? lang;
+}
+
 // eslint-disable-next-line react-refresh/only-export-components
-export const CAL_MONTHS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
+export function getLocalizedMonths(locale: string): string[] {
+  const l = calLocale(locale);
+  return Array.from({ length: 12 }, (_, i) =>
+    new Intl.DateTimeFormat(l, { month: "long" }).format(new Date(2024, i, 1)),
+  );
+}
 
 export function MiniCalendar({
   year,
@@ -38,6 +37,13 @@ export function MiniCalendar({
   onDayClick: (iso: string) => void;
   onDayHover: (iso: string) => void;
 }) {
+  const { i18n } = useTranslation();
+  // Jan 6, 2025 is a Monday — generate 7 short day names starting from Monday
+  const dayNames = Array.from({ length: 7 }, (_, i) =>
+    new Intl.DateTimeFormat(calLocale(i18n.language), { weekday: "short" }).format(
+      new Date(2025, 0, 6 + i),
+    ),
+  );
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDow = (new Date(year, month, 1).getDay() + 6) % 7;
   const prevMonthDays = new Date(year, month, 0).getDate();
@@ -67,7 +73,7 @@ export function MiniCalendar({
 
   return (
     <div className="dv-cal-grid">
-      {["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"].map((d) => (
+      {dayNames.map((d) => (
         <span key={d} className="dv-cal-dow">
           {d}
         </span>

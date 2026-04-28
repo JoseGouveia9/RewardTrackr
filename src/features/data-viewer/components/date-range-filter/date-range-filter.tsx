@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { DateRange } from "../../types";
 import { EMPTY_DATE_RANGE, DATE_PRESETS } from "../../utils/constants";
 import { isDateRangeActive } from "../../utils";
-import { MiniCalendar, CAL_MONTHS } from "../mini-calendar/mini-calendar";
+import { MiniCalendar, getLocalizedMonths } from "../mini-calendar/mini-calendar";
 import { useOutsideClick } from "../../hooks/use-outside-click";
 
 function CalSelect({
@@ -61,7 +61,7 @@ export function DateRangeFilter({
   maxDate?: string;
   dates?: string[];
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState<DateRange>(EMPTY_DATE_RANGE);
   const [picking, setPicking] = useState(false);
@@ -103,7 +103,7 @@ export function DateRangeFilter({
   }, [availableYearMonths]);
 
   const monthOptions = useMemo(() => {
-    const all = CAL_MONTHS.map((m, i) => {
+    const all = getLocalizedMonths(i18n.language).map((m, i) => {
       const ym = `${calYear}-${String(i + 1).padStart(2, "0")}`;
       return { label: m, value: i, hasData: availableYearMonths.has(ym) };
     });
@@ -115,7 +115,7 @@ export function DateRangeFilter({
     return all
       .filter((o) => o.value >= min && o.value <= max)
       .map(({ label, value }) => ({ label, value }));
-  }, [availableYearMonths, calYear]);
+  }, [availableYearMonths, calYear, i18n.language]);
 
   useEffect(() => {
     if (monthOptions.length === 0) return;
