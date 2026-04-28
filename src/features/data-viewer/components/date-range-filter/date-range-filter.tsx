@@ -147,6 +147,7 @@ export function DateRangeFilter({
   function handleApply() {
     onChange(pending);
     setPicking(false);
+    setOpen(false);
   }
 
   function handleClear() {
@@ -155,6 +156,7 @@ export function DateRangeFilter({
     setActivePreset(null);
     setPicking(false);
     setHover("");
+    setOpen(false);
   }
 
   function handlePreset(p: (typeof DATE_PRESETS)[0]) {
