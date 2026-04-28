@@ -5,7 +5,8 @@
   background: rgba(224, 25, 42, 0.1);
   border: none;
   border-radius: 12px;
-  padding: 8px;
+  padding: 6px 8px;
+  min-height: 35px;
   cursor: pointer;
   overflow: hidden;
   max-width: 36px;
@@ -20,7 +21,7 @@
 .support-button:hover {
   max-width: 220px;
   gap: 7px;
-  padding: 8px 14px;
+  padding: 6px 14px;
   background: rgba(224, 25, 42, 0.1);
 }
 
