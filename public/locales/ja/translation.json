@@ -98,13 +98,14 @@
     "type": "タイプ",
     "bought": "購入",
     "asset": "資産",
-    "rateLabel": "{{pair}} レート",
+    "rateLabel": "{{from}}建て{{to}}価格",
     "electricity": "電力",
     "service": "サービス",
     "kwhCost": "kWhコスト",
     "efficiency": "効率",
     "kwhCostNote": "kWhコスト：GoMiningは請求期間中のプロジェクト平均を使用します（$0.05〜$0.07/kWh）。",
-    "maintenanceUsdNote": "メンテナンスは常にUSDで計算され、選択した通貨に変換されます。"
+    "maintenanceUsdNote": "メンテナンスは常にUSDで計算され、選択した通貨に変換されます。",
+    "btcPrice": "BTC価格"
   },
   "tabs": {
     "soloMining": "ソロマイニング",

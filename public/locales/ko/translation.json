@@ -98,13 +98,14 @@
     "type": "유형",
     "bought": "구매",
     "asset": "자산",
-    "rateLabel": "{{pair}} 환율",
+    "rateLabel": "{{from}} 기준 {{to}} 가격",
     "electricity": "전력",
     "service": "서비스",
     "kwhCost": "kWh 비용",
     "efficiency": "효율",
     "kwhCostNote": "kWh 비용: GoMining은 청구 기간의 프로젝트 평균을 사용합니다($0.05–$0.07/kWh).",
-    "maintenanceUsdNote": "유지보수는 항상 USD로 계산된 후 선택한 통화로 변환됩니다."
+    "maintenanceUsdNote": "유지보수는 항상 USD로 계산된 후 선택한 통화로 변환됩니다.",
+    "btcPrice": "BTC 가격"
   },
   "tabs": {
     "soloMining": "솔로 채굴",

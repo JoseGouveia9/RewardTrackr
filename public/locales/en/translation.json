@@ -98,13 +98,14 @@
     "type": "Type",
     "bought": "Bought",
     "asset": "Asset",
-    "rateLabel": "{{pair}} rate",
+    "rateLabel": "{{to}} Price in {{from}}",
     "electricity": "Electricity",
     "service": "Service",
     "kwhCost": "kWh cost",
     "efficiency": "efficiency",
     "kwhCostNote": "kWh cost: GoMining uses the project average over the billing period ($0.05–$0.07/kWh).",
-    "maintenanceUsdNote": "Maintenance is always calculated in USD and then converted to the selected currency."
+    "maintenanceUsdNote": "Maintenance is always calculated in USD and then converted to the selected currency.",
+    "btcPrice": "BTC Price"
   },
   "tabs": {
     "soloMining": "Solo Mining",
