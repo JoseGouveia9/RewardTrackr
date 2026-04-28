@@ -57,6 +57,7 @@ h6 {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 12px;
 }
 
@@ -134,7 +135,9 @@ h3,
 }
 
 .hero-subtitle {
-  margin: 20px 0 0 !important;
+  order: 10;
+  flex: 0 0 100%;
+  margin: 8px 0 0 !important;
   font-family: inherit;
   font-size: inherit;
   font-weight: inherit;
@@ -746,6 +749,11 @@ button:disabled {
     padding: 0 16px;
   }
 
+  .hero-subtitle {
+    order: 0;
+    padding: 0 16px;
+  }
+
   .hero-actions {
     width: 100%;
     flex-wrap: wrap;
@@ -764,6 +772,11 @@ button:disabled {
     padding-bottom: 9px;
   }
 
+  .hero-actions .language-button {
+    flex: 0 0 auto;
+    order: 3;
+  }
+
   .hero-actions .dv-trigger-button {
     width: 100%;
     padding-top: 9px;
@@ -773,16 +786,14 @@ button:disabled {
 
   .hero-actions .dv-trigger-wrap {
     order: 3;
-    flex: 0 0 calc(50% - 5px);
+    flex: 1 1 0;
+    min-width: 0;
   }
 
   .hero-actions .hero-profile-wrapper {
-    order: 4;
-    flex: 0 0 100%;
-  }
-
-  .hero-actions .hero-profile-wrapper--narrow {
-    flex: 0 0 calc(50% - 5px);
+    order: 3;
+    flex: 1 1 0;
+    min-width: 0;
   }
 
   .hero-actions .referral-button {

@@ -73,6 +73,7 @@
   },
   "dataViewer": {
     "trends": "트렌드",
+    "trendsShort": "트렌드",
     "groupByDay": "일별 그룹화",
     "poolReward": "풀 보상",
     "maintenance": "유지보수",

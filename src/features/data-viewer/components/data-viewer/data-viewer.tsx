@@ -399,7 +399,8 @@ export const DataViewer = memo(function DataViewer({
                     <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
                     <polyline points="16 7 22 7 22 13" />
                   </svg>
-                  {t("dataViewer.trends")}
+                  <span className="trends-label-full">{t("dataViewer.trends")}</span>
+                  <span className="trends-label-short">{t("dataViewer.trendsShort")}</span>
                 </button>
                 <span className="dv-toolbar-separator">·</span>
               </>

@@ -73,6 +73,7 @@
   },
   "dataViewer": {
     "trends": "趋势",
+    "trendsShort": "趋势",
     "groupByDay": "按天分组",
     "poolReward": "矿池奖励",
     "maintenance": "维护费",

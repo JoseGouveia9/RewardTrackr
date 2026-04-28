@@ -73,6 +73,7 @@
   },
   "dataViewer": {
     "trends": "Trends",
+    "trendsShort": "Trends",
     "groupByDay": "Group by day",
     "poolReward": "Pool Reward",
     "maintenance": "Maintenance",

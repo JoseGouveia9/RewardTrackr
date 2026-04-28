@@ -73,6 +73,7 @@
   },
   "dataViewer": {
     "trends": "الاتجاهات",
+    "trendsShort": "الاتجاه",
     "groupByDay": "تجميع حسب اليوم",
     "poolReward": "مكافأة المجمع",
     "maintenance": "الصيانة",

@@ -38,9 +38,7 @@ export function SharedView() {
       onTabSeen={() => {}}
       sharedData={loading ? {} : (profile?.sheets ?? null)}
       title={t("share.communityTitle")}
-      banner={
-        <SharedBanner profile={profile ?? undefined} loading={loading} onClose={handleClose} />
-      }
+      banner={<SharedBanner profile={profile ?? undefined} loading={loading} />}
       onShare={undefined}
       shareDisabled={false}
     />

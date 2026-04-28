@@ -8,11 +8,9 @@ import { formatAge } from "@/features/export/utils/cache";
 export function SharedBanner({
   profile,
   loading,
-  onClose,
 }: {
   profile?: { alias: string; updatedAt: string };
   loading?: boolean;
-  onClose: () => void;
 }) {
   const { t } = useTranslation();
   const age = profile ? formatAge(new Date(profile.updatedAt).getTime()) : null;
@@ -41,27 +39,6 @@ export function SharedBanner({
         )}
         {age && <span className="shared-banner-meta">{t("share.updatedAge", { age })}</span>}
       </div>
-      <button
-        type="button"
-        className="shared-banner-close"
-        onClick={onClose}
-        aria-label={t("common.close")}
-      >
-        <svg
-          width="13"
-          height="13"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <line x1="18" y1="6" x2="6" y2="18" />
-          <line x1="6" y1="6" x2="18" y2="18" />
-        </svg>
-      </button>
     </div>
   );
 }

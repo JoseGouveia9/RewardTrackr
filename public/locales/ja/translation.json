@@ -73,6 +73,7 @@
   },
   "dataViewer": {
     "trends": "トレンド",
+    "trendsShort": "トレンド",
     "groupByDay": "日別グループ",
     "poolReward": "プール報酬",
     "maintenance": "メンテナンス",

@@ -179,7 +179,8 @@ function App() {
   }, []);
 
   const isRecords = location.pathname === "/records";
-  const isCommunity = location.pathname === "/community" || location.pathname.startsWith("/view/");
+  const isSharedView = location.pathname.startsWith("/view/");
+  const isCommunity = location.pathname === "/community" || isSharedView;
 
   const handleHeroTitleClick = useCallback(() => {
     void navigate("/");
@@ -252,12 +253,13 @@ function App() {
                 </AnimatePresence>
               </div>
             </div>
+            {!user && <p className="hero-subtitle">{t("app.heroSubtitle")}</p>}
             <div className="hero-actions">
               <SupportButton />
               {!user && (
                 <button
                   type="button"
-                  className="community-button"
+                  className="community-button language-button"
                   onClick={() => setLanguagePickerOpen(true)}
                   aria-label={t("language.selectLanguage")}
                 >
@@ -345,7 +347,6 @@ function App() {
               </motion.div>
             </div>
           </div>
-          {!user && <p className="hero-subtitle">{t("app.heroSubtitle")}</p>}
         </header>
 
         {notices.announcement && (
@@ -357,7 +358,7 @@ function App() {
         )}
 
         <AppNotice
-          visible={!notices.noticeRateLimitsDismissed}
+          visible={!isSharedView && !notices.noticeRateLimitsDismissed}
           onDismiss={notices.dismissRateLimits}
           icon={<WarningNoticeIcon />}
         >
@@ -365,7 +366,7 @@ function App() {
         </AppNotice>
 
         <AppNotice
-          visible={!notices.noticeUnofficialDismissed}
+          visible={!isSharedView && !notices.noticeUnofficialDismissed}
           className="app-notice-unofficial"
           onDismiss={notices.dismissUnofficial}
           icon={<WarningNoticeIcon />}
@@ -374,7 +375,7 @@ function App() {
         </AppNotice>
 
         <AppNotice
-          visible={!user && !notices.noticeOpenSourceDismissed}
+          visible={!isSharedView && !user && !notices.noticeOpenSourceDismissed}
           className="app-notice-opensource"
           onDismiss={notices.dismissOpenSource}
           icon={<ShieldNoticeIcon />}

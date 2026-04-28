@@ -73,6 +73,7 @@
   },
   "dataViewer": {
     "trends": "Tendances",
+    "trendsShort": "Tend.",
     "groupByDay": "Regrouper par jour",
     "poolReward": "Récompense du pool",
     "maintenance": "Maintenance",

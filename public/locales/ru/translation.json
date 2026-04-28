@@ -73,6 +73,7 @@
   },
   "dataViewer": {
     "trends": "Тренды",
+    "trendsShort": "Тренды",
     "groupByDay": "Группировать по дням",
     "poolReward": "Награда пула",
     "maintenance": "Обслуживание",
