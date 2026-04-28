@@ -26,7 +26,7 @@ function ogHtml(alias, id) {
 </head><body></body></html>`;
 }
 
-export async function handleOgRoute({ url, request, env }) {
+export async function handleOgRoute({ url, request }) {
   const match = url.pathname.match(/^\/view\/([a-z0-9_-]+)$/i);
   if (!match) return null;
 
@@ -41,10 +41,8 @@ export async function handleOgRoute({ url, request, env }) {
     .join(" ");
 
   try {
-    const workerUrl = env.WORKER_URL ?? `https://${url.host}`;
-    const res = await fetch(`${workerUrl}/share/${id}`, {
-      headers: { "User-Agent": "RewardTrackr-OG/1.0" },
-    });
+    const rawUrl = `https://raw.githubusercontent.com/JoseGouveia9/rewardtrackr-shared/main/shared/${id}.json`;
+    const res = await fetch(rawUrl, { headers: { "User-Agent": "RewardTrackr-OG/1.0" } });
     if (res.ok) {
       const data = await res.json();
       if (typeof data.alias === "string" && data.alias.trim()) alias = data.alias.trim();

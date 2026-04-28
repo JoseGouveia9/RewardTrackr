@@ -40,7 +40,7 @@ export default {
       return new Response(null, { status: 204, headers: CORS_HEADERS });
     }
 
-    const ogResponse = await handleOgRoute({ url, request, env });
+    const ogResponse = await handleOgRoute({ url, request });
     if (ogResponse) return ogResponse;
 
     const announcementResponse = await handleAnnouncementRoute({ url, request, env, jsonResponse });
