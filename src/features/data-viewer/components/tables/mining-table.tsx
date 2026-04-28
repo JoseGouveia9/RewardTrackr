@@ -101,7 +101,10 @@ function buildFormulas(
   currency: Currency,
   fiatCode: string,
 ) {
-  const r = (pair: string) => t("dataViewer.rateLabel", { pair });
+  const r = (pair: string) => {
+    const [from, to] = pair.split("/");
+    return t("dataViewer.rateLabel", { from, to });
+  };
   const disc = `${t("dataViewer.discount")}%`;
 
   const btcLabel =
@@ -395,7 +398,7 @@ export function MiningTable({
                 )}
                 {showTrends && currency !== "BTC" && (hasSubLabel || hasSatsLabel) && (
                   <span className="dv-th-sub">
-                    {hasSubLabel ? "BTC PRICE" : ""}
+                    {hasSubLabel ? t("dataViewer.btcPrice").toUpperCase() : ""}
                     {hasSubLabel && hasSatsLabel ? " · " : ""}
                     {hasSatsLabel ? "SATS/TH" : ""}
                   </span>
@@ -440,7 +443,12 @@ export function MiningTable({
                       currency === "BTC" &&
                       row.satsPerTh != null && (
                         <div className="dv-cell-sub">
-                          Sats/TH: {row.satsPerTh.toFixed(2)} Sats
+                          Sats/TH:{" "}
+                          {(Math.floor(row.satsPerTh * 100) / 100).toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}{" "}
+                          Sats
                           {isDiffDay && (
                             <TrendArrow current={row.satsPerTh} prev={prevRow?.satsPerTh} />
                           )}
@@ -451,7 +459,7 @@ export function MiningTable({
                       currency === "GMT" &&
                       row.btcPriceGmt != null && (
                         <div className="dv-cell-sub">
-                          BTC Price:{" "}
+                          {t("dataViewer.btcPrice")}:{" "}
                           {row.btcPriceGmt.toLocaleString(undefined, { maximumFractionDigits: 0 })}{" "}
                           GMT
                           <TrendArrow current={row.btcPriceGmt} prev={prevRow?.btcPriceGmt} />
@@ -462,7 +470,12 @@ export function MiningTable({
                       currency === "GMT" &&
                       row.satsPerTh != null && (
                         <div className="dv-cell-sub">
-                          Sats/TH: {row.satsPerTh.toFixed(2)} Sats
+                          Sats/TH:{" "}
+                          {(Math.floor(row.satsPerTh * 100) / 100).toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}{" "}
+                          Sats
                           {isDiffDay && (
                             <TrendArrow current={row.satsPerTh} prev={prevRow?.satsPerTh} />
                           )}
@@ -473,7 +486,7 @@ export function MiningTable({
                       currency === "USD" &&
                       row.btcPriceAtTime != null && (
                         <div className="dv-cell-sub">
-                          BTC Price:{" "}
+                          {t("dataViewer.btcPrice")}:{" "}
                           {row.btcPriceAtTime.toLocaleString(undefined, {
                             maximumFractionDigits: 0,
                           })}{" "}
@@ -486,7 +499,12 @@ export function MiningTable({
                       currency === "USD" &&
                       row.satsPerTh != null && (
                         <div className="dv-cell-sub">
-                          Sats/TH: {row.satsPerTh.toFixed(2)} Sats
+                          Sats/TH:{" "}
+                          {(Math.floor(row.satsPerTh * 100) / 100).toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}{" "}
+                          Sats
                           {isDiffDay && (
                             <TrendArrow current={row.satsPerTh} prev={prevRow?.satsPerTh} />
                           )}
@@ -497,7 +515,7 @@ export function MiningTable({
                       currency === "FIAT" &&
                       row.btcPriceFiat != null && (
                         <div className="dv-cell-sub">
-                          BTC Price:{" "}
+                          {t("dataViewer.btcPrice")}:{" "}
                           {row.btcPriceFiat.toLocaleString(undefined, { maximumFractionDigits: 0 })}{" "}
                           {fiatCode}
                           <TrendArrow current={row.btcPriceFiat} prev={prevRow?.btcPriceFiat} />
@@ -508,7 +526,12 @@ export function MiningTable({
                       currency === "FIAT" &&
                       row.satsPerTh != null && (
                         <div className="dv-cell-sub">
-                          Sats/TH: {row.satsPerTh.toFixed(2)} Sats
+                          Sats/TH:{" "}
+                          {(Math.floor(row.satsPerTh * 100) / 100).toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}{" "}
+                          Sats
                           {isDiffDay && (
                             <TrendArrow current={row.satsPerTh} prev={prevRow?.satsPerTh} />
                           )}
