@@ -460,7 +460,7 @@
   top: 0;
   z-index: 2;
   padding: 10px 16px;
-  text-align: left;
+  text-align: start;
   font-size: 0.72rem;
   font-weight: 700;
   font-family: "Space Grotesk", sans-serif;
@@ -822,6 +822,18 @@
   transform: none;
 }
 
+.dv-formula-tooltip--left {
+  left: 0;
+  right: auto;
+  transform: none;
+}
+
+.dv-formula-tooltip--left::before {
+  left: 5px;
+  right: auto;
+  transform: none;
+}
+
 .dv-info-wrap:hover .dv-formula-tooltip {
   display: block;
 }
@@ -885,10 +897,16 @@
 }
 
 .dv-math-var {
-  font-style: italic;
   opacity: 0.75;
   font-size: 10px;
   white-space: nowrap;
+}
+
+.dv-math-note {
+  font-size: 10px;
+  opacity: 0.65;
+  line-height: 1.4;
+  margin-top: 4px;
 }
 
 /* ============================
@@ -1218,7 +1236,7 @@
 .dv-column-filter-dropdown {
   position: absolute;
   top: calc(100% + 4px);
-  left: 0;
+  inset-inline-start: 0;
   z-index: 9999;
   background: rgba(255, 255, 255, 0.72);
   border: 1px solid rgba(0, 0, 0, 0.07);

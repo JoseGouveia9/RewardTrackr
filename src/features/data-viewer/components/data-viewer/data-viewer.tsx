@@ -138,6 +138,13 @@ export const DataViewer = memo(function DataViewer({
     return { hasUsd, hasFiat };
   }, [activeKey, isTxTab, cacheVersion, sharedData]);
 
+  const hasTrendsData = useMemo(() => {
+    void cacheVersion;
+    const entry = sharedData ? sharedData["solo-mining"] : loadCacheEntry("solo-mining");
+    if (!entry?.records?.length) return false;
+    return (entry.records as Record<string, unknown>[]).some((r) => r.satsPerTh != null);
+  }, [cacheVersion, sharedData]);
+
   const tabsWithNew = useMemo(() => {
     if (sharedData) return new Set<RewardKey>();
     void cacheVersion;
@@ -370,7 +377,7 @@ export const DataViewer = memo(function DataViewer({
               </button>
             )}
             {hasViewSelector && !isMiningTab && <span className="dv-toolbar-separator">·</span>}
-            {hasActiveData && isMiningTab && activeKey == "solo-mining" && (
+            {hasActiveData && isMiningTab && activeKey == "solo-mining" && hasTrendsData && (
               <>
                 <button
                   type="button"
