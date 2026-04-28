@@ -41,7 +41,7 @@
     "unofficialNotice": "Esta es una herramienta no oficial y no está afiliada, respaldada ni asociada con el equipo de GoMining.",
     "openSourceNotice": "Esta aplicación y extensión fueron creadas con seguridad y transparencia en mente. El código fuente completo es de código abierto y accesible para cualquiera que quiera inspeccionarlo antes de usarlo.",
     "checkItHere": "Compruébalo aquí.",
-    "maxExportsPerDay": "Máx. {{max}} exportación por día.",
+    "maxExportsPerDay": "Máx. {{max}} exportaciones por día.",
     "feedbackSuggestions": "Comentarios & Sugerencias",
     "sheetsToFetch": "{{fetch}} hoja(s) se obtendrán. {{stored}} almacenadas, se comprobarán actualizaciones primero.",
     "allSheetsStored": "Todas las hojas almacenadas. Se comprobarán actualizaciones antes de generar."
@@ -97,7 +97,14 @@
     "withdrawn": "Retirado",
     "type": "Tipo",
     "bought": "Comprado",
-    "asset": "Activo"
+    "asset": "Activo",
+    "rateLabel": "tasa {{pair}}",
+    "electricity": "Electricidad",
+    "service": "Servicio",
+    "kwhCost": "coste kWh",
+    "efficiency": "eficiencia",
+    "kwhCostNote": "Coste kWh: GoMining usa el promedio del proyecto durante el período de facturación ($0,05–$0,07/kWh).",
+    "maintenanceUsdNote": "El mantenimiento siempre se calcula en USD y luego se convierte a la moneda seleccionada."
   },
   "tabs": {
     "soloMining": "Minería en solitario",

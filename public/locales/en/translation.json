@@ -41,7 +41,7 @@
     "unofficialNotice": "This is an unofficial tool and is not affiliated with, endorsed by, or associated with the GoMining team.",
     "openSourceNotice": "This app and extension were built with security and transparency in mind. The full source code is open source and accessible to anyone who wants to inspect it before using it.",
     "checkItHere": "Check it here.",
-    "maxExportsPerDay": "Max {{max}} export per day.",
+    "maxExportsPerDay": "Max {{max}} exports per day.",
     "feedbackSuggestions": "Feedback & Suggestions",
     "sheetsToFetch": "{{fetch}} sheet(s) will be fetched. {{stored}} stored, will be probed for updates first.",
     "allSheetsStored": "All sheets stored. Will probe for updates before building."
@@ -97,7 +97,14 @@
     "withdrawn": "Withdrawn",
     "type": "Type",
     "bought": "Bought",
-    "asset": "Asset"
+    "asset": "Asset",
+    "rateLabel": "{{pair}} rate",
+    "electricity": "Electricity",
+    "service": "Service",
+    "kwhCost": "kWh cost",
+    "efficiency": "efficiency",
+    "kwhCostNote": "kWh cost: GoMining uses the project average over the billing period ($0.05–$0.07/kWh).",
+    "maintenanceUsdNote": "Maintenance is always calculated in USD and then converted to the selected currency."
   },
   "tabs": {
     "soloMining": "Solo Mining",
