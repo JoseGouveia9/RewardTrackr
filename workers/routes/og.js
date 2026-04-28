@@ -3,9 +3,9 @@ const CRAWLERS =
 
 function ogHtml(alias, id) {
   const pageUrl = `https://rewardtrackr.com/view/${id}`;
-  const title = `${alias}'s records on RewardTrackr`;
-  const description = `Check out ${alias}'s GoMining Solo Mining, MinerWars and reward data.`;
-  const image = "https://rewardtrackr.com/logo.webp";
+  const title = `${alias}'s GoMining Rewards on RewardTrackr`;
+  const description = `Check out ${alias}'s GoMining rewards records — Solo Mining, MinerWars, Bounties and more.`;
+  const image = "https://rewardtrackr.com/og-preview.png";
 
   return `<!doctype html><html><head>
 <meta charset="UTF-8">
@@ -16,9 +16,9 @@ function ogHtml(alias, id) {
 <meta property="og:title" content="${title}">
 <meta property="og:description" content="${description}">
 <meta property="og:image" content="${image}">
-<meta property="og:image:width" content="512">
-<meta property="og:image:height" content="512">
-<meta name="twitter:card" content="summary">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="800">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${title}">
 <meta name="twitter:description" content="${description}">
 <meta name="twitter:image" content="${image}">
@@ -31,10 +31,14 @@ export async function handleOgRoute({ url, request, env }) {
   if (!match) return null;
 
   const ua = request.headers.get("User-Agent") ?? "";
-  if (!CRAWLERS.test(ua)) return null;
+  if (!CRAWLERS.test(ua)) return fetch(request);
 
   const id = match[1].toLowerCase().replace(/[^a-z0-9_-]/g, "");
-  let alias = id;
+  // Best-effort capitalisation fallback: "moustachio" → "Moustachio", "my-alias" → "My Alias"
+  let alias = id
+    .split(/[-_]/)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
 
   try {
     const workerUrl = env.WORKER_URL ?? `https://${url.host}`;
@@ -43,10 +47,10 @@ export async function handleOgRoute({ url, request, env }) {
     });
     if (res.ok) {
       const data = await res.json();
-      if (typeof data.alias === "string") alias = data.alias;
+      if (typeof data.alias === "string" && data.alias.trim()) alias = data.alias.trim();
     }
   } catch {
-    // fall back to id as alias
+    // use capitalised fallback
   }
 
   return new Response(ogHtml(alias, id), {
