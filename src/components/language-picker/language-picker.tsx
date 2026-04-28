@@ -22,6 +22,13 @@ export function LanguagePicker({ open, onClose }: LanguagePickerProps) {
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [open, onClose]);
 
+  useEffect(() => {
+    document.body.style.overflow = open ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open]);
+
   function handleSelect(code: string) {
     void i18n.changeLanguage(code);
     applyDocumentDir(code);

@@ -17,6 +17,9 @@
   padding: 24px;
   width: 100%;
   max-width: 440px;
+  max-height: calc(100vh - 40px);
+  display: flex;
+  flex-direction: column;
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(24px) saturate(160%);
 }
@@ -62,6 +65,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
+  overflow-y: auto;
 }
 
 .lang-option {
