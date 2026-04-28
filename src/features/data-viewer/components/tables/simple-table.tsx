@@ -1,4 +1,5 @@
 ﻿import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { loadCacheEntry } from "@/features/export/utils/cache";
 import type { CacheEntry, RewardKey } from "@/features/export/types";
 import type { SimpleView, DateRange } from "../../types";
@@ -16,7 +17,6 @@ import { Pagination } from "../pagination/pagination";
 import { useSyncTableColumns } from "../../hooks/use-sync-table-columns";
 import { AnimatedLoadingRow } from "./animated-loading-row";
 
-// Renders a paged reward table for non-mining sheets with per-currency totals and optional group-by-day.
 export function SimpleTable({
   rewardKey,
   fiatCode,
@@ -38,6 +38,7 @@ export function SimpleTable({
   dateRange: DateRange;
   setDateRange: (v: DateRange) => void;
 }) {
+  const { t } = useTranslation();
   const [page, setPage] = useState(0);
   const [hiddenCurrencies, setHiddenCurrencies] = useState<Set<string>>(new Set());
   const totalsRef = useRef<HTMLTableElement>(null);
@@ -105,7 +106,6 @@ export function SimpleTable({
     [finalRows, page],
   );
 
-  // One totals row per distinct currency
   const currencyTotals = useMemo(() => {
     const map = new Map<string, { reward: number; rewardInUSD: number; rewardInFiat: number }>();
     for (const row of filteredRows) {
@@ -139,10 +139,10 @@ export function SimpleTable({
         {isFetching ? (
           <span className="dv-loading-inline">
             <span className="dv-spinner" aria-hidden="true" />
-            <span>Fetching data...</span>
+            <span>{t("dataViewer.fetchingData")}</span>
           </span>
         ) : (
-          "No cached data for this sheet. Export it first from the main panel."
+          t("dataViewer.noData")
         )}
       </div>
     );
@@ -156,9 +156,12 @@ export function SimpleTable({
   );
   const isSingleCurrency = currencyTotals.length === 1;
   const valueLabel =
-    rewardKey === "deposits" ? "Deposited" : rewardKey === "withdrawals" ? "Withdrawn" : "Reward";
+    rewardKey === "deposits"
+      ? t("dataViewer.deposited")
+      : rewardKey === "withdrawals"
+        ? t("dataViewer.withdrawn")
+        : t("dataViewer.reward");
 
-  // Returns the display value and currency label for a row based on the active simpleView.
   function rowValue(row: {
     reward: number;
     rewardInUSD: number;
@@ -173,7 +176,7 @@ export function SimpleTable({
   return (
     <>
       <div className="dv-tables-wrap">
-        {/* Totals - one row per currency */}
+        {}
         <table ref={totalsRef} className="dv-table dv-table-totals">
           <colgroup>
             <col className="dv-column-date" />
@@ -200,7 +203,7 @@ export function SimpleTable({
                 >
                   <td>
                     {isSingleCurrency ? (
-                      <span className="dv-totals-label">Total</span>
+                      <span className="dv-totals-label">{t("common.total")}</span>
                     ) : (
                       <span className="dv-totals-currency-cell">
                         <AnyCurrencyIcon currency={currency} />
@@ -220,7 +223,7 @@ export function SimpleTable({
             })}
             {!isSingleCurrency && !isNative && (
               <tr>
-                <td className="dv-totals-label">Total</td>
+                <td className="dv-totals-label">{t("common.total")}</td>
                 <td>
                   <span className="dv-total-cell-value dv-total-cell-value--accent dv-cell-with-icon">
                     {formatCurrencyValue(
@@ -235,7 +238,7 @@ export function SimpleTable({
           </tbody>
         </table>
 
-        {/* Data table */}
+        {}
         <table ref={dataRef} className="dv-table dv-table-data">
           <colgroup>
             <col className="dv-column-date" />

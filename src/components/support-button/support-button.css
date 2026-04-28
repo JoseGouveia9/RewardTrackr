@@ -1,12 +1,12 @@
-﻿/* Trigger button */
-.support-button {
+﻿.support-button {
   display: flex;
   align-items: center;
   gap: 0;
   background: rgba(224, 25, 42, 0.1);
   border: none;
   border-radius: 12px;
-  padding: 8px;
+  padding: 6px 8px;
+  min-height: 35px;
   cursor: pointer;
   overflow: hidden;
   max-width: 36px;
@@ -21,7 +21,7 @@
 .support-button:hover {
   max-width: 220px;
   gap: 7px;
-  padding: 8px 14px;
+  padding: 6px 14px;
   background: rgba(224, 25, 42, 0.1);
 }
 
@@ -54,7 +54,6 @@
   transform: translateX(0);
 }
 
-/* Overlay */
 .support-overlay {
   position: fixed;
   inset: 0;
@@ -67,7 +66,6 @@
   backdrop-filter: blur(8px);
 }
 
-/* Modal card */
 .support-modal {
   width: 100%;
   max-width: 600px;
@@ -130,7 +128,6 @@
   line-height: 1.5;
 }
 
-/* Addresses */
 .support-addresses {
   display: flex;
   flex-direction: column;
@@ -191,8 +188,6 @@
   background: rgba(255, 255, 255, 0.14);
   color: #ffffff;
 }
-
-/* Ko-fi section inside modal (mobile only) */
 
 .support-kofi-section {
   display: none;
@@ -292,8 +287,6 @@
   padding: 0;
 }
 
-/* Mobile: show expanded by default (no hover available) */
-
 @media (max-width: 640px) {
   .support-button {
     max-width: unset;
@@ -323,7 +316,6 @@
   }
 }
 
-/* Light mode */
 .page.theme-light .support-overlay {
   background: rgba(0, 0, 0, 0.45);
 }

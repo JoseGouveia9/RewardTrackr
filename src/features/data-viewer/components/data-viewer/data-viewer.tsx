@@ -1,7 +1,12 @@
-﻿import { memo, useEffect, useMemo } from "react";
+﻿import { memo, useEffect, useMemo, useRef, useState } from "react";
 import type React from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { loadCacheEntry } from "@/features/export/utils/cache";
+import {
+  fetchDifficultyAdjustments,
+  type DifficultyEntry,
+} from "@/features/export/api/difficulty-adjustments";
 import { ErrorBoundary } from "@/components/error-boundary/error-boundary";
 import type { Currency, EarnView, TxView, SimpleView, PurchaseView } from "../../types";
 import type { CacheState, RewardKey } from "@/features/export/types";
@@ -24,13 +29,13 @@ interface DataViewerProps {
   cacheVersion?: number;
   onTabSeen?: (key: RewardKey) => void;
   title?: string;
-  /** When set the viewer renders the supplied records instead of localStorage. */
+
   sharedData?: Partial<CacheState> | null;
-  /** Optional banner rendered above the dv-page (e.g. SharedBanner). */
+
   banner?: React.ReactNode;
-  /** When provided, a Share button is shown in the header. */
+
   onShare?: () => void;
-  /** Disables the share button and shows a tooltip when true. */
+
   shareDisabled?: boolean;
 }
 
@@ -58,7 +63,11 @@ export const DataViewer = memo(function DataViewer({
     setGroupByDay,
     dateRange,
     setDateRange,
+    miningPage,
+    setMiningPage,
   } = useDataViewerState();
+
+  useEffect(() => setMiningPage(0), [activeKey, dateRange, setMiningPage]);
   const fiatCode = useMemo(() => loadFiatCode(), []);
 
   const isSharedContext = sharedData !== null && sharedData !== undefined;
@@ -130,7 +139,6 @@ export const DataViewer = memo(function DataViewer({
   }, [activeKey, isTxTab, cacheVersion, sharedData]);
 
   const tabsWithNew = useMemo(() => {
-    // Never show "new" badges when viewing a shared profile
     if (sharedData) return new Set<RewardKey>();
     void cacheVersion;
     const flagged = new Set<RewardKey>();
@@ -165,7 +173,6 @@ export const DataViewer = memo(function DataViewer({
     return (loadCacheEntry(activeKey)?.records?.length ?? 0) > 0;
   }, [activeKey, cacheVersion, isPurchaseTab, sharedData]);
 
-  // Derive per-tab effective views from sharedView, falling back to first option if unavailable
   const effectiveEarnView: EarnView = sharedView;
   const effectiveTxView: TxView =
     sharedView === "USD" && !txDataInfo.hasUsd
@@ -216,6 +223,36 @@ export const DataViewer = memo(function DataViewer({
   ];
   const showSimpleSelector = simpleHasUsd || simpleHasFiat;
 
+  const { t } = useTranslation();
+  const [showTrends, setShowTrends] = useState(false);
+  const [trendsAnimating, setTrendsAnimating] = useState(false);
+  const [trendsExiting, setTrendsExiting] = useState(false);
+  const exitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const animTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const toggleTrends = () => {
+    if (exitTimer.current) clearTimeout(exitTimer.current);
+    if (animTimer.current) clearTimeout(animTimer.current);
+    if (!showTrends) {
+      setTrendsExiting(false);
+      setTrendsAnimating(true);
+      setShowTrends(true);
+      animTimer.current = setTimeout(() => setTrendsAnimating(false), 220);
+    } else {
+      setTrendsAnimating(false);
+      setTrendsExiting(true);
+      exitTimer.current = setTimeout(() => {
+        setShowTrends(false);
+        setTrendsExiting(false);
+      }, 180);
+    }
+  };
+
+  const [difficultyMap, setDifficultyMap] = useState<Map<string, DifficultyEntry>>(new Map());
+  useEffect(() => {
+    void fetchDifficultyAdjustments().then(setDifficultyMap);
+  }, []);
+
   const hasViewSelector =
     hasActiveData &&
     (isMiningTab ||
@@ -246,10 +283,15 @@ export const DataViewer = memo(function DataViewer({
     <>
       {banner}
       <div className="dv-page">
-        {/* Header */}
+        {}
         <div className="dv-header">
           <div className="dv-header-left">
-            <button type="button" className="dv-back-button" onClick={onClose} aria-label="Back">
+            <button
+              type="button"
+              className="dv-back-button"
+              onClick={onClose}
+              aria-label={t("common.back")}
+            >
               <svg
                 width="16"
                 height="16"
@@ -264,7 +306,7 @@ export const DataViewer = memo(function DataViewer({
                 <path d="M19 12H5" />
                 <path d="M12 19l-7-7 7-7" />
               </svg>
-              <span>Back</span>
+              <span>{t("common.back")}</span>
             </button>
             {title ? <span className="dv-title">{title}</span> : null}
             {onShare && (
@@ -273,7 +315,7 @@ export const DataViewer = memo(function DataViewer({
                 className={`dv-share-button${shareDisabled ? " dv-share-button--disabled" : ""}`}
                 onClick={shareDisabled ? undefined : onShare}
                 aria-disabled={shareDisabled}
-                aria-label="Share records"
+                aria-label={t("dataViewer.shareRecordsLabel")}
                 title={shareDisabled ? "Export in progress — share after it completes" : undefined}
               >
                 <svg
@@ -293,19 +335,19 @@ export const DataViewer = memo(function DataViewer({
                   <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
                   <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
                 </svg>
-                <span>Share</span>
+                <span>{t("common.share")}</span>
               </button>
             )}
           </div>
 
-          {/* Toolbar: group button + currency selector */}
+          {}
           <div className="dv-toolbar">
             {hasActiveData && !isMiningTab && (
               <button
                 type="button"
                 className={`dv-group-button${groupByDay ? " dv-group-button--active" : ""}`}
                 onClick={() => setGroupByDay((v) => !v)}
-                title="Group by day"
+                title={t("dataViewer.groupByDay")}
                 aria-pressed={groupByDay}
               >
                 <svg
@@ -324,10 +366,37 @@ export const DataViewer = memo(function DataViewer({
                   <line x1="3" y1="18" x2="15" y2="18" />
                   <polyline points="17 15 20 18 23 15" />
                 </svg>
-                <span>Group by day</span>
+                <span>{t("dataViewer.groupByDay")}</span>
               </button>
             )}
             {hasViewSelector && !isMiningTab && <span className="dv-toolbar-separator">·</span>}
+            {hasActiveData && isMiningTab && activeKey == "solo-mining" && (
+              <>
+                <button
+                  type="button"
+                  className={`dv-trends-toggle${showTrends && !trendsExiting ? " dv-trends-toggle--active" : ""}`}
+                  onClick={toggleTrends}
+                  aria-pressed={showTrends && !trendsExiting}
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+                    <polyline points="16 7 22 7 22 13" />
+                  </svg>
+                  {t("dataViewer.trends")}
+                </button>
+                <span className="dv-toolbar-separator">·</span>
+              </>
+            )}
             {hasActiveData && isMiningTab ? (
               <ViewSelector
                 views={currencies}
@@ -361,7 +430,7 @@ export const DataViewer = memo(function DataViewer({
           </div>
         </div>
 
-        {/* Tabs */}
+        {}
         <TabList
           tabs={visibleTabs}
           activeKey={activeKey}
@@ -371,7 +440,7 @@ export const DataViewer = memo(function DataViewer({
           fetchingKeys={fetchingKeys}
         />
 
-        {/* Content */}
+        {}
         <div className="dv-content">
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
@@ -393,6 +462,12 @@ export const DataViewer = memo(function DataViewer({
                     cacheEntry={sharedData ? (sharedData[activeKey] ?? null) : undefined}
                     dateRange={dateRange}
                     setDateRange={setDateRange}
+                    page={miningPage}
+                    setPage={setMiningPage}
+                    showTrends={showTrends}
+                    trendsAnimating={trendsAnimating}
+                    trendsExiting={trendsExiting}
+                    difficultyMap={difficultyMap}
                   />
                 ) : isEarnTab ? (
                   <SimpleEarnTable
@@ -462,18 +537,18 @@ interface DataViewerButtonProps {
   hasNew?: boolean;
 }
 
-// Renders the header button that toggles the data-viewer panel open and closed.
 export const DataViewerButton = memo(function DataViewerButton({
   active,
   onClick,
   hasNew = false,
 }: DataViewerButtonProps) {
+  const { t } = useTranslation();
   return (
     <button
       type="button"
       className={`dv-trigger-button${active ? " dv-trigger-button--active" : ""}${hasNew && !active ? " dv-trigger-button--has-new" : ""}`}
       onClick={onClick}
-      aria-label="View records"
+      aria-label={t("app.records")}
     >
       <svg
         width="16"
@@ -491,8 +566,8 @@ export const DataViewerButton = memo(function DataViewerButton({
         <rect x="3" y="14" width="7" height="7" rx="1" />
         <rect x="14" y="14" width="7" height="7" rx="1" />
       </svg>
-      <span>Records</span>
-      {hasNew ? <span className="dv-new-badge dv-new-badge--button">NEW</span> : null}
+      <span>{t("app.records")}</span>
+      {hasNew ? <span className="dv-new-badge dv-new-badge--button">{t("common.new")}</span> : null}
     </button>
   );
 });

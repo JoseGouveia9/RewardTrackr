@@ -39,6 +39,7 @@ export function transformSoloMining(
   let reinvested = false;
   let totalPower = 0;
   let discountMax = 0;
+  const satsPerThValues: number[] = [];
 
   if (Array.isArray(raw.incomeList)) {
     for (const inc of raw.incomeList) {
@@ -57,6 +58,11 @@ export function transformSoloMining(
       if (inc?.totalDiscount != null && inc.totalDiscount > discountMax) {
         discountMax = inc.totalDiscount;
       }
+      const pr = inc?.metaData?.poolReward;
+      const pw = inc?.power;
+      if (pr != null && pw != null && pw > 0) {
+        satsPerThValues.push((pr * 1e8) / pw);
+      }
     }
   }
 
@@ -69,6 +75,7 @@ export function transformSoloMining(
       ? (maintenanceGMTDirect * gmtPrice) / btcPrice
       : 0;
 
+  // When maintenance is paid in GMT, raw.value is already the net reward (no maintenance deducted)
   const poolReward = hasGmtMaintenance ? rawValue : rawValue + maintenanceBtc;
   const reward = poolReward - maintenanceBtc;
 
@@ -101,6 +108,12 @@ export function transformSoloMining(
     reinvested,
     totalPower,
     discount,
+    satsPerTh:
+      satsPerThValues.length > 0
+        ? satsPerThValues.reduce((a, b) => a + b, 0) / satsPerThValues.length
+        : undefined,
+    btcPriceAtTime: btcPrice > 0 ? btcPrice : undefined,
+    btcPriceGmt: btcPrice > 0 && gmtPrice > 0 ? btcPrice / gmtPrice : undefined,
   };
 }
 
@@ -117,6 +130,7 @@ export function transformMinerWars(
   const maintenanceBtc = c1Btc + c2Btc;
 
   const netReward = raw.totalReward ?? 0;
+  // When maintenanceByGmt is true, totalReward is already net (maintenance deducted server-side)
   const poolReward = maintenanceByGmt ? netReward : netReward + maintenanceBtc;
   const reward = poolReward - maintenanceBtc;
 
@@ -150,6 +164,8 @@ export function transformMinerWars(
     reinvested: raw.reinvestmentInPowerNftStatusExecuted === true,
     totalPower: raw.power ?? 0,
     discount: raw.totalDiscount ?? 0,
+    btcPriceAtTime: btcPrice > 0 ? btcPrice : undefined,
+    btcPriceGmt: btcPrice > 0 && gmtPrice > 0 ? btcPrice / gmtPrice : undefined,
   };
 }
 

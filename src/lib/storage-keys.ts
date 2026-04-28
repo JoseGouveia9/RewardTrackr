@@ -1,6 +1,3 @@
-// Central registry of all localStorage keys used by the application.
-// Import from here instead of hardcoding key strings in individual files.
-
 export const LS_KEY_REWARD_PREFIX = "rt_reward_";
 export const LS_KEY_PRICE_CACHE = "rt_pricecache";
 export const LS_KEY_FX_CACHE = "rt_fxcache";
@@ -12,3 +9,4 @@ export const LS_KEY_NOTICE_RATE_LIMITS = "notice_ratelimits_dismissed";
 export const LS_KEY_NOTICE_UNOFFICIAL = "notice_unofficial_dismissed";
 export const LS_KEY_NOTICE_OPENSOURCE = "notice_opensource_dismissed";
 export const LS_KEY_NOTICE_ANNOUNCEMENT_PREFIX = "notice_announcement_";
+export const LS_KEY_MIGRATED_PREFIX = "rt_migrated_";

@@ -1,4 +1,6 @@
-﻿/* Page root */
+﻿/* ============================
+   Base
+   ============================ */
 
 .page {
   min-height: 100vh;
@@ -28,13 +30,9 @@ h6 {
   font-family: "Space Grotesk", sans-serif;
 }
 
-/* Background decoration */
-
 .background-shape {
   display: none;
 }
-
-/* Container */
 
 .container {
   max-width: 1120px;
@@ -44,7 +42,9 @@ h6 {
   z-index: 1;
 }
 
-/* Hero */
+/* ============================
+   Hero
+   ============================ */
 
 .hero {
   background: transparent;
@@ -141,8 +141,6 @@ h3,
   line-height: inherit;
 }
 
-/* Copyright */
-
 .copyright {
   margin: 12px 0 0;
   font-size: 0.72rem;
@@ -162,7 +160,9 @@ h3,
   color: #f7931a;
 }
 
-/* App notices */
+/* ============================
+   App Notice
+   ============================ */
 
 .app-notice {
   display: flex;
@@ -251,7 +251,9 @@ h3,
   color: #ffc94d;
 }
 
-/* Panels */
+/* ============================
+   Panels
+   ============================ */
 
 .panel {
   background: #ffffff;
@@ -282,7 +284,9 @@ h3,
   color: #6d7589;
 }
 
-/* Forms */
+/* ============================
+   Forms
+   ============================ */
 
 textarea {
   width: 100%;
@@ -302,8 +306,6 @@ textarea:focus {
   outline: 2px solid rgba(247, 147, 26, 0.28);
   border-color: #fbb060;
 }
-
-/* Buttons */
 
 button {
   border: 1px solid transparent;
@@ -326,6 +328,10 @@ button:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
+
+/* ============================
+   Buttons
+   ============================ */
 
 .btn-primary {
   background: linear-gradient(90deg, #f7931a 0%, #e07d10 100%);
@@ -354,13 +360,11 @@ button:disabled {
   margin-top: 2px;
 }
 
-/* Export section */
-
 .export-section {
   margin-top: 16px;
 }
 
-.export-btn-wrapper {
+.export-button-wrapper {
   display: block;
 }
 
@@ -440,7 +444,9 @@ button:disabled {
   font-size: 0.8rem !important;
 }
 
-/* Panel actions */
+/* ============================
+   Actions & Messages
+   ============================ */
 
 .panel-actions {
   display: flex;
@@ -462,8 +468,6 @@ button:disabled {
   margin: 0;
 }
 
-/* Utility icons */
-
 .section-icon {
   color: #f7931a;
   flex-shrink: 0;
@@ -476,8 +480,6 @@ button:disabled {
 .btn-icon {
   flex-shrink: 0;
 }
-
-/* Messages */
 
 .message {
   display: flex;
@@ -513,7 +515,9 @@ button:disabled {
   line-height: 22px;
   font-weight: 700;
   opacity: 0.75;
-  transition: opacity 0.12s ease, background 0.12s ease;
+  transition:
+    opacity 0.12s ease,
+    background 0.12s ease;
 }
 
 .message-close:hover {
@@ -577,8 +581,6 @@ button:disabled {
   border-color: rgba(203, 213, 225, 0.15);
 }
 
-/* Divider & misc */
-
 .divider {
   margin: 16px 0;
   border: 0;
@@ -593,7 +595,9 @@ button:disabled {
   line-height: 1.5;
 }
 
-/* Dark mode */
+/* ============================
+   Theme Variants
+   ============================ */
 
 .page.theme-dark {
   background: #121214;
@@ -711,7 +715,9 @@ button:disabled {
   box-shadow: 0 10px 22px rgba(40, 52, 84, 0.05);
 }
 
-/* Mobile */
+/* ============================
+   Mobile Overrides
+   ============================ */
 
 @media (max-width: 640px) {
   .container {
@@ -750,7 +756,7 @@ button:disabled {
     order: 1;
   }
 
-  .hero-actions .sh-trigger-btn {
+  .hero-actions .community-button {
     flex: 0 0 100%;
     order: 2;
     justify-content: center;
@@ -770,12 +776,12 @@ button:disabled {
     flex: 0 0 calc(50% - 5px);
   }
 
-  .hero-actions .hero-profile-wrap {
+  .hero-actions .hero-profile-wrapper {
     order: 4;
     flex: 0 0 100%;
   }
 
-  .hero-actions .hero-profile-wrap--narrow {
+  .hero-actions .hero-profile-wrapper--narrow {
     flex: 0 0 calc(50% - 5px);
   }
 
@@ -793,9 +799,11 @@ button:disabled {
   }
 }
 
-/* ── Community / Share trigger button ─────────────────────────── */
+/* ============================
+   Community Button
+   ============================ */
 
-.sh-trigger-btn {
+.community-button {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -804,6 +812,7 @@ button:disabled {
   border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 12px;
   padding: 7px 12px;
+  min-height: 35px;
   color: #4a5068;
   font-size: 0.8rem !important;
   font-weight: 600 !important;
@@ -815,42 +824,42 @@ button:disabled {
     color 0.14s ease;
 }
 
-.sh-trigger-btn:not(.sh-trigger-btn--active):hover {
+.community-button:not(.community-button--active):hover {
   background: rgba(0, 0, 0, 0.05);
   border-color: rgba(0, 0, 0, 0.14);
   color: #22283a;
 }
 
-.page.theme-dark .sh-trigger-btn {
+.page.theme-dark .community-button {
   color: rgba(255, 255, 255, 0.65);
   border-color: rgba(255, 255, 255, 0.1);
 }
 
-.page.theme-dark .sh-trigger-btn:not(.sh-trigger-btn--active):hover {
+.page.theme-dark .community-button:not(.community-button--active):hover {
   background: rgba(255, 255, 255, 0.07);
   border-color: rgba(255, 255, 255, 0.2);
   color: #fff;
 }
 
-.sh-trigger-btn--active {
+.community-button--active {
   background: #4f46e5;
   border-color: #4f46e5;
   color: #ffffff;
 }
 
-.sh-trigger-btn--active:hover {
+.community-button--active:hover {
   background: #4f46e5;
   border-color: #4f46e5;
   color: #ffffff;
 }
 
-.page.theme-dark .sh-trigger-btn--active {
+.page.theme-dark .community-button--active {
   background: rgba(79, 70, 229, 0.2);
   border-color: rgba(79, 70, 229, 0.45);
   color: #c7d2fe;
 }
 
-.page.theme-dark .sh-trigger-btn--active:hover {
+.page.theme-dark .community-button--active:hover {
   background: rgba(79, 70, 229, 0.2);
   border-color: rgba(79, 70, 229, 0.45);
   color: #c7d2fe;

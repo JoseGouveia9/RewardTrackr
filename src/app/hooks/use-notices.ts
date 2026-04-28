@@ -20,7 +20,6 @@ export interface NoticesState {
   dismissAnnouncement: () => void;
 }
 
-// Manages dismiss state for all app notices and banners, persisting dismissals to localStorage.
 export function useNotices(): NoticesState {
   const [noticeRateLimitsDismissed, setNoticeRateLimitsDismissed] = useState(
     () => localStorage.getItem(LS_KEY_NOTICE_RATE_LIMITS) === "1",
@@ -43,7 +42,6 @@ export function useNotices(): NoticesState {
     });
   }, []);
 
-  // Persists a notice dismissal and updates local state.
   function dismiss(key: string, setter: (v: boolean) => void) {
     localStorage.setItem(key, "1");
     setter(true);

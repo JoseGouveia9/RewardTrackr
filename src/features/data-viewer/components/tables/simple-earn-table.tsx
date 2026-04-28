@@ -1,4 +1,5 @@
 ﻿import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { loadCacheEntry } from "@/features/export/utils/cache";
 import type { CacheEntry, RewardKey } from "@/features/export/types";
 import type { EarnView, DateRange } from "../../types";
@@ -16,7 +17,6 @@ import { Pagination } from "../pagination/pagination";
 import { useSyncTableColumns } from "../../hooks/use-sync-table-columns";
 import { AnimatedLoadingRow } from "./animated-loading-row";
 
-// Renders a paged Simple Earn table with asset, APR, reward and optional group-by-day aggregation.
 export function SimpleEarnTable({
   rewardKey,
   fiatCode,
@@ -38,6 +38,7 @@ export function SimpleEarnTable({
   dateRange: DateRange;
   setDateRange: (v: DateRange) => void;
 }) {
+  const { t } = useTranslation();
   const [page, setPage] = useState(0);
   const totalsRef = useRef<HTMLTableElement>(null);
   const dataRef = useRef<HTMLTableElement>(null);
@@ -150,7 +151,6 @@ export function SimpleEarnTable({
     <FiatIcon code={fiatCode} />
   );
 
-  // Returns the display value and currency label for a row based on the active earnView.
   function earnRowValue(row: {
     reward: number;
     rewardInUSD: number;
@@ -168,10 +168,10 @@ export function SimpleEarnTable({
         {isFetching ? (
           <span className="dv-loading-inline">
             <span className="dv-spinner" aria-hidden="true" />
-            <span>Fetching data...</span>
+            <span>{t("dataViewer.fetchingData")}</span>
           </span>
         ) : (
-          "No cached data for this sheet. Export it first from the main panel."
+          t("dataViewer.noData")
         )}
       </div>
     );
@@ -180,7 +180,7 @@ export function SimpleEarnTable({
   return (
     <>
       <div className="dv-tables-wrap dv-tables-wrap--scroll">
-        {/* Grand total */}
+        {}
         <table ref={totalsRef} className="dv-table dv-table-totals">
           <colgroup>
             <col className="dv-column-date" />
@@ -190,11 +190,11 @@ export function SimpleEarnTable({
           </colgroup>
           <tbody>
             <tr>
-              <td className="dv-totals-label">Total</td>
+              <td className="dv-totals-label">{t("common.total")}</td>
               <td />
               <td />
               <td>
-                <span className="dv-total-cell-label">Reward</span>
+                <span className="dv-total-cell-label">{t("dataViewer.reward")}</span>
                 <span className="dv-total-cell-value dv-total-cell-value--accent dv-cell-with-icon">
                   {isEarnNative
                     ? formatCurrencyValue(earnGrandTotal.reward, nativeCurrency)
@@ -209,7 +209,7 @@ export function SimpleEarnTable({
           </tbody>
         </table>
 
-        {/* Data table */}
+        {}
         <table ref={dataRef} className="dv-table dv-table-data">
           <colgroup>
             <col className="dv-column-date" />
@@ -227,9 +227,9 @@ export function SimpleEarnTable({
                   dates={rowDates}
                 />
               </th>
-              <th>Asset</th>
+              <th>{t("dataViewer.asset")}</th>
               <th>APR</th>
-              <th>Reward</th>
+              <th>{t("dataViewer.reward")}</th>
             </tr>
           </thead>
           <tbody>

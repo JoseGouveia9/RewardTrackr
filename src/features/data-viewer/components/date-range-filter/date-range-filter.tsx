@@ -1,11 +1,11 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { DateRange } from "../../types";
 import { EMPTY_DATE_RANGE, DATE_PRESETS } from "../../utils/constants";
 import { isDateRangeActive } from "../../utils";
 import { MiniCalendar, CAL_MONTHS } from "../mini-calendar/mini-calendar";
 import { useOutsideClick } from "../../hooks/use-outside-click";
 
-// A styled custom dropdown matching the fiat-dropdown look, for small option sets.
 function CalSelect({
   value,
   options,
@@ -24,14 +24,14 @@ function CalSelect({
     <div ref={wrapRef} className="dv-cal-sel-wrap">
       <button type="button" className="dv-cal-sel-trigger" onClick={() => setOpen((p) => !p)}>
         <span>{selectedLabel}</span>
-        <span className={`dv-cal-sel-caret${open ? " open" : ""}`}>⌃</span>
+        <span className={`dv-cal-sel-caret${open ? " dv-cal-sel-caret--open" : ""}`}>⌃</span>
       </button>
       {open && (
         <div className="dv-cal-sel-menu">
           {options.map((o) => (
             <div
               key={o.value}
-              className={`dv-cal-sel-option${o.value === value ? " selected" : ""}${o.disabled ? " disabled" : ""}`}
+              className={`dv-cal-sel-option${o.value === value ? " dv-cal-sel-option--selected" : ""}${o.disabled ? " dv-cal-sel-option--disabled" : ""}`}
               onClick={() => {
                 if (!o.disabled) {
                   onChange(o.value);
@@ -40,7 +40,6 @@ function CalSelect({
               }}
             >
               {o.label}
-              {o.value === value && <span className="dv-cal-sel-check">✓</span>}
             </div>
           ))}
         </div>
@@ -49,7 +48,6 @@ function CalSelect({
   );
 }
 
-// Renders a date-range filter button that opens a calendar picker with presets and apply/clear actions.
 export function DateRangeFilter({
   value,
   onChange,
@@ -63,10 +61,12 @@ export function DateRangeFilter({
   maxDate?: string;
   dates?: string[];
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState<DateRange>(EMPTY_DATE_RANGE);
   const [picking, setPicking] = useState(false);
   const [hover, setHover] = useState("");
+  const [activePreset, setActivePreset] = useState<string | null>(null);
   const initDate = maxDate ? new Date(maxDate + "T00:00:00") : new Date();
   const [calYear, setCalYear] = useState(initDate.getFullYear());
   const [calMonth, setCalMonth] = useState(initDate.getMonth());
@@ -78,6 +78,17 @@ export function DateRangeFilter({
     for (const d of dates) s.add(d.slice(0, 7));
     return s;
   }, [dates]);
+
+  const dateSet = useMemo(() => new Set(dates ?? []), [dates]);
+
+  const availablePresets = useMemo(() => {
+    if (!dates?.length) return DATE_PRESETS;
+    return DATE_PRESETS.filter((p) => {
+      const from = p.from();
+      const to = p.to();
+      return [...dateSet].some((d) => d >= from && d <= to);
+    });
+  }, [dateSet, dates]);
 
   const yearOptions = useMemo(() => {
     if (availableYearMonths.size > 0) {
@@ -92,17 +103,42 @@ export function DateRangeFilter({
   }, [availableYearMonths]);
 
   const monthOptions = useMemo(() => {
-    return CAL_MONTHS.map((m, i) => {
+    const all = CAL_MONTHS.map((m, i) => {
       const ym = `${calYear}-${String(i + 1).padStart(2, "0")}`;
-      const disabled = availableYearMonths.size > 0 && !availableYearMonths.has(ym);
-      return { label: m, value: i, disabled };
+      return { label: m, value: i, hasData: availableYearMonths.has(ym) };
     });
+    if (availableYearMonths.size === 0) return all.map(({ label, value }) => ({ label, value }));
+    const withData = all.filter((o) => o.hasData).map((o) => o.value);
+    if (withData.length === 0) return [];
+    const min = Math.min(...withData);
+    const max = Math.max(...withData);
+    return all
+      .filter((o) => o.value >= min && o.value <= max)
+      .map(({ label, value }) => ({ label, value }));
   }, [availableYearMonths, calYear]);
+
+  useEffect(() => {
+    if (monthOptions.length === 0) return;
+    if (!monthOptions.some((o) => o.value === calMonth)) {
+      setCalMonth(monthOptions[monthOptions.length - 1].value);
+    }
+  }, [monthOptions, calMonth]);
 
   useOutsideClick(ref, () => setOpen(false), open);
 
+  function handleYearChange(y: number) {
+    setCalYear(y);
+    if (availableYearMonths.size > 0) {
+      const months = [...availableYearMonths]
+        .filter((ym) => ym.startsWith(`${y}-`))
+        .map((ym) => Number(ym.slice(5, 7)) - 1);
+      if (months.length > 0) setCalMonth(Math.max(...months));
+    }
+  }
+
   function openPicker() {
     setPending({ ...value });
+    setActivePreset(null);
     setPicking(false);
     setHover("");
     setOpen(true);
@@ -116,17 +152,23 @@ export function DateRangeFilter({
   function handleClear() {
     onChange(EMPTY_DATE_RANGE);
     setPending(EMPTY_DATE_RANGE);
+    setActivePreset(null);
     setPicking(false);
     setHover("");
   }
 
   function handlePreset(p: (typeof DATE_PRESETS)[0]) {
-    const to = p.to();
-    setPending({ from: p.from(), to });
+    let from = p.from();
+    let to = p.to();
+    if (minDate && from < minDate) from = minDate;
+    if (maxDate && to > maxDate) to = maxDate;
+    setPending({ from, to });
+    setActivePreset(p.label);
     setPicking(false);
     setHover("");
-    if (to) {
-      const d = new Date(to + "T00:00:00");
+    const anchor = to || from;
+    if (anchor) {
+      const d = new Date(anchor + "T00:00:00");
       setCalYear(d.getFullYear());
       setCalMonth(d.getMonth());
     }
@@ -135,18 +177,17 @@ export function DateRangeFilter({
   function handleDayClick(d: string) {
     if (!picking) {
       setPending({ from: d, to: "" });
+      setActivePreset(null);
       setPicking(true);
       setHover(d);
     } else {
       const from = pending.from;
       setPending(d < from ? { from: d, to: from } : { from, to: d });
+      setActivePreset(null);
       setPicking(false);
       setHover("");
     }
   }
-
-  const activePreset =
-    DATE_PRESETS.find((p) => p.from() === pending.from && p.to() === pending.to)?.label ?? null;
 
   return (
     <div ref={ref} className="dv-column-filter">
@@ -168,41 +209,41 @@ export function DateRangeFilter({
         >
           <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
         </svg>
-        Date
+        {t("dataViewer.date")}
       </button>
 
       {open && (
         <div className="dv-column-filter-dropdown">
           <div className="dv-filter-date-layout">
-            {/* Left: presets + actions */}
+            {}
             <div className="dv-filter-date-presets">
               <div className="dv-filter-presets-list">
-                {DATE_PRESETS.map((p) => (
+                {availablePresets.map((p) => (
                   <button
                     key={p.label}
                     type="button"
                     className={`dv-filter-preset-button${activePreset === p.label ? " dv-filter-preset-button--active" : ""}`}
                     onClick={() => handlePreset(p)}
                   >
-                    {p.label}
+                    {t(p.label)}
                   </button>
                 ))}
               </div>
               <div className="dv-filter-actions">
                 <button type="button" className="dv-filter-apply-button" onClick={handleApply}>
-                  Apply
+                  {t("common.apply")}
                 </button>
                 <button type="button" className="dv-filter-clear-button" onClick={handleClear}>
-                  Clear
+                  {t("common.clear")}
                 </button>
               </div>
             </div>
 
-            {/* Right: single calendar with selects */}
+            {}
             <div className="dv-filter-calendars">
               <div className="dv-cal-header">
                 <CalSelect value={calMonth} options={monthOptions} onChange={setCalMonth} />
-                <CalSelect value={calYear} options={yearOptions} onChange={setCalYear} />
+                <CalSelect value={calYear} options={yearOptions} onChange={handleYearChange} />
               </div>
               <MiniCalendar
                 year={calYear}

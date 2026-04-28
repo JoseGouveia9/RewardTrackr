@@ -1,4 +1,5 @@
 ﻿import { memo } from "react";
+import { useTranslation } from "react-i18next";
 import { TX_CHECKBOX_OPTIONS } from "../../config/wallet-types";
 
 interface TransactionFilterProps {
@@ -6,11 +7,11 @@ interface TransactionFilterProps {
   onToggleTxType: (fromTypes: string[], checked: boolean) => void;
 }
 
-// Renders toggle checkboxes for each wallet-transaction type to include in the export.
 export const TransactionFilter = memo(function TransactionFilter({
   selectedTxFromTypes,
   onToggleTxType,
 }: TransactionFilterProps) {
+  const { t } = useTranslation();
   return (
     <div className="wallet-options">
       <p className="options-section-title">
@@ -30,14 +31,14 @@ export const TransactionFilter = memo(function TransactionFilter({
           <path d="M7 12h10" />
           <path d="M10 18h4" />
         </svg>
-        Transactions Filter
+        {t("common.transactionsFilter")}
       </p>
       <div className="transaction-filter-grid">
         {TX_CHECKBOX_OPTIONS.map((opt) => {
           const checked = opt.fromTypes.every((ft) => selectedTxFromTypes.includes(ft));
           return (
-            <label key={opt.label} className="transaction-filter-item">
-              <span className="transaction-filter-label">{opt.label}</span>
+            <label key={opt.labelKey} className="transaction-filter-item">
+              <span className="transaction-filter-label">{t(opt.labelKey)}</span>
               <input
                 type="checkbox"
                 className="toggle-switch"

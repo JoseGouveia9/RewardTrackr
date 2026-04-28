@@ -1,4 +1,6 @@
-﻿/* Wrapper */
+﻿/* ============================
+   Trigger
+   ============================ */
 
 .fiat-dropdown-wrap {
   position: relative;
@@ -6,8 +8,6 @@
   flex-direction: column;
   align-items: flex-end;
 }
-
-/* Trigger */
 
 .fiat-dropdown-trigger {
   min-width: 130px;
@@ -29,11 +29,13 @@
   transition: transform 0.16s ease;
 }
 
-.fiat-dropdown-caret.open {
+.fiat-dropdown-caret--open {
   transform: rotate(180deg);
 }
 
-/* Dropdown menu */
+/* ============================
+   Menu & Scrollbar
+   ============================ */
 
 .fiat-dropdown-menu {
   position: absolute;
@@ -49,7 +51,7 @@
   background: #252527;
   box-shadow: 0 14px 30px rgba(5, 8, 22, 0.45);
   scrollbar-width: thin;
-  scrollbar-color: #E07D10 #1e1e20;
+  scrollbar-color: #e07d10 #1e1e20;
 }
 
 .fiat-dropdown-menu-portal {
@@ -61,8 +63,6 @@
   transform: translateY(-100%);
 }
 
-/* Scrollbar */
-
 .fiat-dropdown-menu::-webkit-scrollbar {
   width: 10px;
 }
@@ -73,16 +73,18 @@
 }
 
 .fiat-dropdown-menu::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #F7931A 0%, #E07D10 100%);
+  background: linear-gradient(180deg, #f7931a 0%, #e07d10 100%);
   border-radius: 999px;
   border: 2px solid #1e1e20;
 }
 
 .fiat-dropdown-menu::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #E8850F 0%, #CB7010 100%);
+  background: linear-gradient(180deg, #e8850f 0%, #cb7010 100%);
 }
 
-/* Search */
+/* ============================
+   Search & Options
+   ============================ */
 
 .fiat-dropdown-search {
   width: 100%;
@@ -100,8 +102,6 @@
   color: rgba(236, 239, 255, 0.62);
 }
 
-/* Options */
-
 .fiat-dropdown-option {
   width: 100%;
   border: 0;
@@ -115,7 +115,7 @@
 }
 
 .fiat-dropdown-option:hover,
-.fiat-dropdown-option.focused {
+.fiat-dropdown-option--focused {
   background: rgba(255, 255, 255, 0.06);
 }
 
@@ -136,17 +136,19 @@
   right: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: #F7931A;
+  color: #f7931a;
   font-size: 1.1rem;
 }
 
-/* Light mode */
+/* ============================
+   Theme Overrides
+   ============================ */
 
 .page.theme-light .fiat-dropdown-menu,
 .fiat-dropdown-menu.theme-light {
   background: rgba(255, 255, 255, 0.95);
   box-shadow: 0 14px 30px rgba(0, 0, 0, 0.12);
-  scrollbar-color: #E07D10 #e8eaf2;
+  scrollbar-color: #e07d10 #e8eaf2;
 }
 
 .page.theme-light .fiat-dropdown-menu::-webkit-scrollbar-track,
@@ -175,9 +177,9 @@
 }
 
 .page.theme-light .fiat-dropdown-option:hover,
-.page.theme-light .fiat-dropdown-option.focused,
+.page.theme-light .fiat-dropdown-option--focused,
 .fiat-dropdown-menu.theme-light .fiat-dropdown-option:hover,
-.fiat-dropdown-menu.theme-light .fiat-dropdown-option.focused {
+.fiat-dropdown-menu.theme-light .fiat-dropdown-option--focused {
   background: rgba(0, 0, 0, 0.04);
 }
 
@@ -197,15 +199,13 @@
   }
 }
 
-/* Dark mode */
-
 .page.theme-dark .fiat-dropdown-trigger {
   background: #242424;
   color: #f0f2ff;
 }
 
 .page.theme-dark .fiat-dropdown-caret {
-  color: #FBB060;
+  color: #fbb060;
 }
 
 .page.theme-dark .fiat-dropdown-menu,

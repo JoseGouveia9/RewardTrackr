@@ -1,4 +1,8 @@
-.sh-modal-overlay {
+/* ============================
+   Overlay & Modal Shell
+   ============================ */
+
+.share-modal-overlay {
   position: fixed;
   inset: 0;
   z-index: 10000;
@@ -9,7 +13,7 @@
   padding: 16px;
 }
 
-.sh-modal {
+.share-modal {
   background: #fff;
   border-radius: 20px;
   padding: 24px;
@@ -21,41 +25,45 @@
   gap: 14px;
 }
 
-.sh-modal-body {
+.share-modal-body {
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
 
-.page.theme-dark .sh-modal {
+.page.theme-dark .share-modal {
   background: #1c1c1e;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 }
 
-.page.theme-light .sh-modal {
+.page.theme-light .share-modal {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(247, 249, 253, 0.97));
   border: 1px solid rgba(52, 66, 97, 0.14);
   box-shadow: 0 18px 48px rgba(40, 52, 84, 0.12);
 }
 
-.sh-modal-header {
+/* ============================
+   Header & Description
+   ============================ */
+
+.share-modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-.sh-modal-title {
+.share-modal-title {
   font-family: "Space Grotesk", sans-serif;
   font-size: 1rem;
   font-weight: 700;
   color: #22283a;
 }
 
-.page.theme-dark .sh-modal-title {
+.page.theme-dark .share-modal-title {
   color: #f0f4ff;
 }
 
-.sh-modal-close {
+.share-modal-close {
   background: transparent;
   border: none;
   cursor: pointer;
@@ -65,26 +73,30 @@
   align-items: center;
 }
 
-.sh-modal-close:hover {
+.share-modal-close:hover {
   color: #22283a;
 }
 
-.page.theme-dark .sh-modal-close:hover {
+.page.theme-dark .share-modal-close:hover {
   color: #fff;
 }
 
-.sh-modal-desc {
+.share-modal-desc {
   font-size: 0.82rem;
   color: #6d7589;
   line-height: 1.5;
   margin: 0;
 }
 
-.page.theme-dark .sh-modal-desc {
+.page.theme-dark .share-modal-desc {
   color: rgba(255, 255, 255, 0.5);
 }
 
-.sh-modal-label {
+/* ============================
+   Form Controls
+   ============================ */
+
+.share-modal-label {
   font-size: 0.75rem;
   font-weight: 600;
   color: #6d7589;
@@ -92,7 +104,7 @@
   letter-spacing: 0.05em;
 }
 
-.sh-modal-input {
+.share-modal-input {
   width: 100%;
   padding: 9px 12px;
   border: 1px solid rgba(0, 0, 0, 0.1);
@@ -105,31 +117,31 @@
   transition: border-color 0.14s;
 }
 
-.sh-modal-input:focus {
+.share-modal-input:focus {
   border-color: rgba(247, 147, 26, 0.5);
 }
 
-.page.theme-light .sh-modal-input {
+.page.theme-light .share-modal-input {
   background: rgba(255, 255, 255, 0.9);
   border-color: rgba(52, 66, 97, 0.16);
 }
 
-.page.theme-dark .sh-modal-input {
+.page.theme-dark .share-modal-input {
   background: rgba(255, 255, 255, 0.05);
   border-color: rgba(255, 255, 255, 0.1);
   color: #f0f4ff;
 }
 
-.sh-modal-hint {
+.share-modal-hint {
   font-size: 0.75rem;
   margin: -6px 0 0;
 }
 
-.sh-modal .app-notice {
+.share-modal .app-notice {
   margin-top: 0;
 }
 
-.sh-modal-loading-inline {
+.share-modal-loading-inline {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -138,41 +150,45 @@
   text-align: center;
 }
 
-.sh-modal-spinner {
+.share-modal-spinner {
   width: 14px;
   height: 14px;
   border-radius: 50%;
   border: 2px solid currentColor;
   border-right-color: transparent;
-  animation: sh-modal-spin 0.7s linear infinite;
+  animation: share-modal-spin 0.7s linear infinite;
 }
 
-@keyframes sh-modal-spin {
+@keyframes share-modal-spin {
   to {
     transform: rotate(360deg);
   }
 }
 
-.sh-modal-hint--error {
+.share-modal-hint--error {
   color: #ef4444;
 }
 
-.sh-modal-hint--warn {
+.share-modal-hint--warn {
   color: #f59e0b;
 }
 
-.sh-modal-hint--warn a {
+.share-modal-hint--warn a {
   color: inherit;
   text-decoration: underline;
 }
 
-.sh-modal-sheets {
+/* ============================
+   Sheet List
+   ============================ */
+
+.share-modal-sheets {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.sh-modal-sheets-label {
+.share-modal-sheets-label {
   font-size: 0.75rem;
   font-weight: 600;
   color: #6d7589;
@@ -180,7 +196,7 @@
   letter-spacing: 0.05em;
 }
 
-.sh-modal-sheet-list {
+.share-modal-sheet-list {
   border: 1px solid rgba(0, 0, 0, 0.06);
   border-radius: 10px;
   overflow: hidden;
@@ -188,17 +204,17 @@
   overflow-y: auto;
 }
 
-.page.theme-light .sh-modal-sheet-list {
+.page.theme-light .share-modal-sheet-list {
   background: rgba(244, 247, 252, 0.9);
   border-color: rgba(52, 66, 97, 0.14);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
 }
 
-.page.theme-dark .sh-modal-sheet-list {
+.page.theme-dark .share-modal-sheet-list {
   border-color: rgba(255, 255, 255, 0.07);
 }
 
-.sh-modal-sheet-row {
+.share-modal-sheet-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -207,15 +223,15 @@
   font-size: 0.8rem;
 }
 
-.sh-modal-sheet-row:last-child {
+.share-modal-sheet-row:last-child {
   border-bottom: none;
 }
 
-.page.theme-dark .sh-modal-sheet-row {
+.page.theme-dark .share-modal-sheet-row {
   border-bottom-color: rgba(255, 255, 255, 0.04);
 }
 
-.sh-modal-sheet-row--check {
+.share-modal-sheet-row--check {
   width: 100%;
   border: none;
   background: transparent;
@@ -227,70 +243,70 @@
   border-radius: 0px;
 }
 
-.sh-modal-sheet-row--check:hover {
+.share-modal-sheet-row--check:hover {
   background: rgba(0, 0, 0, 0.03);
 }
 
-.page.theme-light .sh-modal-sheet-row--check:hover {
+.page.theme-light .share-modal-sheet-row--check:hover {
   background: rgb(0 0 0 / 11%) !important;
 }
 
-.page.theme-dark .sh-modal-sheet-row--check:hover {
+.page.theme-dark .share-modal-sheet-row--check:hover {
   background: rgba(255, 255, 255, 0.04);
 }
 
-.sh-modal-sheet-row--check .sh-modal-sheet-name {
+.share-modal-sheet-row--check .share-modal-sheet-name {
   flex: 1;
 }
 
-.sh-modal-sheet-row--check:not(.sh-modal-sheet-row--checked) .sh-modal-sheet-name,
-.sh-modal-sheet-row--check:not(.sh-modal-sheet-row--checked) .sh-modal-sheet-meta {
+.share-modal-sheet-row--check:not(.share-modal-sheet-row--checked) .share-modal-sheet-name,
+.share-modal-sheet-row--check:not(.share-modal-sheet-row--checked) .share-modal-sheet-meta {
   opacity: 0.62;
 }
 
-.sh-modal-sheet-row--check.sh-modal-sheet-row--checked .sh-modal-sheet-name,
-.sh-modal-sheet-row--check.sh-modal-sheet-row--checked .sh-modal-sheet-meta {
+.share-modal-sheet-row--check.share-modal-sheet-row--checked .share-modal-sheet-name,
+.share-modal-sheet-row--check.share-modal-sheet-row--checked .share-modal-sheet-meta {
   color: #c87510;
   opacity: 1;
 }
 
-.page.theme-light .sh-modal-sheet-row--check.sh-modal-sheet-row--checked {
+.page.theme-light .share-modal-sheet-row--check.share-modal-sheet-row--checked {
   background: rgba(244, 247, 252, 0.9);
 }
 
-.page.theme-light .sh-modal-sheet-row--check.sh-modal-sheet-row--checked .sh-modal-sheet-name,
-.page.theme-light .sh-modal-sheet-row--check.sh-modal-sheet-row--checked .sh-modal-sheet-meta {
+.page.theme-light .share-modal-sheet-row--check.share-modal-sheet-row--checked .share-modal-sheet-name,
+.page.theme-light .share-modal-sheet-row--check.share-modal-sheet-row--checked .share-modal-sheet-meta {
   color: #22283a;
 }
 
-.sh-modal-sheet-row--check.sh-modal-sheet-row--checked .sheet-check-icon {
+.share-modal-sheet-row--check.share-modal-sheet-row--checked .sheet-check-icon {
   background: rgba(255, 255, 255, 0.25);
   border-color: transparent;
 }
 
-.sh-modal-sheet-row--check.sh-modal-sheet-row--checked .sheet-check-icon--visible {
+.share-modal-sheet-row--check.share-modal-sheet-row--checked .sheet-check-icon--visible {
   background: rgba(255, 255, 255, 0.25);
   border-color: transparent;
 }
 
-.page.theme-light .sh-modal-sheet-row--check.sh-modal-sheet-row--checked .sheet-check-icon,
-.page.theme-light .sh-modal-sheet-row--check.sh-modal-sheet-row--checked .sheet-check-icon--visible,
-.page.theme-light .sh-modal-visibility-row.sh-modal-visibility-row--checked .sheet-check-icon,
+.page.theme-light .share-modal-sheet-row--check.share-modal-sheet-row--checked .sheet-check-icon,
+.page.theme-light .share-modal-sheet-row--check.share-modal-sheet-row--checked .sheet-check-icon--visible,
+.page.theme-light .share-modal-visibility-row.share-modal-visibility-row--checked .sheet-check-icon,
 .page.theme-light
-  .sh-modal-visibility-row.sh-modal-visibility-row--checked
+  .share-modal-visibility-row.share-modal-visibility-row--checked
   .sheet-check-icon--visible,
-.page.theme-dark .sh-modal-sheet-row--check.sh-modal-sheet-row--checked .sheet-check-icon,
-.page.theme-dark .sh-modal-sheet-row--check.sh-modal-sheet-row--checked .sheet-check-icon--visible,
-.page.theme-dark .sh-modal-visibility-row.sh-modal-visibility-row--checked .sheet-check-icon,
+.page.theme-dark .share-modal-sheet-row--check.share-modal-sheet-row--checked .sheet-check-icon,
+.page.theme-dark .share-modal-sheet-row--check.share-modal-sheet-row--checked .sheet-check-icon--visible,
+.page.theme-dark .share-modal-visibility-row.share-modal-visibility-row--checked .sheet-check-icon,
 .page.theme-dark
-  .sh-modal-visibility-row.sh-modal-visibility-row--checked
+  .share-modal-visibility-row.share-modal-visibility-row--checked
   .sheet-check-icon--visible {
   background: #f7931a;
   border-color: #f7931a;
   color: #ffffff;
 }
 
-.sh-modal .sheet-check-icon {
+.share-modal .sheet-check-icon {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -305,48 +321,52 @@
   opacity: 1;
 }
 
-.sh-modal .sheet-check-icon--visible {
+.share-modal .sheet-check-icon--visible {
   background: #f7931a;
   border-color: #f7931a;
   color: #fff;
 }
 
-.sh-modal .sheet-check-icon svg {
+.share-modal .sheet-check-icon svg {
   opacity: 0;
 }
 
-.sh-modal .sheet-check-icon--visible svg {
+.share-modal .sheet-check-icon--visible svg {
   opacity: 1;
 }
 
-.sh-modal-visibility-row:not(.sh-modal-visibility-row--checked) .sheet-check-icon svg {
+.share-modal-visibility-row:not(.share-modal-visibility-row--checked) .sheet-check-icon svg {
   opacity: 0;
 }
 
-.sh-modal-visibility-row.sh-modal-visibility-row--checked .sheet-check-icon svg {
+.share-modal-visibility-row.share-modal-visibility-row--checked .sheet-check-icon svg {
   opacity: 1;
 }
 
-.page.theme-dark .sh-modal .sheet-check-icon {
+.page.theme-dark .share-modal .sheet-check-icon {
   background: rgba(255, 255, 255, 0.08);
   border-color: rgba(255, 255, 255, 0.24);
 }
 
-.sh-modal-sheet-name {
+.share-modal-sheet-name {
   font-weight: 600;
   color: #22283a;
 }
 
-.page.theme-dark .sh-modal-sheet-name {
+.page.theme-dark .share-modal-sheet-name {
   color: rgba(255, 255, 255, 0.85);
 }
 
-.sh-modal-sheet-meta {
+.share-modal-sheet-meta {
   color: #9fa5be;
   font-size: 0.75rem;
 }
 
-.sh-modal-visibility-row {
+/* ============================
+   Visibility Row
+   ============================ */
+
+.share-modal-visibility-row {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -363,29 +383,29 @@
   justify-content: unset;
 }
 
-.sh-modal-visibility-row:hover {
+.share-modal-visibility-row:hover {
   background: rgba(0, 0, 0, 0.03);
 }
 
-.page.theme-light .sh-modal-visibility-row {
+.page.theme-light .share-modal-visibility-row {
   background: rgba(244, 247, 252, 0.9);
   border-color: rgba(52, 66, 97, 0.14);
 }
 
-.page.theme-light .sh-modal-visibility-row:hover {
+.page.theme-light .share-modal-visibility-row:hover {
   background: rgb(0 0 0 / 11%);
 }
 
-.page.theme-dark .sh-modal-visibility-row:hover {
+.page.theme-dark .share-modal-visibility-row:hover {
   background: rgba(255, 255, 255, 0.04);
 }
 
-.sh-modal-visibility-row:disabled {
+.share-modal-visibility-row:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
 
-.sh-modal-visibility-row span {
+.share-modal-visibility-row span {
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -393,32 +413,32 @@
   font-weight: 600;
 }
 
-.sh-modal-visibility-row small {
+.share-modal-visibility-row small {
   color: #6d7589;
   font-size: 0.65rem;
   font-weight: 500;
 }
 
-.sh-modal-visibility-row:not(.sh-modal-visibility-row--checked) > span:last-child,
-.sh-modal-visibility-row:not(.sh-modal-visibility-row--checked) > span:last-child small {
+.share-modal-visibility-row:not(.share-modal-visibility-row--checked) > span:last-child,
+.share-modal-visibility-row:not(.share-modal-visibility-row--checked) > span:last-child small {
   opacity: 0.62;
 }
 
-.page.theme-dark .sh-modal-visibility-row {
+.page.theme-dark .share-modal-visibility-row {
   border-color: rgba(255, 255, 255, 0.08);
   color: rgba(255, 255, 255, 0.88);
 }
 
-.page.theme-dark .sh-modal-sheet-row--check.sh-modal-sheet-row--checked .sh-modal-sheet-name,
-.page.theme-dark .sh-modal-sheet-row--check.sh-modal-sheet-row--checked .sh-modal-sheet-meta {
+.page.theme-dark .share-modal-sheet-row--check.share-modal-sheet-row--checked .share-modal-sheet-name,
+.page.theme-dark .share-modal-sheet-row--check.share-modal-sheet-row--checked .share-modal-sheet-meta {
   color: rgba(255, 255, 255, 0.94);
 }
 
-.page.theme-dark .sh-modal-visibility-row small {
+.page.theme-dark .share-modal-visibility-row small {
   color: rgba(255, 255, 255, 0.55);
 }
 
-.sh-modal-update-warning {
+.share-modal-update-warning {
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -431,17 +451,21 @@
   line-height: 1.45;
 }
 
-.sh-modal-update-warning-actions {
+.share-modal-update-warning-actions {
   display: flex;
   gap: 8px;
 }
 
-.sh-modal-actions {
+/* ============================
+   Actions & Buttons
+   ============================ */
+
+.share-modal-actions {
   display: flex;
   gap: 8px;
 }
 
-.sh-modal-btn {
+.share-modal-button {
   flex: 1;
   padding: 10px;
   border-radius: 12px;
@@ -454,39 +478,39 @@
     opacity 0.14s;
 }
 
-.sh-modal-btn:disabled {
+.share-modal-button:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
 
-.sh-modal-btn--primary {
+.share-modal-button--primary {
   background: #f7931a;
   color: #fff;
 }
 
-.sh-modal-btn--primary:not(:disabled):hover {
+.share-modal-button--primary:not(:disabled):hover {
   background: #e07d0d;
 }
 
-.sh-modal-btn--ghost {
+.share-modal-button--ghost {
   background: rgba(0, 0, 0, 0.06);
   color: #6d7589;
 }
 
-.page.theme-dark .sh-modal-btn--ghost {
+.page.theme-dark .share-modal-button--ghost {
   background: rgba(255, 255, 255, 0.07);
   color: rgba(255, 255, 255, 0.5);
 }
 
-.sh-modal-btn--ghost:not(:disabled):hover {
+.share-modal-button--ghost:not(:disabled):hover {
   background: rgba(0, 0, 0, 0.1);
 }
 
-.page.theme-dark .sh-modal-btn--ghost:not(:disabled):hover {
+.page.theme-dark .share-modal-button--ghost:not(:disabled):hover {
   background: rgba(255, 255, 255, 0.12);
 }
 
-.sh-modal-btn--danger {
+.share-modal-button--danger {
   flex: 0;
   padding: 8px 12px;
   border-radius: 10px;
@@ -494,20 +518,24 @@
   color: #b91c1c;
 }
 
-.sh-modal-btn--danger:not(:disabled):hover {
+.share-modal-button--danger:not(:disabled):hover {
   background: rgba(220, 38, 38, 0.18);
 }
 
-.page.theme-dark .sh-modal-btn--danger {
+.page.theme-dark .share-modal-button--danger {
   background: rgba(239, 68, 68, 0.18);
   color: #fca5a5;
 }
 
-.page.theme-dark .sh-modal-btn--danger:not(:disabled):hover {
+.page.theme-dark .share-modal-button--danger:not(:disabled):hover {
   background: rgba(239, 68, 68, 0.28);
 }
 
-.sh-modal-success-msg {
+/* ============================
+   Success & Link
+   ============================ */
+
+.share-modal-success-msg {
   display: flex;
   align-items: center;
   gap: 7px;
@@ -517,11 +545,11 @@
   margin: 0;
 }
 
-.page.theme-dark .sh-modal-success-msg {
+.page.theme-dark .share-modal-success-msg {
   color: #4ade80;
 }
 
-.sh-modal-link-row {
+.share-modal-link-row {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -531,22 +559,22 @@
   padding: 8px 8px 8px 12px;
 }
 
-.page.theme-light .sh-modal-link-row {
+.page.theme-light .share-modal-link-row {
   background: rgba(0, 0, 0, 0.03);
   border-color: rgba(0, 0, 0, 0.08);
 }
 
-.sh-modal-link-actions {
+.share-modal-link-actions {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.sh-modal-link-actions .sh-modal-link-row {
+.share-modal-link-actions .share-modal-link-row {
   flex: 1;
 }
 
-.sh-modal-existing {
+.share-modal-existing {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -556,18 +584,18 @@
   background: rgba(0, 0, 0, 0.02);
 }
 
-.page.theme-light .sh-modal-existing {
+.page.theme-light .share-modal-existing {
   border-color: rgba(52, 66, 97, 0.14);
   background: rgba(244, 247, 252, 0.9);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
 }
 
-.page.theme-dark .sh-modal-existing {
+.page.theme-dark .share-modal-existing {
   border-color: rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.03);
 }
 
-.sh-modal-existing-title {
+.share-modal-existing-title {
   margin: 0;
   font-size: 0.76rem;
   font-weight: 700;
@@ -576,11 +604,11 @@
   color: #6d7589;
 }
 
-.page.theme-dark .sh-modal-existing-title {
+.page.theme-dark .share-modal-existing-title {
   color: rgba(255, 255, 255, 0.55);
 }
 
-.sh-modal-link-input {
+.share-modal-link-input {
   flex: 1;
   padding: 0;
   border: none;
@@ -594,15 +622,15 @@
   min-width: 0;
 }
 
-.page.theme-light .sh-modal-link-input {
+.page.theme-light .share-modal-link-input {
   color: #344261;
 }
 
-.page.theme-dark .sh-modal-link-input {
+.page.theme-dark .share-modal-link-input {
   color: rgba(255, 255, 255, 0.84);
 }
 
-.sh-modal-icon-btn {
+.share-modal-icon-button {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -621,58 +649,58 @@
     opacity 0.14s ease;
 }
 
-.page.theme-light .sh-modal-icon-btn {
+.page.theme-light .share-modal-icon-button {
   background: rgba(0, 0, 0, 0.05);
   color: #6d7589;
 }
 
-.page.theme-light .sh-modal-icon-btn:hover {
+.page.theme-light .share-modal-icon-button:hover {
   background: rgba(0, 0, 0, 0.1);
   color: #22283a;
 }
 
-.sh-modal-icon-btn:hover {
+.share-modal-icon-button:hover {
   background: rgba(255, 255, 255, 0.14);
   color: #ffffff;
 }
 
-.sh-modal-icon-btn:disabled {
+.share-modal-icon-button:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
 
-.sh-modal-icon-btn--done {
+.share-modal-icon-button--done {
   background: rgba(34, 197, 94, 0.2);
   color: #22c55e;
 }
 
-.sh-modal-icon-btn--done:hover {
+.share-modal-icon-button--done:hover {
   background: rgba(34, 197, 94, 0.28);
   color: #4ade80;
 }
 
-.sh-modal-icon-btn--danger {
+.share-modal-icon-button--danger {
   background: rgba(220, 38, 38, 0.12);
   color: #f87171;
 }
 
-.sh-modal-icon-btn--danger:hover {
+.share-modal-icon-button--danger:hover {
   background: rgba(220, 38, 38, 0.2);
   color: #fca5a5;
 }
 
-.page.theme-light .sh-modal-icon-btn--danger {
+.page.theme-light .share-modal-icon-button--danger {
   background: #ef4444;
   color: #ffffff;
 }
 
-.page.theme-light .sh-modal-icon-btn--danger:hover {
+.page.theme-light .share-modal-icon-button--danger:hover {
   background: #dc2626;
   color: #ffffff;
 }
 
 @media (max-width: 640px) {
-  .sh-modal {
+  .share-modal {
     padding: 20px 16px;
   }
 }

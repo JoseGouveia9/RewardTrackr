@@ -12,7 +12,6 @@ interface AccountSwitchOptions {
   setMessage: (msg: string) => void;
 }
 
-// Clears cache and resets export config when a different account is detected on login.
 export function useAccountSwitch({
   user,
   resetConfig,

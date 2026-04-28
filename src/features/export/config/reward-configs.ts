@@ -12,16 +12,16 @@ const API_SE =
     : "https://api.se.gomining.com");
 
 export const REWARD_GROUPS: RewardGroup[] = [
-  { id: "solo-mining", label: "Solo Mining", keys: ["solo-mining"] },
-  { id: "minerwars", label: "MinerWars", keys: ["minerwars"] },
-  { id: "bounty", label: "Bounties", keys: ["bounty"] },
-  { id: "referrals", label: "Referrals", keys: ["referrals"] },
-  { id: "ambassador", label: "Ambassador", keys: ["ambassador"] },
-  { id: "deposits", label: "Deposits", keys: ["deposits"] },
-  { id: "withdrawals", label: "Withdrawals", keys: ["withdrawals"] },
-  { id: "purchases-upgrades", label: "Purchases & Upgrades", keys: ["purchases", "upgrades"] },
-  { id: "simple-earn", label: "Simple Earn", keys: ["simple-earn"] },
-  { id: "transactions", label: "Transactions", keys: ["transactions"] },
+  { id: "solo-mining", label: "tabs.soloMining", keys: ["solo-mining"] },
+  { id: "minerwars", label: "tabs.minerWars", keys: ["minerwars"] },
+  { id: "bounty", label: "tabs.bounties", keys: ["bounty"] },
+  { id: "referrals", label: "tabs.referrals", keys: ["referrals"] },
+  { id: "ambassador", label: "tabs.ambassador", keys: ["ambassador"] },
+  { id: "deposits", label: "tabs.deposits", keys: ["deposits"] },
+  { id: "withdrawals", label: "tabs.withdrawals", keys: ["withdrawals"] },
+  { id: "purchases-upgrades", label: "tabs.purchasesUpgrades", keys: ["purchases", "upgrades"] },
+  { id: "simple-earn", label: "tabs.simpleEarn", keys: ["simple-earn"] },
+  { id: "transactions", label: "tabs.transactions", keys: ["transactions"] },
 ];
 
 export const ALL_REWARD_KEYS: RewardKey[] = [...new Set(REWARD_GROUPS.flatMap((g) => g.keys))];

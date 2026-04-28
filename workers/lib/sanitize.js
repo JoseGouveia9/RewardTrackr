@@ -16,6 +16,7 @@ const SHARE_FIELDS_BY_KEY = {
   "solo-mining": [
     "createdAt",
     "currency",
+    "reinvestmentStatus",
     "poolReward",
     "poolRewardGMT",
     "poolRewardUSD",
@@ -28,12 +29,17 @@ const SHARE_FIELDS_BY_KEY = {
     "rewardGMT",
     "rewardInUSD",
     "rewardInFiat",
+    "reinvested",
     "totalPower",
     "discount",
+    "satsPerTh",
+    "btcPriceAtTime",
+    "btcPriceGmt",
   ],
   minerwars: [
     "createdAt",
     "currency",
+    "reinvestmentStatus",
     "poolReward",
     "poolRewardGMT",
     "poolRewardUSD",
@@ -46,8 +52,11 @@ const SHARE_FIELDS_BY_KEY = {
     "rewardGMT",
     "rewardInUSD",
     "rewardInFiat",
+    "reinvested",
     "totalPower",
     "discount",
+    "btcPriceAtTime",
+    "btcPriceGmt",
   ],
   bounty: ["createdAt", "currency", "reward", "rewardInUSD", "rewardInUsd", "rewardInFiat"],
   referrals: [
@@ -94,11 +103,16 @@ const SHARE_FIELDS_BY_KEY = {
 const STRING_FIELDS = new Set([
   "createdAt",
   "currency",
+  "reinvestmentStatus",
   "asset",
   "type",
   "txType",
   "fromType",
 ]);
+
+const BOOLEAN_FIELDS = new Set(["reinvested"]);
+
+const OPTIONAL_NUMBER_FIELDS = new Set(["satsPerTh", "btcPriceAtTime", "btcPriceGmt"]);
 
 function isPlainObject(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -121,8 +135,20 @@ function sanitizeRecord(record, allowedFields) {
   for (const field of allowedFields) {
     if (!(field in record)) continue;
     if (STRING_FIELDS.has(field)) {
-      const value = sanitizeString(record[field], 40);
+      const raw = record[field];
+      if (raw === null) { out[field] = null; continue; }
+      const value = sanitizeString(raw, 40);
       if (value) out[field] = value;
+      continue;
+    }
+    if (BOOLEAN_FIELDS.has(field)) {
+      out[field] = Boolean(record[field]);
+      continue;
+    }
+    if (OPTIONAL_NUMBER_FIELDS.has(field)) {
+      if (record[field] == null) continue;
+      const n = Number(record[field]);
+      if (Number.isFinite(n) && n > 0) out[field] = n;
       continue;
     }
     out[field] = sanitizeNumber(record[field]);

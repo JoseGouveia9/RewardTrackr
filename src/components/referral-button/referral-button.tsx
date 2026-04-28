@@ -1,4 +1,5 @@
 ﻿import { memo, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEscapeKey } from "@/hooks/use-escape-key";
 import "./referral-button.css";
@@ -9,12 +10,12 @@ interface ReferralButtonProps {
   onClose: () => void;
 }
 
-// Renders the "No GoMining account?" button and a modal with referral perks and sign-up link.
 export const ReferralButton = memo(function ReferralButton({
   open,
   onOpen,
   onClose,
 }: ReferralButtonProps) {
+  const { t } = useTranslation();
   useEscapeKey(onClose, open);
 
   useEffect(() => {
@@ -52,7 +53,7 @@ export const ReferralButton = memo(function ReferralButton({
           <line x1="19" y1="8" x2="19" y2="14" />
           <line x1="22" y1="11" x2="16" y2="11" />
         </svg>
-        <span>No GoMining account?</span>
+        <span>{t("referral.noAccount")}</span>
       </button>
 
       <AnimatePresence>
@@ -76,7 +77,7 @@ export const ReferralButton = memo(function ReferralButton({
               transition={{ duration: 0.24, ease: "easeInOut" }}
             >
               <div className="referral-modal-header">
-                <span className="referral-modal-title">No GoMining account?</span>
+                <span className="referral-modal-title">{t("referral.signUpTitle")}</span>
                 <button
                   type="button"
                   className="referral-modal-close"
@@ -98,26 +99,20 @@ export const ReferralButton = memo(function ReferralButton({
                 </button>
               </div>
 
-              <p className="referral-modal-intro">
-                Sign up with my referral code and get these bonuses:
-              </p>
+              <p className="referral-modal-intro">{t("referral.signUpIntro")}</p>
 
               <ul className="referral-modal-perks">
                 <li>
-                  <span className="referral-perk-title">
-                    5% bonus in TH on your first miner purchase
-                  </span>
-                  <span className="referral-perk-condition">Within 30 days after registration</span>
+                  <span className="referral-perk-title">{t("referral.bonus1Title")}</span>
+                  <span className="referral-perk-condition">{t("referral.bonus1Sub")}</span>
                 </li>
                 <li>
-                  <span className="referral-perk-title">
-                    $20 cashback in TH for the first $100 spent with the GoMining card
-                  </span>
-                  <span className="referral-perk-condition">Within 90 days after registration</span>
+                  <span className="referral-perk-title">{t("referral.bonus2Title")}</span>
+                  <span className="referral-perk-condition">{t("referral.bonus2Sub")}</span>
                 </li>
                 <li>
-                  <span className="referral-perk-title">30 days of Platinum+ for free</span>
-                  <span className="referral-perk-condition">Within 30 days after registration</span>
+                  <span className="referral-perk-title">{t("referral.bonus3Title")}</span>
+                  <span className="referral-perk-condition">{t("referral.bonus3Sub")}</span>
                 </li>
               </ul>
 
@@ -127,13 +122,10 @@ export const ReferralButton = memo(function ReferralButton({
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Sign Up for GoMining
+                {t("referral.signUp")}
               </a>
 
-              <p className="referral-modal-code">
-                Use code <strong>9GFJB2X</strong> on your profile and at checkout when buying your
-                first miner
-              </p>
+              <p className="referral-modal-code">{t("referral.useCode")}</p>
             </motion.div>
           </motion.div>
         )}

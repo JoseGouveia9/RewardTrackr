@@ -1,4 +1,6 @@
-﻿/* Trigger button */
+﻿/* ============================
+   Trigger Button
+   ============================ */
 
 .dv-trigger-button {
   display: flex;
@@ -90,15 +92,15 @@
   color: #fbb060;
 }
 
-/* Page */
+/* ============================
+   Page Layout
+   ============================ */
 
 .dv-page {
   display: flex;
   flex-direction: column;
   margin-top: 16px;
 }
-
-/* Header */
 
 .dv-header {
   display: flex;
@@ -206,8 +208,6 @@
   color: #f0f4ff;
 }
 
-/* Toolbar (group button + currency selector) */
-
 .dv-toolbar {
   display: flex;
   align-items: center;
@@ -223,6 +223,10 @@
 .page.theme-dark .dv-toolbar-separator {
   color: rgba(255, 255, 255, 0.2);
 }
+
+/* ============================
+   Group & Currency Controls
+   ============================ */
 
 .dv-group-button {
   display: flex;
@@ -270,8 +274,6 @@
   border-color: rgba(255, 255, 255, 0.25);
   color: #ffffff;
 }
-
-/* Currency selector */
 
 .dv-currency-selector {
   display: flex;
@@ -321,7 +323,9 @@
   color: #ffffff;
 }
 
-/* Tabs */
+/* ============================
+   Tabs
+   ============================ */
 
 .dv-tabs {
   display: flex;
@@ -386,7 +390,6 @@
   right: -6px;
 }
 
-
 .dv-tab:not(.dv-tab--active):hover {
   background: rgba(0, 0, 0, 0.05);
   color: #22283a;
@@ -419,7 +422,9 @@
   color: #fbb060;
 }
 
-/* Totals row */
+/* ============================
+   Totals Table
+   ============================ */
 
 .dv-total-cell-label {
   display: block;
@@ -485,7 +490,9 @@
   color: #fbb060 !important;
 }
 
-/* Tables */
+/* ============================
+   Data Table
+   ============================ */
 
 .dv-content {
   flex: 1;
@@ -506,19 +513,14 @@
   table-layout: fixed;
 }
 
-/* Mining (6-col): on mobile the fixed width forces horizontal scroll;
-   on desktop (≥641px) let it stretch to 100% via the override below */
 .dv-tables-wrap--wide .dv-table {
   width: 750px;
 }
 
-/* Simple Earn (4-col): on mobile the hook fits all columns in the viewport;
-   on desktop stretch to 100% */
 .dv-tables-wrap--scroll .dv-table {
   width: 560px;
 }
 
-/* On desktop both tables should fill the full container width */
 @media (min-width: 641px) {
   .dv-tables-wrap--wide .dv-table,
   .dv-tables-wrap--scroll .dv-table {
@@ -526,7 +528,6 @@
   }
 }
 
-/* Totals table */
 .dv-table-totals {
   border: 1px solid rgba(247, 147, 26, 0.4);
   border-radius: 14px;
@@ -581,7 +582,6 @@
   color: #f7931a;
 }
 
-/* Clickable totals rows (currency filter toggle) */
 .dv-totals-row--clickable {
   cursor: pointer;
   user-select: none;
@@ -615,7 +615,6 @@
   text-decoration: line-through;
 }
 
-/* Data table */
 .dv-table-data {
   border: 1px solid rgba(0, 0, 0, 0.06);
   border-radius: 14px;
@@ -685,6 +684,29 @@
   font-size: 0.78rem;
 }
 
+.dv-diff-adj {
+  font-size: 0.68rem;
+  font-weight: 600;
+  margin-top: 2px;
+  letter-spacing: 0.01em;
+}
+
+.dv-diff-adj--up {
+  color: #e05252;
+}
+
+.dv-diff-adj--down {
+  color: #4caf7d;
+}
+
+.page.theme-dark .dv-diff-adj--up {
+  color: #f87171;
+}
+
+.page.theme-dark .dv-diff-adj--down {
+  color: #6ee7a0;
+}
+
 .dv-cell-accent {
   color: #f7931a !important;
   font-weight: 600;
@@ -694,15 +716,12 @@
   color: #fbb060 !important;
 }
 
-/* Type column: wrap at word boundaries; only break inside a word as last resort.
-   Use .dv-table td.dv-cell-type for higher specificity than .dv-table td */
 .dv-table td.dv-cell-type {
   white-space: normal;
   overflow-wrap: break-word;
   max-width: 130px;
 }
 
-/* Responsive label: full text on desktop, short on mobile */
 .dv-label--short {
   display: none;
 }
@@ -716,13 +735,314 @@
   }
 }
 
-/* Currency icons */
-
 .dv-cell-with-icon {
   display: inline-flex;
   align-items: center;
   gap: 5px;
   vertical-align: middle;
+}
+
+/* ============================
+   Formula Tooltip
+   ============================ */
+
+.dv-info-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  margin-left: 3px;
+  vertical-align: middle;
+}
+
+.dv-info-icon {
+  cursor: default;
+  opacity: 0.4;
+  color: inherit;
+  line-height: 0;
+  transition: opacity 0.12s;
+}
+
+.dv-info-wrap:hover .dv-info-icon {
+  opacity: 0.9;
+}
+
+.dv-formula-tooltip {
+  display: none;
+  position: absolute;
+  top: calc(100% + 7px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1a1a1c;
+  color: #dde1f0;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  border-radius: 8px;
+  padding: 10px 13px;
+  width: max-content;
+  white-space: normal;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.65;
+  z-index: 200;
+  pointer-events: none;
+  text-align: left;
+  overflow-wrap: break-word;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+
+.page.theme-light .dv-formula-tooltip {
+  background: #ffffff;
+  color: #22283a;
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.page.theme-light .dv-formula-tooltip::before {
+  border-bottom-color: rgba(0, 0, 0, 0.1);
+}
+
+.dv-formula-tooltip::before {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-bottom-color: var(--border-color, rgba(255, 255, 255, 0.1));
+}
+
+.dv-formula-tooltip--right {
+  left: auto;
+  right: 0;
+  transform: none;
+}
+
+.dv-formula-tooltip--right::before {
+  left: auto;
+  right: 5px;
+  transform: none;
+}
+
+.dv-info-wrap:hover .dv-formula-tooltip {
+  display: block;
+}
+
+.dv-table-data thead th:has(.dv-info-wrap:hover),
+.dv-table-data thead th:has(.dv-column-filter-dropdown) {
+  z-index: 3;
+}
+
+.dv-math-line {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+  font-size: 11px;
+}
+
+.dv-math-line:last-child {
+  margin-bottom: 0;
+}
+
+.dv-math-frac {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  vertical-align: middle;
+  margin: 0 2px;
+  line-height: 1.25;
+}
+
+.dv-math-num {
+  border-bottom: 1px solid currentColor;
+  padding: 0 3px 2px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.dv-math-den {
+  padding: 2px 3px 0;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.dv-math-label {
+  font-weight: 600;
+  font-size: 11.5px;
+  margin-bottom: 8px;
+  opacity: 0.9;
+  text-align: center;
+}
+
+.dv-math-sep {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 6px 0 8px;
+}
+
+.page.theme-light .dv-math-sep {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.dv-math-var {
+  font-style: italic;
+  opacity: 0.75;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+/* ============================
+   Sub-labels & Currency Icons
+   ============================ */
+
+.dv-th-sub {
+  display: block;
+  font-size: 0.6rem;
+  font-weight: inherit;
+  color: inherit;
+  margin-top: 1px;
+  text-transform: none;
+  letter-spacing: 0;
+  opacity: 0.35;
+  overflow: hidden;
+}
+
+.dv-cell-sub {
+  font-size: 0.62rem;
+  color: rgba(176, 183, 204, 0.7);
+  margin-top: 1px;
+  line-height: 1.4;
+  overflow: hidden;
+}
+
+/* ============================
+   Trends Toggle
+   ============================ */
+
+.dv-trends-toggle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  background: transparent;
+  color: #6d7589;
+  cursor: pointer;
+  font-size: 0.75rem !important;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition:
+    background 0.12s ease,
+    color 0.12s ease,
+    border-color 0.12s ease;
+}
+
+.dv-trends-toggle:not(.dv-trends-toggle--active):hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #22283a;
+}
+
+.dv-trends-toggle--active {
+  background: rgba(22, 163, 74, 0.08);
+  border-color: rgba(22, 163, 74, 0.25);
+  color: #16a34a;
+}
+
+.page.theme-light .dv-trends-toggle--active {
+  background: #16a34a;
+  border-color: #16a34a;
+  color: #ffffff;
+}
+
+.page.theme-dark .dv-trends-toggle {
+  border-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.page.theme-dark .dv-trends-toggle:not(.dv-trends-toggle--active):hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.page.theme-dark .dv-trends-toggle--active {
+  background: rgba(74, 222, 128, 0.1);
+  border-color: rgba(74, 222, 128, 0.25);
+  color: #4ade80;
+}
+
+/* ============================
+   Trend Arrow
+   ============================ */
+
+.dv-trends-active .dv-cell-sub,
+.dv-trends-active .dv-th-sub {
+  animation: dv-bop-in 0.22s ease both;
+}
+
+.dv-trends-visible .dv-cell-sub,
+.dv-trends-visible .dv-th-sub {
+  opacity: 1;
+  max-height: 24px;
+  transform: translateY(0);
+}
+
+.dv-trends-exiting .dv-cell-sub,
+.dv-trends-exiting .dv-th-sub {
+  animation: dv-bop-out 0.18s ease both;
+}
+
+@keyframes dv-bop-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-6px);
+    max-height: 0;
+  }
+  65% {
+    transform: translateY(1px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 24px;
+  }
+}
+
+@keyframes dv-bop-out {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 24px;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-6px);
+    max-height: 0;
+  }
+}
+
+.dv-trend {
+  display: inline;
+  vertical-align: middle;
+  margin-left: 4px;
+  letter-spacing: 0.01em;
+}
+
+.dv-trend--up {
+  color: #16a34a;
+}
+
+.dv-trend--down {
+  color: #dc2626;
+}
+
+.page.theme-dark .dv-trend--up {
+  color: #4ade80;
+}
+
+.page.theme-dark .dv-trend--down {
+  color: #f87171;
 }
 
 .dv-currency-icon {
@@ -773,7 +1093,9 @@
   color: #22283a;
 }
 
-/* Pagination */
+/* ============================
+   Pagination
+   ============================ */
 
 .dv-pagination {
   display: flex;
@@ -851,14 +1173,15 @@
   color: rgba(255, 255, 255, 0.45);
 }
 
-/* Column filters */
+/* ============================
+   Date Filter
+   ============================ */
 
 .dv-column-filter {
   position: relative;
   display: inline-block;
 }
 
-/* Matches thead th styling exactly */
 .dv-column-filter-button {
   display: inline-flex;
   align-items: center;
@@ -892,7 +1215,6 @@
   color: #fbb060 !important;
 }
 
-/* Dropdown panel - glass card style */
 .dv-column-filter-dropdown {
   position: absolute;
   top: calc(100% + 4px);
@@ -925,13 +1247,11 @@
     0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
-/* Date two-column layout */
 .dv-filter-date-layout {
   display: flex;
   gap: 16px;
 }
 
-/* Left: presets + actions */
 .dv-filter-date-presets {
   display: flex;
   flex-direction: column;
@@ -964,7 +1284,7 @@
     color 0.1s ease;
 }
 
-.dv-filter-preset-button:hover {
+.dv-filter-preset-button:not(.dv-filter-preset-button--active):hover {
   background: rgba(0, 0, 0, 0.05);
   border-color: rgba(0, 0, 0, 0.18);
   color: #22283a;
@@ -981,7 +1301,7 @@
   color: rgba(255, 255, 255, 0.6);
 }
 
-.page.theme-dark .dv-filter-preset-button:hover {
+.page.theme-dark .dv-filter-preset-button:not(.dv-filter-preset-button--active):hover {
   background: rgba(255, 255, 255, 0.07);
   border-color: rgba(255, 255, 255, 0.22);
   color: rgba(255, 255, 255, 0.9);
@@ -993,7 +1313,6 @@
   color: #fbb060;
 }
 
-/* Apply / Cancel actions */
 .dv-filter-actions {
   display: flex;
   flex-direction: column;
@@ -1087,14 +1406,16 @@
   background: rgba(255, 255, 255, 0.06);
 }
 
-/* Right: calendar column */
 .dv-filter-calendars {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-/* Calendar month/year custom selects */
+/* ============================
+   Calendar Select
+   ============================ */
+
 .dv-cal-header {
   display: flex;
   gap: 6px;
@@ -1134,7 +1455,7 @@
   transition: transform 0.15s ease;
 }
 
-.dv-cal-sel-caret.open {
+.dv-cal-sel-caret--open {
   transform: rotate(180deg);
 }
 
@@ -1178,15 +1499,15 @@
   position: relative;
 }
 
-.dv-cal-sel-option:hover:not(.disabled) {
+.dv-cal-sel-option:hover:not(.dv-cal-sel-option--disabled) {
   background: rgba(255, 255, 255, 0.06);
 }
 
-.dv-cal-sel-option.selected {
+.dv-cal-sel-option--selected {
   color: #f7931a;
 }
 
-.dv-cal-sel-option.disabled {
+.dv-cal-sel-option--disabled {
   opacity: 0.28;
   cursor: default;
   pointer-events: none;
@@ -1201,7 +1522,6 @@
   font-size: 0.85rem;
 }
 
-/* Light theme */
 .page.theme-light .dv-cal-sel-menu {
   background: rgba(255, 255, 255, 0.97);
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
@@ -1223,7 +1543,7 @@
   background: rgba(0, 0, 0, 0.05);
 }
 
-.page.theme-light .dv-cal-sel-option.selected {
+.page.theme-light .dv-cal-sel-option--selected {
   color: #e07d10;
 }
 
@@ -1231,7 +1551,6 @@
   color: #e07d10;
 }
 
-/* Dark theme */
 .page.theme-dark .dv-cal-sel-trigger {
   background: rgba(255, 255, 255, 0.08);
   color: rgba(255, 255, 255, 0.85);
@@ -1245,7 +1564,10 @@
   color: #fbb060;
 }
 
-/* Calendar grid */
+/* ============================
+   Calendar Grid
+   ============================ */
+
 .dv-cal-grid {
   display: grid;
   grid-template-columns: repeat(7, 30px);
@@ -1357,7 +1679,10 @@
   color: #ffffff !important;
 }
 
-/* Checkbox list */
+/* ============================
+   Filter Checkboxes
+   ============================ */
+
 .dv-filter-checks {
   display: flex;
   flex-direction: column;
@@ -1393,7 +1718,6 @@
   background: rgba(255, 255, 255, 0.05);
 }
 
-/* Custom checkbox */
 .dv-filter-checkbox {
   appearance: none;
   -webkit-appearance: none;
@@ -1438,7 +1762,6 @@
   border-color: #f7931a;
 }
 
-/* Clear link (TypeCheckFilter) */
 .dv-filter-clear-link {
   align-self: flex-start;
   background: transparent;
@@ -1461,7 +1784,9 @@
   color: #fbb060;
 }
 
-/* Empty state */
+/* ============================
+   Loading & Empty States
+   ============================ */
 
 .dv-empty {
   padding: 40px 20px;
@@ -1525,7 +1850,9 @@
   }
 }
 
-/* Mobile */
+/* ============================
+   Mobile Overrides
+   ============================ */
 
 @media (max-width: 640px) {
   .dv-column-filter-dropdown {

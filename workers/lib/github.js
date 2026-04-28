@@ -32,7 +32,6 @@ async function ghFetch(token, path, method, body) {
   });
 }
 
-
 export async function getFileSha(token, path) {
   const res = await ghFetch(token, path, "GET");
   if (!res.ok) return null;
@@ -50,7 +49,6 @@ export async function readFile(token, path, { withSha = false } = {}) {
   if (data.content) {
     content = fromBase64(data.content);
   } else if (sha) {
-    // File >1MB: content is null, fetch by blob SHA via Git API (content-addressed, no CDN caching)
     const blobRes = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/git/blobs/${sha}`, {
       cache: "no-store",
       headers: {

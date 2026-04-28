@@ -1,5 +1,6 @@
 ﻿import { memo, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import type { AuthUser } from "../../types";
 import "./header-user-menu.css";
 
@@ -23,18 +24,20 @@ interface HeaderUserMenuProps {
   theme: string;
   onToggleTheme: () => void;
   onLogout: () => void;
+  onOpenLanguage: () => void;
 }
 
-// Renders the user avatar button with a dropdown showing user info, theme toggle, and logout.
 export const HeaderUserMenu = memo(function HeaderUserMenu({
   user,
   displayAlias,
   theme,
   onToggleTheme,
   onLogout,
+  onOpenLanguage,
 }: HeaderUserMenuProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (!open) return;
@@ -115,7 +118,7 @@ export const HeaderUserMenu = memo(function HeaderUserMenu({
                   <line x1="16" x2="14" y1="3" y2="21" />
                 </svg>
               </span>
-              <span className="user-menu-info-label">User ID:</span>
+              <span className="user-menu-info-label">{t("auth.userId")}</span>
               <span className="user-menu-info-value">{user.id || "n/a"}</span>
             </div>
             <div className="user-menu-info-row">
@@ -135,7 +138,7 @@ export const HeaderUserMenu = memo(function HeaderUserMenu({
                   <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
                 </svg>
               </span>
-              <span className="user-menu-info-label">Email:</span>
+              <span className="user-menu-info-label">{t("auth.email")}</span>
               <span className="user-menu-info-value">{user.email || "n/a"}</span>
             </div>
 
@@ -184,7 +187,35 @@ export const HeaderUserMenu = memo(function HeaderUserMenu({
                   </svg>
                 )}
               </span>
-              {theme === "dark" ? "Light Mode" : "Dark Mode"}
+              {theme === "dark" ? t("auth.lightMode") : t("auth.darkMode")}
+            </button>
+
+            <button
+              type="button"
+              className="user-menu-action"
+              role="menuitem"
+              onClick={() => {
+                setOpen(false);
+                onOpenLanguage();
+              }}
+            >
+              <span className="user-menu-action-icon" aria-hidden="true">
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="2" y1="12" x2="22" y2="12" />
+                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                </svg>
+              </span>
+              {t("auth.language")}
             </button>
 
             <button
@@ -212,7 +243,7 @@ export const HeaderUserMenu = memo(function HeaderUserMenu({
                   <line x1="21" y1="12" x2="9" y2="12" />
                 </svg>
               </span>
-              Logout
+              {t("auth.logout")}
             </button>
           </motion.div>
         )}

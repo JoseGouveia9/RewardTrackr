@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { fetchDirectory } from "../../api";
 import type { DirectoryEntry } from "../../types";
 import { DirectoryRow } from "../shared-banner/shared-banner";
 import "./community-page.css";
 
-// Full-page community directory listing all shared profiles.
 export function CommunityPage({ onClose }: { onClose: () => void }) {
+  const { t } = useTranslation();
   const [entries, setEntries] = useState<DirectoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -25,8 +26,8 @@ export function CommunityPage({ onClose }: { onClose: () => void }) {
   }, []);
 
   return (
-    <div className="sh-community">
-      <div className="sh-community-header">
+    <div className="community">
+      <div className="community-header">
         <button type="button" className="dv-back-button" onClick={onClose} aria-label="Back">
           <svg
             width="16"
@@ -42,37 +43,35 @@ export function CommunityPage({ onClose }: { onClose: () => void }) {
             <path d="M19 12H5" />
             <path d="M12 19l-7-7 7-7" />
           </svg>
-          <span>Back</span>
+          <span>{t("common.back")}</span>
         </button>
-        <span className="dv-title">Community</span>
+        <span className="dv-title">{t("share.communityTitle")}</span>
       </div>
 
-      <p className="sh-community-sub">
-        Shared profiles from RewardTrackr users. Click any row to view their records.
-      </p>
+      <p className="community-sub">{t("share.communitySubtitle")}</p>
 
-      {error && <p className="sh-community-error">{error}</p>}
+      {error && <p className="community-error">{error}</p>}
 
       {loading && (
-        <div className="sh-community-loading">
-          <span className="sh-community-loading-inline">
-            <span className="sh-community-spinner" aria-hidden="true" />
-            <span>Fetching community profiles...</span>
+        <div className="community-loading">
+          <span className="community-loading-inline">
+            <span className="community-spinner" aria-hidden="true" />
+            <span>{t("share.fetchingProfiles")}</span>
           </span>
         </div>
       )}
 
       {!loading && !error && visibleEntries.length === 0 && (
-        <p className="sh-community-empty">No shared profiles yet. Be the first!</p>
+        <p className="community-empty">{t("share.noProfiles")}</p>
       )}
 
       {!loading && visibleEntries.length > 0 && (
-        <div className="sh-community-table-wrap">
-          <table className="sh-community-table">
+        <div className="community-table-wrap">
+          <table className="community-table">
             <thead>
               <tr>
-                <th>User</th>
-                <th>Updated</th>
+                <th>{t("common.user")}</th>
+                <th>{t("common.updated")}</th>
               </tr>
             </thead>
             <tbody>

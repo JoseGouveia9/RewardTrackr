@@ -3,7 +3,6 @@ import { ErrorBoundary } from "@/components/error-boundary/error-boundary";
 import { ThemeProvider } from "./theme-context";
 import App from "./App";
 
-// Root provider: wraps the app in BrowserRouter, ErrorBoundary, and ThemeProvider.
 export function Provider() {
   return (
     <BrowserRouter>

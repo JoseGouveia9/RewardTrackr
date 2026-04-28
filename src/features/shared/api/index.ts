@@ -4,20 +4,18 @@ import type { CacheState } from "@/features/export/types";
 const RAW_BASE = "https://raw.githubusercontent.com/JoseGouveia9/rewardtrackr-shared/main/shared";
 
 const WORKER_URL = (import.meta.env.VITE_WORKER_URL as string | undefined) ?? "";
+// Deduplicates concurrent callers — only one in-flight request per resource at a time
 let inFlightDirectory: Promise<DirectoryEntry[]> | null = null;
 const inFlightProfiles = new Map<string, Promise<SharedProfile>>();
 
-// Returns true if the Cloudflare Worker URL is configured in this deployment.
 export function isWorkerConfigured(): boolean {
   return !!WORKER_URL;
 }
 
-// Builds the public share URL for a given profile id slug.
 export function buildShareLink(profileId: string): string {
   return `${window.location.origin}/view/${profileId}`;
 }
 
-// Fetches the public directory listing from the shared repo.
 export async function fetchDirectory(): Promise<DirectoryEntry[]> {
   if (inFlightDirectory) return inFlightDirectory;
 
@@ -43,7 +41,6 @@ export async function fetchDirectory(): Promise<DirectoryEntry[]> {
   }
 }
 
-// Fetches a single shared profile by its id slug.
 export async function fetchSharedProfile(id: string): Promise<SharedProfile> {
   const safeId = id.toLowerCase().replace(/[^a-z0-9_-]/g, "");
   const inFlight = inFlightProfiles.get(safeId);
@@ -71,7 +68,6 @@ export async function fetchSharedProfile(id: string): Promise<SharedProfile> {
   }
 }
 
-// POSTs the user's records to the Cloudflare Worker which writes them to the shared repo.
 export async function publishProfile(
   alias: string,
   sheets: Partial<CacheState>,
@@ -92,7 +88,6 @@ export async function publishProfile(
   return res.json() as Promise<{ id: string; updatedAt: string }>;
 }
 
-// Fetches the authenticated user's own shared profile metadata from the worker.
 export async function fetchMySharedProfile(authToken: string): Promise<{
   exists: boolean;
   id?: string;
@@ -126,7 +121,6 @@ export interface Announcement {
   message: string;
 }
 
-// Fetches the current announcement from the worker, returning null if none is active.
 export async function fetchAnnouncement(): Promise<Announcement | null> {
   if (!WORKER_URL) return null;
   try {
@@ -140,7 +134,6 @@ export async function fetchAnnouncement(): Promise<Announcement | null> {
   }
 }
 
-// Deletes the authenticated user's shared profile via the worker.
 export async function deleteMySharedProfile(
   authToken: string,
 ): Promise<{ deleted: boolean; id?: string }> {

@@ -1,7 +1,7 @@
 ﻿import type { MouseEvent } from "react";
+import { useTranslation } from "react-i18next";
 import { PAGE_SIZE } from "../../utils/constants";
 
-// Renders previous/next page buttons; returns null when there is only one page.
 export function Pagination({
   page,
   total,
@@ -11,6 +11,7 @@ export function Pagination({
   total: number;
   onChange: (p: number) => void;
 }) {
+  const { t } = useTranslation();
   const pageCount = Math.ceil(total / PAGE_SIZE);
   if (pageCount <= 1) return null;
 
@@ -31,19 +32,19 @@ export function Pagination({
         className="dv-pagination-button"
         onClick={goPrev}
         disabled={page === 0}
-        aria-label="Previous page"
+        aria-label={t("dataViewer.previousPage")}
       >
         ‹
       </button>
       <span className="dv-pagination-info">
-        {page + 1} / {pageCount}
+        {t("dataViewer.pageOf", { page: page + 1, total: pageCount })}
       </span>
       <button
         type="button"
         className="dv-pagination-button"
         onClick={goNext}
         disabled={page >= pageCount - 1}
-        aria-label="Next page"
+        aria-label={t("dataViewer.nextPage")}
       >
         ›
       </button>

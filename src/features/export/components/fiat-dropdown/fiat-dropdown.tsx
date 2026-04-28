@@ -1,5 +1,6 @@
 ﻿import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
 import { FIAT_OPTIONS } from "../../config/currencies";
 import "./fiat-dropdown.css";
 import type { ExtraFiatCurrency } from "../../types";
@@ -9,8 +10,8 @@ interface FiatDropdownProps {
   onChange: (currency: ExtraFiatCurrency) => void;
 }
 
-// Renders a searchable fiat-currency dropdown with keyboard navigation.
 export const FiatDropdown = memo(function FiatDropdown({ value, onChange }: FiatDropdownProps) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState("");
   const [focusedIndex, setFocusedIndex] = useState(-1);
@@ -72,19 +73,16 @@ export const FiatDropdown = memo(function FiatDropdown({ value, onChange }: Fiat
     };
   }, [open, updateMenuAnchor, updateMenuThemeClass]);
 
-  // Closes the dropdown and resets the search filter.
   function close(): void {
     setOpen(false);
     setFilter("");
   }
 
-  // Notifies the parent of the selected currency and closes the dropdown.
   function selectOption(currency: string): void {
     onChange(currency as ExtraFiatCurrency);
     close();
   }
 
-  // Handles Escape, ArrowUp/Down, and Enter keyboard events on the search input.
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>): void {
     if (e.key === "Escape") {
       close();
@@ -113,7 +111,7 @@ export const FiatDropdown = memo(function FiatDropdown({ value, onChange }: Fiat
           <div
             className={`fiat-dropdown-menu fiat-dropdown-menu-portal ${menuThemeClass}`}
             role="listbox"
-            aria-label="Extra fiat currency"
+            aria-label={t("export.extraFiatCurrency")}
             ref={(el) => {
               listRef.current = el;
               menuRef.current = el;
@@ -127,19 +125,19 @@ export const FiatDropdown = memo(function FiatDropdown({ value, onChange }: Fiat
             <input
               className="fiat-dropdown-search"
               type="text"
-              placeholder="Search currency..."
+              placeholder={t("export.searchCurrency")}
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
               onKeyDown={handleKeyDown}
               autoFocus
-              aria-label="Search currencies"
+              aria-label={t("export.searchCurrencies")}
             />
             {filtered.map(({ currency, label }, idx) => (
               <div
                 key={currency}
                 role="option"
                 aria-selected={value === currency}
-                className={`fiat-dropdown-option ${value === currency ? "selected" : ""} ${focusedIndex === idx ? "focused" : ""}`}
+                className={`fiat-dropdown-option${focusedIndex === idx ? " fiat-dropdown-option--focused" : ""}`}
                 onClick={() => selectOption(currency)}
                 onMouseEnter={() => setFocusedIndex(idx)}
               >
@@ -172,7 +170,7 @@ export const FiatDropdown = memo(function FiatDropdown({ value, onChange }: Fiat
         aria-expanded={open}
       >
         <span>{value}</span>
-        <span className={`fiat-dropdown-caret ${open ? "open" : ""}`}>⌃</span>
+        <span className={`fiat-dropdown-caret${open ? " fiat-dropdown-caret--open" : ""}`}>⌃</span>
       </button>
       {menu}
     </span>
