@@ -35,36 +35,30 @@
 }
 
 .dv-trigger-button--has-new {
-  animation: dv-trigger-vibrate 2s ease-in-out infinite;
+  animation: dv-trigger-vibrate 1.6s ease-in-out infinite;
   will-change: transform;
   backface-visibility: hidden;
 }
 
 @keyframes dv-trigger-vibrate {
   0%,
-  60%,
+  70%,
   100% {
     transform: translate3d(0, 0, 0);
   }
-  63% {
-    transform: translate3d(-3px, 0, 0);
+  73% {
+    transform: translate3d(-1px, 0, 0);
   }
-  66% {
-    transform: translate3d(3px, 0, 0);
+  76% {
+    transform: translate3d(1px, 0, 0);
   }
-  69% {
-    transform: translate3d(-3px, 0, 0);
+  79% {
+    transform: translate3d(-1px, 0, 0);
   }
-  72% {
-    transform: translate3d(3px, 0, 0);
+  82% {
+    transform: translate3d(1px, 0, 0);
   }
-  75% {
-    transform: translate3d(-2px, 0, 0);
-  }
-  78% {
-    transform: translate3d(2px, 0, 0);
-  }
-  81% {
+  85% {
     transform: translate3d(0, 0, 0);
   }
 }
