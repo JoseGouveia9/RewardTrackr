@@ -51,20 +51,11 @@ function tSheetName(key: string, fallback: string): string {
   return i18nKey ? i18n.t(i18nKey, { defaultValue: fallback }) : fallback;
 }
 
-async function hashToken(token: string): Promise<string> {
-  const encoded = new TextEncoder().encode(token);
-  const buffer = await crypto.subtle.digest("SHA-256", encoded);
-  return Array.from(new Uint8Array(buffer))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
-
 async function checkExportRateLimit(token: string): Promise<void> {
   if (!WORKER_URL) return;
-  const hash = await hashToken(token);
   const response = await fetch(`${WORKER_URL}/rl-check`, {
     method: "POST",
-    headers: { Authorization: `Bearer ${hash}` },
+    headers: { Authorization: `Bearer ${token}` },
   });
   if (!response.ok) {
     const data = (await response.json().catch(() => null)) as { message?: string } | null;
@@ -74,10 +65,9 @@ async function checkExportRateLimit(token: string): Promise<void> {
 
 async function rollbackExportRateLimit(token: string): Promise<void> {
   if (!WORKER_URL) return;
-  const hash = await hashToken(token);
   await fetch(`${WORKER_URL}/rl-rollback`, {
     method: "POST",
-    headers: { Authorization: `Bearer ${hash}` },
+    headers: { Authorization: `Bearer ${token}` },
   }).catch(() => {});
 }
 
