@@ -74,9 +74,9 @@ export function PrivacyPage() {
           <h2 className="legal-section-title">Security notice</h2>
           <p>
             Your API token is stored only in your browser session and is transmitted solely to the
-            GoMining API and the rate-limit service described below. Browser storage may still be
-            accessible to scripts running on the page or anyone with access to your device. Use
-            RewardTrackr only on trusted devices and keep your browser secure.
+            GoMining API. It is never sent to any server operated by this project. Browser storage
+            may still be accessible to scripts running on the page or anyone with access to your
+            device. Use RewardTrackr only on trusted devices and keep your browser secure.
           </p>
         </div>
 
@@ -87,9 +87,9 @@ export function PrivacyPage() {
             <li>
               <strong>RewardTrackr rate-limit service (Cloudflare Worker)</strong> — when you start
               an export, a request is sent to a Cloudflare Worker operated by this project to
-              enforce fair-use limits. Your access token is included to identify your session. The
-              worker does not store your token or reward data — it only records a timestamp to track
-              usage.
+              enforce fair-use limits. A one-way SHA-256 hash of your token is used to identify your
+              session — the raw token is never sent. The worker does not store your token or reward
+              data — it only records a timestamp to track usage.
             </li>
             <li>
               <strong>GoMining API</strong> — to fetch your reward records. Your access token is
