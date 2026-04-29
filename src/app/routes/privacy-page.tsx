@@ -34,10 +34,9 @@ export function PrivacyPage() {
         <div className="legal-section">
           <h2 className="legal-section-title">No data collection</h2>
           <p>
-            RewardTrackr does not operate its own backend or database. It does not collect, store,
-            or transmit your personal data to any server operated by this project. There is no
-            account system, no analytics, and no telemetry of any kind. Data remains in your browser
-            unless you explicitly export or share it.
+            RewardTrackr does not collect, store, or sell your personal data. There is no account
+            system, no analytics, and no telemetry. Your reward records and preferences stay in your
+            browser. The only exception is a minimal rate-limit check described below.
           </p>
         </div>
 
@@ -65,26 +64,33 @@ export function PrivacyPage() {
             <li>UI preferences (theme, language, dismissed notices)</li>
           </ul>
           <p>
-            RewardTrackr does not operate its own backend or database. Data remains in your browser
-            unless you explicitly export or share it. You can remove stored data at any time by
-            clearing your browser's site data or using the in-app "Clear cache" option.
+            Data remains in your browser unless you explicitly export or share it. You can remove
+            stored data at any time by clearing your browser's site data or using the in-app "Clear
+            cache" option.
           </p>
         </div>
 
         <div className="legal-section">
           <h2 className="legal-section-title">Security notice</h2>
           <p>
-            While your API token is stored only in your browser session and is not transmitted
-            anywhere except directly to the GoMining API, browser storage may still be accessible to
-            scripts running on the page or anyone with access to your device. Use RewardTrackr only
-            on trusted devices and keep your browser secure.
+            Your API token is stored only in your browser session and is transmitted solely to the
+            GoMining API and the rate-limit service described below. Browser storage may still be
+            accessible to scripts running on the page or anyone with access to your device. Use
+            RewardTrackr only on trusted devices and keep your browser secure.
           </p>
         </div>
 
         <div className="legal-section">
-          <h2 className="legal-section-title">Third-party API calls</h2>
-          <p>RewardTrackr makes requests to the following external services on your behalf:</p>
+          <h2 className="legal-section-title">External requests</h2>
+          <p>RewardTrackr makes requests to the following services:</p>
           <ul>
+            <li>
+              <strong>RewardTrackr rate-limit service (Cloudflare Worker)</strong> — when you start
+              an export, a request is sent to a Cloudflare Worker operated by this project to
+              enforce fair-use limits. Your access token is included to identify your session. The
+              worker does not store your token or reward data — it only records a timestamp to track
+              usage.
+            </li>
             <li>
               <strong>GoMining API</strong> — to fetch your reward records. Your access token is
               sent in the request header. This is subject to GoMining's own privacy policy.
