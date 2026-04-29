@@ -43,31 +43,41 @@ export function PrivacyPage() {
 
         <div className="legal-section">
           <h2 className="legal-section-title">What is stored in your browser</h2>
+          <p>All data RewardTrackr uses is stored locally in your browser.</p>
           <p>
-            All data RewardTrackr uses is stored locally in your browser's <code>localStorage</code>
-            . This includes:
+            <strong>Session storage (temporary):</strong>
           </p>
           <ul>
             <li>
-              Your GoMining API access token — used solely to call the GoMining API on your behalf
+              Your GoMining API access token — stored in <code>sessionStorage</code> and used solely
+              to authenticate requests directly to the GoMining API on your behalf. This token is
+              automatically cleared when the browser tab or session is closed.
             </li>
-            <li>Cached reward records from your last sync — so incremental exports are faster</li>
-            <li>Your export preferences (selected sheets, currency settings)</li>
+          </ul>
+          <p>
+            <strong>Local storage (persistent):</strong>
+          </p>
+          <ul>
+            <li>
+              Cached reward records from your last sync — to support faster incremental exports
+            </li>
+            <li>Export preferences (selected sheets, currency settings)</li>
             <li>UI preferences (theme, language, dismissed notices)</li>
           </ul>
           <p>
-            This data remains stored locally until you delete it or clear your browser storage. You
-            can clear it at any time by clearing your browser's site data or using the "Clear cache"
-            option in the app.
+            RewardTrackr does not operate its own backend or database. Data remains in your browser
+            unless you explicitly export or share it. You can remove stored data at any time by
+            clearing your browser's site data or using the in-app "Clear cache" option.
           </p>
         </div>
 
         <div className="legal-section">
           <h2 className="legal-section-title">Security notice</h2>
           <p>
-            Because RewardTrackr stores your API token in your browser's <code>localStorage</code>,
-            anyone with access to your browser profile or device may be able to access it. Use a
-            secure, personal device and avoid using RewardTrackr on shared or public computers.
+            While your API token is stored only in your browser session and is not transmitted
+            anywhere except directly to the GoMining API, browser storage may still be accessible to
+            scripts running on the page or anyone with access to your device. Use RewardTrackr only
+            on trusted devices and keep your browser secure.
           </p>
         </div>
 

@@ -36,8 +36,8 @@ export function AboutPage() {
           <p>
             RewardTrackr is a free, open-source browser tool that lets GoMining users export and
             analyse their reward history. It connects directly to the GoMining API using your
-            personal access token stored locally in your browser, and organises your data into a
-            structured Excel spreadsheet you can download and keep.
+            personal access token stored temporarily in your browser session, and organises your
+            data into a structured Excel spreadsheet you can download and keep.
           </p>
           <p>
             RewardTrackr does not operate its own backend or database. Data remains in your browser
