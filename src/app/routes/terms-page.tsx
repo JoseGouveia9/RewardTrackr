@@ -59,6 +59,24 @@ export function TermsPage() {
         </div>
 
         <div className="legal-section">
+          <h2 className="legal-section-title">No professional advice</h2>
+          <p>
+            RewardTrackr does not provide tax, financial, accounting, or legal advice. Any data
+            exported by this tool is for informational purposes only. Consult a qualified
+            professional for guidance on your specific situation.
+          </p>
+        </div>
+
+        <div className="legal-section">
+          <h2 className="legal-section-title">API dependency</h2>
+          <p>
+            RewardTrackr depends on third-party APIs — including the GoMining API and CoinGecko —
+            which may change, become unavailable, or impose rate limits without notice. The author
+            is not responsible for any disruptions caused by changes to these external services.
+          </p>
+        </div>
+
+        <div className="legal-section">
           <h2 className="legal-section-title">Your responsibility</h2>
           <p>
             You are solely responsible for keeping your GoMining API access token secure. Do not
@@ -87,6 +105,11 @@ export function TermsPage() {
             These terms may be updated at any time. Continued use of RewardTrackr after changes are
             posted constitutes acceptance of the updated terms.
           </p>
+        </div>
+
+        <div className="legal-section">
+          <h2 className="legal-section-title">Governing law</h2>
+          <p>These terms shall be governed by the laws of Portugal.</p>
         </div>
       </div>
     </div>

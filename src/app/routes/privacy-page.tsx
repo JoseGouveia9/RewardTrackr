@@ -34,9 +34,10 @@ export function PrivacyPage() {
         <div className="legal-section">
           <h2 className="legal-section-title">No data collection</h2>
           <p>
-            RewardTrackr does not collect, store, or transmit your personal data to any server
-            operated by this project. There is no account system, no analytics, and no telemetry of
-            any kind.
+            RewardTrackr does not operate its own backend or database. It does not collect, store,
+            or transmit your personal data to any server operated by this project. There is no
+            account system, no analytics, and no telemetry of any kind. Data remains in your browser
+            unless you explicitly export or share it.
           </p>
         </div>
 
@@ -55,9 +56,18 @@ export function PrivacyPage() {
             <li>UI preferences (theme, language, dismissed notices)</li>
           </ul>
           <p>
-            This data never leaves your device except when making direct API calls to GoMining and
-            CoinGecko (see below). You can clear it at any time by clearing your browser's site data
-            or using the "Clear cache" option in the app.
+            This data remains stored locally until you delete it or clear your browser storage. You
+            can clear it at any time by clearing your browser's site data or using the "Clear cache"
+            option in the app.
+          </p>
+        </div>
+
+        <div className="legal-section">
+          <h2 className="legal-section-title">Security notice</h2>
+          <p>
+            Because RewardTrackr stores your API token in your browser's <code>localStorage</code>,
+            anyone with access to your browser profile or device may be able to access it. Use a
+            secure, personal device and avoid using RewardTrackr on shared or public computers.
           </p>
         </div>
 
@@ -80,8 +90,9 @@ export function PrivacyPage() {
           <h2 className="legal-section-title">Shared records</h2>
           <p>
             If you choose to share your records using the share feature, a snapshot of your selected
-            data is published to a public GitHub repository. Only data you explicitly choose to
-            share is included. You can revoke access by contacting the maintainer.
+            data is published to a public GitHub repository and may be accessible to anyone with the
+            link. Only data you explicitly choose to share is included. While you may request
+            deletion, previously accessed or copied data may remain available elsewhere.
           </p>
         </div>
 

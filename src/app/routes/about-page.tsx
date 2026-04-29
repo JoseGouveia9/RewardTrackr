@@ -35,13 +35,13 @@ export function AboutPage() {
           <h2 className="legal-section-title">What is RewardTrackr?</h2>
           <p>
             RewardTrackr is a free, open-source browser tool that lets GoMining users export and
-            analyse their reward history. It connects to the GoMining API using your personal access
-            token and organises your data into a structured Excel spreadsheet you can download and
-            keep.
+            analyse their reward history. It connects directly to the GoMining API using your
+            personal access token stored locally in your browser, and organises your data into a
+            structured Excel spreadsheet you can download and keep.
           </p>
           <p>
-            Everything runs directly in your browser — no data is sent to any third-party server run
-            by this project.
+            RewardTrackr does not operate its own backend or database. Data remains in your browser
+            unless you explicitly export or share it.
           </p>
         </div>
 
@@ -63,8 +63,15 @@ export function AboutPage() {
         <div className="legal-section">
           <h2 className="legal-section-title">Open Source</h2>
           <p>
-            RewardTrackr is open source and available on GitHub. You are free to inspect the code,
-            report issues, or contribute improvements.
+            RewardTrackr is open source and released under the{" "}
+            <a
+              href="https://github.com/JoseGouveia9/RewardTrackr/blob/main/LICENSE"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              MIT License
+            </a>
+            . You are free to inspect the code, report issues, or contribute improvements.
           </p>
           <p>
             <a
@@ -81,7 +88,7 @@ export function AboutPage() {
           <h2 className="legal-section-title">Author</h2>
           <p>
             Built and maintained by José Gouveia (Moustachio). RewardTrackr is not affiliated with,
-            endorsed by, or officially connected to GoMining or any of its parent companies.
+            endorsed by, or officially connected to GoMining or any of its related entities.
           </p>
         </div>
       </div>
