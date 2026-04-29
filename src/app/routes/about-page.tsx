@@ -36,12 +36,12 @@ export function AboutPage() {
           <p>
             RewardTrackr is a free, open-source browser tool that lets GoMining users export and
             analyse their reward history. It connects directly to the GoMining API using your
-            personal access token stored temporarily in your browser session, and organises your
-            data into a structured Excel spreadsheet you can download and keep.
+            personal access token stored temporarily in your browser session (sessionStorage), and
+            organises your data into a structured Excel spreadsheet you can download and keep.
           </p>
           <p>
-            RewardTrackr does not operate its own backend or database. Data remains in your browser
-            unless you explicitly export or share it.
+            RewardTrackr does not use its own backend to process or store your reward data. Your
+            reward records remain in your browser unless you explicitly export or share them.
           </p>
         </div>
 
@@ -52,7 +52,7 @@ export function AboutPage() {
               Export Solo Mining, MinerWars, Bounties, Simple Earn, Referrals, Ambassador, Deposits,
               Withdrawals, and Transactions
             </li>
-            <li>Incremental sync -only fetches new records since your last export</li>
+            <li>Incremental sync: only fetches new records since your last export</li>
             <li>BTC price enrichment via CoinGecko for historical USD/EUR values</li>
             <li>Extra fiat currency columns (EUR, GBP, and more)</li>
             <li>Shareable read-only record snapshots</li>
@@ -63,15 +63,9 @@ export function AboutPage() {
         <div className="legal-section">
           <h2 className="legal-section-title">Open Source</h2>
           <p>
-            RewardTrackr is open source and released under the{" "}
-            <a
-              href="https://github.com/JoseGouveia9/RewardTrackr/blob/main/LICENSE"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              MIT License
-            </a>
-            . You are free to inspect the code, report issues, or contribute improvements.
+            RewardTrackr's source code is publicly available for transparency and review. You are
+            welcome to inspect the code and report issues. Redistribution, modification, or reuse
+            without explicit written permission from the author is not permitted.
           </p>
           <p>
             <a

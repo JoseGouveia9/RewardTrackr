@@ -70,7 +70,7 @@ export function TermsPage() {
         <div className="legal-section">
           <h2 className="legal-section-title">API dependency</h2>
           <p>
-            RewardTrackr depends on third-party APIs -including the GoMining API and CoinGecko —
+            RewardTrackr depends on third-party APIs, including the GoMining API and CoinGecko,
             which may change, become unavailable, or impose rate limits without notice. The author
             is not responsible for any disruptions caused by changes to these external services.
           </p>
@@ -94,8 +94,8 @@ export function TermsPage() {
           <p>
             To the fullest extent permitted by law, the author of RewardTrackr shall not be liable
             for any direct, indirect, incidental, or consequential damages arising from your use of
-            the tool, including but not limited to data loss, export errors, or API changes made by
-            GoMining.
+            the tool, including but not limited to data loss, export errors, or API changes,
+            restrictions, or service interruptions by third-party providers.
           </p>
         </div>
 
