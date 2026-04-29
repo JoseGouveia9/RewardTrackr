@@ -63,9 +63,15 @@ export function AboutPage() {
         <div className="legal-section">
           <h2 className="legal-section-title">Open Source</h2>
           <p>
-            RewardTrackr's source code is publicly available for transparency and review. You are
-            welcome to inspect the code and report issues. Redistribution, modification, or reuse
-            without explicit written permission from the author is not permitted.
+            RewardTrackr is open source and released under the{" "}
+            <a
+              href="https://github.com/JoseGouveia9/RewardTrackr/blob/main/LICENSE"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              MIT License
+            </a>
+            . You are free to inspect the code, report issues, or contribute improvements.
           </p>
           <p>
             <a
