@@ -34,8 +34,8 @@ export function AboutPage() {
         <div className="legal-section">
           <h2 className="legal-section-title">What is RewardTrackr?</h2>
           <p>
-            RewardTrackr is a free, open-source browser tool that lets GoMining users export and
-            analyse their reward history. It connects directly to the GoMining API using your
+            RewardTrackr is a free, source-available browser tool that lets GoMining users export
+            and analyse their reward history. It connects directly to the GoMining API using your
             personal access token stored temporarily in your browser session (sessionStorage), and
             organises your data into a structured Excel spreadsheet you can download and keep.
           </p>
@@ -61,17 +61,14 @@ export function AboutPage() {
         </div>
 
         <div className="legal-section">
-          <h2 className="legal-section-title">Open Source</h2>
+          <h2 className="legal-section-title">Source Availability</h2>
           <p>
-            RewardTrackr is open source and released under the{" "}
-            <a
-              href="https://github.com/JoseGouveia9/RewardTrackr/blob/main/LICENSE"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              MIT License
-            </a>
-            . You are free to inspect the code, report issues, or contribute improvements.
+            RewardTrackr is source-available software. The source code is publicly accessible for
+            transparency, security review, and personal use.
+          </p>
+          <p>
+            You may clone and inspect the code for personal or educational purposes, but you may not
+            redistribute, modify, or publish it as a competing product or service.
           </p>
           <p>
             <a
