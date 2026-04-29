@@ -43,9 +43,8 @@ export function TermsPage() {
           <h2 className="legal-section-title">Unofficial tool</h2>
           <p>
             RewardTrackr is an independent, community-built tool. It is not affiliated with,
-            endorsed by, or officially connected to GoMining, Bitfufu, or any of their related
-            entities. Use of the GoMining API through this tool is subject to GoMining's own terms
-            of service.
+            endorsed by, or officially connected to GoMining or any of its related entities. Use of
+            the GoMining API through this tool is subject to GoMining's own terms of service.
           </p>
         </div>
 
