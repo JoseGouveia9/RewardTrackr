@@ -256,7 +256,9 @@ function App() {
                 </AnimatePresence>
               </div>
             </div>
-            {!user && <p className="hero-subtitle">{t("app.heroSubtitle")}</p>}
+            {!user && location.pathname === "/" && (
+              <p className="hero-subtitle">{t("app.heroSubtitle")}</p>
+            )}
             <div className="hero-actions">
               <SupportButton />
               {!user && (
