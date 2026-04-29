@@ -70,7 +70,7 @@ export function TermsPage() {
         <div className="legal-section">
           <h2 className="legal-section-title">API dependency</h2>
           <p>
-            RewardTrackr depends on third-party APIs — including the GoMining API and CoinGecko —
+            RewardTrackr depends on third-party APIs -including the GoMining API and CoinGecko —
             which may change, become unavailable, or impose rate limits without notice. The author
             is not responsible for any disruptions caused by changes to these external services.
           </p>

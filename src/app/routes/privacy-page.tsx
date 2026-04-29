@@ -48,7 +48,7 @@ export function PrivacyPage() {
           </p>
           <ul>
             <li>
-              Your GoMining API access token — stored in <code>sessionStorage</code> and used solely
+              Your GoMining API access token -stored in <code>sessionStorage</code> and used solely
               to authenticate requests directly to the GoMining API on your behalf. This token is
               automatically cleared when the browser tab or session is closed.
             </li>
@@ -58,7 +58,7 @@ export function PrivacyPage() {
           </p>
           <ul>
             <li>
-              Cached reward records from your last sync — to support faster incremental exports
+              Cached reward records from your last sync -to support faster incremental exports
             </li>
             <li>Export preferences (selected sheets, currency settings)</li>
             <li>UI preferences (theme, language, dismissed notices)</li>
@@ -85,18 +85,18 @@ export function PrivacyPage() {
           <p>RewardTrackr makes requests to the following services:</p>
           <ul>
             <li>
-              <strong>RewardTrackr rate-limit service (Cloudflare Worker)</strong> — when you start
+              <strong>RewardTrackr rate-limit service (Cloudflare Worker)</strong> -when you start
               an export, a request is sent to a Cloudflare Worker operated by this project to
               enforce fair-use limits. A one-way SHA-256 hash of your token is used to identify your
-              session — the raw token is never sent. The worker does not store your token or reward
-              data — it only records a timestamp to track usage.
+              session -the raw token is never sent. The worker does not store your token or reward
+              data -it only records a timestamp to track usage.
             </li>
             <li>
-              <strong>GoMining API</strong> — to fetch your reward records. Your access token is
-              sent in the request header. This is subject to GoMining's own privacy policy.
+              <strong>GoMining API</strong> -to fetch your reward records. Your access token is sent
+              in the request header. This is subject to GoMining's own privacy policy.
             </li>
             <li>
-              <strong>CoinGecko API</strong> — to retrieve historical BTC prices for fiat value
+              <strong>CoinGecko API</strong> -to retrieve historical BTC prices for fiat value
               enrichment. No personal data is sent; only date ranges are queried.
             </li>
           </ul>

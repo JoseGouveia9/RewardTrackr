@@ -52,7 +52,7 @@ export function AboutPage() {
               Export Solo Mining, MinerWars, Bounties, Simple Earn, Referrals, Ambassador, Deposits,
               Withdrawals, and Transactions
             </li>
-            <li>Incremental sync — only fetches new records since your last export</li>
+            <li>Incremental sync -only fetches new records since your last export</li>
             <li>BTC price enrichment via CoinGecko for historical USD/EUR values</li>
             <li>Extra fiat currency columns (EUR, GBP, and more)</li>
             <li>Shareable read-only record snapshots</li>
