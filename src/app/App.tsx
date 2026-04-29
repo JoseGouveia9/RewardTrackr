@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useMemo, useState, type KeyboardEvent } from "react";
 import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
-import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router";
+import { Routes, Route, Navigate, Link, useNavigate, useLocation } from "react-router";
 import { AppNotice } from "@/components/app-notice/app-notice";
 import { loadAllCacheEntries } from "@/features/export/utils/cache";
 import { AuthPanel, HeaderUserMenu, useAuth } from "@/features/auth";
@@ -18,6 +18,9 @@ import { MessageBanner } from "@/components/message-banner/message-banner";
 import { useNotices } from "./hooks/use-notices";
 import { useAccountSwitch } from "./hooks/use-account-switch";
 import { SharedView } from "./routes/shared-view";
+import { AboutPage } from "./routes/about-page";
+import { PrivacyPage } from "./routes/privacy-page";
+import { TermsPage } from "./routes/terms-page";
 import { LS_KEY_REWARD_PREFIX } from "@/lib/storage-keys";
 import { LanguagePicker } from "@/components/language-picker/language-picker";
 import logo from "/logo.webp";
@@ -589,11 +592,27 @@ function App() {
               }
             />
 
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/terms" element={<TermsPage />} />
+
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
 
           <motion.p className="copyright" layout transition={LAYOUT_SPRING}>
             © 2026 José Gouveia · Moustachio ·{" "}
+            <Link className="copyright-link" to="/about">
+              About
+            </Link>
+            {" · "}
+            <Link className="copyright-link" to="/privacy">
+              Privacy
+            </Link>
+            {" · "}
+            <Link className="copyright-link" to="/terms">
+              Terms
+            </Link>
+            {" · "}
             <a
               className="copyright-link"
               href="https://docs.google.com/forms/d/e/1FAIpQLSe98CKOga2pnoXh2SdXu0uxOBd9OOIDm1JsR6ludeGH5HOoLg/viewform"
