@@ -34,10 +34,10 @@ export function PrivacyPage() {
         <div className="legal-section">
           <h2 className="legal-section-title">No data collection</h2>
           <p>
-            RewardTrackr does not collect, store, or sell your reward data or personal account data.
-            There is no account system, no analytics, and no telemetry. Your reward records and
-            preferences stay in your browser. Limited technical metadata may be processed for
-            rate-limiting purposes, as described below.
+            RewardTrackr does not collect, store, or sell your reward data or personal account data
+            for analytics or profiling purposes. There is no account system, no analytics, and no
+            telemetry. Your reward records and preferences stay in your browser. Limited technical
+            metadata may be processed for rate-limiting purposes, as described below.
           </p>
         </div>
 
@@ -60,6 +60,10 @@ export function PrivacyPage() {
           <ul>
             <li>
               Cached reward records from your last sync, to support faster incremental exports
+            </li>
+            <li>Cached market and exchange rate data, to avoid redundant network calls</li>
+            <li>
+              Your synced GoMining account alias, retained across sessions for display purposes
             </li>
             <li>Export preferences (selected sheets, currency settings)</li>
             <li>UI preferences (theme, language, dismissed notices)</li>
@@ -101,6 +105,10 @@ export function PrivacyPage() {
               <strong>CoinGecko API:</strong> retrieves historical BTC prices for fiat value
               enrichment. No personal data is sent; only date ranges are queried.
             </li>
+            <li>
+              <strong>Exchange rate APIs:</strong> used to retrieve fiat exchange rates for currency
+              conversion. No personal data is sent; only currency codes are queried.
+            </li>
           </ul>
         </div>
 
@@ -110,7 +118,7 @@ export function PrivacyPage() {
             If you choose to use the share feature, RewardTrackr will create a JSON snapshot
             containing only the data you explicitly select and publish it to a public GitHub
             repository. A unique shareable link is then generated, which can be used to view that
-            snapshot inside RewardTrackr.
+            snapshot inside the RewardTrackr app.
           </p>
           <p>
             Anyone with the share link can access the shared snapshot. Because the underlying

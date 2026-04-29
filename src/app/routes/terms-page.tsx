@@ -77,6 +77,16 @@ export function TermsPage() {
         </div>
 
         <div className="legal-section">
+          <h2 className="legal-section-title">Fair use and rate limits</h2>
+          <p>
+            RewardTrackr enforces a fair-use export limit (currently 3 exports per day) to protect
+            the service for all users. This limit is tracked via the rate-limit service described in
+            the Privacy Policy. The author reserves the right to adjust these limits at any time,
+            with or without prior notice.
+          </p>
+        </div>
+
+        <div className="legal-section">
           <h2 className="legal-section-title">Your responsibility</h2>
           <p>
             You are solely responsible for keeping your GoMining API access token secure. Do not
