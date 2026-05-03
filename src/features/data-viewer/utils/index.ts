@@ -19,10 +19,13 @@ export function formatMiningValue(value: number, currency: Currency): string {
   ) {
     decimals++;
   }
+  const factor = Math.pow(10, decimals);
+  const truncated =
+    value >= 0 ? Math.floor(value * factor) / factor : Math.ceil(value * factor) / factor;
   return new Intl.NumberFormat(undefined, {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
-  }).format(value);
+  }).format(truncated);
 }
 
 export function formatCurrencyValue(value: number, currency: string): string {
@@ -42,10 +45,13 @@ export function formatCurrencyValue(value: number, currency: string): string {
   ) {
     decimals++;
   }
+  const factor = Math.pow(10, decimals);
+  const truncated =
+    value >= 0 ? Math.floor(value * factor) / factor : Math.ceil(value * factor) / factor;
   return new Intl.NumberFormat(undefined, {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
-  }).format(value);
+  }).format(truncated);
 }
 
 export function toIsoOffset(offsetDays = 0): string {

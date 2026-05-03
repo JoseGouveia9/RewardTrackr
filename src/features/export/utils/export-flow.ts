@@ -19,6 +19,7 @@ import type {
   RewardSheetPayload,
 } from "../types";
 import {
+  MINERWARS_SCHEMA_VERSION,
   MINING_SCHEMA_VERSION,
   hasMissingPrices,
   filterCacheableRecords,
@@ -230,7 +231,7 @@ function cacheExtras(key: RewardKey, includeWalletFiat: boolean, currency: Extra
   const pricingMode = WALLET_TX_KEYS.has(key)
     ? ((includeWalletFiat ? "fiat-on" : "fiat-off") as "fiat-on" | "fiat-off")
     : undefined;
-  const schemaVersion = MINING_SCHEMA_VERSION;
+  const schemaVersion = key === "minerwars" ? MINERWARS_SCHEMA_VERSION : MINING_SCHEMA_VERSION;
   return pricingMode
     ? { pricingMode, extraFiatCurrency: currency, schemaVersion }
     : { extraFiatCurrency: currency, schemaVersion };

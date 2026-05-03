@@ -129,20 +129,23 @@ export function transformMinerWars(
   const c2Btc = raw.c2ValueInBtc ?? raw.c2Value ?? 0;
   const maintenanceBtc = c1Btc + c2Btc;
 
-  const netReward = raw.totalReward ?? 0;
-  // When maintenanceByGmt is true, totalReward is already net (maintenance deducted server-side)
-  const poolReward = maintenanceByGmt ? netReward : netReward + maintenanceBtc;
-  const reward = poolReward - maintenanceBtc;
-
   const c1Gmt = raw.c1ValueInGmt ?? 0;
   const c2Gmt = raw.c2ValueInGmt ?? 0;
+
   const maintenanceGMT =
     maintenanceByGmt && c1Gmt + c2Gmt > 0
       ? c1Gmt + c2Gmt
       : usdToGmt(maintenanceBtc * btcPrice, gmtPrice);
 
+  const netReward = raw.totalReward ?? 0;
+  // totalReward is always net; add maintenance back for poolReward
+  const poolReward = maintenanceByGmt
+    ? netReward + (maintenanceGMT * gmtPrice) / (btcPrice || 1)
+    : netReward + maintenanceBtc;
+  const reward = netReward;
+
   const poolRewardUSD = poolReward * btcPrice;
-  const maintenanceUSD = maintenanceBtc * btcPrice;
+  const maintenanceUSD = maintenanceByGmt ? maintenanceGMT * gmtPrice : maintenanceBtc * btcPrice;
   const rewardUSD = reward * btcPrice;
 
   return {
