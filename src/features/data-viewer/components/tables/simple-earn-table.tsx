@@ -181,7 +181,11 @@ export function SimpleEarnTable({
     <>
       <div className="dv-tables-wrap dv-tables-wrap--scroll">
         {}
-        <table ref={totalsRef} className="dv-table dv-table-totals">
+        <table
+          ref={totalsRef}
+          className="dv-table dv-table-totals"
+          hidden={filteredRows.length === 0}
+        >
           <colgroup>
             <col className="dv-column-date" />
             <col className="dv-column-value" />
@@ -234,6 +238,13 @@ export function SimpleEarnTable({
           </thead>
           <tbody>
             <AnimatedLoadingRow show={isFetching && finalRows.length > 0} colSpan={4} />
+            {filteredRows.length === 0 && (
+              <tr>
+                <td colSpan={4} className="dv-loading-cell">
+                  {t("dataViewer.noFilterResults")}
+                </td>
+              </tr>
+            )}
             {pageRows.map((row, i) => {
               const { v, c } = earnRowValue(row);
               const icon = isEarnNative ? (

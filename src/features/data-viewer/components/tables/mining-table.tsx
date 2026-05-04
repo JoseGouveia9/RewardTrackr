@@ -331,7 +331,11 @@ export function MiningTable({
       <div
         className={`dv-tables-wrap dv-tables-wrap--wide${trendsExiting ? " dv-trends-exiting" : trendsAnimating ? " dv-trends-active" : showTrends ? " dv-trends-visible" : ""}`}
       >
-        <table ref={totalsRef} className="dv-table dv-table-totals">
+        <table
+          ref={totalsRef}
+          className="dv-table dv-table-totals"
+          hidden={filteredRows.length === 0}
+        >
           <colgroup>
             <col className="dv-column-date" />
             <col className="dv-column-value" />
@@ -419,6 +423,13 @@ export function MiningTable({
           </thead>
           <tbody>
             <AnimatedLoadingRow show={isFetching && filteredRows.length > 0} colSpan={6} />
+            {filteredRows.length === 0 && (
+              <tr>
+                <td colSpan={6} className="dv-loading-cell">
+                  {t("dataViewer.noFilterResults")}
+                </td>
+              </tr>
+            )}
             {pageRows.map((row, i) => {
               const prevRow = filteredRows[page * PAGE_SIZE + i + 1];
               const diffEntry = difficultyMap.get(row.date.slice(0, 10));

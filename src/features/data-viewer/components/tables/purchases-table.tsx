@@ -194,7 +194,11 @@ export function PurchasesTable({
     <>
       <div className="dv-tables-wrap">
         {}
-        <table ref={totalsRef} className="dv-table dv-table-totals">
+        <table
+          ref={totalsRef}
+          className="dv-table dv-table-totals"
+          hidden={filteredRows.length === 0}
+        >
           <colgroup>
             <col className="dv-column-date" />
             <col className="dv-column-type" />
@@ -307,6 +311,13 @@ export function PurchasesTable({
           </thead>
           <tbody>
             <AnimatedLoadingRow show={isFetching && finalRows.length > 0} colSpan={3} />
+            {filteredRows.length === 0 && (
+              <tr>
+                <td colSpan={3} className="dv-loading-cell">
+                  {t("dataViewer.noFilterResults")}
+                </td>
+              </tr>
+            )}
             {pageRows.map((row, i) => {
               const boughtVal =
                 purchaseView === "NATIVE"

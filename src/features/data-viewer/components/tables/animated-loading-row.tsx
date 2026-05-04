@@ -1,6 +1,8 @@
 import { AnimatePresence, motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 
 export function AnimatedLoadingRow({ show, colSpan }: { show: boolean; colSpan: number }) {
+  const { t } = useTranslation();
   return (
     <AnimatePresence initial={false}>
       {show ? (
@@ -15,7 +17,7 @@ export function AnimatedLoadingRow({ show, colSpan }: { show: boolean; colSpan: 
           <td className="dv-loading-cell" colSpan={colSpan}>
             <span className="dv-loading-inline">
               <span className="dv-spinner" aria-hidden="true" />
-              <span>Fetching data...</span>
+              <span>{t("dataViewer.fetchingData")}</span>
             </span>
           </td>
         </motion.tr>
