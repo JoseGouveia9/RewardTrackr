@@ -1,8 +1,10 @@
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
 import "./legal-page.css";
 
 export function AboutPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   return (
     <div className="legal-page">
@@ -20,55 +22,47 @@ export function AboutPage() {
         >
           <path d="M19 12H5M12 5l-7 7 7 7" />
         </svg>
-        Back
+        {t("common.back")}
       </button>
 
       <div className="legal-header">
-        <h1 className="legal-title">About RewardTrackr</h1>
-        <p className="legal-meta">An unofficial GoMining companion tool</p>
+        <h1 className="legal-title">{t("about.title")}</h1>
+        <p className="legal-meta">{t("about.subtitle")}</p>
       </div>
 
       <div className="legal-divider" />
 
       <div className="legal-body">
         <div className="legal-section">
-          <h2 className="legal-section-title">What is RewardTrackr?</h2>
-          <p>
-            RewardTrackr is a free, source-available browser tool that lets GoMining users export
-            and analyse their reward history. It connects directly to the GoMining API using your
-            personal access token stored temporarily in your browser session (sessionStorage), and
-            organises your data into a structured Excel spreadsheet you can download and keep.
-          </p>
-          <p>
-            RewardTrackr does not use its own backend to process or store your reward data. Your
-            reward records remain in your browser unless you explicitly export or share them.
-          </p>
+          <h2 className="legal-section-title">{t("about.whatIsTitle")}</h2>
+          <p>{t("about.whatIsP1")}</p>
+          <p>{t("about.whatIsP2")}</p>
         </div>
 
         <div className="legal-section">
-          <h2 className="legal-section-title">Features</h2>
+          <h2 className="legal-section-title">{t("about.featuresTitle")}</h2>
           <ul>
-            <li>
-              Export Solo Mining, MinerWars, Bounties, Simple Earn, Referrals, Ambassador, Deposits,
-              Withdrawals, and Transactions
-            </li>
-            <li>Incremental sync: only fetches new records since your last export</li>
-            <li>BTC price enrichment via CoinGecko for historical USD/EUR values</li>
-            <li>Extra fiat currency columns (EUR, GBP, and more)</li>
-            <li>Shareable read-only record snapshots</li>
-            <li>Light and dark theme, multi-language support</li>
+            <li>{t("about.feature1")}</li>
+            <li>{t("about.feature2")}</li>
+            <li>{t("about.feature3")}</li>
+            <li>{t("about.feature4")}</li>
+            <li>{t("about.feature5")}</li>
+            <li>{t("about.feature6")}</li>
           </ul>
         </div>
 
         <div className="legal-section">
-          <h2 className="legal-section-title">Source Availability</h2>
+          <h2 className="legal-section-title">{t("about.licenseTitle")}</h2>
           <p>
-            RewardTrackr is source-available software. The source code is publicly accessible for
-            transparency, security review, and personal use.
-          </p>
-          <p>
-            You may clone and inspect the code for personal or educational purposes, but you may not
-            redistribute, modify, or publish it as a competing product or service.
+            {t("about.licenseP1")}{" "}
+            <a
+              href="https://github.com/JoseGouveia9/RewardTrackr/blob/main/LICENSE"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {t("about.licenseLink")}
+            </a>
+            {t("about.licenseP1b")}
           </p>
           <p>
             <a
@@ -76,17 +70,14 @@ export function AboutPage() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              github.com/JoseGouveia9/RewardTrackr
+              {t("about.repoLink")}
             </a>
           </p>
         </div>
 
         <div className="legal-section">
-          <h2 className="legal-section-title">Author</h2>
-          <p>
-            Built and maintained by José Gouveia (Moustachio). RewardTrackr is not affiliated with,
-            endorsed by, or officially connected to GoMining or any of its related entities.
-          </p>
+          <h2 className="legal-section-title">{t("about.authorTitle")}</h2>
+          <p>{t("about.authorP1")}</p>
         </div>
       </div>
     </div>

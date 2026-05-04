@@ -1,8 +1,10 @@
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
 import "./legal-page.css";
 
 export function TermsPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   return (
     <div className="legal-page">
@@ -20,106 +22,66 @@ export function TermsPage() {
         >
           <path d="M19 12H5M12 5l-7 7 7 7" />
         </svg>
-        Back
+        {t("common.back")}
       </button>
 
       <div className="legal-header">
-        <h1 className="legal-title">Terms of Use</h1>
-        <p className="legal-meta">Last updated: April 2026</p>
+        <h1 className="legal-title">{t("terms.title")}</h1>
+        <p className="legal-meta">{t("terms.lastUpdated")}</p>
       </div>
 
       <div className="legal-divider" />
 
       <div className="legal-body">
         <div className="legal-section">
-          <h2 className="legal-section-title">Acceptance</h2>
-          <p>
-            By using RewardTrackr you agree to these terms. If you do not agree, please do not use
-            the tool.
-          </p>
+          <h2 className="legal-section-title">{t("terms.acceptanceTitle")}</h2>
+          <p>{t("terms.acceptanceP1")}</p>
         </div>
 
         <div className="legal-section">
-          <h2 className="legal-section-title">Unofficial tool</h2>
-          <p>
-            RewardTrackr is an independent, community-built tool. It is not affiliated with,
-            endorsed by, or officially connected to GoMining or any of its related entities. Use of
-            the GoMining API through this tool is subject to GoMining's own terms of service.
-          </p>
+          <h2 className="legal-section-title">{t("terms.unofficialTitle")}</h2>
+          <p>{t("terms.unofficialP1")}</p>
         </div>
 
         <div className="legal-section">
-          <h2 className="legal-section-title">No warranty</h2>
-          <p>
-            RewardTrackr is provided "as is" without warranty of any kind. The author makes no
-            guarantees regarding the accuracy, completeness, or availability of the tool or the data
-            it retrieves. Exported data should be independently verified before being used for tax,
-            financial, or legal purposes.
-          </p>
+          <h2 className="legal-section-title">{t("terms.noWarrantyTitle")}</h2>
+          <p>{t("terms.noWarrantyP1")}</p>
         </div>
 
         <div className="legal-section">
-          <h2 className="legal-section-title">No professional advice</h2>
-          <p>
-            RewardTrackr does not provide tax, financial, accounting, or legal advice. Any data
-            exported by this tool is for informational purposes only. Consult a qualified
-            professional for guidance on your specific situation.
-          </p>
+          <h2 className="legal-section-title">{t("terms.noAdviceTitle")}</h2>
+          <p>{t("terms.noAdviceP1")}</p>
         </div>
 
         <div className="legal-section">
-          <h2 className="legal-section-title">API dependency</h2>
-          <p>
-            RewardTrackr depends on third-party APIs, including the GoMining API and CoinGecko,
-            which may change, become unavailable, or impose rate limits without notice. The author
-            is not responsible for any disruptions caused by changes to these external services.
-          </p>
+          <h2 className="legal-section-title">{t("terms.apiDependencyTitle")}</h2>
+          <p>{t("terms.apiDependencyP1")}</p>
         </div>
 
         <div className="legal-section">
-          <h2 className="legal-section-title">Fair use and rate limits</h2>
-          <p>
-            RewardTrackr enforces a fair-use export limit (currently 3 exports per day) to protect
-            the service for all users. This limit is tracked via the rate-limit service described in
-            the Privacy Policy. The author reserves the right to adjust these limits at any time,
-            with or without prior notice.
-          </p>
+          <h2 className="legal-section-title">{t("terms.fairUseTitle")}</h2>
+          <p>{t("terms.fairUseP1")}</p>
         </div>
 
         <div className="legal-section">
-          <h2 className="legal-section-title">Your responsibility</h2>
-          <p>
-            You are solely responsible for keeping your GoMining API access token secure. Do not
-            share your token with others. RewardTrackr stores it locally in your browser and uses it
-            only to make API requests on your behalf.
-          </p>
-          <p>
-            You agree not to use RewardTrackr in any way that violates GoMining's terms of service
-            or applicable law.
-          </p>
+          <h2 className="legal-section-title">{t("terms.responsibilityTitle")}</h2>
+          <p>{t("terms.responsibilityP1")}</p>
+          <p>{t("terms.responsibilityP2")}</p>
         </div>
 
         <div className="legal-section">
-          <h2 className="legal-section-title">Limitation of liability</h2>
-          <p>
-            To the fullest extent permitted by law, the author of RewardTrackr shall not be liable
-            for any direct, indirect, incidental, or consequential damages arising from your use of
-            the tool, including but not limited to data loss, export errors, or API changes,
-            restrictions, or service interruptions by third-party providers.
-          </p>
+          <h2 className="legal-section-title">{t("terms.liabilityTitle")}</h2>
+          <p>{t("terms.liabilityP1")}</p>
         </div>
 
         <div className="legal-section">
-          <h2 className="legal-section-title">Changes</h2>
-          <p>
-            These terms may be updated at any time. Continued use of RewardTrackr after changes are
-            posted constitutes acceptance of the updated terms.
-          </p>
+          <h2 className="legal-section-title">{t("terms.changesTitle")}</h2>
+          <p>{t("terms.changesP1")}</p>
         </div>
 
         <div className="legal-section">
-          <h2 className="legal-section-title">Governing law</h2>
-          <p>These terms shall be governed by the laws of Portugal.</p>
+          <h2 className="legal-section-title">{t("terms.governingLawTitle")}</h2>
+          <p>{t("terms.governingLawP1")}</p>
         </div>
       </div>
     </div>

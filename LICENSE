@@ -1,20 +1,25 @@
-Source-Available License
+Source Available License
 
 Copyright (c) 2026 José Gouveia
 
-Permission is granted to view, copy, and use this software for personal, non-commercial purposes only, subject to the conditions below.
+Permission is granted, free of charge, to any person to:
 
-You may:
-Clone and inspect the source code
-Run the software locally for personal use
-Use the code for security review, auditing, or educational purposes
-You may not:
-Redistribute this software or modified versions of it
-Publish forks or derivatives as a product or service
-Use this software or derivatives commercially
-Use the RewardTrackr name, branding, or identity in any fork or derivative
-Remove or modify copyright notices
+  - View, clone, and inspect the source code
+  - Run the software locally for personal, non-commercial purposes
+  - Use the code for security review, auditing, or educational purposes
 
-This software is provided “as is”, without warranty of any kind, express or implied.
+The following are NOT permitted without explicit written permission from the author:
+
+  - Commercial use of any kind
+  - Redistribution, sublicensing, publication, or public hosting of this software or
+    modified versions, whether free or commercial
+  - Using the RewardTrackr name, branding, or identity in any fork or derivative
+  - Removing or modifying this license notice or copyright notices
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT. IN NO EVENT SHALL
+THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING
+FROM THE USE OF THE SOFTWARE.
 
 All rights not explicitly granted are reserved by the author.

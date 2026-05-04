@@ -604,15 +604,15 @@ function App() {
           <motion.p className="copyright" layout transition={LAYOUT_SPRING}>
             © 2026 José Gouveia · Moustachio ·{" "}
             <Link className="copyright-link" to="/about">
-              About
+              {t("footer.about")}
             </Link>
             {" · "}
             <Link className="copyright-link" to="/privacy">
-              Privacy
+              {t("footer.privacy")}
             </Link>
             {" · "}
             <Link className="copyright-link" to="/terms">
-              Terms
+              {t("footer.terms")}
             </Link>
             {" · "}
             <a
