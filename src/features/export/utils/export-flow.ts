@@ -86,6 +86,16 @@ function triggerFileDownload(buffer: ArrayBuffer, fileName: string): void {
   URL.revokeObjectURL(url);
 }
 
+async function sleepWithCountdown(ms: number, onTick: (seconds: number) => void) {
+  const end = Date.now() + ms;
+  while (true) {
+    const remaining = end - Date.now();
+    if (remaining <= 0) break;
+    onTick(Math.ceil(remaining / 1000));
+    await new Promise<void>((resolve) => setTimeout(resolve, Math.min(1000, remaining)));
+  }
+}
+
 async function fetchWithRetry<T>(
   fn: () => Promise<T>,
   onProgress?: (msg: string) => void,
@@ -97,8 +107,9 @@ async function fetchWithRetry<T>(
       // Only retry on AbortError (request timeout) — API/network errors are not retried
       const isTimeout = err instanceof Error && err.name === "AbortError";
       if (!isTimeout || attempt > MAX_RETRIES) throw err;
-      onProgress?.(i18n.t("export.requestTimeout", { attempt, max: MAX_RETRIES }));
-      await new Promise<void>((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
+      await sleepWithCountdown(RETRY_DELAY_MS, (remaining) => {
+        onProgress?.(i18n.t("export.requestTimeout", { attempt, max: MAX_RETRIES, remaining }));
+      });
     }
   }
   throw new Error("Max retries exceeded");
