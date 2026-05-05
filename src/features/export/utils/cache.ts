@@ -11,7 +11,7 @@ import { parseJsonSafe } from "@/lib/parse-json-safe";
 import type { CacheEntry, CacheState, RewardKey, RewardRecord } from "../types";
 
 export const MINING_SCHEMA_VERSION = 1;
-export const MINERWARS_SCHEMA_VERSION = 3;
+export const MINERWARS_SCHEMA_VERSION = 4;
 
 type PriceCacheValue = {
   price: number;

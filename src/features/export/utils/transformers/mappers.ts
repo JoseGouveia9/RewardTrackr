@@ -143,11 +143,9 @@ export function transformMinerWars(
     : rawMaintenanceBtc;
 
   const netReward = raw.totalReward ?? 0;
-  // totalReward is always net; add maintenance back for poolReward
-  const poolReward = maintenanceByGmt
-    ? netReward + (maintenanceGMT * gmtPrice) / (btcPrice || 1)
-    : netReward + maintenanceBtc;
-  const reward = netReward;
+  // When maintenanceByGmt, maintenance is paid separately in GMT — BTC reward is untouched
+  const poolReward = maintenanceByGmt ? netReward : netReward + maintenanceBtc;
+  const reward = maintenanceByGmt ? netReward - maintenanceBtc : netReward;
 
   const poolRewardUSD = poolReward * btcPrice;
   const maintenanceUSD = maintenanceByGmt ? maintenanceGMT * gmtPrice : maintenanceBtc * btcPrice;
