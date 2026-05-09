@@ -189,7 +189,12 @@
     "noProfiles": "Noch keine geteilten Profile. Sei der Erste!",
     "viewingRecords": "{{alias}}s Datensätze werden angezeigt",
     "loadingProfile": "Profil wird geladen...",
-    "updatedAge": "· Aktualisiert {{age}} · Schreibgeschützt"
+    "updatedAge": "· Aktualisiert {{age}} · Schreibgeschützt",
+    "filterEntries": "Filter",
+    "filterAll": "Alle",
+    "filterNone": "Keine",
+    "filterSave": "Speichern",
+    "filterDiscard": "Verwerfen"
   },
   "support": {
     "supportProject": "Projekt unterstützen",

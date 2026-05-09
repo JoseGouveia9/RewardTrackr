@@ -189,7 +189,12 @@
     "noProfiles": "Пока нет общих профилей. Будь первым!",
     "viewingRecords": "Просмотр записей {{alias}}",
     "loadingProfile": "Загрузка профиля...",
-    "updatedAge": "· Обновлено {{age}} · Только для чтения"
+    "updatedAge": "· Обновлено {{age}} · Только для чтения",
+    "filterEntries": "Фильтр",
+    "filterAll": "Все",
+    "filterNone": "Ничего",
+    "filterSave": "Сохранить",
+    "filterDiscard": "Отменить"
   },
   "support": {
     "supportProject": "Поддержать проект",

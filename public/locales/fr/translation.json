@@ -189,7 +189,12 @@
     "noProfiles": "Aucun profil partagé pour l'instant. Sois le premier !",
     "viewingRecords": "Consultation des enregistrements de {{alias}}",
     "loadingProfile": "Chargement du profil...",
-    "updatedAge": "· Mis à jour {{age}} · Lecture seule"
+    "updatedAge": "· Mis à jour {{age}} · Lecture seule",
+    "filterEntries": "Filtrer",
+    "filterAll": "Tout",
+    "filterNone": "Aucun",
+    "filterSave": "Enregistrer",
+    "filterDiscard": "Annuler"
   },
   "support": {
     "supportProject": "Soutenir le projet",

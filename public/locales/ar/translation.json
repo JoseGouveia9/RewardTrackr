@@ -189,7 +189,12 @@
     "noProfiles": "لا توجد ملفات شخصية مشتركة بعد. كن الأول!",
     "viewingRecords": "عرض سجلات {{alias}}",
     "loadingProfile": "جارٍ تحميل الملف الشخصي...",
-    "updatedAge": "· محدَّث {{age}} · للقراءة فقط"
+    "updatedAge": "· محدَّث {{age}} · للقراءة فقط",
+    "filterEntries": "تصفية",
+    "filterAll": "الكل",
+    "filterNone": "لا شيء",
+    "filterSave": "حفظ",
+    "filterDiscard": "تجاهل"
   },
   "support": {
     "supportProject": "دعم المشروع",

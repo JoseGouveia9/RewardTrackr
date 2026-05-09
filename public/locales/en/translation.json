@@ -189,7 +189,12 @@
     "noProfiles": "No shared profiles yet. Be the first!",
     "viewingRecords": "Viewing {{alias}}'s records",
     "loadingProfile": "Loading profile...",
-    "updatedAge": "· Updated {{age}} · Read only"
+    "updatedAge": "· Updated {{age}} · Read only",
+    "filterEntries": "Filter",
+    "filterAll": "All",
+    "filterNone": "None",
+    "filterSave": "Save",
+    "filterDiscard": "Discard"
   },
   "support": {
     "supportProject": "Support the project",

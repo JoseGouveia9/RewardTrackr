@@ -189,7 +189,12 @@
     "noProfiles": "Ainda não há perfis partilhados. Sê o primeiro!",
     "viewingRecords": "A ver os registos de {{alias}}",
     "loadingProfile": "A carregar perfil...",
-    "updatedAge": "· Atualizado {{age}} · Apenas leitura"
+    "updatedAge": "· Atualizado {{age}} · Apenas leitura",
+    "filterEntries": "Filtrar",
+    "filterAll": "Tudo",
+    "filterNone": "Nenhum",
+    "filterSave": "Guardar",
+    "filterDiscard": "Descartar"
   },
   "support": {
     "supportProject": "Apoiar o projeto",

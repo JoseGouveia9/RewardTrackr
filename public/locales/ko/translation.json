@@ -189,7 +189,12 @@
     "noProfiles": "아직 공유된 프로필이 없습니다. 첫 번째가 되세요!",
     "viewingRecords": "{{alias}}의 기록 보는 중",
     "loadingProfile": "프로필 로딩 중...",
-    "updatedAge": "· {{age}} 업데이트됨 · 읽기 전용"
+    "updatedAge": "· {{age}} 업데이트됨 · 읽기 전용",
+    "filterEntries": "필터",
+    "filterAll": "전체",
+    "filterNone": "없음",
+    "filterSave": "저장",
+    "filterDiscard": "취소"
   },
   "support": {
     "supportProject": "프로젝트 지원",

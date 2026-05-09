@@ -189,7 +189,12 @@
     "noProfiles": "暂无分享档案。成为第一个！",
     "viewingRecords": "正在查看 {{alias}} 的记录",
     "loadingProfile": "加载档案中...",
-    "updatedAge": "· 更新于 {{age}} · 只读"
+    "updatedAge": "· 更新于 {{age}} · 只读",
+    "filterEntries": "筛选",
+    "filterAll": "全部",
+    "filterNone": "无",
+    "filterSave": "保存",
+    "filterDiscard": "放弃"
   },
   "support": {
     "supportProject": "支持项目",

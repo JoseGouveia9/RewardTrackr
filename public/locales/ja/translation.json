@@ -189,7 +189,12 @@
     "noProfiles": "まだ共有プロフィールがありません。最初になりましょう！",
     "viewingRecords": "{{alias}}のレコードを表示中",
     "loadingProfile": "プロフィールを読み込み中...",
-    "updatedAge": "· {{age}}に更新 · 読み取り専用"
+    "updatedAge": "· {{age}}に更新 · 読み取り専用",
+    "filterEntries": "フィルター",
+    "filterAll": "すべて",
+    "filterNone": "なし",
+    "filterSave": "保存",
+    "filterDiscard": "破棄"
   },
   "support": {
     "supportProject": "プロジェクトを支援",
