@@ -615,6 +615,72 @@
   text-decoration: line-through;
 }
 
+/* ============================
+   Multi-currency totals — collapse rows into one inline flex row
+   Only tables with more than one <tr> (simple, purchases).
+   Mining / transactions / earn have a single row and are unaffected.
+   ============================ */
+
+.dv-table-totals:has(tr ~ tr) {
+  display: flex;
+}
+
+.dv-table-totals:has(tr ~ tr) colgroup {
+  display: none;
+}
+
+.dv-table-totals:has(tr ~ tr) tbody {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+}
+
+.dv-table-totals:has(tr ~ tr) tr {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 12px;
+  background: rgba(247, 147, 26, 0.1);
+}
+
+.page.theme-dark .dv-table-totals:has(tr ~ tr) tr {
+  background: rgba(247, 147, 26, 0.12);
+}
+
+.page.theme-light .dv-table-totals:has(tr ~ tr) tr {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.dv-table-totals:has(tr ~ tr) tr:not(:last-child) {
+  border-right: 1px solid rgba(247, 147, 26, 0.2);
+}
+
+.dv-table-totals:has(tr ~ tr) td:empty {
+  display: none;
+}
+
+.dv-table-totals:has(tr ~ tr) td {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none !important;
+  background: transparent !important;
+}
+
+.dv-table-totals:has(tr ~ tr) .dv-total-cell-label {
+  display: none;
+}
+
+.dv-table-totals:has(tr ~ tr) .dv-total-cell-value {
+  display: flex;
+  align-items: center;
+  font-size: 0.75rem;
+}
+
 .dv-table-data {
   border: 1px solid rgba(0, 0, 0, 0.06);
   border-radius: 14px;
@@ -677,6 +743,30 @@
 
 .page.theme-dark .dv-table tbody tr:hover td {
   background: rgba(255, 255, 255, 0.08);
+}
+
+/* ============================
+   Row Selection Mode
+   ============================ */
+
+.dv-table-data.dv-selection-mode tbody tr {
+  cursor: pointer;
+}
+
+.dv-table-data.dv-selection-mode .dv-row--selected td {
+  background: rgba(0, 0, 0, 0.06) !important;
+}
+
+.page.theme-light .dv-table-data.dv-selection-mode .dv-row--selected td {
+  background: rgb(0 0 0 / 11%) !important;
+}
+
+.page.theme-dark .dv-table-data.dv-selection-mode .dv-row--selected td {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.dv-table-data.dv-selection-mode .dv-row--excluded td {
+  opacity: 0.3;
 }
 
 .dv-cell-date {
