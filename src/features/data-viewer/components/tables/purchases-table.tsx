@@ -1,4 +1,5 @@
 ﻿import { useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { loadCacheEntry } from "@/features/export/utils/cache";
 import type { CacheEntry } from "@/features/export/types";
@@ -17,6 +18,7 @@ import { TypeCheckFilter } from "../type-check-filter/type-check-filter";
 import { Pagination } from "../pagination/pagination";
 import { useSyncTableColumns } from "../../hooks/use-sync-table-columns";
 import { AnimatedLoadingRow } from "./animated-loading-row";
+import { useRowSelection } from "../../context/row-selection-context";
 
 export function PurchasesTable({
   fiatCode,
@@ -28,6 +30,7 @@ export function PurchasesTable({
   groupByDay,
   dateRange,
   setDateRange,
+  pageSize,
 }: {
   fiatCode: string;
   purchaseView: PurchaseView;
@@ -38,8 +41,11 @@ export function PurchasesTable({
   groupByDay: boolean;
   dateRange: DateRange;
   setDateRange: (v: DateRange) => void;
+  pageSize?: number;
 }) {
   const { t } = useTranslation();
+  const rowSel = useRowSelection();
+  const excluded = useMemo(() => new Set(rowSel?.exclusions["purchases"] ?? []), [rowSel]);
   const [page, setPage] = useState(0);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [hiddenCurrencies, setHiddenCurrencies] = useState<Set<string>>(new Set());
@@ -55,15 +61,16 @@ export function PurchasesTable({
     return upgradesCacheEntry !== undefined ? upgradesCacheEntry : loadCacheEntry("upgrades");
   }, [cacheVersion, upgradesCacheEntry]);
 
-  function parseEntry(entry: ReturnType<typeof loadCacheEntry>) {
+  function parseEntry(entry: ReturnType<typeof loadCacheEntry>, keyPrefix: string) {
     if (!entry?.records?.length) return [];
-    return entry.records.map((r) => {
+    return entry.records.map((r, i) => {
       const rec = r as Record<string, unknown>;
       const valueUsd = Number(rec.valueUsd ?? 0);
       const valueFiat = Number(rec.valueFiat ?? 0);
       const reward = rec.reward != null ? Number(rec.reward) : undefined;
       return {
         date: String(rec.createdAt ?? ""),
+        rowId: `${keyPrefix}::${String(rec.createdAt ?? "")}::${i}`,
         type: String(rec.type ?? ""),
         currency: String(rec.currency ?? ""),
         reward: reward != null && Number.isFinite(reward) ? reward : undefined,
@@ -75,8 +82,8 @@ export function PurchasesTable({
 
   const rows = useMemo(
     () =>
-      [...parseEntry(purchasesEntry), ...parseEntry(upgradesEntry)].sort((a, b) =>
-        b.date.localeCompare(a.date),
+      [...parseEntry(purchasesEntry, "purchases"), ...parseEntry(upgradesEntry, "upgrades")].sort(
+        (a, b) => b.date.localeCompare(a.date),
       ),
     [purchasesEntry, upgradesEntry],
   );
@@ -104,8 +111,9 @@ export function PurchasesTable({
   );
 
   const finalRows = useMemo(() => {
-    if (!groupByDay) return displayRows;
-    const map = new Map<string, (typeof displayRows)[0]>();
+    type FinalRow = (typeof displayRows)[0] & { groupIds: string[] };
+    if (!groupByDay) return displayRows.map((r): FinalRow => ({ ...r, groupIds: [r.rowId] }));
+    const map = new Map<string, FinalRow>();
     for (const row of displayRows) {
       const key = `${row.date.slice(0, 10)}|${row.currency}|${row.type}`;
       const existing = map.get(key);
@@ -118,22 +126,29 @@ export function PurchasesTable({
               : (existing.reward ?? row.reward),
           valueUsd: existing.valueUsd + row.valueUsd,
           valueFiat: existing.valueFiat + row.valueFiat,
+          groupIds: [...existing.groupIds, row.rowId],
         });
       } else {
-        map.set(key, { ...row, date: row.date.slice(0, 10) });
+        map.set(key, { ...row, date: row.date.slice(0, 10), groupIds: [row.rowId] });
       }
     }
     return [...map.values()];
   }, [displayRows, groupByDay]);
 
+  const effectivePageSize = pageSize ?? PAGE_SIZE;
   const pageRows = useMemo(
-    () => finalRows.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE),
-    [finalRows, page],
+    () => finalRows.slice(page * effectivePageSize, (page + 1) * effectivePageSize),
+    [finalRows, page, effectivePageSize],
+  );
+
+  const selectedRows = useMemo(
+    () => (rowSel ? filteredRows.filter((r) => !excluded.has(r.rowId)) : filteredRows),
+    [filteredRows, rowSel, excluded],
   );
 
   const currencyTotals = useMemo(() => {
     const map = new Map<string, { nativeAmount: number; valueUsd: number; valueFiat: number }>();
-    for (const row of filteredRows) {
+    for (const row of selectedRows) {
       const cur = map.get(row.currency) ?? { nativeAmount: 0, valueUsd: 0, valueFiat: 0 };
       map.set(row.currency, {
         nativeAmount: cur.nativeAmount + (row.reward ?? row.valueUsd),
@@ -142,7 +157,7 @@ export function PurchasesTable({
       });
     }
     return [...map.entries()];
-  }, [filteredRows]);
+  }, [selectedRows]);
 
   const grandTotal = useMemo(
     () =>
@@ -194,76 +209,87 @@ export function PurchasesTable({
     <>
       <div className="dv-tables-wrap">
         {}
-        <table
-          ref={totalsRef}
-          className="dv-table dv-table-totals"
-          hidden={filteredRows.length === 0}
-        >
-          <colgroup>
-            <col className="dv-column-date" />
-            <col className="dv-column-type" />
-            <col className="dv-column-value" />
-          </colgroup>
-          <tbody>
-            {currencyTotals.map(([currency, totals]) => {
-              const { v, c } = totalValue(totals, currency);
-              const hidden = hiddenCurrencies.has(currency);
-              const toggle = isSingleCurrency
-                ? undefined
-                : () =>
-                    setHiddenCurrencies((prev) => {
-                      const next = new Set(prev);
-                      if (next.has(currency)) next.delete(currency);
-                      else next.add(currency);
-                      return next;
-                    });
-              return (
-                <tr
-                  key={currency}
-                  className={`${!isSingleCurrency ? "dv-totals-row--clickable" : ""}${hidden ? " dv-totals-row--hidden" : ""}`}
-                  onClick={toggle}
-                >
-                  <td>
-                    {isSingleCurrency ? (
-                      <span className="dv-totals-label">{t("common.total")}</span>
-                    ) : (
-                      <span className="dv-totals-currency-cell">
-                        <AnyCurrencyIcon currency={currency} />
-                        <span className="dv-totals-currency-label">{currency}</span>
-                      </span>
-                    )}
-                  </td>
-                  <td />
-                  <td>
-                    <span className="dv-total-cell-label">Bought</span>
-                    <span className="dv-total-cell-value dv-cell-with-icon">
-                      {formatCurrencyValue(v, c)}
-                      {isNative ? <AnyCurrencyIcon currency={currency} /> : boughtIcon}
-                    </span>
-                  </td>
-                </tr>
-              );
-            })}
-            {!isSingleCurrency && !isNative && (
-              <tr>
-                <td className="dv-totals-label">{t("common.total")}</td>
-                <td />
-                <td>
-                  <span className="dv-total-cell-value dv-total-cell-value--accent dv-cell-with-icon">
-                    {formatCurrencyValue(
-                      purchaseView === "USD" ? grandTotal.valueUsd : grandTotal.valueFiat,
-                      purchaseView,
-                    )}
-                    {boughtIcon}
-                  </span>
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+        <AnimatePresence initial={false}>
+          {selectedRows.length > 0 && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+              style={{ overflow: "hidden" }}
+            >
+              <table ref={totalsRef} className="dv-table dv-table-totals">
+                <colgroup>
+                  <col className="dv-column-date" />
+                  <col className="dv-column-type" />
+                  <col className="dv-column-value" />
+                </colgroup>
+                <tbody>
+                  {currencyTotals.map(([currency, totals]) => {
+                    const { v, c } = totalValue(totals, currency);
+                    const hidden = hiddenCurrencies.has(currency);
+                    const toggle = isSingleCurrency
+                      ? undefined
+                      : () =>
+                          setHiddenCurrencies((prev) => {
+                            const next = new Set(prev);
+                            if (next.has(currency)) next.delete(currency);
+                            else next.add(currency);
+                            return next;
+                          });
+                    return (
+                      <tr
+                        key={currency}
+                        className={`${!isSingleCurrency ? "dv-totals-row--clickable" : ""}${hidden ? " dv-totals-row--hidden" : ""}`}
+                        onClick={toggle}
+                      >
+                        <td>
+                          {isSingleCurrency ? (
+                            <span className="dv-totals-label">{t("common.total")}</span>
+                          ) : (
+                            <span className="dv-totals-currency-cell">
+                              <AnyCurrencyIcon currency={currency} />
+                              <span className="dv-totals-currency-label">{currency}</span>
+                            </span>
+                          )}
+                        </td>
+                        <td />
+                        <td>
+                          <span className="dv-total-cell-label">Bought</span>
+                          <span className="dv-total-cell-value dv-cell-with-icon">
+                            {formatCurrencyValue(v, c)}
+                            {isNative ? <AnyCurrencyIcon currency={currency} /> : boughtIcon}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {!isSingleCurrency && !isNative && (
+                    <tr>
+                      <td className="dv-totals-label">{t("common.total")}</td>
+                      <td />
+                      <td>
+                        <span className="dv-total-cell-value dv-total-cell-value--accent dv-cell-with-icon">
+                          {formatCurrencyValue(
+                            purchaseView === "USD" ? grandTotal.valueUsd : grandTotal.valueFiat,
+                            purchaseView,
+                          )}
+                          {boughtIcon}
+                        </span>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {}
-        <table ref={dataRef} className="dv-table dv-table-data">
+        <table
+          ref={dataRef}
+          className={`dv-table dv-table-data${rowSel ? " dv-selection-mode" : ""}`}
+        >
           <colgroup>
             <col className="dv-column-date" />
             <col className="dv-column-type" />
@@ -326,8 +352,14 @@ export function PurchasesTable({
                     ? row.valueUsd
                     : row.valueFiat;
               const boughtCur = purchaseView === "NATIVE" ? row.currency : purchaseView;
+              const ids = row.groupIds;
+              const isExcluded = rowSel ? ids.every((id) => excluded.has(id)) : false;
               return (
-                <tr key={`${row.date}-${row.currency}-${row.type}-${i}`}>
+                <tr
+                  key={`${row.date}-${row.currency}-${row.type}-${i}`}
+                  className={rowSel ? (isExcluded ? "dv-row--excluded" : "dv-row--selected") : ""}
+                  onClick={rowSel ? () => rowSel.onToggle("purchases", ids) : undefined}
+                >
                   <td className="dv-cell-date">
                     {groupByDay ? fmtDate(row.date) : fmtDateTime(row.date)}
                   </td>
@@ -358,7 +390,12 @@ export function PurchasesTable({
           </tbody>
         </table>
       </div>
-      <Pagination page={page} total={finalRows.length} onChange={setPage} />
+      <Pagination
+        page={page}
+        total={finalRows.length}
+        onChange={setPage}
+        pageSize={effectivePageSize}
+      />
     </>
   );
 }

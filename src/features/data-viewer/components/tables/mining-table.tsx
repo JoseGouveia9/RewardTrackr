@@ -1,4 +1,5 @@
 ﻿import { useMemo, useRef, type ReactNode } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { loadCacheEntry, wasCacheMigrated } from "@/features/export/utils/cache";
 import type { CacheEntry, RewardKey } from "@/features/export/types";
@@ -17,6 +18,7 @@ import { DateRangeFilter } from "../date-range-filter/date-range-filter";
 import { Pagination } from "../pagination/pagination";
 import { useSyncTableColumns } from "../../hooks/use-sync-table-columns";
 import { AnimatedLoadingRow } from "./animated-loading-row";
+import { useRowSelection } from "../../context/row-selection-context";
 
 const INFO_ICON = (
   <svg
@@ -219,6 +221,7 @@ export function MiningTable({
   trendsAnimating,
   trendsExiting,
   difficultyMap = new Map(),
+  pageSize,
 }: {
   rewardKey: RewardKey;
   currency: Currency;
@@ -234,9 +237,12 @@ export function MiningTable({
   trendsAnimating: boolean;
   trendsExiting: boolean;
   difficultyMap?: Map<string, DifficultyEntry>;
+  pageSize?: number;
 }) {
   const { t, i18n } = useTranslation();
   const isRtl = i18n.dir() === "rtl";
+  const rowSel = useRowSelection();
+  const excluded = useMemo(() => new Set(rowSel?.exclusions[rewardKey] ?? []), [rowSel, rewardKey]);
   const formulas = useMemo(() => buildFormulas(t, currency, fiatCode), [t, currency, fiatCode]);
   const totalsRef = useRef<HTMLTableElement>(null);
   const dataRef = useRef<HTMLTableElement>(null);
@@ -248,10 +254,11 @@ export function MiningTable({
 
   const rows = useMemo(() => {
     if (!entry?.records?.length) return [];
-    return entry.records.map((r) => {
+    return entry.records.map((r, i) => {
       const rec = r as Record<string, unknown>;
       return {
         date: String(rec.createdAt ?? ""),
+        rowId: `${rewardKey}::${String(rec.createdAt ?? "")}::${i}`,
         poolReward: getRecordField(rec, currency, "poolReward"),
         maintenance: getRecordField(rec, currency, "maintenance"),
         reward: getRecordField(rec, currency, "reward"),
@@ -267,7 +274,7 @@ export function MiningTable({
         })(),
       };
     });
-  }, [entry, currency]);
+  }, [entry, currency, rewardKey]);
 
   const dateBounds = useMemo(() => getDateBounds(rows), [rows]);
   const rowDates = useMemo(() => rows.map((r) => r.date.slice(0, 10)), [rows]);
@@ -277,9 +284,10 @@ export function MiningTable({
     [rows, dateRange],
   );
 
+  const effectivePageSize = pageSize ?? PAGE_SIZE;
   const pageRows = useMemo(
-    () => filteredRows.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE),
-    [filteredRows, page],
+    () => filteredRows.slice(page * effectivePageSize, (page + 1) * effectivePageSize),
+    [filteredRows, page, effectivePageSize],
   );
 
   const hasSubLabel = useMemo(() => {
@@ -296,9 +304,14 @@ export function MiningTable({
     [rewardKey, rows],
   );
 
+  const selectedRows = useMemo(
+    () => (rowSel ? filteredRows.filter((r) => !excluded.has(r.rowId)) : filteredRows),
+    [filteredRows, rowSel, excluded],
+  );
+
   const totals = useMemo(
     () =>
-      filteredRows.reduce(
+      selectedRows.reduce(
         (acc, r) => ({
           poolReward: acc.poolReward + r.poolReward,
           maintenance: acc.maintenance + r.maintenance,
@@ -306,7 +319,7 @@ export function MiningTable({
         }),
         { poolReward: 0, maintenance: 0, reward: 0 },
       ),
-    [filteredRows],
+    [selectedRows],
   );
 
   if (!entry) {
@@ -331,50 +344,61 @@ export function MiningTable({
       <div
         className={`dv-tables-wrap dv-tables-wrap--wide${trendsExiting ? " dv-trends-exiting" : trendsAnimating ? " dv-trends-active" : showTrends ? " dv-trends-visible" : ""}`}
       >
-        <table
-          ref={totalsRef}
-          className="dv-table dv-table-totals"
-          hidden={filteredRows.length === 0}
-        >
-          <colgroup>
-            <col className="dv-column-date" />
-            <col className="dv-column-value" />
-            <col className="dv-column-value" />
-            <col className="dv-column-value" />
-            <col className="dv-column-value" />
-            <col className="dv-column-value" />
-          </colgroup>
-          <tbody>
-            <tr>
-              <td className="dv-totals-label">{t("common.total")}</td>
-              <td />
-              <td>
-                <span className="dv-total-cell-label">{t("dataViewer.poolReward")}</span>
-                <span className="dv-total-cell-value dv-cell-with-icon">
-                  {formatMiningValue(totals.poolReward, currency)}
-                  <MiningCurrencyIcon currency={currency} fiatCode={fiatCode} />
-                </span>
-              </td>
-              <td>
-                <span className="dv-total-cell-label">{t("dataViewer.maintenance")}</span>
-                <span className="dv-total-cell-value dv-cell-with-icon">
-                  {formatMiningValue(totals.maintenance, currency)}
-                  <MiningCurrencyIcon currency={currency} fiatCode={fiatCode} />
-                </span>
-              </td>
-              <td />
-              <td>
-                <span className="dv-total-cell-label">{t("dataViewer.reward")}</span>
-                <span className="dv-total-cell-value dv-total-cell-value--accent dv-cell-with-icon">
-                  {formatMiningValue(totals.reward, currency)}
-                  <MiningCurrencyIcon currency={currency} fiatCode={fiatCode} />
-                </span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <AnimatePresence initial={false}>
+          {selectedRows.length > 0 && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+              style={{ overflow: "hidden" }}
+            >
+              <table ref={totalsRef} className="dv-table dv-table-totals">
+                <colgroup>
+                  <col className="dv-column-date" />
+                  <col className="dv-column-value" />
+                  <col className="dv-column-value" />
+                  <col className="dv-column-value" />
+                  <col className="dv-column-value" />
+                  <col className="dv-column-value" />
+                </colgroup>
+                <tbody>
+                  <tr>
+                    <td className="dv-totals-label">{t("common.total")}</td>
+                    <td />
+                    <td>
+                      <span className="dv-total-cell-label">{t("dataViewer.poolReward")}</span>
+                      <span className="dv-total-cell-value dv-cell-with-icon">
+                        {formatMiningValue(totals.poolReward, currency)}
+                        <MiningCurrencyIcon currency={currency} fiatCode={fiatCode} />
+                      </span>
+                    </td>
+                    <td>
+                      <span className="dv-total-cell-label">{t("dataViewer.maintenance")}</span>
+                      <span className="dv-total-cell-value dv-cell-with-icon">
+                        {formatMiningValue(totals.maintenance, currency)}
+                        <MiningCurrencyIcon currency={currency} fiatCode={fiatCode} />
+                      </span>
+                    </td>
+                    <td />
+                    <td>
+                      <span className="dv-total-cell-label">{t("dataViewer.reward")}</span>
+                      <span className="dv-total-cell-value dv-total-cell-value--accent dv-cell-with-icon">
+                        {formatMiningValue(totals.reward, currency)}
+                        <MiningCurrencyIcon currency={currency} fiatCode={fiatCode} />
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        <table ref={dataRef} className="dv-table dv-table-data">
+        <table
+          ref={dataRef}
+          className={`dv-table dv-table-data${rowSel ? " dv-selection-mode" : ""}`}
+        >
           <colgroup>
             <col className="dv-column-date" />
             <col className="dv-column-value" />
@@ -431,11 +455,21 @@ export function MiningTable({
               </tr>
             )}
             {pageRows.map((row, i) => {
-              const prevRow = filteredRows[page * PAGE_SIZE + i + 1];
+              const prevRow = filteredRows[page * effectivePageSize + i + 1];
               const diffEntry = difficultyMap.get(row.date.slice(0, 10));
               const isDiffDay = diffEntry != null;
               return (
-                <tr key={`${row.date}-${i}`}>
+                <tr
+                  key={`${row.date}-${i}`}
+                  className={
+                    rowSel
+                      ? excluded.has(row.rowId)
+                        ? "dv-row--excluded"
+                        : "dv-row--selected"
+                      : ""
+                  }
+                  onClick={rowSel ? () => rowSel.onToggle(rewardKey, [row.rowId]) : undefined}
+                >
                   <td className="dv-cell-date">{fmtDate(row.date)}</td>
                   <td>
                     {row.totalPower > 0
@@ -568,7 +602,12 @@ export function MiningTable({
           </tbody>
         </table>
       </div>
-      <Pagination page={page} total={filteredRows.length} onChange={setPage} />
+      <Pagination
+        page={page}
+        total={filteredRows.length}
+        onChange={setPage}
+        pageSize={effectivePageSize}
+      />
     </>
   );
 }

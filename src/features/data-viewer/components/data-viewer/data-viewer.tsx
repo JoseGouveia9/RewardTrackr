@@ -10,6 +10,7 @@ import {
 import { ErrorBoundary } from "@/components/error-boundary/error-boundary";
 import type { Currency, EarnView, TxView, SimpleView, PurchaseView } from "../../types";
 import type { CacheState, RewardKey } from "@/features/export/types";
+import { RowSelectionProvider } from "../../context/row-selection-context";
 import { ALL_TABS } from "../../utils/constants";
 import { loadFiatCode } from "../../utils";
 import { useDataViewerState } from "../../hooks/use-data-viewer-state";
@@ -29,14 +30,16 @@ interface DataViewerProps {
   cacheVersion?: number;
   onTabSeen?: (key: RewardKey) => void;
   title?: string;
-
   sharedData?: Partial<CacheState> | null;
-
   banner?: React.ReactNode;
-
   onShare?: () => void;
-
   shareDisabled?: boolean;
+  hideHeader?: boolean;
+  pageSize?: number;
+  rowSelection?: {
+    exclusions: Partial<Record<RewardKey, string[]>>;
+    onToggle: (key: RewardKey, ids: string[]) => void;
+  };
 }
 
 export const DataViewer = memo(function DataViewer({
@@ -50,6 +53,9 @@ export const DataViewer = memo(function DataViewer({
   banner,
   onShare,
   shareDisabled = false,
+  hideHeader = false,
+  pageSize,
+  rowSelection,
 }: DataViewerProps) {
   const {
     activeKey,
@@ -71,6 +77,15 @@ export const DataViewer = memo(function DataViewer({
   const fiatCode = useMemo(() => loadFiatCode(), []);
 
   const isSharedContext = sharedData !== null && sharedData !== undefined;
+  const effectiveGroupByDay = groupByDay;
+
+  const rowSelectionContextValue = useMemo(() => {
+    if (!rowSelection) return null;
+    return {
+      exclusions: rowSelection.exclusions,
+      onToggle: rowSelection.onToggle,
+    };
+  }, [rowSelection]);
 
   const isActiveKeyFetching =
     isFetching && (fetchingKeys === undefined || fetchingKeys.has(activeKey));
@@ -284,82 +299,25 @@ export const DataViewer = memo(function DataViewer({
           : isPurchaseTab
             ? effectivePurchaseView
             : effectiveSimpleView
-  }:${groupByDay ? "grouped" : "raw"}`;
+  }:${effectiveGroupByDay ? "grouped" : "raw"}`;
 
   return (
     <>
       {banner}
       <div className="dv-page">
         {}
-        <div className="dv-header">
-          <div className="dv-header-left">
-            <button
-              type="button"
-              className="dv-back-button"
-              onClick={onClose}
-              aria-label={t("common.back")}
-            >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M19 12H5" />
-                <path d="M12 19l-7-7 7-7" />
-              </svg>
-              <span>{t("common.back")}</span>
-            </button>
-            {title ? <span className="dv-title">{title}</span> : null}
-            {onShare && (
+        {!hideHeader && (
+          <div className="dv-header">
+            <div className="dv-header-left">
               <button
                 type="button"
-                className={`dv-share-button${shareDisabled ? " dv-share-button--disabled" : ""}`}
-                onClick={shareDisabled ? undefined : onShare}
-                aria-disabled={shareDisabled}
-                aria-label={t("dataViewer.shareRecordsLabel")}
-                title={shareDisabled ? "Export in progress — share after it completes" : undefined}
+                className="dv-back-button"
+                onClick={onClose}
+                aria-label={t("common.back")}
               >
                 <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <circle cx="18" cy="5" r="3" />
-                  <circle cx="6" cy="12" r="3" />
-                  <circle cx="18" cy="19" r="3" />
-                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
-                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-                </svg>
-                <span>{t("common.share")}</span>
-              </button>
-            )}
-          </div>
-
-          {}
-          <div className="dv-toolbar">
-            {hasActiveData && !isMiningTab && (
-              <button
-                type="button"
-                className={`dv-group-button${groupByDay ? " dv-group-button--active" : ""}`}
-                onClick={() => setGroupByDay((v) => !v)}
-                title={t("dataViewer.groupByDay")}
-                aria-pressed={groupByDay}
-              >
-                <svg
-                  width="14"
-                  height="14"
+                  width="16"
+                  height="16"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -368,22 +326,54 @@ export const DataViewer = memo(function DataViewer({
                   strokeLinejoin="round"
                   aria-hidden="true"
                 >
-                  <line x1="3" y1="6" x2="21" y2="6" />
-                  <line x1="3" y1="12" x2="15" y2="12" />
-                  <line x1="3" y1="18" x2="15" y2="18" />
-                  <polyline points="17 15 20 18 23 15" />
+                  <path d="M19 12H5" />
+                  <path d="M12 19l-7-7 7-7" />
                 </svg>
-                <span>{t("dataViewer.groupByDay")}</span>
+                <span>{t("common.back")}</span>
               </button>
-            )}
-            {hasViewSelector && !isMiningTab && <span className="dv-toolbar-separator">·</span>}
-            {hasActiveData && isMiningTab && activeKey == "solo-mining" && hasTrendsData && (
-              <>
+              {title ? <span className="dv-title">{title}</span> : null}
+              {onShare && (
                 <button
                   type="button"
-                  className={`dv-trends-toggle${showTrends && !trendsExiting ? " dv-trends-toggle--active" : ""}`}
-                  onClick={toggleTrends}
-                  aria-pressed={showTrends && !trendsExiting}
+                  className={`dv-share-button${shareDisabled ? " dv-share-button--disabled" : ""}`}
+                  onClick={shareDisabled ? undefined : onShare}
+                  aria-disabled={shareDisabled}
+                  aria-label={t("dataViewer.shareRecordsLabel")}
+                  title={
+                    shareDisabled ? "Export in progress — share after it completes" : undefined
+                  }
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <circle cx="18" cy="5" r="3" />
+                    <circle cx="6" cy="12" r="3" />
+                    <circle cx="18" cy="19" r="3" />
+                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                  </svg>
+                  <span>{t("common.share")}</span>
+                </button>
+              )}
+            </div>
+
+            {}
+            <div className="dv-toolbar">
+              {hasActiveData && !isMiningTab && (
+                <button
+                  type="button"
+                  className={`dv-group-button${groupByDay ? " dv-group-button--active" : ""}`}
+                  onClick={() => setGroupByDay((v) => !v)}
+                  title={t("dataViewer.groupByDay")}
+                  aria-pressed={groupByDay}
                 >
                   <svg
                     width="14"
@@ -396,47 +386,76 @@ export const DataViewer = memo(function DataViewer({
                     strokeLinejoin="round"
                     aria-hidden="true"
                   >
-                    <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
-                    <polyline points="16 7 22 7 22 13" />
+                    <line x1="3" y1="6" x2="21" y2="6" />
+                    <line x1="3" y1="12" x2="15" y2="12" />
+                    <line x1="3" y1="18" x2="15" y2="18" />
+                    <polyline points="17 15 20 18 23 15" />
                   </svg>
-                  <span className="trends-label-full">{t("dataViewer.trends")}</span>
-                  <span className="trends-label-short">{t("dataViewer.trendsShort")}</span>
+                  <span>{t("dataViewer.groupByDay")}</span>
                 </button>
-                <span className="dv-toolbar-separator">·</span>
-              </>
-            )}
-            {hasActiveData && isMiningTab ? (
-              <ViewSelector
-                views={currencies}
-                activeKey={currency}
-                onSelect={(k) => {
-                  setCurrency(k);
-                  setSharedView(k === "USD" ? "USD" : k === "FIAT" ? "FIAT" : "NATIVE");
-                }}
-              />
-            ) : hasActiveData && isEarnTab ? (
-              <ViewSelector views={earnViews} activeKey={effectiveEarnView} onSelect={setView} />
-            ) : hasActiveData && isTxTab && showTxSelector ? (
-              <ViewSelector
-                views={txViews}
-                activeKey={effectiveTxView}
-                onSelect={(k) => setView(k === "GMT" ? "NATIVE" : k)}
-              />
-            ) : hasActiveData && isPurchaseTab ? (
-              <ViewSelector
-                views={purchaseViews}
-                activeKey={effectivePurchaseView}
-                onSelect={setView}
-              />
-            ) : hasActiveData && showSimpleSelector ? (
-              <ViewSelector
-                views={simpleViews}
-                activeKey={effectiveSimpleView}
-                onSelect={setView}
-              />
-            ) : null}
+              )}
+              {hasViewSelector && !isMiningTab && <span className="dv-toolbar-separator">·</span>}
+              {hasActiveData && isMiningTab && activeKey == "solo-mining" && hasTrendsData && (
+                <>
+                  <button
+                    type="button"
+                    className={`dv-trends-toggle${showTrends && !trendsExiting ? " dv-trends-toggle--active" : ""}`}
+                    onClick={toggleTrends}
+                    aria-pressed={showTrends && !trendsExiting}
+                  >
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+                      <polyline points="16 7 22 7 22 13" />
+                    </svg>
+                    <span className="trends-label-full">{t("dataViewer.trends")}</span>
+                    <span className="trends-label-short">{t("dataViewer.trendsShort")}</span>
+                  </button>
+                  <span className="dv-toolbar-separator">·</span>
+                </>
+              )}
+              {hasActiveData && isMiningTab ? (
+                <ViewSelector
+                  views={currencies}
+                  activeKey={currency}
+                  onSelect={(k) => {
+                    setCurrency(k);
+                    setSharedView(k === "USD" ? "USD" : k === "FIAT" ? "FIAT" : "NATIVE");
+                  }}
+                />
+              ) : hasActiveData && isEarnTab ? (
+                <ViewSelector views={earnViews} activeKey={effectiveEarnView} onSelect={setView} />
+              ) : hasActiveData && isTxTab && showTxSelector ? (
+                <ViewSelector
+                  views={txViews}
+                  activeKey={effectiveTxView}
+                  onSelect={(k) => setView(k === "GMT" ? "NATIVE" : k)}
+                />
+              ) : hasActiveData && isPurchaseTab ? (
+                <ViewSelector
+                  views={purchaseViews}
+                  activeKey={effectivePurchaseView}
+                  onSelect={setView}
+                />
+              ) : hasActiveData && showSimpleSelector ? (
+                <ViewSelector
+                  views={simpleViews}
+                  activeKey={effectiveSimpleView}
+                  onSelect={setView}
+                />
+              ) : null}
+            </div>
           </div>
-        </div>
+        )}
 
         {}
         <TabList
@@ -450,89 +469,98 @@ export const DataViewer = memo(function DataViewer({
 
         {}
         <div className="dv-content">
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div
-              key={tableAnimationKey}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.14, ease: "easeOut" }}
-            >
-              <ErrorBoundary>
-                {isMiningTab ? (
-                  <MiningTable
-                    key={activeKey}
-                    rewardKey={activeKey}
-                    currency={currency}
-                    fiatCode={fiatCode}
-                    isFetching={isActiveKeyFetching}
-                    cacheVersion={cacheVersion}
-                    cacheEntry={sharedData ? (sharedData[activeKey] ?? null) : undefined}
-                    dateRange={dateRange}
-                    setDateRange={setDateRange}
-                    page={miningPage}
-                    setPage={setMiningPage}
-                    showTrends={showTrends}
-                    trendsAnimating={trendsAnimating}
-                    trendsExiting={trendsExiting}
-                    difficultyMap={difficultyMap}
-                  />
-                ) : isEarnTab ? (
-                  <SimpleEarnTable
-                    key={activeKey}
-                    rewardKey={activeKey}
-                    fiatCode={fiatCode}
-                    earnView={effectiveEarnView}
-                    isFetching={isActiveKeyFetching}
-                    cacheVersion={cacheVersion}
-                    cacheEntry={sharedData ? (sharedData[activeKey] ?? null) : undefined}
-                    groupByDay={groupByDay}
-                    dateRange={dateRange}
-                    setDateRange={setDateRange}
-                  />
-                ) : isTxTab ? (
-                  <TransactionsTable
-                    key={activeKey}
-                    rewardKey={activeKey}
-                    fiatCode={fiatCode}
-                    txView={effectiveTxView}
-                    isFetching={isActiveKeyFetching}
-                    cacheVersion={cacheVersion}
-                    cacheEntry={sharedData ? (sharedData[activeKey] ?? null) : undefined}
-                    groupByDay={groupByDay}
-                    dateRange={dateRange}
-                    setDateRange={setDateRange}
-                  />
-                ) : isPurchaseTab ? (
-                  <PurchasesTable
-                    key={activeKey}
-                    fiatCode={fiatCode}
-                    purchaseView={effectivePurchaseView}
-                    isFetching={isActiveKeyFetching}
-                    cacheVersion={cacheVersion}
-                    purchasesCacheEntry={sharedData ? (sharedData["purchases"] ?? null) : undefined}
-                    upgradesCacheEntry={sharedData ? (sharedData["upgrades"] ?? null) : undefined}
-                    groupByDay={groupByDay}
-                    dateRange={dateRange}
-                    setDateRange={setDateRange}
-                  />
-                ) : (
-                  <SimpleTable
-                    key={activeKey}
-                    rewardKey={activeKey}
-                    fiatCode={fiatCode}
-                    simpleView={effectiveSimpleView}
-                    isFetching={isActiveKeyFetching}
-                    cacheVersion={cacheVersion}
-                    cacheEntry={sharedData ? (sharedData[activeKey] ?? null) : undefined}
-                    groupByDay={groupByDay}
-                    dateRange={dateRange}
-                    setDateRange={setDateRange}
-                  />
-                )}
-              </ErrorBoundary>
-            </motion.div>
-          </AnimatePresence>
+          <RowSelectionProvider value={rowSelectionContextValue}>
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={tableAnimationKey}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.14, ease: "easeOut" }}
+              >
+                <ErrorBoundary>
+                  {isMiningTab ? (
+                    <MiningTable
+                      key={activeKey}
+                      rewardKey={activeKey}
+                      currency={currency}
+                      fiatCode={fiatCode}
+                      isFetching={isActiveKeyFetching}
+                      cacheVersion={cacheVersion}
+                      cacheEntry={sharedData ? (sharedData[activeKey] ?? null) : undefined}
+                      dateRange={dateRange}
+                      setDateRange={setDateRange}
+                      page={miningPage}
+                      setPage={setMiningPage}
+                      showTrends={showTrends}
+                      trendsAnimating={trendsAnimating}
+                      trendsExiting={trendsExiting}
+                      difficultyMap={difficultyMap}
+                      pageSize={pageSize}
+                    />
+                  ) : isEarnTab ? (
+                    <SimpleEarnTable
+                      key={activeKey}
+                      rewardKey={activeKey}
+                      fiatCode={fiatCode}
+                      earnView={effectiveEarnView}
+                      isFetching={isActiveKeyFetching}
+                      cacheVersion={cacheVersion}
+                      cacheEntry={sharedData ? (sharedData[activeKey] ?? null) : undefined}
+                      groupByDay={effectiveGroupByDay}
+                      dateRange={dateRange}
+                      setDateRange={setDateRange}
+                      pageSize={pageSize}
+                    />
+                  ) : isTxTab ? (
+                    <TransactionsTable
+                      key={activeKey}
+                      rewardKey={activeKey}
+                      fiatCode={fiatCode}
+                      txView={effectiveTxView}
+                      isFetching={isActiveKeyFetching}
+                      cacheVersion={cacheVersion}
+                      cacheEntry={sharedData ? (sharedData[activeKey] ?? null) : undefined}
+                      groupByDay={effectiveGroupByDay}
+                      dateRange={dateRange}
+                      setDateRange={setDateRange}
+                      pageSize={pageSize}
+                    />
+                  ) : isPurchaseTab ? (
+                    <PurchasesTable
+                      key={activeKey}
+                      fiatCode={fiatCode}
+                      purchaseView={effectivePurchaseView}
+                      isFetching={isActiveKeyFetching}
+                      cacheVersion={cacheVersion}
+                      purchasesCacheEntry={
+                        sharedData ? (sharedData["purchases"] ?? null) : undefined
+                      }
+                      upgradesCacheEntry={sharedData ? (sharedData["upgrades"] ?? null) : undefined}
+                      groupByDay={effectiveGroupByDay}
+                      dateRange={dateRange}
+                      setDateRange={setDateRange}
+                      pageSize={pageSize}
+                    />
+                  ) : (
+                    <SimpleTable
+                      key={activeKey}
+                      rewardKey={activeKey}
+                      fiatCode={fiatCode}
+                      simpleView={effectiveSimpleView}
+                      isFetching={isActiveKeyFetching}
+                      cacheVersion={cacheVersion}
+                      cacheEntry={sharedData ? (sharedData[activeKey] ?? null) : undefined}
+                      groupByDay={effectiveGroupByDay}
+                      dateRange={dateRange}
+                      setDateRange={setDateRange}
+                      pageSize={pageSize}
+                    />
+                  )}
+                </ErrorBoundary>
+              </motion.div>
+            </AnimatePresence>
+          </RowSelectionProvider>
         </div>
       </div>
     </>

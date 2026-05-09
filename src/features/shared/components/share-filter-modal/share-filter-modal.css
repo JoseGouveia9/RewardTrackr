@@ -1,0 +1,163 @@
+.sfm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10001;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.sfm-modal {
+  background: #fff;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 1100px;
+  max-height: 88vh;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.22);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.page.theme-dark .sfm-modal {
+  background: #1c1c1e;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+}
+
+.page.theme-light .sfm-modal {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(247, 249, 253, 0.97));
+  border: 1px solid rgba(52, 66, 97, 0.14);
+  box-shadow: 0 18px 48px rgba(40, 52, 84, 0.14);
+}
+
+.sfm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  flex-shrink: 0;
+}
+
+.page.theme-dark .sfm-header {
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+
+.sfm-title {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #22283a;
+}
+
+.page.theme-dark .sfm-title {
+  color: #f0f4ff;
+}
+
+.sfm-content {
+  scrollbar-gutter: stable;
+  height: 650px;
+  flex-shrink: 0;
+  padding: 0 16px;
+}
+
+.sfm-content .dv-wrap {
+  border-radius: 0;
+  box-shadow: none;
+  border: none;
+  background: transparent;
+  height: 100%;
+}
+
+.sfm-content .dv-page {
+  margin-top: 0;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Hide back button / title / share — keep only the currency selector toolbar */
+.sfm-content .dv-header-left {
+  display: none;
+}
+
+.sfm-content .dv-header {
+  justify-content: flex-end;
+  margin-top: 12px;
+  margin-bottom: 6px;
+}
+
+/* Hide trends toggle and its trailing separator — group-by button stays visible */
+.sfm-content .dv-trends-toggle,
+.sfm-content .dv-trends-toggle + .dv-toolbar-separator {
+  display: none;
+}
+
+/* Right padding doesn't work inside overflow-x:auto flex containers — use a spacer instead */
+.sfm-content .dv-tabs::after {
+  content: "";
+  flex: 0 0 16px;
+}
+
+.sfm-content .dv-content {
+  padding: 0 0px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* The motion.div rendered by AnimatePresence is the direct DOM child — make it stretch */
+.sfm-content .dv-content > * {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.sfm-content .dv-tables-wrap {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Pagination always at the bottom — flex pushes it down when content is short,
+   sticky keeps it visible when content overflows and user scrolls */
+.sfm-content .dv-pagination {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  flex-shrink: 0;
+  background: #1c1c1e;
+  margin-top: 10px;
+  margin-bottom: 0;
+  padding-bottom: 12px;
+  padding-top: 4px;
+}
+
+.page.theme-light .sfm-content .dv-pagination {
+  background: #f7f9fd;
+}
+
+.sfm-footer {
+  display: flex;
+  gap: 8px;
+  padding: 16px 24px 20px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  flex-shrink: 0;
+}
+
+.page.theme-dark .sfm-footer {
+  border-top-color: rgba(255, 255, 255, 0.06);
+}
+
+@media (max-width: 640px) {
+  .sfm-modal {
+    max-height: 92vh;
+  }
+
+  .sfm-header,
+  .sfm-footer {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}

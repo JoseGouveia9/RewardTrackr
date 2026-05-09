@@ -1,4 +1,5 @@
 ﻿import { useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { loadCacheEntry } from "@/features/export/utils/cache";
 import type { CacheEntry, RewardKey } from "@/features/export/types";
@@ -18,6 +19,7 @@ import { TypeCheckFilter } from "../type-check-filter/type-check-filter";
 import { Pagination } from "../pagination/pagination";
 import { useSyncTableColumns } from "../../hooks/use-sync-table-columns";
 import { AnimatedLoadingRow } from "./animated-loading-row";
+import { useRowSelection } from "../../context/row-selection-context";
 
 export function TransactionsTable({
   rewardKey,
@@ -29,6 +31,7 @@ export function TransactionsTable({
   groupByDay,
   dateRange,
   setDateRange,
+  pageSize,
 }: {
   rewardKey: RewardKey;
   fiatCode: string;
@@ -39,8 +42,11 @@ export function TransactionsTable({
   groupByDay: boolean;
   dateRange: DateRange;
   setDateRange: (v: DateRange) => void;
+  pageSize?: number;
 }) {
   const { t } = useTranslation();
+  const rowSel = useRowSelection();
+  const excluded = useMemo(() => new Set(rowSel?.exclusions[rewardKey] ?? []), [rowSel, rewardKey]);
   const [page, setPage] = useState(0);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const totalsRef = useRef<HTMLTableElement>(null);
@@ -53,20 +59,21 @@ export function TransactionsTable({
 
   const allRows = useMemo(() => {
     if (!entry?.records?.length) return [];
-    return entry.records.map((r) => {
+    return entry.records.map((r, i) => {
       const rec = r as Record<string, unknown>;
       const reward = Number(rec.reward ?? 0);
       const rewardInUSD = Number(rec.rewardInUSD ?? rec.rewardInUsd ?? 0);
       const rewardInFiat = Number(rec.rewardInFiat ?? 0);
       return {
         date: String(rec.createdAt ?? ""),
+        rowId: `${rewardKey}::${String(rec.createdAt ?? "")}::${i}`,
         txType: String(rec.txType ?? rec.fromType ?? ""),
         reward: Number.isFinite(reward) ? reward : 0,
         rewardInUSD: Number.isFinite(rewardInUSD) ? rewardInUSD : 0,
         rewardInFiat: Number.isFinite(rewardInFiat) ? rewardInFiat : 0,
       };
     });
-  }, [entry]);
+  }, [entry, rewardKey]);
 
   const dateBounds = useMemo(() => getDateBounds(allRows), [allRows]);
   const rowDates = useMemo(() => allRows.map((r) => r.date.slice(0, 10)), [allRows]);
@@ -89,8 +96,9 @@ export function TransactionsTable({
   useEffect(() => setPage(0), [dateRange, selectedTypes, groupByDay]);
 
   const finalRows = useMemo(() => {
-    if (!groupByDay) return filteredRows;
-    const map = new Map<string, (typeof filteredRows)[0]>();
+    type FinalRow = (typeof filteredRows)[0] & { groupIds: string[] };
+    if (!groupByDay) return filteredRows.map((r): FinalRow => ({ ...r, groupIds: [r.rowId] }));
+    const map = new Map<string, FinalRow>();
     for (const row of filteredRows) {
       const key = row.date.slice(0, 10) + "|" + row.txType;
       const ex = map.get(key);
@@ -100,17 +108,19 @@ export function TransactionsTable({
           reward: ex.reward + row.reward,
           rewardInUSD: ex.rewardInUSD + row.rewardInUSD,
           rewardInFiat: ex.rewardInFiat + row.rewardInFiat,
+          groupIds: [...ex.groupIds, row.rowId],
         });
       } else {
-        map.set(key, { ...row, date: row.date.slice(0, 10) });
+        map.set(key, { ...row, date: row.date.slice(0, 10), groupIds: [row.rowId] });
       }
     }
     return [...map.values()];
   }, [filteredRows, groupByDay]);
 
+  const effectivePageSize = pageSize ?? PAGE_SIZE;
   const pageRows = useMemo(
-    () => finalRows.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE),
-    [finalRows, page],
+    () => finalRows.slice(page * effectivePageSize, (page + 1) * effectivePageSize),
+    [finalRows, page, effectivePageSize],
   );
 
   const rewardIcon =
@@ -122,9 +132,14 @@ export function TransactionsTable({
     return { v: row.reward, c: "GMT" };
   }
 
+  const selectedRows = useMemo(
+    () => (rowSel ? filteredRows.filter((r) => !excluded.has(r.rowId)) : filteredRows),
+    [filteredRows, rowSel, excluded],
+  );
+
   const totalValues = useMemo(
     () =>
-      filteredRows.reduce(
+      selectedRows.reduce(
         (acc, r) => ({
           reward: acc.reward + r.reward,
           rewardInUSD: acc.rewardInUSD + r.rewardInUSD,
@@ -132,7 +147,7 @@ export function TransactionsTable({
         }),
         { reward: 0, rewardInUSD: 0, rewardInFiat: 0 },
       ),
-    [filteredRows],
+    [selectedRows],
   );
 
   if (!entry) {
@@ -156,33 +171,44 @@ export function TransactionsTable({
     <>
       <div className="dv-tables-wrap">
         {}
-        <table
-          ref={totalsRef}
-          className="dv-table dv-table-totals"
-          hidden={filteredRows.length === 0}
-        >
-          <colgroup>
-            <col className="dv-column-date" />
-            <col className="dv-column-type" />
-            <col className="dv-column-value" />
-          </colgroup>
-          <tbody>
-            <tr>
-              <td className="dv-totals-label">{t("common.total")}</td>
-              <td />
-              <td>
-                <span className="dv-total-cell-label">{t("dataViewer.reward")}</span>
-                <span className="dv-total-cell-value dv-total-cell-value--accent dv-cell-with-icon">
-                  {formatCurrencyValue(totalV, totalC)}
-                  {rewardIcon}
-                </span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <AnimatePresence initial={false}>
+          {selectedRows.length > 0 && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+              style={{ overflow: "hidden" }}
+            >
+              <table ref={totalsRef} className="dv-table dv-table-totals">
+                <colgroup>
+                  <col className="dv-column-date" />
+                  <col className="dv-column-type" />
+                  <col className="dv-column-value" />
+                </colgroup>
+                <tbody>
+                  <tr>
+                    <td className="dv-totals-label">{t("common.total")}</td>
+                    <td />
+                    <td>
+                      <span className="dv-total-cell-label">{t("dataViewer.reward")}</span>
+                      <span className="dv-total-cell-value dv-total-cell-value--accent dv-cell-with-icon">
+                        {formatCurrencyValue(totalV, totalC)}
+                        {rewardIcon}
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {}
-        <table ref={dataRef} className="dv-table dv-table-data">
+        <table
+          ref={dataRef}
+          className={`dv-table dv-table-data${rowSel ? " dv-selection-mode" : ""}`}
+        >
           <colgroup>
             <col className="dv-column-date" />
             <col className="dv-column-type" />
@@ -225,8 +251,14 @@ export function TransactionsTable({
             )}
             {pageRows.map((row, i) => {
               const { v, c } = rowValue(row);
+              const ids = row.groupIds;
+              const isExcluded = rowSel ? ids.every((id) => excluded.has(id)) : false;
               return (
-                <tr key={`${row.date}-${row.txType}-${i}`}>
+                <tr
+                  key={`${row.date}-${row.txType}-${i}`}
+                  className={rowSel ? (isExcluded ? "dv-row--excluded" : "dv-row--selected") : ""}
+                  onClick={rowSel ? () => rowSel.onToggle(rewardKey, ids) : undefined}
+                >
                   <td className="dv-cell-date">
                     {groupByDay ? fmtDate(row.date) : fmtDateTime(row.date)}
                   </td>
@@ -245,7 +277,12 @@ export function TransactionsTable({
           </tbody>
         </table>
       </div>
-      <Pagination page={page} total={finalRows.length} onChange={setPage} />
+      <Pagination
+        page={page}
+        total={finalRows.length}
+        onChange={setPage}
+        pageSize={effectivePageSize}
+      />
     </>
   );
 }

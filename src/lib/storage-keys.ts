@@ -10,3 +10,4 @@ export const LS_KEY_NOTICE_UNOFFICIAL = "notice_unofficial_dismissed";
 export const LS_KEY_NOTICE_OPENSOURCE = "notice_opensource_dismissed";
 export const LS_KEY_NOTICE_ANNOUNCEMENT_PREFIX = "notice_announcement_";
 export const LS_KEY_MIGRATED_PREFIX = "rt_migrated_";
+export const LS_KEY_SHARE_EXCLUSIONS = "rt_share_exclusions";

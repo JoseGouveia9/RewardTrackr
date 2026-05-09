@@ -1,4 +1,5 @@
 ﻿import { useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { loadCacheEntry } from "@/features/export/utils/cache";
 import type { CacheEntry, RewardKey } from "@/features/export/types";
@@ -16,6 +17,7 @@ import { DateRangeFilter } from "../date-range-filter/date-range-filter";
 import { Pagination } from "../pagination/pagination";
 import { useSyncTableColumns } from "../../hooks/use-sync-table-columns";
 import { AnimatedLoadingRow } from "./animated-loading-row";
+import { useRowSelection } from "../../context/row-selection-context";
 
 export function SimpleEarnTable({
   rewardKey,
@@ -27,6 +29,7 @@ export function SimpleEarnTable({
   groupByDay,
   dateRange,
   setDateRange,
+  pageSize,
 }: {
   rewardKey: RewardKey;
   fiatCode: string;
@@ -37,8 +40,11 @@ export function SimpleEarnTable({
   groupByDay: boolean;
   dateRange: DateRange;
   setDateRange: (v: DateRange) => void;
+  pageSize?: number;
 }) {
   const { t } = useTranslation();
+  const rowSel = useRowSelection();
+  const excluded = useMemo(() => new Set(rowSel?.exclusions[rewardKey] ?? []), [rowSel, rewardKey]);
   const [page, setPage] = useState(0);
   const totalsRef = useRef<HTMLTableElement>(null);
   const dataRef = useRef<HTMLTableElement>(null);
@@ -50,7 +56,7 @@ export function SimpleEarnTable({
 
   const rows = useMemo(() => {
     if (!entry?.records?.length) return [];
-    return entry.records.map((r) => {
+    return entry.records.map((r, i) => {
       const rec = r as Record<string, unknown>;
       const reward = Number(rec.reward ?? 0);
       const rewardInUSD = Number(rec.rewardInUSD ?? rec.rewardInUsd ?? 0);
@@ -58,6 +64,7 @@ export function SimpleEarnTable({
       const apr = Number(rec.apr ?? 0);
       return {
         date: String(rec.createdAt ?? ""),
+        rowId: `${rewardKey}::${String(rec.createdAt ?? "")}::${i}`,
         asset: String(rec.asset ?? rec.currency ?? ""),
         currency: String(rec.currency ?? ""),
         apr: Number.isFinite(apr) ? apr : 0,
@@ -66,7 +73,7 @@ export function SimpleEarnTable({
         rewardInFiat: Number.isFinite(rewardInFiat) ? rewardInFiat : 0,
       };
     });
-  }, [entry]);
+  }, [entry, rewardKey]);
 
   const dateBounds = useMemo(() => getDateBounds(rows), [rows]);
   const rowDates = useMemo(() => rows.map((r) => r.date.slice(0, 10)), [rows]);
@@ -81,8 +88,9 @@ export function SimpleEarnTable({
   const displayRows = filteredRows;
 
   const finalRows = useMemo(() => {
-    if (!groupByDay) return displayRows;
-    const map = new Map<string, (typeof displayRows)[0]>();
+    type FinalRow = (typeof displayRows)[0] & { groupIds: string[] };
+    if (!groupByDay) return displayRows.map((r): FinalRow => ({ ...r, groupIds: [r.rowId] }));
+    const map = new Map<string, FinalRow>();
     for (const row of displayRows) {
       const key = row.date.slice(0, 10) + "|" + row.asset;
       const ex = map.get(key);
@@ -92,17 +100,24 @@ export function SimpleEarnTable({
           reward: ex.reward + row.reward,
           rewardInUSD: ex.rewardInUSD + row.rewardInUSD,
           rewardInFiat: ex.rewardInFiat + row.rewardInFiat,
+          groupIds: [...ex.groupIds, row.rowId],
         });
       } else {
-        map.set(key, { ...row, date: row.date.slice(0, 10) });
+        map.set(key, { ...row, date: row.date.slice(0, 10), groupIds: [row.rowId] });
       }
     }
     return [...map.values()];
   }, [displayRows, groupByDay]);
 
+  const effectivePageSize = pageSize ?? PAGE_SIZE;
   const pageRows = useMemo(
-    () => finalRows.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE),
-    [finalRows, page],
+    () => finalRows.slice(page * effectivePageSize, (page + 1) * effectivePageSize),
+    [finalRows, page, effectivePageSize],
+  );
+
+  const selectedRows = useMemo(
+    () => (rowSel ? filteredRows.filter((r) => !excluded.has(r.rowId)) : filteredRows),
+    [filteredRows, rowSel, excluded],
   );
 
   const assetTotals = useMemo(() => {
@@ -110,7 +125,7 @@ export function SimpleEarnTable({
       string,
       { currency: string; reward: number; rewardInUSD: number; rewardInFiat: number }
     >();
-    for (const row of filteredRows) {
+    for (const row of selectedRows) {
       const cur = map.get(row.asset) ?? {
         currency: row.currency,
         reward: 0,
@@ -125,7 +140,7 @@ export function SimpleEarnTable({
       });
     }
     return [...map.entries()];
-  }, [filteredRows]);
+  }, [selectedRows]);
 
   const earnGrandTotal = useMemo(
     () =>
@@ -181,40 +196,51 @@ export function SimpleEarnTable({
     <>
       <div className="dv-tables-wrap dv-tables-wrap--scroll">
         {}
-        <table
-          ref={totalsRef}
-          className="dv-table dv-table-totals"
-          hidden={filteredRows.length === 0}
-        >
-          <colgroup>
-            <col className="dv-column-date" />
-            <col className="dv-column-value" />
-            <col className="dv-column-rate" />
-            <col className="dv-column-value" />
-          </colgroup>
-          <tbody>
-            <tr>
-              <td className="dv-totals-label">{t("common.total")}</td>
-              <td />
-              <td />
-              <td>
-                <span className="dv-total-cell-label">{t("dataViewer.reward")}</span>
-                <span className="dv-total-cell-value dv-total-cell-value--accent dv-cell-with-icon">
-                  {isEarnNative
-                    ? formatCurrencyValue(earnGrandTotal.reward, nativeCurrency)
-                    : formatCurrencyValue(
-                        isEarnUsd ? earnGrandTotal.rewardInUSD : earnGrandTotal.rewardInFiat,
-                        isEarnUsd ? "USD" : "FIAT",
-                      )}
-                  {earnTotalIcon}
-                </span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <AnimatePresence initial={false}>
+          {selectedRows.length > 0 && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+              style={{ overflow: "hidden" }}
+            >
+              <table ref={totalsRef} className="dv-table dv-table-totals">
+                <colgroup>
+                  <col className="dv-column-date" />
+                  <col className="dv-column-value" />
+                  <col className="dv-column-rate" />
+                  <col className="dv-column-value" />
+                </colgroup>
+                <tbody>
+                  <tr>
+                    <td className="dv-totals-label">{t("common.total")}</td>
+                    <td />
+                    <td />
+                    <td>
+                      <span className="dv-total-cell-label">{t("dataViewer.reward")}</span>
+                      <span className="dv-total-cell-value dv-total-cell-value--accent dv-cell-with-icon">
+                        {isEarnNative
+                          ? formatCurrencyValue(earnGrandTotal.reward, nativeCurrency)
+                          : formatCurrencyValue(
+                              isEarnUsd ? earnGrandTotal.rewardInUSD : earnGrandTotal.rewardInFiat,
+                              isEarnUsd ? "USD" : "FIAT",
+                            )}
+                        {earnTotalIcon}
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {}
-        <table ref={dataRef} className="dv-table dv-table-data">
+        <table
+          ref={dataRef}
+          className={`dv-table dv-table-data${rowSel ? " dv-selection-mode" : ""}`}
+        >
           <colgroup>
             <col className="dv-column-date" />
             <col className="dv-column-value" />
@@ -254,8 +280,14 @@ export function SimpleEarnTable({
               ) : (
                 <FiatIcon code={fiatCode} />
               );
+              const ids = row.groupIds;
+              const isExcluded = rowSel ? ids.every((id) => excluded.has(id)) : false;
               return (
-                <tr key={`${row.date}-${row.asset}-${i}`}>
+                <tr
+                  key={`${row.date}-${row.asset}-${i}`}
+                  className={rowSel ? (isExcluded ? "dv-row--excluded" : "dv-row--selected") : ""}
+                  onClick={rowSel ? () => rowSel.onToggle(rewardKey, ids) : undefined}
+                >
                   <td className="dv-cell-date">
                     {groupByDay ? fmtDate(row.date) : fmtDateTime(row.date)}
                   </td>
@@ -278,7 +310,12 @@ export function SimpleEarnTable({
           </tbody>
         </table>
       </div>
-      <Pagination page={page} total={finalRows.length} onChange={setPage} />
+      <Pagination
+        page={page}
+        total={finalRows.length}
+        onChange={setPage}
+        pageSize={effectivePageSize}
+      />
     </>
   );
 }

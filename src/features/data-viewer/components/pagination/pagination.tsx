@@ -6,13 +6,15 @@ export function Pagination({
   page,
   total,
   onChange,
+  pageSize: pageSizeProp,
 }: {
   page: number;
   total: number;
   onChange: (p: number) => void;
+  pageSize?: number;
 }) {
   const { t } = useTranslation();
-  const pageCount = Math.ceil(total / PAGE_SIZE);
+  const pageCount = Math.ceil(total / (pageSizeProp ?? PAGE_SIZE));
   if (pageCount <= 1) return null;
 
   function goPrev(e: MouseEvent<HTMLButtonElement>) {
