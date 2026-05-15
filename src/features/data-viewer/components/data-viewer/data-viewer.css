@@ -1999,12 +1999,6 @@
   .dv-table-data thead th {
     padding: 7px 8px;
   }
-  .dv-table td:first-child {
-    padding-left: 16px;
-  }
-  .dv-table td:last-child {
-    padding-right: 16px;
-  }
   .dv-table-data thead th:first-child {
     padding-left: 16px;
   }

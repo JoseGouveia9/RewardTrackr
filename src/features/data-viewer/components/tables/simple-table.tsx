@@ -199,7 +199,7 @@ export function SimpleTable({
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
-              style={{ overflow: "hidden" }}
+              style={{ overflowY: "clip" }}
             >
               <table ref={totalsRef} className="dv-table dv-table-totals">
                 <colgroup>

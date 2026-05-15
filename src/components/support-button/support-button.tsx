@@ -78,17 +78,17 @@ function KofiMobileButton() {
 const ADDRESSES = [
   {
     label: "GOMINING TOKEN (GMT) · BNB Network (BEP-20) / Ethereum Network (ERC-20)",
-    value: "0x02B80404866B5177d78D1178E910Ea4788656088",
-  },
-  {
-    label: "GOMINING TOKEN (GMT) · TON Network",
-    value: "UQAaNd7PzffMT7PY0wJNSOqp9wld2oDmxcSGWHQrnDlt1DIN",
+    value: "0x191Cc26ef2892bCe37800Ec97Bb2862A296Db00B",
   },
   {
     label: "GOMINING TOKEN (GMT) · SOL Network",
-    value: "2BmjP1zawQ1iHe5a5NtT4MUz4EojLkj7DcZQE52pAAPs",
+    value: "3DUa4jLZ9RTuW53om812k5Gwbnr31g8UssRnYcMzHhzu",
   },
-  { label: "BITCOIN · BTC Network", value: "bc1qkfftx7v669cqk7jr68fnkp73wmlq9pvp3fvu3s" },
+  {
+    label: "GOMINING TOKEN (GMT) · TON Network",
+    value: "UQCfBtTGiUg4VZLZKsVzUYuPXedNQfmSIjFo4JO_aYgp_Mdo",
+  },
+  { label: "BITCOIN · BTC Network", value: "bc1q6pu0f5q67qvv5tmedr2kswrv2duuf4p7zhczq0" },
   { label: "BITCOIN · Lightning Network", value: "moustachio@blink.sv" },
 ];
 
