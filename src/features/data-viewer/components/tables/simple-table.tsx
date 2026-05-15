@@ -246,7 +246,7 @@ export function SimpleTable({
                     );
                   })}
                   {!isSingleCurrency && !isNative && (
-                    <tr>
+                    <tr className="dv-totals-row--summary">
                       <td className="dv-totals-label">{t("common.total")}</td>
                       <td>
                         <span className="dv-total-cell-value dv-total-cell-value--accent dv-cell-with-icon">

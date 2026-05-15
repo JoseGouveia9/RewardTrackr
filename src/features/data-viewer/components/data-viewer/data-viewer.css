@@ -2042,4 +2042,65 @@
   .dv-currency-button {
     padding: 5px;
   }
+
+  /* ── Multi-currency totals on mobile ──────────────────────────────────
+     Rules are ordered from lowest → highest specificity so more-specific
+     count-based selectors always win.
+     ─────────────────────────────────────────────────────────────────── */
+
+  /* Default: 3 per row (covers 3, 5, 6, 7+) */
+  .dv-table-totals:has(tr ~ tr) tr:not(.dv-totals-row--summary) {
+    flex: 0 0 33.333%;
+    max-width: 33.333%;
+  }
+  /* No border after last item in each 3-wide row */
+  .dv-table-totals:has(tr ~ tr) tr:nth-child(3n):not(.dv-totals-row--summary) {
+    border-right: none;
+  }
+
+  /* 2 currencies → 2 per row (50% each) */
+  .dv-table-totals:has(tr.dv-totals-row--clickable:nth-child(2)):not(
+      :has(tr.dv-totals-row--clickable:nth-child(3))
+    )
+    tr:not(.dv-totals-row--summary) {
+    flex: 0 0 50%;
+    max-width: 50%;
+  }
+  .dv-table-totals:has(tr.dv-totals-row--clickable:nth-child(2)):not(
+      :has(tr.dv-totals-row--clickable:nth-child(3))
+    )
+    tr:nth-child(2n):not(.dv-totals-row--summary) {
+    border-right: none;
+  }
+
+  /* 4 currencies → all 4 in one row (25% each) */
+  .dv-table-totals:has(tr.dv-totals-row--clickable:nth-child(4)):not(
+      :has(tr.dv-totals-row--clickable:nth-child(5))
+    )
+    tr:not(.dv-totals-row--summary) {
+    flex: 0 0 25%;
+    max-width: 25%;
+  }
+  /* Restore border on 3rd item (undoes the nth-child(3n) removal above) */
+  .dv-table-totals:has(tr.dv-totals-row--clickable:nth-child(4)):not(
+      :has(tr.dv-totals-row--clickable:nth-child(5))
+    )
+    tr:nth-child(3):not(.dv-totals-row--summary) {
+    border-right: 1px solid rgba(247, 147, 26, 0.2);
+  }
+  /* No border after the 4th item (last in the single row) */
+  .dv-table-totals:has(tr.dv-totals-row--clickable:nth-child(4)):not(
+      :has(tr.dv-totals-row--clickable:nth-child(5))
+    )
+    tr:nth-child(4):not(.dv-totals-row--summary) {
+    border-right: none;
+  }
+
+  /* Grand total row: always alone, full width, with top separator */
+  .dv-table-totals:has(tr ~ tr) tr.dv-totals-row--summary {
+    flex: 0 0 100%;
+    max-width: 100%;
+    border-right: none;
+    border-top: 1px solid rgba(247, 147, 26, 0.25);
+  }
 }

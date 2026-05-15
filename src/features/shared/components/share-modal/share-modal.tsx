@@ -99,11 +99,31 @@ export function ShareModal({
   const availableSheets = useMemo(() => ALL_REWARD_KEYS.filter((k) => !!cache[k]), [cache]);
   const [selectedKeys, setSelectedKeys] = useState<Set<RewardKey>>(new Set(availableSheets));
 
+  // Persisted exclusions + conditional auto-exclusion of new entries.
+  // New entries are only auto-excluded when the sheet already had prior exclusions
+  // (if it was fully selected before, new entries remain selected).
+  const effectiveExclusions = useMemo<typeof exclusions>(() => {
+    const result = { ...exclusions };
+    for (const k of availableSheets) {
+      const entry = cache[k];
+      if (!entry?.newEntriesCount) continue;
+      const tabKey = (k === "upgrades" ? "purchases" : k) as RewardKey;
+      const hasExistingExclusions = (result[tabKey] ?? []).some((id) => id.startsWith(`${k}::`));
+      if (!hasExistingExclusions) continue;
+      const existing = new Set(result[tabKey] ?? []);
+      for (let i = 0; i < entry.newEntriesCount && i < entry.records.length; i++) {
+        existing.add(`${k}::${String(entry.records[i].createdAt ?? "")}::${i}`);
+      }
+      result[tabKey] = [...existing];
+    }
+    return result;
+  }, [exclusions, availableSheets, cache]);
+
   function isAllExcluded(key: RewardKey): boolean {
     const records = cache[key]?.records;
     if (!records || records.length === 0) return false;
     const tabKey = key === "upgrades" ? "purchases" : key;
-    const excluded = new Set(exclusions[tabKey] ?? []);
+    const excluded = new Set(effectiveExclusions[tabKey] ?? []);
     return records.every((r, i) => excluded.has(`${key}::${String(r.createdAt ?? "")}::${i}`));
   }
 
@@ -476,7 +496,7 @@ export function ShareModal({
                           );
                           const excludedCount = comboKeys.reduce((sum, ck) => {
                             const tabKey = (ck === "upgrades" ? "purchases" : ck) as RewardKey;
-                            const excSet = new Set(exclusions[tabKey] ?? []);
+                            const excSet = new Set(effectiveExclusions[tabKey] ?? []);
                             return (
                               sum +
                               (cache[ck]?.records ?? []).filter((r, i) =>
@@ -718,11 +738,11 @@ export function ShareModal({
           <ShareFilterModal
             cache={cache}
             initialExclusions={(() => {
-              const result = { ...exclusions };
+              // Start from effectiveExclusions (already includes conditional new-entry auto-exclusions)
+              const result = { ...effectiveExclusions };
+              // Also exclude all rows from deselected sheets
               for (const k of availableSheets) {
                 if (selectedKeys.has(k)) continue;
-                // "upgrades" is rendered inside the "purchases" DataViewer tab,
-                // so its exclusion IDs must live under "purchases"
                 const tabKey = k === "upgrades" ? "purchases" : k;
                 const ids = (cache[k]?.records ?? []).map(
                   (r, i) => `${k}::${String(r.createdAt ?? "")}::${i}`,

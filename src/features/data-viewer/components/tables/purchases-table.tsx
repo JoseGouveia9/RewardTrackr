@@ -265,7 +265,7 @@ export function PurchasesTable({
                     );
                   })}
                   {!isSingleCurrency && !isNative && (
-                    <tr>
+                    <tr className="dv-totals-row--summary">
                       <td className="dv-totals-label">{t("common.total")}</td>
                       <td />
                       <td>
