@@ -52,7 +52,7 @@ That's it, your file will download automatically.
 ## Notes
 
 - The app runs on free-tier services (Cloudflare, CoinGecko, FX Rates API). If a request fails due to rate limits, wait a moment and try again.
-- Exports are limited to **1 per day** to keep the service free and available for everyone.
+- Exports are limited to **3 per day** to keep the service free and available for everyone.
 - Data is cached in your browser after the first export, so future exports only fetch new records.
 
 ## Tech stack
