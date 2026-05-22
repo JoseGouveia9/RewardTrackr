@@ -33,6 +33,7 @@ You can also browse your data directly in the app before exporting, with filters
 - **Community tab** - browse shared profiles from other RewardTrackr users
 - **Fiat conversion** - each row shows the USD and local currency value at the time the reward was received
 - **Browser cache** - data is cached after the first fetch, so subsequent exports only pull new records
+- **Localization** - switch languages in-app with RTL support for Arabic
 - **Dark & light mode** - follows your system preference with a manual toggle
 
 ## Privacy
@@ -53,6 +54,7 @@ That's it, your file will download automatically.
 
 - The app runs on free-tier services (Cloudflare, CoinGecko, FX Rates API). If a request fails due to rate limits, wait a moment and try again.
 - Exports are limited to **3 per day** to keep the service free and available for everyone.
+- Shares are limited to **3 per day** to keep the community directory healthy.
 - Data is cached in your browser after the first export, so future exports only fetch new records.
 
 ## Tech stack
@@ -61,7 +63,9 @@ That's it, your file will download automatically.
 | ---------------- | ----------------------------------- | --------------------------------------------------------------------- |
 | UI framework     | React 19 + TypeScript               | Component model and type safety                                       |
 | Build tool       | Vite 8                              | Fast dev server and ESM-native bundling                               |
-| Styling          | Plain CSS (component-scoped)        | No overhead, full control, dark/light theming via CSS variables       |
+| Styling          | Tailwind CSS 4 + custom CSS         | Utility-first layout with fine-grained, component-level styling       |
+| Routing          | React Router 7                      | First-class routing with nested layouts and shareable views           |
+| Localization     | i18next + react-i18next             | Runtime language switching with lazy-loaded dictionaries              |
 | Animations       | Framer Motion                       | Declarative enter/exit transitions                                    |
 | State            | `useState` + custom hooks           | Feature logic is self-contained, no global store needed               |
 | Data fetching    | Native `fetch` with custom wrappers | Lightweight, no extra dependency for simple REST calls                |
