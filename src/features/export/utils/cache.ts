@@ -4,6 +4,8 @@ import { WALLET_TX_KEYS } from "../config/wallet-types";
 import { ALL_REWARD_KEYS } from "../config/reward-configs";
 import {
   LS_KEY_MIGRATED_PREFIX,
+  LS_KEY_MW_COMPARISON,
+  LS_KEY_MW_CYCLES,
   LS_KEY_PRICE_CACHE,
   LS_KEY_REWARD_PREFIX,
 } from "@/lib/storage-keys";
@@ -89,6 +91,9 @@ export function loadAllCacheEntries(): CacheState {
 
 export function clearAllCacheEntries(): void {
   ALL_REWARD_KEYS.forEach((key) => localStorage.removeItem(LS_KEY_REWARD_PREFIX + key));
+  // Also clear the persisted MinerWars comparison cache
+  localStorage.removeItem(LS_KEY_MW_COMPARISON);
+  localStorage.removeItem(LS_KEY_MW_CYCLES);
 }
 
 export function persistPriceCache(key: RewardKey, records: RewardRecord[]): void {

@@ -28,6 +28,7 @@ interface DataViewerProps {
   isFetching?: boolean;
   fetchingKeys?: Set<RewardKey>;
   cacheVersion?: number;
+  onRefreshKeys?: (keys: RewardKey[]) => Promise<void>;
   onTabSeen?: (key: RewardKey) => void;
   title?: string;
   sharedData?: Partial<CacheState> | null;
@@ -47,6 +48,7 @@ export const DataViewer = memo(function DataViewer({
   isFetching = false,
   fetchingKeys,
   cacheVersion = 0,
+  onRefreshKeys,
   onTabSeen,
   title = "Records",
   sharedData,
@@ -487,6 +489,7 @@ export const DataViewer = memo(function DataViewer({
                       fiatCode={fiatCode}
                       isFetching={isActiveKeyFetching}
                       cacheVersion={cacheVersion}
+                      onRefreshKeys={onRefreshKeys}
                       cacheEntry={sharedData ? (sharedData[activeKey] ?? null) : undefined}
                       dateRange={dateRange}
                       setDateRange={setDateRange}

@@ -111,7 +111,7 @@ function App() {
     setCacheVersion((v) => v + 1);
   }, []);
 
-  const { loading, fetchingKeys, handleExport, handleClearCache } = useExport({
+  const { loading, fetchingKeys, handleExport, refreshKeys, handleClearCache } = useExport({
     storedToken,
     selectedKeys,
     cache,
@@ -418,6 +418,7 @@ function App() {
                     isFetching={loading}
                     fetchingKeys={fetchingKeys}
                     cacheVersion={cacheVersion}
+                    onRefreshKeys={refreshKeys}
                     onTabSeen={handleTabSeen}
                     sharedData={null}
                     title={t("app.records")}

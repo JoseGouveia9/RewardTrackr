@@ -551,6 +551,110 @@ export interface ExportFlowParams {
   onStarted?: () => void;
 }
 
+export interface RefreshCacheKeysParams {
+  accessToken: string;
+  keys: RewardKey[];
+  cache: CacheState;
+  includeWalletFiat: boolean;
+  excelFiatCurrency: ExtraFiatCurrency;
+  onMessage?: (msg: string) => void;
+  onCacheUpdate?: (cache: CacheState) => void;
+}
+
+/**
+ * Refreshes selected reward sheets in local cache without building/downloading Excel.
+ * Intended for in-app "refresh data" actions.
+ */
+export async function refreshCacheKeys({
+  accessToken,
+  keys,
+  cache,
+  includeWalletFiat,
+  excelFiatCurrency,
+  onMessage,
+  onCacheUpdate,
+}: RefreshCacheKeysParams): Promise<CacheState> {
+  if (keys.length === 0) return cache;
+
+  const priceCache = getSessionPriceCache();
+  let updatedCache: CacheState = { ...cache };
+
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[i];
+    const config = REWARD_CONFIG_MAP[key];
+    if (!config) continue;
+
+    onMessage?.(
+      i18n.t("export.fetchingSheet", {
+        name: tSheetName(key, config.sheetName),
+        current: i + 1,
+        total: keys.length,
+      }),
+    );
+
+    const translatedName = tSheetName(key, config.sheetName);
+    const { records: rawRecords, totalCount } = await fetchAllPages(
+      config,
+      accessToken,
+      undefined,
+      onMessage,
+      translatedName,
+    );
+
+    onMessage?.(
+      i18n.t("export.enrichingSheet", {
+        name: tSheetName(key, config.sheetName),
+        current: i + 1,
+        total: keys.length,
+      }),
+    );
+
+    const enriched = await enrichRecords(
+      config,
+      rawRecords,
+      priceCache,
+      includeWalletFiat,
+      excelFiatCurrency,
+      onMessage,
+    );
+    const fallbackTotalCount =
+      typeof totalCount === "number" ? totalCount : (enriched as RewardRecord[]).length;
+    const prepared = filterCacheableRecords(key, enriched as RewardRecord[], fallbackTotalCount);
+
+    const currentEntry = updatedCache[key];
+    const recordsForCache = prepared.records;
+    const previousCount = currentEntry?.records.length ?? 0;
+    const newEntriesCount = !currentEntry
+      ? recordsForCache.length
+      : Math.max(0, recordsForCache.length - previousCount);
+    const extras = {
+      ...cacheExtras(key, includeWalletFiat, excelFiatCurrency),
+      newEntriesCount,
+    };
+    const hasApiTotalCount =
+      typeof totalCount === "number" && (totalCount > 0 || prepared.records.length === 0);
+    const totalCountForCache = hasApiTotalCount ? totalCount : recordsForCache.length;
+
+    saveCacheEntry(key, config.sheetName, recordsForCache, totalCountForCache, extras);
+    persistPriceCache(key, recordsForCache);
+
+    updatedCache = {
+      ...updatedCache,
+      [key]: {
+        sheetName: config.sheetName,
+        records: recordsForCache,
+        totalCount: totalCountForCache,
+        fetchedAt: Date.now(),
+        ...extras,
+      },
+    };
+
+    onCacheUpdate?.(updatedCache);
+  }
+
+  return updatedCache;
+}
+
 export async function executeExportFlow({
   accessToken,
   selectedKeys,

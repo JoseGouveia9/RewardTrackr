@@ -4,7 +4,11 @@ import * as Sentry from "@sentry/react";
 import { decodeJwt } from "@/lib/http";
 import { ALL_REWARD_KEYS } from "../config/reward-configs";
 import { clearAllCacheEntries } from "../utils/cache";
-import { executeExportFlow } from "../utils/export-flow";
+import { executeExportFlow, refreshCacheKeys } from "../utils/export-flow";
+import {
+  invalidateMinerWarsCache,
+  prefetchAllCompletedCycles,
+} from "@/features/data-viewer/api/minerwars-comparison";
 import type { CacheState, ExtraFiatCurrency, RewardKey } from "../types";
 
 interface UseExportParams {
@@ -24,6 +28,7 @@ interface UseExportReturn {
   loading: boolean;
   fetchingKeys: Set<RewardKey>;
   handleExport: () => Promise<void>;
+  refreshKeys: (keys: RewardKey[]) => Promise<void>;
   handleClearCache: () => void;
 }
 
@@ -45,6 +50,7 @@ export function useExport({
 
   const handleClearCache = useCallback((): void => {
     clearAllCacheEntries();
+    invalidateMinerWarsCache();
     onCacheUpdate(Object.fromEntries(ALL_REWARD_KEYS.map((k) => [k, null])) as CacheState);
     onMessage(t("export.cacheCleared"));
   }, [onMessage, onCacheUpdate, t]);
@@ -90,6 +96,11 @@ export function useExport({
         },
       });
       Sentry.logger.info("Export completed", { sheets: selectedKeys.length });
+      // Pre-compute and persist all completed MinerWars cycle comparisons in the background
+      // so switching cycles in the panel is instant with zero API calls.
+      if (selectedKeys.includes("minerwars")) {
+        prefetchAllCompletedCycles(storedToken).catch(() => {});
+      }
       onMessage(successMessage);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (error: unknown) {
@@ -137,5 +148,52 @@ export function useExport({
     t,
   ]);
 
-  return { loading, fetchingKeys, handleExport, handleClearCache };
+  const refreshKeys = useCallback(
+    async (keys: RewardKey[]): Promise<void> => {
+      if (keys.length === 0) return;
+
+      const decoded = decodeJwt(storedToken);
+      if (!decoded || (decoded.exp && Math.floor(Date.now() / 1000) >= decoded.exp)) {
+        onMessage(t("export.sessionExpired"));
+        return;
+      }
+
+      setLoading(true);
+      setFetchingKeys(new Set(keys));
+      try {
+        const updated = await refreshCacheKeys({
+          accessToken: storedToken,
+          keys,
+          cache,
+          includeWalletFiat,
+          excelFiatCurrency,
+          onMessage,
+          onCacheUpdate: (newCache) => {
+            onCacheUpdate(newCache);
+            setFetchingKeys((prev) => {
+              const next = new Set(prev);
+              for (const k of prev) {
+                if (newCache[k]) next.delete(k);
+              }
+              return next;
+            });
+          },
+        });
+        onCacheUpdate(updated);
+
+        if (keys.includes("minerwars")) {
+          prefetchAllCompletedCycles(storedToken).catch(() => {});
+        }
+      } catch (error: unknown) {
+        const msg = error instanceof Error ? error.message : t("export.failedGeneric");
+        onMessage(t("export.failed", { details: msg }));
+      } finally {
+        setLoading(false);
+        setFetchingKeys(new Set());
+      }
+    },
+    [storedToken, cache, includeWalletFiat, excelFiatCurrency, onMessage, onCacheUpdate, t],
+  );
+
+  return { loading, fetchingKeys, handleExport, refreshKeys, handleClearCache };
 }

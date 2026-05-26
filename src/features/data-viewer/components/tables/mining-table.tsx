@@ -19,6 +19,7 @@ import { Pagination } from "../pagination/pagination";
 import { useSyncTableColumns } from "../../hooks/use-sync-table-columns";
 import { AnimatedLoadingRow } from "./animated-loading-row";
 import { useRowSelection } from "../../context/row-selection-context";
+import { MinerWarsComparisonPanel } from "../minerwars-comparison-panel/minerwars-comparison-panel";
 
 const INFO_ICON = (
   <svg
@@ -212,6 +213,7 @@ export function MiningTable({
   fiatCode,
   isFetching = false,
   cacheVersion = 0,
+  onRefreshKeys,
   cacheEntry,
   dateRange,
   setDateRange,
@@ -228,6 +230,7 @@ export function MiningTable({
   fiatCode: string;
   isFetching?: boolean;
   cacheVersion?: number;
+  onRefreshKeys?: (keys: RewardKey[]) => Promise<void>;
   cacheEntry?: CacheEntry | null;
   dateRange: DateRange;
   setDateRange: (v: DateRange) => void;
@@ -341,6 +344,12 @@ export function MiningTable({
 
   return (
     <>
+      {rewardKey === "minerwars" && (
+        <MinerWarsComparisonPanel
+          cacheVersion={cacheVersion}
+          onRefreshMinerwarsTable={onRefreshKeys ? () => onRefreshKeys(["minerwars"]) : undefined}
+        />
+      )}
       <div
         className={`dv-tables-wrap dv-tables-wrap--wide${trendsExiting ? " dv-trends-exiting" : trendsAnimating ? " dv-trends-active" : showTrends ? " dv-trends-visible" : ""}`}
       >
