@@ -1,15 +1,21 @@
 import type { CursorPaginationItem, RewardConfig, RewardGroup, RewardKey } from "../types";
 import { ALL_TX_FROM_TYPES } from "./wallet-types";
 
-const API =
-  (import.meta.env.VITE_API_BASE as string | undefined)?.replace(/\/$/, "") ??
-  "https://api.gomining.com";
+function resolveApiBase(): string {
+  const envBase = (import.meta.env.VITE_API_BASE as string | undefined)?.replace(/\/$/, "");
+  if (envBase) return envBase;
+
+  if (typeof window !== "undefined" && /(^|\.)rewardtrackr\.com$/i.test(window.location.hostname)) {
+    return window.location.origin;
+  }
+
+  return "https://api.gomining.com";
+}
+
+const API = resolveApiBase();
 
 const API_SE =
-  (import.meta.env.VITE_API_SE_BASE as string | undefined)?.replace(/\/$/, "") ??
-  (import.meta.env.VITE_API_BASE
-    ? `${(import.meta.env.VITE_API_BASE as string).replace(/\/$/, "")}/se`
-    : "https://api.se.gomining.com");
+  (import.meta.env.VITE_API_SE_BASE as string | undefined)?.replace(/\/$/, "") ?? `${API}/se`;
 
 export const REWARD_GROUPS: RewardGroup[] = [
   { id: "solo-mining", label: "tabs.soloMining", keys: ["solo-mining"] },

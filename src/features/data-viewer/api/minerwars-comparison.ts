@@ -2,9 +2,18 @@ import { buildApiHeaders, postJson } from "@/lib/http";
 import { fetchDifficultyEpochs } from "@/features/export/api/difficulty-adjustments";
 import { LS_KEY_MW_COMPARISON, LS_KEY_MW_CYCLES, LS_KEY_REWARD_PREFIX } from "@/lib/storage-keys";
 
-const API =
-  (import.meta.env.VITE_API_BASE as string | undefined)?.replace(/\/$/, "") ??
-  "https://api.gomining.com";
+function resolveApiBase(): string {
+  const envBase = (import.meta.env.VITE_API_BASE as string | undefined)?.replace(/\/$/, "");
+  if (envBase) return envBase;
+
+  if (typeof window !== "undefined" && /(^|\.)rewardtrackr\.com$/i.test(window.location.hostname)) {
+    return window.location.origin;
+  }
+
+  return "https://api.gomining.com";
+}
+
+const API = resolveApiBase();
 
 const MULTIPLIERS = [1, 2, 4, 8, 16, 32, 64, 128, 256];
 
