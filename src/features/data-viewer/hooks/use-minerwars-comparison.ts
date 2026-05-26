@@ -3,6 +3,7 @@ import { LS_KEY_SYNC_TOKEN } from "@/lib/storage-keys";
 import {
   fetchAvailableCycles,
   fetchMinerWarsComparison,
+  getCachedMinerWarsComparison,
   invalidateCycleCache,
   type CycleInfo,
   type MinerWarsComparison,
@@ -64,10 +65,19 @@ export function useMinerWarsComparison({
       .finally(() => setLoadingCycles(false));
   }, [reloadCycles]);
 
-  // Step 2: fetch comparison whenever selected cycle changes
-  const fetchComparison = useCallback((cycleId: number): Promise<void> => {
+  // Step 2: on cycle change, read comparison from cache only (no network).
+  // Network fetches are reserved for explicit refresh/build flows.
+  const fetchComparison = useCallback((cycleId: number, allowNetwork = false): Promise<void> => {
     const token = getToken();
     if (!token) return Promise.resolve();
+
+    if (!allowNetwork) {
+      const cached = getCachedMinerWarsComparison(cycleId);
+      setData(cached);
+      setError(null);
+      setLoading(false);
+      return Promise.resolve();
+    }
 
     abortRef.current?.abort();
     abortRef.current = new AbortController();
@@ -87,7 +97,7 @@ export function useMinerWarsComparison({
   }, []);
 
   useEffect(() => {
-    if (selectedCycleId !== null) fetchComparison(selectedCycleId);
+    if (selectedCycleId !== null) fetchComparison(selectedCycleId, false);
     return () => abortRef.current?.abort();
   }, [selectedCycleId, fetchComparison]);
 
@@ -106,7 +116,7 @@ export function useMinerWarsComparison({
 
     await reloadCycles().catch(() => []);
     invalidateCycleCache(selectedCycleId);
-    await fetchComparison(selectedCycleId);
+    await fetchComparison(selectedCycleId, true);
   }, [selectedCycleId, cycles, onRefreshMinerwarsTable, reloadCycles, fetchComparison]);
 
   useEffect(() => {
@@ -118,8 +128,7 @@ export function useMinerWarsComparison({
       .then((nextCycles) => {
         const nextSelected = nextCycles.find((c) => c.cycleId === selectedCycleId);
         if (nextSelected?.status === "completed") {
-          invalidateCycleCache(selectedCycleId);
-          void fetchComparison(selectedCycleId);
+          void fetchComparison(selectedCycleId, false);
         }
       })
       .catch(() => {

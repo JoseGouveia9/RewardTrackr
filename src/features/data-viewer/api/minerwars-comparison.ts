@@ -525,6 +525,18 @@ export function invalidateCycleCache(cycleId: number): void {
   }
 }
 
+/** Read a cycle comparison from memory/localStorage only (no network). */
+export function getCachedMinerWarsComparison(cycleId: number): MinerWarsComparison | null {
+  const mem = comparisonCache.get(cycleId);
+  if (mem) return mem.data;
+
+  const persisted = loadPersistedComparison(cycleId);
+  if (!persisted) return null;
+
+  comparisonCache.set(cycleId, { data: persisted.data, ts: persisted.ts });
+  return persisted.data;
+}
+
 // ─── Build-cache helpers for batch prefetch ──────────────────────────────────
 
 /**
