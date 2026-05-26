@@ -102,7 +102,13 @@ function App() {
     resetConfig,
   } = useExportConfig();
 
-  const { storedToken, user, syncedAlias, handleCheckSync, handleLogout } = useAuth(setMessage);
+  const { storedToken, user, syncedAlias, handleCheckSync, handleManualTokenSync, handleLogout } =
+    useAuth(setMessage);
+
+  const isDevHost =
+    typeof window !== "undefined" &&
+    /^(localhost|127\.0\.0\.1|dev\.rewardtrackr\.com)$/i.test(window.location.hostname);
+  const showManualTokenInput = import.meta.env.DEV || isDevHost;
 
   useAccountSwitch({ user, resetConfig, setCache, setCacheVersion, setMessage });
 
@@ -437,7 +443,11 @@ function App() {
               element={
                 !user ? (
                   <>
-                    <AuthPanel onSync={handleCheckSync} />
+                    <AuthPanel
+                      onSync={handleCheckSync}
+                      showManualTokenInput={showManualTokenInput}
+                      onManualTokenSubmit={handleManualTokenSync}
+                    />
                     <AnimatePresence mode="popLayout">
                       {message ? (
                         <motion.div layout transition={LAYOUT_SPRING}>
