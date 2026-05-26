@@ -2,6 +2,11 @@ name = "rewardtrackr"
 main = "workers/worker.js"
 compatibility_date = "2025-03-21"
 
+[assets]
+directory = "./dist"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+
 [observability]
 enabled = true
 
@@ -15,3 +20,11 @@ id = "be4396d2374d4fbb9ae1f782179f9fe5"
 
 # Secret required for the /share endpoint: set via CLI, never commit it:
 # wrangler secret put GITHUB_TOKEN
+
+[env.dev]
+# Inherit top-level settings and deploy with:
+# npx wrangler deploy --env dev
+name = "rewardtrackr-dev"
+routes = [
+	{ pattern = "dev.rewardtrackr.com/*", zone_name = "rewardtrackr.com" }
+]
