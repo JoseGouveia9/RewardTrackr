@@ -59,6 +59,10 @@ export interface MinerWarsComparison {
   btcFundIsZero: boolean;
   /** Actual total pool reward for completed cycles (BTC), summed from income API. null for live cycles or no data. */
   actualMinerWarsBtc: number | null;
+  /** Full 7-day clan solo-equivalent target (clan TH/s × sats/TH/day). null when clan power unavailable. */
+  clanTargetSoloSats: number | null;
+  /** Current BTC per block in sats (btcFund / totalMinedBlocks). null when no blocks mined yet. */
+  btcPerBlockSats: number | null;
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -708,6 +712,8 @@ export async function prefetchAllCompletedCycles(token: string): Promise<void> {
         hasClanAnalytics: true, // suppressed for completed cycles anyway
         btcFundIsZero: false, // has actual income
         actualMinerWarsBtc,
+        clanTargetSoloSats: null,
+        btcPerBlockSats: null,
       };
 
       persistComparison(result);
@@ -718,8 +724,20 @@ export async function prefetchAllCompletedCycles(token: string): Promise<void> {
   }
 }
 
-// ─── Public: fetch available cycles ──────────────────────────────────────────
+// ─── Public: fetch available cycles ─────────────────────────────────────────
 
+/** Read cycles from memory/localStorage cache only. Returns null when no cache exists. */
+export function getCachedCycles(): CycleInfo[] | null {
+  if (cyclesCache) return withResolvedStatuses(cyclesCache.data);
+  const persisted = loadPersistedCycles();
+  if (persisted) {
+    cyclesCache = persisted;
+    return withResolvedStatuses(persisted.data);
+  }
+  return null;
+}
+
+/** Fetch cycles from cache, falling back to API when cache is empty (requires valid token). */
 export async function fetchAvailableCycles(token: string): Promise<CycleInfo[]> {
   if (cyclesCache) return withResolvedStatuses(cyclesCache.data);
 
@@ -900,21 +918,32 @@ export async function fetchMinerWarsComparison(
   let targetSoloSats = 0;
   let targetActualDays = 0;
   let targetProjectedDays = 0;
+  let clanTargetSoloSats = 0;
+  const lastClanPower = currentClanPower ?? clanNftPower ?? 0;
 
   for (const dateStr of fullCycleDates) {
-    if (solodays.has(dateStr)) continue;
     const isPast = elapsedComparisonDates.includes(dateStr);
-    const userPow = isPast
-      ? userPowerByDate.has(dateStr)
-        ? userPowerByDate.get(dateStr)!
-        : (lastUserPower ?? 0)
-      : (lastUserPower ?? 0);
     const satsPerTH = isPast ? (satsPerThByDate.get(dateStr) ?? latestSatsPerTH) : latestSatsPerTH;
-    if (satsPerTH != null && userPow) {
-      targetSoloSats += satsPerTH * userPow;
-      if (isPast) targetActualDays++;
-      else targetProjectedDays++;
+
+    if (!solodays.has(dateStr)) {
+      const userPow = isPast
+        ? userPowerByDate.has(dateStr)
+          ? userPowerByDate.get(dateStr)!
+          : (lastUserPower ?? 0)
+        : (lastUserPower ?? 0);
+      if (satsPerTH != null && userPow) {
+        targetSoloSats += satsPerTH * userPow;
+        if (isPast) targetActualDays++;
+        else targetProjectedDays++;
+      }
     }
+
+    const clanPow = isPast
+      ? clanPowerByDate.has(dateStr)
+        ? clanPowerByDate.get(dateStr)!
+        : lastClanPower
+      : lastClanPower;
+    if (satsPerTH != null && clanPow) clanTargetSoloSats += satsPerTH * clanPow;
   }
 
   const progressPct = targetSoloSats > 0 ? (minerWarsSats / targetSoloSats) * 100 : null;
@@ -943,6 +972,8 @@ export async function fetchMinerWarsComparison(
     hasClanAnalytics: clanPowerByDate.size > 0,
     btcFundIsZero: btcFund === 0,
     actualMinerWarsBtc,
+    clanTargetSoloSats: lastClanPower > 0 ? clanTargetSoloSats : null,
+    btcPerBlockSats: totalMinedBlocks > 0 ? (btcFund / totalMinedBlocks) * 1e8 : null,
   };
 
   comparisonCache.set(cycleId, { data: result, ts: Date.now() });

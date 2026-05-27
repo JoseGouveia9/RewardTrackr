@@ -4,6 +4,7 @@ import { LS_KEY_SYNC_TOKEN } from "@/lib/storage-keys";
 import {
   fetchAvailableCycles,
   fetchMinerWarsComparison,
+  getCachedCycles,
   getCachedMinerWarsComparison,
   invalidateCycleCache,
   type CycleInfo,
@@ -19,6 +20,7 @@ interface UseMinerWarsComparisonResult {
   loading: boolean;
   error: string | null;
   refresh: () => Promise<void>;
+  isLoggedIn: boolean;
 }
 
 interface UseMinerWarsComparisonOptions {
@@ -39,53 +41,46 @@ export function useMinerWarsComparison({
   const abortRef = useRef<AbortController | null>(null);
 
   const getToken = () => sessionStorage.getItem(LS_KEY_SYNC_TOKEN) ?? "";
-  const isTokenExpired = (token: string): boolean => {
+  const isTokenValid = (token: string): boolean => {
+    if (!token) return false;
     const decoded = decodeJwt(token);
-    return !decoded || (decoded.exp != null && Math.floor(Date.now() / 1000) >= decoded.exp);
+    return (
+      Boolean(decoded) && (decoded!.exp == null || Math.floor(Date.now() / 1000) < decoded!.exp)
+    );
   };
-
   const reloadCycles = useCallback(async (): Promise<CycleInfo[]> => {
     const token = getToken();
-    if (!token || isTokenExpired(token)) {
+    // Always attempt fetchAvailableCycles — it reads localStorage cache first
+    // and only hits the network when the cache is empty (requires a valid token).
+    try {
+      const list = await fetchAvailableCycles(token);
+      setCycles(list);
+      return list;
+    } catch {
+      if (!isTokenValid(token)) {
+        setData(null);
+        setError("Session expired");
+      }
       setCycles([]);
-      setData(null);
-      setError("Session expired");
       return [];
     }
-    const list = await fetchAvailableCycles(token);
-    setCycles(list);
-    return list;
   }, []);
 
-  // Step 1: load available cycles once
+  // Step 1: load available cycles from cache only — no API calls on initial load.
+  // Cache is populated by build report / explicit refresh.
   useEffect(() => {
-    const token = getToken();
-    if (!token) {
-      setLoadingCycles(false);
-      return;
+    const cached = getCachedCycles();
+    if (cached && cached.length > 0) {
+      setCycles(cached);
+      setSelectedCycleId(cached[0].cycleId);
     }
-    setLoadingCycles(true);
-    reloadCycles()
-      .then((list) => {
-        if (list.length > 0) setSelectedCycleId(list[0].cycleId);
-      })
-      .catch(() => {
-        /* silently ignore */
-      })
-      .finally(() => setLoadingCycles(false));
-  }, [reloadCycles]);
+    setLoadingCycles(false);
+  }, []);
 
   // Step 2: on cycle change, read comparison from cache only (no network).
   // Network fetches are reserved for explicit refresh/build flows.
   const fetchComparison = useCallback((cycleId: number, allowNetwork = false): Promise<void> => {
-    const token = getToken();
-    if (!token || isTokenExpired(token)) {
-      setData(null);
-      setError("Session expired");
-      setLoading(false);
-      return Promise.resolve();
-    }
-
+    // Always try cache first — works even when not logged in.
     if (!allowNetwork) {
       const cached = getCachedMinerWarsComparison(cycleId);
       if (cached) {
@@ -94,6 +89,15 @@ export function useMinerWarsComparison({
         setLoading(false);
         return Promise.resolve();
       }
+    }
+
+    // Network required — validate token.
+    const token = getToken();
+    if (!token || !isTokenValid(token)) {
+      setData(null);
+      setError("Session expired");
+      setLoading(false);
+      return Promise.resolve();
     }
 
     abortRef.current?.abort();
@@ -164,5 +168,6 @@ export function useMinerWarsComparison({
     loading,
     error,
     refresh,
+    isLoggedIn: isTokenValid(getToken()),
   };
 }

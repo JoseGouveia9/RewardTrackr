@@ -1,17 +1,16 @@
 /**
  * MinerWars Round Reward Formula - Test Script
  *
- * Formula:
- *   clan round reward = (round multiplier / total multipliers in cycle)
- *                       * BTC prize pool
- *                       * (clan round power / avg power of all participants in round)
+ * Formula (validated from clan-leaderboard/index-v2):
+ *   btcPerBlock = btcFund / totalMinedBlocks
+ *   clan reward (N blocks) = btcPerBlock * N
  *
- *   user reward = clan round reward * (user score / clan score)
+ * For won rounds, blocks are derived from round.multiplier (x4 => 4 blocks).
+ * User reward remains an estimation placeholder until the user formula is validated.
  *
  * Endpoints used:
- *   1. nft-game/rewards-by-user              → rounds won by clan (roundId, multiplier, cycleId)
- *   2. nft-game/round/find-by-cycleId        → all rounds in cycle (total multipliers, avg power)
- *   3. nft-game/clan-leaderboard/index-v2    → BTC prize pool (btcFund) + clan nftPower snapshot
+ *   1. nft-game/rewards-by-user              → rounds won by clan (roundId, cycleId)
+ *   2. nft-game/clan-leaderboard/index-v2    → btcFund + totalMinedBlocks + clan snapshot
  *   4. nft/my-computing-power-chart          → user TH/s per day
  *      nft-game/clan/analytics               → clan TH/s per day
  *      nft-game/clan/get-my                  → current clan power
@@ -115,7 +114,7 @@ async function getCurrentCycleRounds(targetCycleId = null) {
   return { cycleId: targetId, cycleStartDate, rounds: collected };
 }
 
-// ─── Endpoint 2: all rounds in a cycle ──────────────────────────────────────
+// ─── Endpoint 2: all rounds in a cycle (for old user reward formula) ─────────
 async function getAllRoundsInCycle(cycleId, leagueId) {
   const collected = [];
   const limit = 50;
@@ -143,12 +142,14 @@ async function getAllRoundsInCycle(cycleId, leagueId) {
   return collected;
 }
 
-// ─── Endpoint 3: BTC prize pool + clan nftPower ─────────────────────────────
+// ─── Endpoint 3: BTC fund + total mined blocks + clan snapshot ──────────────
 async function getCycleClanData(calculatedAt, leagueId, myClanId) {
   const limit = 50;
   let skip = 0;
   let btcFund = null;
+  let totalMinedBlocks = null;
   let clanNftPower = null;
+  let clanBlocksMined = null;
 
   while (true) {
     const res = await post('https://api.gomining.com/api/nft-game/clan-leaderboard/index-v2', {
@@ -159,6 +160,7 @@ async function getCycleClanData(calculatedAt, leagueId, myClanId) {
 
     if (btcFund === null) {
       btcFund = parseFloat(res.data.btcFund);
+      totalMinedBlocks = Number(res.data.totalMinedBlocks ?? 0);
     }
 
     const allClans = [
@@ -170,6 +172,7 @@ async function getCycleClanData(calculatedAt, leagueId, myClanId) {
     const mine = allClans.find((c) => c.clanId === myClanId);
     if (mine) {
       clanNftPower = mine.nftPower;
+      clanBlocksMined = Number(mine.blocksMined ?? 0);
       break;
     }
 
@@ -178,7 +181,7 @@ async function getCycleClanData(calculatedAt, leagueId, myClanId) {
     if (skip >= totalCount || allClans.length < limit) break;
   }
 
-  return { btcFund, clanNftPower };
+  return { btcFund, totalMinedBlocks, clanNftPower, clanBlocksMined };
 }
 
 // ─── Endpoint 6: user NFT power per day ────────────────────────────────────
@@ -307,26 +310,27 @@ async function main() {
   const lastRoundLeagueId = refRound.leagueId;
   console.log(`  Total rounds won: ${userRounds.length}  |  League: ${lastRoundLeagueId}  |  Clan: ${refRound.clanId}`);
 
-  // ── Step 2: all rounds in cycle ──
+  // ── Step 2: all rounds in cycle (for user reward formula) ──
+  const myClanId = refRound.clanId;
   console.log(`\n[2] Fetching all rounds in cycle ${CYCLE_ID} (leagueId ${lastRoundLeagueId})`);
   const allCycleRounds = await getAllRoundsInCycle(CYCLE_ID, lastRoundLeagueId);
-
   const completedRounds = allCycleRounds.filter((r) => !r.active && r.power > 0);
   const sumAllMultipliers = completedRounds.reduce((s, r) => s + r.multiplier, 0);
   const totalPowerSum = completedRounds.reduce((s, r) => s + r.power, 0);
   const avgRoundNftPower = totalPowerSum / completedRounds.length;
+  const completedRoundsMap = new Map(completedRounds.map((r) => [r.id, r]));
+  console.log(`  Total rounds in cycle: ${completedRounds.length}  |  Sum multipliers: ${sumAllMultipliers}  |  Avg power: ${avgRoundNftPower.toFixed(4)}`);
 
-  console.log(`  Total rounds in cycle:               ${completedRounds.length}`);
-  console.log(`  Clan won rounds:                     ${userRounds.length}`);
-  console.log(`  Sum of ALL round multipliers:        ${sumAllMultipliers}`);
-  console.log(`  Avg NFT power across cycle:          ${avgRoundNftPower.toFixed(4)}`);
-
-  // ── Step 3: BTC prize pool + clan nftPower ──
-  const myClanId = refRound.clanId;
-  console.log(`\n[3] Fetching BTC prize pool + clan nftPower (leagueId ${lastRoundLeagueId}, clanId ${myClanId})`);
-  const { btcFund, clanNftPower } = await getCycleClanData(CYCLE_START_DATE, lastRoundLeagueId, myClanId);
+  // ── Step 3: BTC fund + mined blocks + clan snapshot ──
+  console.log(`\n[3] Fetching BTC fund + mined blocks + clan snapshot (leagueId ${lastRoundLeagueId}, clanId ${myClanId})`);
+  const { btcFund, totalMinedBlocks, clanNftPower, clanBlocksMined } =
+    await getCycleClanData(CYCLE_START_DATE, lastRoundLeagueId, myClanId);
   const btcPrizePool = btcFund;
+  const btcPerBlock = totalMinedBlocks > 0 ? btcPrizePool / totalMinedBlocks : 0;
   console.log(`  btcFund: ${btcPrizePool} BTC`);
+  console.log(`  totalMinedBlocks: ${totalMinedBlocks}`);
+  console.log(`  btcPerBlock: ${btcPerBlock.toFixed(12)} BTC`);
+  console.log(`  Clan blocksMined (snapshot): ${clanBlocksMined ?? 'not found'}`);
   console.log(`  Clan nftPower (cycle snapshot):  ${clanNftPower ?? 'not found'} TH/s`);
 
   // ── Step 4: Fetch per-day power charts + current clan power ──
@@ -355,27 +359,24 @@ async function main() {
   }
   console.log(`  Current clan power (clan/get-my): ${currentClanPower?.toFixed(4) ?? 'N/A'} TH/s`);
 
-  // ── Step 5: Calculate rewards for ALL won rounds ──
-  console.log(`\n[5] Calculating user rewards for all ${userRounds.length} won rounds...\n`);
+  // ── Step 4: Calculate rewards for ALL won rounds ──
+  console.log(`\n[4] Calculating rewards for all ${userRounds.length} won rounds...`);
+  console.log('    Clan formula (new): btcPerBlock * roundBlocks  →  btcFund / totalMinedBlocks * multiplier');
+  console.log('    User formula (old): (multiplier / sumAllMultipliers) * btcFund * powerRatio * (userPower / clanPower)\n');
 
   // Sort ascending by roundId for display
   const sortedRounds = [...userRounds].sort((a, b) => a.roundId - b.roundId);
-  // Pre-build map for O(1) lookup by roundId
-  const completedRoundsMap = new Map(completedRounds.map((r) => [r.id, r]));
-
-  const colW = [10, 21, 5, 12, 10, 12, 12, 14, 12, 14, 12];
+  const colW = [10, 21, 7, 10, 12, 14, 12, 14, 12];
   const header = [
     'Round ID'.padEnd(colW[0]),
     'Date'.padEnd(colW[1]),
-    'Mult'.padEnd(colW[2]),
-    'Round TH/s'.padEnd(colW[3]),
-    'User TH/s'.padEnd(colW[4]),
-    'Clan TH/s'.padEnd(colW[5]),
-    'Pwr Ratio'.padEnd(colW[6]),
-    'Clan BTC'.padEnd(colW[7]),
-    'Clan sats'.padEnd(colW[8]),
-    'User BTC'.padEnd(colW[9]),
-    'User sats'.padEnd(colW[10]),
+    'Blocks'.padEnd(colW[2]),
+    'User TH/s'.padEnd(colW[3]),
+    'Clan TH/s'.padEnd(colW[4]),
+    'Clan BTC'.padEnd(colW[5]),
+    'Clan sats'.padEnd(colW[6]),
+    'User BTC*'.padEnd(colW[7]),
+    'User sats*'.padEnd(colW[8]),
   ].join(' | ');
   const divider = '-'.repeat(header.length);
 
@@ -384,30 +385,11 @@ async function main() {
 
   let totalUserBtc = 0;
   let totalClanBtc = 0;
+  let totalWonBlocks = 0;
   let missingPower = 0;
   const roundRewards = new Map(); // roundId → { btc, date }
 
   for (const round of sortedRounds) {
-    const entry = completedRoundsMap.get(round.roundId);
-    if (!entry) {
-      missingPower++;
-      const row = [
-        String(round.roundId).padEnd(colW[0]),
-        (round.endedAt ?? '').slice(0, 19).replace('T', ' ').padEnd(colW[1]),
-        `x${round.multiplier}`.padEnd(colW[2]),
-        'N/A'.padEnd(colW[3]),
-        'N/A'.padEnd(colW[4]),
-        'N/A'.padEnd(colW[5]),
-        'N/A'.padEnd(colW[6]),
-        'N/A'.padEnd(colW[7]),
-        'N/A'.padEnd(colW[8]),
-        'N/A'.padEnd(colW[9]),
-        'N/A'.padEnd(colW[10]),
-      ].join(' | ');
-      console.log(row);
-      continue;
-    }
-
     // Per-day power: chart first, then current sources, then last known
     const roundDate = (round.endedAt ?? '').slice(0, 10);
     const isToday = roundDate >= TODAY;
@@ -418,26 +400,31 @@ async function main() {
       ? clanPowerByDate.get(roundDate)
       : (isToday ? currentClanPower : clanNftPower);
 
-    const powerRatio = entry.power / avgRoundNftPower;
-    const clanReward = (round.multiplier / sumAllMultipliers) * btcPrizePool * powerRatio;
-    const userReward = effectiveClanPower ? clanReward * (effectiveUserPower / effectiveClanPower) : null;
+    const roundBlocks = Number(round.multiplier ?? 1);
+    // Clan reward: new validated formula (btcPerBlock × blocks)
+    const clanReward = btcPerBlock * roundBlocks;
+    // User reward: old formula base (multiplier/sumMult * btcFund * powerRatio) × user share
+    const entry = completedRoundsMap.get(round.roundId);
+    const powerRatio = entry ? entry.power / avgRoundNftPower : 1;
+    const clanRewardOldBase = (round.multiplier / sumAllMultipliers) * btcPrizePool * powerRatio;
+    const userReward = effectiveClanPower ? clanRewardOldBase * (effectiveUserPower / effectiveClanPower) : null;
+    if (effectiveClanPower == null) missingPower++;
 
     totalClanBtc += clanReward;
+    totalWonBlocks += roundBlocks;
     if (userReward !== null) totalUserBtc += userReward;
     roundRewards.set(round.roundId, { btc: userReward ?? 0, date: roundDate });
 
     const row = [
       String(round.roundId).padEnd(colW[0]),
       (round.endedAt ?? '').slice(0, 19).replace('T', ' ').padEnd(colW[1]),
-      `x${round.multiplier}`.padEnd(colW[2]),
-      entry.power.toFixed(2).padEnd(colW[3]),
-      effectiveUserPower.toFixed(2).padEnd(colW[4]),
-      effectiveClanPower != null ? effectiveClanPower.toFixed(2).padEnd(colW[5]) : 'N/A'.padEnd(colW[5]),
-      powerRatio.toFixed(4).padEnd(colW[6]),
-      clanReward.toFixed(10).padEnd(colW[7]),
-      (clanReward * 1e8).toFixed(2).padEnd(colW[8]),
-      userReward !== null ? userReward.toFixed(10).padEnd(colW[9]) : 'N/A'.padEnd(colW[9]),
-      userReward !== null ? (userReward * 1e8).toFixed(2).padEnd(colW[10]) : 'N/A'.padEnd(colW[10]),
+      String(roundBlocks).padEnd(colW[2]),
+      effectiveUserPower != null ? effectiveUserPower.toFixed(2).padEnd(colW[3]) : 'N/A'.padEnd(colW[3]),
+      effectiveClanPower != null ? effectiveClanPower.toFixed(2).padEnd(colW[4]) : 'N/A'.padEnd(colW[4]),
+      clanReward.toFixed(10).padEnd(colW[5]),
+      (clanReward * 1e8).toFixed(2).padEnd(colW[6]),
+      userReward !== null ? userReward.toFixed(10).padEnd(colW[7]) : 'N/A'.padEnd(colW[7]),
+      userReward !== null ? (userReward * 1e8).toFixed(2).padEnd(colW[8]) : 'N/A'.padEnd(colW[8]),
     ].join(' | ');
     console.log(row);
   }
@@ -446,15 +433,22 @@ async function main() {
   console.log('\n' + '='.repeat(60));
   console.log('  TOTALS (estimated) — Cycle ' + CYCLE_ID);
   console.log('='.repeat(60));
-  console.log(`  Rounds won:               ${userRounds.length}  (${missingPower} missing power data)`);
+  console.log(`  Rounds won:               ${userRounds.length}  (${missingPower} missing clan power entries)`);
+  console.log(`  Won blocks (sum mult):    ${totalWonBlocks}`);
+  if (clanBlocksMined != null) {
+    const delta = totalWonBlocks - clanBlocksMined;
+    console.log(`  Snapshot blocksMined:     ${clanBlocksMined}  (delta: ${delta >= 0 ? '+' : ''}${delta})`);
+  }
+  console.log(`  Reward per won round:     ${btcPerBlock.toFixed(10)} BTC  (${(btcPerBlock * 1e8).toFixed(2)} sats)`);
   console.log(`  Total clan BTC (est.):    ${totalClanBtc.toFixed(10)} BTC  (${(totalClanBtc * 1e8).toFixed(2)} sats)`);
-  console.log(`  Total user BTC (est.):    ${totalUserBtc.toFixed(10)} BTC  (${(totalUserBtc * 1e8).toFixed(2)} sats)`);
+  console.log(`  Total user BTC (est.*):   ${totalUserBtc.toFixed(10)} BTC  (${(totalUserBtc * 1e8).toFixed(2)} sats)`);
   console.log(`  Current clan power (today):      ${currentClanPower?.toFixed(4) ?? 'N/A'} TH/s`);
   console.log(`  Last known user power:           ${lastUserPower?.toFixed(4) ?? 'N/A'} TH/s`);
+  console.log('  * user estimate still uses power-ratio placeholder');
   console.log('='.repeat(60));
 
-  // ── Step 6: Hypothetical solo mining comparison ──
-  console.log(`\n[6] Computing hypothetical solo mining earnings (mempool.space difficulty)...`);
+  // ── Step 5: Hypothetical solo mining comparison ──
+  console.log(`\n[5] Computing hypothetical solo mining earnings (mempool.space difficulty)...`);
 
   // All calendar days from cycle start → cycle end (7 days), capped at TODAY
   const cycleCutoff = CYCLE_END < TODAY ? CYCLE_END : TODAY;
@@ -572,6 +566,38 @@ async function main() {
     ? `${targetActualDays} day(s) actual + ${targetProjectedDays} projected @ ${latestSatsPerTH?.toFixed(4) ?? 'N/A'} sats/TH`
     : `${targetActualDays} day(s) actual`;
 
+  // ── Clan target: same structure as solo target but using clan TH/s ──────────
+  // clanMinerWarsSats: blocks mined by clan so far × btcPerBlock
+  const clanMinerWarsSats = (clanBlocksMined ?? 0) * btcPerBlock * 1e8;
+  const btcPerBlockSats = btcPerBlock * 1e8;
+
+  let clanTargetSats = 0;
+  let clanTargetActualDays = 0;
+  let clanTargetProjectedDays = 0;
+  const lastClanPower = clanPowerByDate.size > 0 ? [...clanPowerByDate.values()].at(-1) : currentClanPower;
+  for (const dateStr of fullCycleDates) {
+    if (solodays.has(dateStr)) continue;
+    const isPast = elapsedComparisonDates.includes(dateStr);
+    const clanPow = isPast
+      ? (clanPowerByDate.has(dateStr) ? clanPowerByDate.get(dateStr) : (lastClanPower ?? 0))
+      : (currentClanPower ?? lastClanPower ?? 0);
+    const satsPerTH = isPast
+      ? (satsPerThByDate.get(dateStr) ?? latestSatsPerTH)
+      : latestSatsPerTH;
+    if (satsPerTH != null && clanPow) {
+      clanTargetSats += satsPerTH * clanPow;
+      if (isPast) clanTargetActualDays++; else clanTargetProjectedDays++;
+    }
+  }
+
+  const clanProgressPct = clanTargetSats > 0 ? ((clanMinerWarsSats / clanTargetSats) * 100).toFixed(1) : 'N/A';
+  const clanBlocksNeeded = isCycleLive && btcPerBlockSats > 0 && clanTargetSats > clanMinerWarsSats
+    ? Math.ceil((clanTargetSats - clanMinerWarsSats) / btcPerBlockSats)
+    : null;
+  const clanTargetLabel = clanTargetProjectedDays > 0
+    ? `${clanTargetActualDays} day(s) actual + ${clanTargetProjectedDays} projected @ ${latestSatsPerTH?.toFixed(4) ?? 'N/A'} sats/TH`
+    : `${clanTargetActualDays} day(s) actual`;
+
   console.log('\n' + '='.repeat(60));
   console.log('  COMPARISON — MinerWars vs Solo Mining (cycle ' + CYCLE_ID + ')');
   console.log('='.repeat(60));
@@ -582,6 +608,17 @@ async function main() {
   console.log('');
   console.log(`  Solo target (7-day): ${targetSoloSats.toFixed(2).padStart(12)} sats  [${targetLabel}]`);
   console.log(`  MinerWars progress:  ${filteredMinerWarsSats.toFixed(2).padStart(12)} sats  (${progressPct}% of target)`);
+  if (isCycleLive && clanTargetSats > 0) {
+    console.log('');
+    console.log(`  Clan target (7-day): ${clanTargetSats.toFixed(2).padStart(12)} sats  [${clanTargetLabel}]`);
+    console.log(`  Clan progress (est): ${clanMinerWarsSats.toFixed(2).padStart(12)} sats  (${clanProgressPct}% of target)`);
+    console.log(`  sats/block (current):${btcPerBlockSats.toFixed(2).padStart(12)} sats`);
+    if (clanBlocksNeeded != null) {
+      console.log(`  Blocks needed:       ${String(clanBlocksNeeded).padStart(12)}  to reach clan target`);
+    } else if (clanMinerWarsSats >= clanTargetSats) {
+      console.log(`  Blocks needed:                 0  clan target already reached!`);
+    }
+  }
   console.log(`  Note: solo est. uses Bitcoin difficulty formula via mempool.space (block subsidy only)`);
   console.log('='.repeat(60));
 }
