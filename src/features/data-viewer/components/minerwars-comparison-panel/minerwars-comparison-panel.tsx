@@ -59,6 +59,8 @@ export function MinerWarsComparisonPanel({
   if (error && !data) return null;
 
   const isActual = data?.actualMinerWarsBtc != null;
+  const clanMinerWarsBtc = (data?.clanMinerWarsSats ?? 0) / 1e8;
+  const btcFundBtc = data?.btcFundBtc ?? 0;
   const soloEquivBtc = (data?.soloEquivSats ?? 0) / 1e8;
   const effectiveMw = data != null ? (data.actualMinerWarsBtc ?? data.minerWarsSats / 1e8) : 0;
   const effectiveDiff = effectiveMw - soloEquivBtc;
@@ -181,12 +183,7 @@ export function MinerWarsComparisonPanel({
             {/* Left: elapsed comparison */}
             <div className="mwcp-section">
               <div className="mwcp-row">
-                <span className="mwcp-label">
-                  MinerWars{isActual ? "" : " (est.)"}
-                  <span className="mwcp-projection-badge">
-                    {data.targetActualDays} {data.targetActualDays === 1 ? "day" : "days"}
-                  </span>
-                </span>
+                <span className="mwcp-label">MinerWars{isActual ? "" : " (est.)"}</span>
                 <span className="mwcp-value">
                   {showBtcFundZeroWarning && (
                     <svg
@@ -210,10 +207,29 @@ export function MinerWarsComparisonPanel({
                 </span>
               </div>
               <div className="mwcp-row">
+                <span className="mwcp-label">Clan MinerWars (est.)</span>
+                <span className="mwcp-value">
+                  {fmtBtc(clanMinerWarsBtc)} <BtcIcon />
+                </span>
+              </div>
+              <div className="mwcp-row">
+                <span className="mwcp-label">
+                  BTC fund (current)
+                  <span className="mwcp-projection-badge">
+                    {data.targetActualDays}{" "}
+                    {data.targetActualDays === 1 ? "funded day" : "funded days"}
+                  </span>
+                </span>
+                <span className="mwcp-value">
+                  {fmtBtc(btcFundBtc)} <BtcIcon />
+                </span>
+              </div>
+              <div className="mwcp-row">
                 <span className="mwcp-label">
                   Solo equiv (est.)
                   <span className="mwcp-projection-badge">
-                    {data.targetActualDays} {data.targetActualDays === 1 ? "day" : "days"}
+                    {data.targetActualDays}{" "}
+                    {data.targetActualDays === 1 ? "funded day" : "funded days"}
                   </span>
                 </span>
                 <span className="mwcp-value">
@@ -241,8 +257,8 @@ export function MinerWarsComparisonPanel({
                   Solo target
                   <span className="mwcp-projection-badge">
                     {projecting
-                      ? `${data.targetActualDays} ${data.targetActualDays === 1 ? "day" : "days"} + ${data.targetProjectedDays} projected`
-                      : `${data.targetActualDays} ${data.targetActualDays === 1 ? "day" : "days"}`}
+                      ? `${data.targetActualDays} ${data.targetActualDays === 1 ? "funded day" : "funded days"} + ${data.targetProjectedDays} projected`
+                      : `${data.targetActualDays} ${data.targetActualDays === 1 ? "funded day" : "funded days"}`}
                   </span>
                 </span>
                 <span className="mwcp-value">

@@ -34,6 +34,10 @@ export interface MinerWarsComparison {
 
   /** Actual MinerWars sats earned so far (est.) */
   minerWarsSats: number;
+  /** Clan MinerWars sats earned so far (est.) */
+  clanMinerWarsSats: number | null;
+  /** Current cycle BTC fund snapshot used for estimation */
+  btcFundBtc: number | null;
   /** Solo equiv sats for elapsed days (excl. solo days) */
   soloEquivSats: number;
   diffSats: number;
@@ -684,6 +688,8 @@ export async function prefetchAllCompletedCycles(token: string): Promise<void> {
         cycleEnd: CYCLE_END,
         today: TODAY,
         minerWarsSats,
+        clanMinerWarsSats: null,
+        btcFundBtc: null,
         soloEquivSats,
         diffSats,
         diffPct,
@@ -816,7 +822,7 @@ export async function fetchMinerWarsComparison(
   // For elapsed solo-equivalent comparisons, exclude cycle day 1 while live.
   const elapsedComparisonDates = isCycleLive ? cycleDates.slice(1) : cycleDates;
 
-  const roundRewards = new Map<number, { btc: number; date: string }>();
+  const roundRewards = new Map<number, { userBtc: number; clanBtc: number; date: string }>();
   for (const round of userRounds) {
     const entry = completedRoundsMap.get(round.roundId);
     if (!entry) continue;
@@ -837,7 +843,7 @@ export async function fetchMinerWarsComparison(
     const userReward =
       effectiveClanPower > 0 ? clanReward * (effectiveUserPower / effectiveClanPower) : 0;
 
-    roundRewards.set(round.roundId, { btc: userReward, date: roundDate });
+    roundRewards.set(round.roundId, { userBtc: userReward, clanBtc: clanReward, date: roundDate });
   }
 
   // 6. Mempool difficulty + solo dates + actual income (parallel)
@@ -850,8 +856,12 @@ export async function fetchMinerWarsComparison(
 
   // 7. Compute comparison
   let minerWarsSats = 0;
-  for (const { btc, date } of roundRewards.values()) {
-    if (!solodays.has(date)) minerWarsSats += btc * 1e8;
+  let clanMinerWarsSats = 0;
+  for (const { userBtc, clanBtc, date } of roundRewards.values()) {
+    if (!solodays.has(date)) {
+      minerWarsSats += userBtc * 1e8;
+      clanMinerWarsSats += clanBtc * 1e8;
+    }
   }
 
   let soloEquivSats = 0;
@@ -907,6 +917,8 @@ export async function fetchMinerWarsComparison(
     cycleEnd: CYCLE_END,
     today: TODAY,
     minerWarsSats,
+    clanMinerWarsSats,
+    btcFundBtc: btcFund,
     soloEquivSats,
     diffSats,
     diffPct,

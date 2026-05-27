@@ -363,7 +363,7 @@ async function main() {
   // Pre-build map for O(1) lookup by roundId
   const completedRoundsMap = new Map(completedRounds.map((r) => [r.id, r]));
 
-  const colW = [10, 21, 5, 12, 10, 12, 12, 14, 12];
+  const colW = [10, 21, 5, 12, 10, 12, 12, 14, 12, 14, 12];
   const header = [
     'Round ID'.padEnd(colW[0]),
     'Date'.padEnd(colW[1]),
@@ -372,8 +372,10 @@ async function main() {
     'User TH/s'.padEnd(colW[4]),
     'Clan TH/s'.padEnd(colW[5]),
     'Pwr Ratio'.padEnd(colW[6]),
-    'User BTC'.padEnd(colW[7]),
-    'User sats'.padEnd(colW[8]),
+    'Clan BTC'.padEnd(colW[7]),
+    'Clan sats'.padEnd(colW[8]),
+    'User BTC'.padEnd(colW[9]),
+    'User sats'.padEnd(colW[10]),
   ].join(' | ');
   const divider = '-'.repeat(header.length);
 
@@ -399,6 +401,8 @@ async function main() {
         'N/A'.padEnd(colW[6]),
         'N/A'.padEnd(colW[7]),
         'N/A'.padEnd(colW[8]),
+        'N/A'.padEnd(colW[9]),
+        'N/A'.padEnd(colW[10]),
       ].join(' | ');
       console.log(row);
       continue;
@@ -430,8 +434,10 @@ async function main() {
       effectiveUserPower.toFixed(2).padEnd(colW[4]),
       effectiveClanPower != null ? effectiveClanPower.toFixed(2).padEnd(colW[5]) : 'N/A'.padEnd(colW[5]),
       powerRatio.toFixed(4).padEnd(colW[6]),
-      userReward !== null ? userReward.toFixed(10).padEnd(colW[7]) : 'N/A'.padEnd(colW[7]),
-      userReward !== null ? (userReward * 1e8).toFixed(2).padEnd(colW[8]) : 'N/A'.padEnd(colW[8]),
+      clanReward.toFixed(10).padEnd(colW[7]),
+      (clanReward * 1e8).toFixed(2).padEnd(colW[8]),
+      userReward !== null ? userReward.toFixed(10).padEnd(colW[9]) : 'N/A'.padEnd(colW[9]),
+      userReward !== null ? (userReward * 1e8).toFixed(2).padEnd(colW[10]) : 'N/A'.padEnd(colW[10]),
     ].join(' | ');
     console.log(row);
   }

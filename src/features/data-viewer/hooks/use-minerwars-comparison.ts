@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { decodeJwt } from "@/lib/http";
 import { LS_KEY_SYNC_TOKEN } from "@/lib/storage-keys";
 import {
   fetchAvailableCycles,
@@ -38,10 +39,19 @@ export function useMinerWarsComparison({
   const abortRef = useRef<AbortController | null>(null);
 
   const getToken = () => sessionStorage.getItem(LS_KEY_SYNC_TOKEN) ?? "";
+  const isTokenExpired = (token: string): boolean => {
+    const decoded = decodeJwt(token);
+    return !decoded || (decoded.exp != null && Math.floor(Date.now() / 1000) >= decoded.exp);
+  };
 
   const reloadCycles = useCallback(async (): Promise<CycleInfo[]> => {
     const token = getToken();
-    if (!token) return [];
+    if (!token || isTokenExpired(token)) {
+      setCycles([]);
+      setData(null);
+      setError("Session expired");
+      return [];
+    }
     const list = await fetchAvailableCycles(token);
     setCycles(list);
     return list;
@@ -69,7 +79,12 @@ export function useMinerWarsComparison({
   // Network fetches are reserved for explicit refresh/build flows.
   const fetchComparison = useCallback((cycleId: number, allowNetwork = false): Promise<void> => {
     const token = getToken();
-    if (!token) return Promise.resolve();
+    if (!token || isTokenExpired(token)) {
+      setData(null);
+      setError("Session expired");
+      setLoading(false);
+      return Promise.resolve();
+    }
 
     if (!allowNetwork) {
       const cached = getCachedMinerWarsComparison(cycleId);
@@ -83,6 +98,7 @@ export function useMinerWarsComparison({
 
     abortRef.current?.abort();
     abortRef.current = new AbortController();
+    setData(null);
     setLoading(true);
     setError(null);
 
@@ -93,6 +109,7 @@ export function useMinerWarsComparison({
       })
       .catch((err: unknown) => {
         if ((err as { name?: string }).name === "AbortError") return;
+        setData(null);
         setError(err instanceof Error ? err.message : "Unknown error");
       })
       .finally(() => setLoading(false));
