@@ -800,6 +800,7 @@ export async function fetchMinerWarsComparison(
   // 5. Round reward calculation
   const CYCLE_END = CYCLE_END_CHECK;
   const CYCLE_START = cycleStartDate.slice(0, 10);
+  const isCycleLive = TODAY >= CYCLE_START && TODAY <= CYCLE_END;
 
   const cycleCutoff = CYCLE_END < TODAY ? CYCLE_END : TODAY;
   const cycleDates: string[] = [];
@@ -810,6 +811,10 @@ export async function fetchMinerWarsComparison(
   ) {
     cycleDates.push(d.toISOString().slice(0, 10));
   }
+
+  // Live cycles have a one-day funding lag: day 1 is funded on day 2.
+  // For elapsed solo-equivalent comparisons, exclude cycle day 1 while live.
+  const elapsedComparisonDates = isCycleLive ? cycleDates.slice(1) : cycleDates;
 
   const roundRewards = new Map<number, { btc: number; date: string }>();
   for (const round of userRounds) {
@@ -850,7 +855,7 @@ export async function fetchMinerWarsComparison(
   }
 
   let soloEquivSats = 0;
-  for (const dateStr of cycleDates) {
+  for (const dateStr of elapsedComparisonDates) {
     if (solodays.has(dateStr)) continue;
     const userPow = userPowerByDate.has(dateStr)
       ? userPowerByDate.get(dateStr)!
@@ -877,7 +882,7 @@ export async function fetchMinerWarsComparison(
 
   for (const dateStr of fullCycleDates) {
     if (solodays.has(dateStr)) continue;
-    const isPast = cycleDateSet.has(dateStr);
+    const isPast = elapsedComparisonDates.includes(dateStr);
     const userPow = isPast
       ? userPowerByDate.has(dateStr)
         ? userPowerByDate.get(dateStr)!

@@ -73,10 +73,12 @@ export function useMinerWarsComparison({
 
     if (!allowNetwork) {
       const cached = getCachedMinerWarsComparison(cycleId);
-      setData(cached);
-      setError(null);
-      setLoading(false);
-      return Promise.resolve();
+      if (cached) {
+        setData(cached);
+        setError(null);
+        setLoading(false);
+        return Promise.resolve();
+      }
     }
 
     abortRef.current?.abort();

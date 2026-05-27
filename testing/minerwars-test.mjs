@@ -461,6 +461,10 @@ async function main() {
     cycleDates.push(d.toISOString().slice(0, 10));
   }
 
+  // Live cycles have a one-day funding lag: day 1 is funded on day 2.
+  // For elapsed solo-equivalent comparisons, exclude cycle day 1 while the cycle is live.
+  const elapsedComparisonDates = isCycleLive ? cycleDates.slice(1) : cycleDates;
+
   // Detect solo mining days within this cycle (handles mid-cycle departures/re-entries)
   // rewards-by-user naturally omits rounds when user was out of clan, so both sides align
   const solodays = await getSoloMiningDates(cycleDates[0], CYCLE_END);
@@ -518,7 +522,7 @@ async function main() {
     if (!solodays.has(date)) filteredMinerWarsSats += btc * 1e8;
   }
   let filteredSoloSats = 0;
-  for (const dateStr of cycleDates) {
+  for (const dateStr of elapsedComparisonDates) {
     if (solodays.has(dateStr)) continue;
     const userPow = userPowerByDate.has(dateStr) ? userPowerByDate.get(dateStr) : (lastUserPower ?? 0);
     const satsPerTH = satsPerThByDate.get(dateStr) ?? latestSatsPerTH;
@@ -545,7 +549,7 @@ async function main() {
   let targetProjectedDays = 0;
   for (const dateStr of fullCycleDates) {
     if (solodays.has(dateStr)) continue;
-    const isPast = cycleDates.includes(dateStr);
+    const isPast = elapsedComparisonDates.includes(dateStr);
     const userPow = isPast
       ? (userPowerByDate.has(dateStr) ? userPowerByDate.get(dateStr) : (lastUserPower ?? 0))
       : (lastUserPower ?? 0);

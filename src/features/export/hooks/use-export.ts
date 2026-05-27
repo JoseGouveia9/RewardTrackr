@@ -6,6 +6,8 @@ import { ALL_REWARD_KEYS } from "../config/reward-configs";
 import { clearAllCacheEntries } from "../utils/cache";
 import { executeExportFlow, refreshCacheKeys } from "../utils/export-flow";
 import {
+  fetchAvailableCycles,
+  fetchMinerWarsComparison,
   invalidateMinerWarsCache,
   prefetchAllCompletedCycles,
 } from "@/features/data-viewer/api/minerwars-comparison";
@@ -47,6 +49,19 @@ export function useExport({
   const { t } = useTranslation();
   const [loading, setLoading] = useState<boolean>(false);
   const [fetchingKeys, setFetchingKeys] = useState<Set<RewardKey>>(new Set());
+
+  const prefetchMinerWarsPanelData = useCallback((token: string): void => {
+    void (async () => {
+      const cycles = await fetchAvailableCycles(token).catch(() => []);
+      const liveOrPending = cycles.find(
+        (c) => c.status === "in-progress" || c.status === "pending",
+      );
+      if (liveOrPending) {
+        await fetchMinerWarsComparison(token, liveOrPending.cycleId).catch(() => {});
+      }
+      await prefetchAllCompletedCycles(token).catch(() => {});
+    })();
+  }, []);
 
   const handleClearCache = useCallback((): void => {
     clearAllCacheEntries();
@@ -96,10 +111,10 @@ export function useExport({
         },
       });
       Sentry.logger.info("Export completed", { sheets: selectedKeys.length });
-      // Pre-compute and persist all completed MinerWars cycle comparisons in the background
-      // so switching cycles in the panel is instant with zero API calls.
+      // Warm MinerWars panel data in the background: cycle list, live/pending cycle,
+      // and completed cycle comparisons.
       if (selectedKeys.includes("minerwars")) {
-        prefetchAllCompletedCycles(storedToken).catch(() => {});
+        prefetchMinerWarsPanelData(storedToken);
       }
       onMessage(successMessage);
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -145,6 +160,7 @@ export function useExport({
     onMessage,
     onCacheUpdate,
     onStarted,
+    prefetchMinerWarsPanelData,
     t,
   ]);
 
@@ -182,7 +198,7 @@ export function useExport({
         onCacheUpdate(updated);
 
         if (keys.includes("minerwars")) {
-          prefetchAllCompletedCycles(storedToken).catch(() => {});
+          prefetchMinerWarsPanelData(storedToken);
         }
       } catch (error: unknown) {
         const msg = error instanceof Error ? error.message : t("export.failedGeneric");
@@ -192,7 +208,16 @@ export function useExport({
         setFetchingKeys(new Set());
       }
     },
-    [storedToken, cache, includeWalletFiat, excelFiatCurrency, onMessage, onCacheUpdate, t],
+    [
+      storedToken,
+      cache,
+      includeWalletFiat,
+      excelFiatCurrency,
+      onMessage,
+      onCacheUpdate,
+      t,
+      prefetchMinerWarsPanelData,
+    ],
   );
 
   return { loading, fetchingKeys, handleExport, refreshKeys, handleClearCache };
