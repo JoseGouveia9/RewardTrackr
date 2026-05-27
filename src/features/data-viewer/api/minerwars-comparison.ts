@@ -237,12 +237,14 @@ async function getCycleClanData(
   const limit = 50;
   let skip = 0;
   let btcFund: number | null = null;
+  let totalMinedBlocks: number | null = null;
   let clanNftPower: number | null = null;
 
   while (true) {
     const res = await postJson<{
       data: {
         btcFund: unknown;
+        totalMinedBlocks: unknown;
         count: number;
         clansPromoted?: Array<{ clanId: number; nftPower: number }>;
         clansRemaining?: Array<{ clanId: number; nftPower: number }>;
@@ -254,7 +256,10 @@ async function getCycleClanData(
       pagination: { skip, limit },
     });
 
-    if (btcFund === null) btcFund = parseFloat(String(res.data.btcFund));
+    if (btcFund === null) {
+      btcFund = parseFloat(String(res.data.btcFund));
+      totalMinedBlocks = Number(res.data.totalMinedBlocks ?? 0);
+    }
 
     const allClans = [
       ...(res.data.clansPromoted ?? []),
@@ -273,7 +278,7 @@ async function getCycleClanData(
     if (skip >= totalCount || allClans.length < limit) break;
   }
 
-  return { btcFund: btcFund ?? 0, clanNftPower };
+  return { btcFund: btcFund ?? 0, totalMinedBlocks: totalMinedBlocks ?? 0, clanNftPower };
 }
 
 async function getUserPowerChart(headers: Record<string, string>, cycleStartDate: string) {
@@ -785,13 +790,14 @@ export async function fetchMinerWarsComparison(
   const avgRoundNftPower = completedRounds.length > 0 ? totalPowerSum / completedRounds.length : 1;
   const completedRoundsMap = new Map(completedRounds.map((r) => [r.id, r]));
 
-  // 3. BTC fund + clan power
-  const { btcFund, clanNftPower } = await getCycleClanData(
+  // 3. BTC fund + total mined blocks + clan power
+  const { btcFund, totalMinedBlocks, clanNftPower } = await getCycleClanData(
     headers,
     cycleStartDate,
     leagueId,
     clanId,
   );
+  const btcPerBlock = totalMinedBlocks > 0 ? btcFund / totalMinedBlocks : 0;
 
   // 4. Power charts (parallel)
   const [userPowerByDate, clanPowerByDate, currentClanPower] = await Promise.all([
@@ -839,9 +845,14 @@ export async function fetchMinerWarsComparison(
         : (clanNftPower ?? 1);
 
     const powerRatio = entry.power / avgRoundNftPower;
-    const clanReward = (round.multiplier / sumAllMultipliers) * btcFund * powerRatio;
+    // Clan reward: new validated formula — btcFund / totalMinedBlocks × multiplier
+    const clanReward = btcPerBlock * round.multiplier;
+    // User reward: validated estimation — power-weighted share of old formula base
     const userReward =
-      effectiveClanPower > 0 ? clanReward * (effectiveUserPower / effectiveClanPower) : 0;
+      effectiveClanPower > 0
+        ? ((round.multiplier / sumAllMultipliers) * btcFund * powerRatio * effectiveUserPower) /
+          effectiveClanPower
+        : 0;
 
     roundRewards.set(round.roundId, { userBtc: userReward, clanBtc: clanReward, date: roundDate });
   }
