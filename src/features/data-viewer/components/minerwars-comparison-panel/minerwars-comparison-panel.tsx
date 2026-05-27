@@ -60,7 +60,6 @@ export function MinerWarsComparisonPanel({
   if (error && !data) return null;
 
   const isActual = data?.actualMinerWarsBtc != null;
-  const btcFundBtc = data?.btcFundBtc ?? 0;
   const soloEquivBtc = (data?.soloEquivSats ?? 0) / 1e8;
   const effectiveMw = data != null ? (data.actualMinerWarsBtc ?? data.minerWarsSats / 1e8) : 0;
   const effectiveDiff = effectiveMw - soloEquivBtc;
@@ -196,19 +195,6 @@ export function MinerWarsComparisonPanel({
           <div className={`mwcp-grid${isCycleLive && clanTargetBtc > 0 ? " mwcp-grid--3col" : ""}`}>
             {/* Section 1: Difference */}
             <div className="mwcp-section">
-              <div className="mwcp-row">
-                <span className="mwcp-label">
-                  BTC fund (current)
-                  <span className="mwcp-projection-badge">
-                    {data.targetActualDays}{" "}
-                    {data.targetActualDays === 1 ? "funded day" : "funded days"}
-                  </span>
-                </span>
-                <span className="mwcp-value">
-                  {fmtBtc(btcFundBtc)} <BtcIcon />
-                </span>
-              </div>
-              <div className="mwcp-divider" />
               <div className="mwcp-row">
                 <span className="mwcp-label">MinerWars{isActual ? "" : " (est.)"}</span>
                 <span className="mwcp-value">

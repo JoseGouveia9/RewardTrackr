@@ -63,6 +63,8 @@ export interface MinerWarsComparison {
   clanTargetSoloSats: number | null;
   /** Current BTC per block in sats (btcFund / totalMinedBlocks). null when no blocks mined yet. */
   btcPerBlockSats: number | null;
+  /** Length of the cycle in days (always 7). Used for the funded-days badge on the BTC fund row. */
+  cycleLength: number;
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -714,6 +716,7 @@ export async function prefetchAllCompletedCycles(token: string): Promise<void> {
         actualMinerWarsBtc,
         clanTargetSoloSats: null,
         btcPerBlockSats: null,
+        cycleLength: cycleDates.length,
       };
 
       persistComparison(result);
@@ -974,6 +977,7 @@ export async function fetchMinerWarsComparison(
     actualMinerWarsBtc,
     clanTargetSoloSats: lastClanPower > 0 ? clanTargetSoloSats : null,
     btcPerBlockSats: totalMinedBlocks > 0 ? (btcFund / totalMinedBlocks) * 1e8 : null,
+    cycleLength: cycleDates.length,
   };
 
   comparisonCache.set(cycleId, { data: result, ts: Date.now() });
