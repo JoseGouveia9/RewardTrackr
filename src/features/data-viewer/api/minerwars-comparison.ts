@@ -1,4 +1,4 @@
-import { buildApiHeaders, postJson } from "@/lib/http";
+import { buildApiHeaders, getJson, postJson } from "@/lib/http";
 import { fetchDifficultyEpochs } from "@/features/export/api/difficulty-adjustments";
 import { LS_KEY_MW_COMPARISON, LS_KEY_MW_CYCLES, LS_KEY_REWARD_PREFIX } from "@/lib/storage-keys";
 
@@ -65,6 +65,20 @@ export interface MinerWarsComparison {
   btcPerBlockSats: number | null;
   /** Length of the cycle in days (always 7). Used for the funded-days badge on the BTC fund row. */
   cycleLength: number;
+  /** Estimated maintenance cost in BTC (null when not computed). */
+  maintenanceBtc: number | null;
+  /** Estimated maintenance cost in GMT (null when no price). */
+  maintenanceGmt: number | null;
+  /** MW reward expressed in GMT at computation time (null when no price). */
+  rewardGmt: number | null;
+  /** Net BTC (reward - maintenance). null when maintenance unavailable. */
+  netBtc: number | null;
+  /** Net GMT (rewardGmt - maintenanceGmt). null when maintenance unavailable. */
+  netGmt: number | null;
+  /** Live BTC price in USD at computation time. null when unavailable. */
+  btcPrice: number | null;
+  /** Live GMT price in USD at computation time. null when unavailable. */
+  gmtPrice: number | null;
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -234,6 +248,43 @@ async function getAllRoundsInCycle(
   return collected;
 }
 
+async function getLivePrices(): Promise<{ btcPrice: number; gmtPrice: number }> {
+  const [gmtRes, btcRes] = await Promise.all([
+    getJson<{ data: { value: number } }>(`${API}/api/exchanges/getTokenPrice`),
+    getJson<{ data: number }>(`${API}/api/exchanges/getPrice?symbol=BTC&value=1`),
+  ]);
+  return { gmtPrice: gmtRes.data?.value ?? 0, btcPrice: btcRes.data ?? 0 };
+}
+
+async function getDiscountFactor(headers: Record<string, string>): Promise<number> {
+  const res = await postJson<{
+    data: {
+      dailyMaintenanceDiscount?: number;
+      levelDiscount?: number;
+      discountByMaintenanceInGmt?: number;
+    };
+  }>(`${API}/api/user/get-my-nft-discount`, headers, {});
+  const d = res.data ?? {};
+  return (
+    1 -
+    ((d.dailyMaintenanceDiscount ?? 0) +
+      (d.levelDiscount ?? 0) +
+      (d.discountByMaintenanceInGmt ?? 0))
+  );
+}
+
+async function getMyNftAvgEE(headers: Record<string, string>): Promise<number | null> {
+  const res = await postJson<{ data: { array: Array<{ energyEfficiency?: number }> } }>(
+    `${API}/api/nft/get-my`,
+    headers,
+    {},
+  );
+  const vals = (res.data?.array ?? [])
+    .map((n) => n.energyEfficiency)
+    .filter((v): v is number => v != null && v > 0);
+  return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+}
+
 async function getCycleClanData(
   headers: Record<string, string>,
   calculatedAt: string,
@@ -245,6 +296,7 @@ async function getCycleClanData(
   let btcFund: number | null = null;
   let totalMinedBlocks: number | null = null;
   let clanNftPower: number | null = null;
+  let leagueWeightedEE: number | null = null;
 
   while (true) {
     const res = await postJson<{
@@ -265,6 +317,9 @@ async function getCycleClanData(
     if (btcFund === null) {
       btcFund = parseFloat(String(res.data.btcFund));
       totalMinedBlocks = Number(res.data.totalMinedBlocks ?? 0);
+      leagueWeightedEE =
+        ((res.data as Record<string, unknown>).weightedEnergyEfficiencyPerTh as number | null) ??
+        null;
     }
 
     const allClans = [
@@ -284,7 +339,12 @@ async function getCycleClanData(
     if (skip >= totalCount || allClans.length < limit) break;
   }
 
-  return { btcFund: btcFund ?? 0, totalMinedBlocks: totalMinedBlocks ?? 0, clanNftPower };
+  return {
+    btcFund: btcFund ?? 0,
+    totalMinedBlocks: totalMinedBlocks ?? 0,
+    clanNftPower,
+    leagueWeightedEE,
+  };
 }
 
 async function getUserPowerChart(headers: Record<string, string>, cycleStartDate: string) {
@@ -717,6 +777,13 @@ export async function prefetchAllCompletedCycles(token: string): Promise<void> {
         clanTargetSoloSats: null,
         btcPerBlockSats: null,
         cycleLength: cycleDates.length,
+        maintenanceBtc: null,
+        maintenanceGmt: null,
+        rewardGmt: null,
+        netBtc: null,
+        netGmt: null,
+        btcPrice: null,
+        gmtPrice: null,
       };
 
       persistComparison(result);
@@ -812,7 +879,7 @@ export async function fetchMinerWarsComparison(
   const completedRoundsMap = new Map(completedRounds.map((r) => [r.id, r]));
 
   // 3. BTC fund + total mined blocks + clan power
-  const { btcFund, totalMinedBlocks, clanNftPower } = await getCycleClanData(
+  const { btcFund, totalMinedBlocks, clanNftPower, leagueWeightedEE } = await getCycleClanData(
     headers,
     cycleStartDate,
     leagueId,
@@ -878,13 +945,22 @@ export async function fetchMinerWarsComparison(
     roundRewards.set(round.roundId, { userBtc: userReward, clanBtc: clanReward, date: roundDate });
   }
 
-  // 6. Mempool difficulty + solo dates + actual income (parallel)
-  const [{ byDate: satsPerThByDate, latestSatsPerTH }, solodays, actualMinerWarsBtc] =
-    await Promise.all([
-      getMempoolEpochs(cycleDates),
-      getSoloMiningDates(headers, CYCLE_START, CYCLE_END),
-      isCompleted ? getMinerWarsActualIncome(headers, CYCLE_END) : Promise.resolve(null),
-    ]);
+  // 6. Mempool difficulty + solo dates + actual income + maintenance inputs (parallel)
+  const [
+    { byDate: satsPerThByDate, latestSatsPerTH },
+    solodays,
+    actualMinerWarsBtc,
+    maintDiscountFactor,
+    maintPrices,
+    maintUserEE,
+  ] = await Promise.all([
+    getMempoolEpochs(cycleDates),
+    getSoloMiningDates(headers, CYCLE_START, CYCLE_END),
+    isCompleted ? getMinerWarsActualIncome(headers, CYCLE_END) : Promise.resolve(null),
+    getDiscountFactor(headers).catch(() => 1),
+    getLivePrices().catch(() => ({ btcPrice: 0, gmtPrice: 0 })),
+    getMyNftAvgEE(headers).catch(() => null),
+  ]);
 
   // 7. Compute comparison
   let minerWarsSats = 0;
@@ -908,6 +984,56 @@ export async function fetchMinerWarsComparison(
 
   const diffSats = minerWarsSats - soloEquivSats;
   const diffPct = soloEquivSats > 0 ? (diffSats / soloEquivSats) * 100 : null;
+
+  // ── Maintenance estimation (per-round official formula) ──────────────────
+  const KWH = 0.05; // $/kWh — GoMining platform constant
+  const SVC = 0.0089; // $/TH/day — GoMining platform constant
+  const userEE = maintUserEE ?? 15;
+  const leagueEE = leagueWeightedEE ?? userEE;
+  const elapsedMWDays = elapsedComparisonDates.filter((d) => !solodays.has(d)).length;
+  const { btcPrice: maintBtcPrice, gmtPrice: maintGmtPrice } = maintPrices;
+
+  let maintenanceBtc: number | null = null;
+  let maintenanceGmt: number | null = null;
+  let rewardGmt: number | null = null;
+  let netBtc: number | null = null;
+  let netGmt: number | null = null;
+
+  if (maintBtcPrice > 0 && elapsedMWDays > 0) {
+    let totalMaintUSD = 0;
+    let cumulativeMWSats = 0;
+    const sortedForMaint = [...userRounds].sort((a, b) => a.roundId - b.roundId);
+    for (const round of sortedForMaint) {
+      const roundDate = toDateStr(round.endedAt);
+      if (solodays.has(roundDate)) continue;
+      const entry = completedRoundsMap.get(round.roundId);
+      const roundPower = entry?.power ?? 0;
+      const userTH = userPowerByDate.has(roundDate)
+        ? userPowerByDate.get(roundDate)!
+        : (lastUserPower ?? 0);
+      const isToday = roundDate >= TODAY;
+      const clanTH = clanPowerByDate.has(roundDate)
+        ? clanPowerByDate.get(roundDate)!
+        : isToday
+          ? (currentClanPower ?? clanNftPower ?? 1)
+          : (clanNftPower ?? 1);
+      const EE = cumulativeMWSats < soloEquivSats ? userEE : leagueEE;
+      const roundElecUSD = (KWH * 24 * elapsedMWDays * roundPower * EE) / 1000;
+      const roundSvcUSD = SVC * elapsedMWDays * roundPower;
+      const share =
+        clanTH > 0 && sumAllMultipliers > 0
+          ? (round.multiplier / sumAllMultipliers) * (userTH / clanTH)
+          : 0;
+      totalMaintUSD += (roundElecUSD + roundSvcUSD) * share * maintDiscountFactor;
+      cumulativeMWSats += btcPerBlock * round.multiplier * (clanTH > 0 ? userTH / clanTH : 0) * 1e8;
+    }
+    maintenanceBtc = totalMaintUSD / maintBtcPrice;
+    maintenanceGmt = maintGmtPrice > 0 ? totalMaintUSD / maintGmtPrice : null;
+    const effectiveMwBtc = actualMinerWarsBtc ?? minerWarsSats / 1e8;
+    rewardGmt = maintGmtPrice > 0 ? (effectiveMwBtc * maintBtcPrice) / maintGmtPrice : null;
+    netBtc = effectiveMwBtc - maintenanceBtc;
+    netGmt = rewardGmt != null && maintenanceGmt != null ? rewardGmt - maintenanceGmt : null;
+  }
 
   // 8. Full 7-day target
   const fullCycleDates: string[] = [];
@@ -978,6 +1104,13 @@ export async function fetchMinerWarsComparison(
     clanTargetSoloSats: lastClanPower > 0 ? clanTargetSoloSats : null,
     btcPerBlockSats: totalMinedBlocks > 0 ? (btcFund / totalMinedBlocks) * 1e8 : null,
     cycleLength: cycleDates.length,
+    maintenanceBtc,
+    maintenanceGmt,
+    rewardGmt,
+    netBtc,
+    netGmt,
+    btcPrice: maintBtcPrice > 0 ? maintBtcPrice : null,
+    gmtPrice: maintGmtPrice > 0 ? maintGmtPrice : null,
   };
 
   comparisonCache.set(cycleId, { data: result, ts: Date.now() });
