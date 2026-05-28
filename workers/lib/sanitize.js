@@ -32,6 +32,7 @@ const SHARE_FIELDS_BY_KEY = {
     "reinvested",
     "totalPower",
     "discount",
+    "energyEfficiency",
     "satsPerTh",
     "btcPriceAtTime",
     "btcPriceGmt",
@@ -55,6 +56,7 @@ const SHARE_FIELDS_BY_KEY = {
     "reinvested",
     "totalPower",
     "discount",
+    "energyEfficiency",
     "btcPriceAtTime",
     "btcPriceGmt",
   ],
@@ -112,7 +114,7 @@ const STRING_FIELDS = new Set([
 
 const BOOLEAN_FIELDS = new Set(["reinvested"]);
 
-const OPTIONAL_NUMBER_FIELDS = new Set(["satsPerTh", "btcPriceAtTime", "btcPriceGmt"]);
+const OPTIONAL_NUMBER_FIELDS = new Set(["satsPerTh", "btcPriceAtTime", "btcPriceGmt", "energyEfficiency"]);
 
 function isPlainObject(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
