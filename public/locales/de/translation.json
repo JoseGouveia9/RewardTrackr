@@ -261,7 +261,9 @@
     "satsPerBlock": "@ {{sats}} Sats/Block",
     "warnBtcFundZero": "Der BTC-Fonds deiner Liga ist derzeit 0. Die MinerWars-Schätzung zeigt 0, bis der Fonds aufgefüllt wird.",
     "warnNoClanAnalyticsLive": "Keine Clan-Analysen (der Clan ist möglicherweise kürzer als 30 Tage) — aktuelle Clan-Power für alle Runden verwendet. Die Schätzung kann über- oder untertrieben sein.",
-    "warnNoClanAnalyticsDone": "Keine Clan-Analysen (der Clan ist möglicherweise kürzer als 30 Tage) — Clan-Power am Zyklusende für alle Runden verwendet. Die Schätzung kann über- oder untertrieben sein."
+    "warnNoClanAnalyticsDone": "Keine Clan-Analysen (der Clan ist möglicherweise kürzer als 30 Tage) — Clan-Power am Zyklusende für alle Runden verwendet. Die Schätzung kann über- oder untertrieben sein.",
+    "maintenanceEst": "Wartung (Schätz.)",
+    "netEst": "Netto (Schätz.)"
   },
   "footer": {
     "about": "Über",

@@ -350,6 +350,7 @@ export function MiningTable({
       {rewardKey === "minerwars" && !isShared && (
         <MinerWarsComparisonPanel
           cacheVersion={cacheVersion}
+          currency={currency}
           onRefreshMinerwarsTable={onRefreshKeys ? () => onRefreshKeys(["minerwars"]) : undefined}
         />
       )}

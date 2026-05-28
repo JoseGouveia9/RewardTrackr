@@ -1,16 +1,22 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMinerWarsComparison } from "../../hooks/use-minerwars-comparison";
-import { BtcIcon } from "../icons/currency-icons";
+import type { Currency } from "../../types";
+import { BtcIcon, GmtIcon } from "../icons/currency-icons";
 import "./minerwars-comparison-panel.css";
 
 interface MinerWarsComparisonPanelProps {
   cacheVersion?: number;
+  currency?: Currency;
   onRefreshMinerwarsTable?: () => Promise<void> | void;
 }
 
 function fmtBtc(btc: number): string {
   return btc.toLocaleString("en-US", { minimumFractionDigits: 8, maximumFractionDigits: 8 });
+}
+
+function fmtGmt(gmt: number): string {
+  return gmt.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function fmtPct(pct: number): string {
@@ -19,6 +25,7 @@ function fmtPct(pct: number): string {
 
 export function MinerWarsComparisonPanel({
   cacheVersion = 0,
+  currency = "BTC",
   onRefreshMinerwarsTable,
 }: MinerWarsComparisonPanelProps) {
   const { t } = useTranslation();
@@ -90,6 +97,11 @@ export function MinerWarsComparisonPanel({
     data != null && !data.hasClanAnalytics && data.actualMinerWarsBtc == null;
   const showBtcFundZeroWarning =
     data != null && data.btcFundIsZero && data.actualMinerWarsBtc == null;
+
+  const showGmt = currency === "GMT" && (data?.btcPrice ?? 0) > 0 && (data?.gmtPrice ?? 0) > 0;
+  const toGmt = (btc: number) => (showGmt ? (btc * data!.btcPrice!) / data!.gmtPrice! : btc);
+  const fmtVal = (btc: number) => (showGmt ? fmtGmt(toGmt(btc)) : fmtBtc(btc));
+  const ValIcon = showGmt ? GmtIcon : BtcIcon;
 
   const selectedCycle = cycles.find((c) => c.cycleId === selectedCycleId);
 
@@ -222,7 +234,7 @@ export function MinerWarsComparisonPanel({
                       <line x1="12" y1="17" x2="12.01" y2="17" />
                     </svg>
                   )}
-                  {fmtBtc(effectiveMw)} <BtcIcon />
+                  {fmtVal(effectiveMw)} <ValIcon />
                 </span>
               </div>
               <div className="mwcp-row">
@@ -233,7 +245,7 @@ export function MinerWarsComparisonPanel({
                   </span>
                 </span>
                 <span className="mwcp-value">
-                  {fmtBtc(soloEquivBtc)} <BtcIcon />
+                  {fmtVal(soloEquivBtc)} <ValIcon />
                 </span>
               </div>
               <div className="mwcp-divider" />
@@ -242,12 +254,51 @@ export function MinerWarsComparisonPanel({
                 <span
                   className={`mwcp-value mwcp-value--diff ${isPositive ? "mwcp-value--pos" : "mwcp-value--neg"}`}
                 >
-                  {(effectiveDiff > 0 ? "+" : "") + fmtBtc(effectiveDiff)} <BtcIcon />
+                  {(effectiveDiff > 0 ? "+" : "") + fmtVal(effectiveDiff)} <ValIcon />
                   {effectiveDiffPct != null && (
                     <span className="mwcp-pct">{fmtPct(effectiveDiffPct)}</span>
                   )}
                 </span>
               </div>
+              {data.maintenanceBtc != null && (
+                <>
+                  <div className="mwcp-divider" />
+                  <div className="mwcp-row">
+                    <span className="mwcp-label mwcp-label--sub">
+                      {t("cycleTracker.maintenanceEst")}
+                    </span>
+                    <span className="mwcp-value mwcp-value--neg">
+                      {currency === "GMT" && data.maintenanceGmt != null ? (
+                        <>
+                          {`-${fmtGmt(data.maintenanceGmt)}`} <GmtIcon />
+                        </>
+                      ) : (
+                        <>
+                          {`-${fmtBtc(data.maintenanceBtc)}`} <BtcIcon />
+                        </>
+                      )}
+                    </span>
+                  </div>
+                  {data.netBtc != null && (
+                    <div className="mwcp-row">
+                      <span className="mwcp-label mwcp-label--sub">{t("cycleTracker.netEst")}</span>
+                      <span
+                        className={`mwcp-value ${(currency === "GMT" ? (data.netGmt ?? 0) : data.netBtc) >= 0 ? "mwcp-value--pos" : "mwcp-value--neg"}`}
+                      >
+                        {currency === "GMT" && data.netGmt != null ? (
+                          <>
+                            {fmtGmt(data.netGmt)} <GmtIcon />
+                          </>
+                        ) : (
+                          <>
+                            {fmtBtc(data.netBtc)} <BtcIcon />
+                          </>
+                        )}
+                      </span>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
 
             {/* Section 2: Solo target + progress */}
@@ -263,14 +314,14 @@ export function MinerWarsComparisonPanel({
                   )}
                 </span>
                 <span className="mwcp-value">
-                  {fmtBtc(data.targetSoloSats / 1e8)} <BtcIcon />
+                  {fmtVal(data.targetSoloSats / 1e8)} <ValIcon />
                 </span>
               </div>
               <div className="mwcp-divider" />
               <div className="mwcp-row">
                 <span className="mwcp-label">{t("cycleTracker.minerWarsProgress")}</span>
                 <span className="mwcp-value mwcp-value--progress">
-                  {fmtBtc(effectiveMw)} <BtcIcon />
+                  {fmtVal(effectiveMw)} <ValIcon />
                   {effectiveProgress != null && (
                     <span
                       className={`mwcp-pct ${effectiveProgress >= 100 ? "mwcp-value--pos" : ""}`}
@@ -305,14 +356,14 @@ export function MinerWarsComparisonPanel({
                     )}
                   </span>
                   <span className="mwcp-value">
-                    {fmtBtc(clanTargetBtc)} <BtcIcon />
+                    {fmtVal(clanTargetBtc)} <ValIcon />
                   </span>
                 </div>
                 <div className="mwcp-divider" />
                 <div className="mwcp-row">
                   <span className="mwcp-label">{t("cycleTracker.clanProgress")}</span>
                   <span className="mwcp-value mwcp-value--progress">
-                    {fmtBtc(clanMinerWarsBtc)} <BtcIcon />
+                    {fmtVal(clanMinerWarsBtc)} <ValIcon />
                     {clanProgress != null && (
                       <span className={`mwcp-pct ${clanProgress >= 100 ? "mwcp-value--pos" : ""}`}>
                         {clanProgress.toFixed(1)}

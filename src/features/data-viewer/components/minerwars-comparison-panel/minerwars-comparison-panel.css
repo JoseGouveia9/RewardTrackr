@@ -302,6 +302,18 @@
   }
 }
 
+/* Maintenance estimate section */
+.mwcp-section--maintenance {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.mwcp-label--sub {
+  font-size: 0.78rem;
+  opacity: 0.8;
+}
+
 /* Notice banner */
 .mwcp-notice {
   font-size: 0.78rem;
