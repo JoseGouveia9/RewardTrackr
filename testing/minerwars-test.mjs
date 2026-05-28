@@ -1,4 +1,4 @@
-/**
+﻿/**
  * MinerWars Round Reward Formula - Test Script
  *
  * Formula (validated from clan-leaderboard/index-v2):
@@ -66,6 +66,38 @@ async function post(url, body) {
     throw new Error(`HTTP ${res.status} at ${url}: ${text}`);
   }
   return res.json();
+}
+
+async function get(url) {
+  const res = await fetch(url, { method: 'GET', headers: HEADERS });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`HTTP ${res.status} at ${url}: ${text}`);
+  }
+  return res.json();
+}
+
+// ─── Discount + live prices ──────────────────────────────────────────────────
+async function getDiscountInfo() {
+  const res = await post('https://api.gomining.com/api/user/get-my-nft-discount', {});
+  return res.data ?? {};
+}
+
+async function getGmtPrice() {
+  const res = await get('https://api.gomining.com/api/exchanges/getTokenPrice');
+  return res.data?.value ?? 0;
+}
+
+async function getGominingBtcPrice() {
+  const res = await get('https://api.gomining.com/api/exchanges/getPrice?symbol=BTC&value=1');
+  return res.data ?? 0;
+}
+
+async function getMyNftAvgEE() {
+  const res = await post('https://api.gomining.com/api/nft/get-my', {});
+  const arr = res?.data?.array ?? [];
+  const vals = arr.map(n => n.energyEfficiency).filter(v => v != null && v > 0);
+  return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
 }
 
 // ─── Endpoint 1: detect/fetch rounds for a given cycle ──────────────────────
@@ -150,6 +182,7 @@ async function getCycleClanData(calculatedAt, leagueId, myClanId) {
   let totalMinedBlocks = null;
   let clanNftPower = null;
   let clanBlocksMined = null;
+  let leagueWeightedEE = null;
 
   while (true) {
     const res = await post('https://api.gomining.com/api/nft-game/clan-leaderboard/index-v2', {
@@ -161,6 +194,7 @@ async function getCycleClanData(calculatedAt, leagueId, myClanId) {
     if (btcFund === null) {
       btcFund = parseFloat(res.data.btcFund);
       totalMinedBlocks = Number(res.data.totalMinedBlocks ?? 0);
+      leagueWeightedEE = res.data.weightedEnergyEfficiencyPerTh ?? null;
     }
 
     const allClans = [
@@ -181,7 +215,7 @@ async function getCycleClanData(calculatedAt, leagueId, myClanId) {
     if (skip >= totalCount || allClans.length < limit) break;
   }
 
-  return { btcFund, totalMinedBlocks, clanNftPower, clanBlocksMined };
+  return { btcFund, totalMinedBlocks, clanNftPower, clanBlocksMined, leagueWeightedEE };
 }
 
 // ─── Endpoint 6: user NFT power per day ────────────────────────────────────
@@ -323,7 +357,7 @@ async function main() {
 
   // ── Step 3: BTC fund + mined blocks + clan snapshot ──
   console.log(`\n[3] Fetching BTC fund + mined blocks + clan snapshot (leagueId ${lastRoundLeagueId}, clanId ${myClanId})`);
-  const { btcFund, totalMinedBlocks, clanNftPower, clanBlocksMined } =
+  const { btcFund, totalMinedBlocks, clanNftPower, clanBlocksMined, leagueWeightedEE } =
     await getCycleClanData(CYCLE_START_DATE, lastRoundLeagueId, myClanId);
   const btcPrizePool = btcFund;
   const btcPerBlock = totalMinedBlocks > 0 ? btcPrizePool / totalMinedBlocks : 0;
@@ -620,6 +654,104 @@ async function main() {
     }
   }
   console.log(`  Note: solo est. uses Bitcoin difficulty formula via mempool.space (block subsidy only)`);
+  console.log('='.repeat(60));
+
+  // ── Step 6: Maintenance estimation ──────────────────────────────────────────
+  console.log(`\n[6] Fetching maintenance discount + live prices...`);
+  const [discountData, gmtPriceValue, liveBtcPrice, userAvgEE] = await Promise.all([
+    getDiscountInfo(),
+    getGmtPrice(),
+    getGominingBtcPrice(),
+    getMyNftAvgEE(),
+  ]);
+
+  const dailyDisc  = discountData.dailyMaintenanceDiscount  ?? 0;
+  const levelDisc  = discountData.levelDiscount             ?? 0;
+  const gmtDisc    = discountData.discountByMaintenanceInGmt ?? 0;
+  const totalDiscount = dailyDisc + levelDisc + gmtDisc;
+  const discountFactor = 1 - totalDiscount;
+
+  console.log(`  Discount:  ${(dailyDisc*100).toFixed(2)}% (daily)  +  ${(levelDisc*100).toFixed(2)}% (level)  +  ${(gmtDisc*100).toFixed(2)}% (GMT pay)  =  ${(totalDiscount*100).toFixed(2)}% total`);
+  console.log(`  BTC price: $${liveBtcPrice.toFixed(2)}   GMT price: $${gmtPriceValue.toFixed(4)}`);
+
+  // Official GoMining formula (per won round, elapsed days instead of full 7):
+  //   round electricity (USD) = (kWh × 24 × days) × round.power × EE / 1000
+  //   round service (USD)     = 0.0089 × days × round.power
+  //   miner share             = (round.multiplier / sumAllMultipliers) × (userTH / clanTH)
+  //   miner maintenance (USD) = (roundElec + roundSvc) × share × (1 − discount)
+  // EE rule: use user's own avg EE while cumulative MW ≤ cumulative solo;
+  //          once MW exceeds solo, use league weighted EE for remaining rounds.
+  const KWH        = 0.05;   // $/kWh — GoMining platform constant
+  const SVC        = 0.0089; // $/TH/day — GoMining platform constant
+  const userEE     = userAvgEE ?? 15;          // W/TH — from nft/get-my
+  const leagueEE   = leagueWeightedEE ?? userEE; // W/TH — from clan-leaderboard/index-v2
+  const elapsedMWDays = elapsedComparisonDates.filter(d => !solodays.has(d)).length;
+  const soloThresholdSats = filteredSoloSats;
+
+  const maintRows = [];
+  let totalMaintUSD = 0;
+  let cumulativeMWSats = 0;
+  for (const round of sortedRounds) {
+    const roundDate = (round.endedAt ?? '').slice(0, 10);
+    if (solodays.has(roundDate)) continue;
+    const entry = completedRoundsMap.get(round.roundId);
+    const roundPower = entry?.power ?? 0;
+    const userTH = userPowerByDate.has(roundDate) ? userPowerByDate.get(roundDate) : (lastUserPower ?? 0);
+    const isRoundToday = roundDate >= TODAY;
+    const clanTH = (clanPowerByDate.has(roundDate)
+      ? clanPowerByDate.get(roundDate)
+      : (isRoundToday ? currentClanPower : clanNftPower)) ?? 0;
+    // Hybrid EE: user's own EE while within solo threshold, league EE once MW exceeds solo
+    const EE = cumulativeMWSats < soloThresholdSats ? userEE : leagueEE;
+    const roundElecUSD = (KWH * 24 * elapsedMWDays * roundPower * EE) / 1000;
+    const roundSvcUSD  = SVC * elapsedMWDays * roundPower;
+    const share = (clanTH > 0 && sumAllMultipliers > 0)
+      ? (round.multiplier / sumAllMultipliers) * (userTH / clanTH)
+      : 0;
+    const minerMaintUSD = (roundElecUSD + roundSvcUSD) * share * discountFactor;
+    totalMaintUSD += minerMaintUSD;
+    // Accumulate MW sats for this round to track threshold crossing
+    const roundUserSats = (btcPerBlock * round.multiplier * (userTH / (clanTH || 1))) * 1e8;
+    cumulativeMWSats += roundUserSats;
+    maintRows.push({ round, roundDate, roundPower, userTH, clanTH, EE, roundElecUSD, roundSvcUSD, share, minerMaintUSD });
+  }
+
+  const totalMaintBtc  = totalMaintUSD / liveBtcPrice;
+  const totalMaintSats = totalMaintBtc * 1e8;
+  const totalMaintGmt  = gmtPriceValue > 0 ? totalMaintUSD / gmtPriceValue : 0;
+
+  console.log(`  User EE: ${userEE.toFixed(2)} W/TH (from NFTs)  |  League EE: ${leagueEE.toFixed(4)} W/TH  |  Solo threshold: ${soloThresholdSats.toFixed(2)} sats`);
+  console.log(`  Formula: per-round official  |  Days: ${elapsedMWDays}  |  Rounds: ${maintRows.length}`);
+  console.log('');
+  for (const r of maintRows) {
+    const maintSats = r.minerMaintUSD / liveBtcPrice * 1e8;
+    const totalRoundUSD = r.roundElecUSD + r.roundSvcUSD;
+    console.log(`  Round ${r.round.roundId}  [${r.roundDate}  blks:${r.round.multiplier}]`);
+    console.log(`    Elec  = (${KWH} x 24 x ${elapsedMWDays} x ${r.roundPower.toFixed(0)} TH x ${r.EE} W/TH [${r.EE === leagueEE && r.EE !== userEE ? 'league' : 'user'}]) / 1000`
+              + `  = $${r.roundElecUSD.toFixed(4)}`);
+    console.log(`    Svc   = ${SVC} x ${elapsedMWDays} x ${r.roundPower.toFixed(0)} TH`
+              + `  = $${r.roundSvcUSD.toFixed(4)}`);
+    console.log(`    Total = $${r.roundElecUSD.toFixed(4)} + $${r.roundSvcUSD.toFixed(4)}`
+              + `  = $${totalRoundUSD.toFixed(4)}`);
+    console.log(`    Share = (${r.round.multiplier}/${sumAllMultipliers}) x (${r.userTH.toFixed(2)} / ${r.clanTH.toFixed(2)})`
+              + `  = ${(r.share * 100).toFixed(6)}%`);
+    console.log(`    Maint = $${totalRoundUSD.toFixed(4)} x ${(r.share * 100).toFixed(6)}% x ${discountFactor.toFixed(4)} (discount)`
+              + `  = $${r.minerMaintUSD.toFixed(6)}  = ${maintSats.toFixed(2)} sats`);
+    console.log('');
+  }
+
+  const mwNetSats  = filteredMinerWarsSats - totalMaintSats;
+  const mwMaintPct = filteredMinerWarsSats > 0 ? (totalMaintSats / filteredMinerWarsSats * 100).toFixed(1) : 'N/A';
+
+  console.log('\n' + '='.repeat(60));
+  console.log('  MAINTENANCE ESTIMATE -- Cycle ' + CYCLE_ID);
+  console.log('='.repeat(60));
+  console.log(`  Window: ${elapsedMWDays} day(s)  |  Discount: ${(totalDiscount*100).toFixed(2)}%`);
+  console.log('');
+  console.log(`  MinerWars:`);
+  console.log(`    Reward:      ${filteredMinerWarsSats.toFixed(2).padStart(12)} sats`);
+  console.log(`    Maintenance: ${totalMaintSats.toFixed(2).padStart(12)} sats  /  ${totalMaintBtc.toFixed(8)} BTC  /  ${totalMaintGmt.toFixed(4)} GMT  (${mwMaintPct}%)`);
+  console.log(`    Net:         ${mwNetSats.toFixed(2).padStart(12)} sats`);
   console.log('='.repeat(60));
 }
 
