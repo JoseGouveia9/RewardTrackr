@@ -500,6 +500,7 @@ export const DataViewer = memo(function DataViewer({
                       trendsExiting={trendsExiting}
                       difficultyMap={difficultyMap}
                       pageSize={pageSize}
+                      isShared={isSharedContext}
                     />
                   ) : isEarnTab ? (
                     <SimpleEarnTable

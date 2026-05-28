@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useMinerWarsComparison } from "../../hooks/use-minerwars-comparison";
 import { BtcIcon } from "../icons/currency-icons";
 import "./minerwars-comparison-panel.css";
@@ -20,6 +21,7 @@ export function MinerWarsComparisonPanel({
   cacheVersion = 0,
   onRefreshMinerwarsTable,
 }: MinerWarsComparisonPanelProps) {
+  const { t } = useTranslation();
   const {
     cycles,
     loadingCycles,
@@ -52,7 +54,7 @@ export function MinerWarsComparisonPanel({
     return (
       <div className="mwcp mwcp--loading">
         <span className="mwcp-spinner" aria-hidden="true" />
-        <span>Computing cycle comparison…</span>
+        <span>{t("cycleTracker.computing")}</span>
       </div>
     );
   }
@@ -104,14 +106,14 @@ export function MinerWarsComparisonPanel({
               aria-haspopup="listbox"
               aria-expanded={dropdownOpen}
             >
-              <span>Cycle {selectedCycle?.cycleId ?? "—"}</span>
+              <span>{t("cycleTracker.cycle", { id: selectedCycle?.cycleId ?? "—" })}</span>
               {selectedCycle && (
                 <span className={`mwcp-cycle-badge mwcp-cycle-badge--${selectedCycle.status}`}>
                   {selectedCycle.status === "in-progress"
-                    ? "Live"
+                    ? t("cycleTracker.statusLive")
                     : selectedCycle.status === "pending"
-                      ? "Pending"
-                      : "Done"}
+                      ? t("cycleTracker.statusPending")
+                      : t("cycleTracker.statusDone")}
                 </span>
               )}
               <svg
@@ -141,10 +143,10 @@ export function MinerWarsComparisonPanel({
                     <span>Cycle {c.cycleId}</span>
                     <span className={`mwcp-cycle-badge mwcp-cycle-badge--${c.status}`}>
                       {c.status === "in-progress"
-                        ? "Live"
+                        ? t("cycleTracker.statusLive")
                         : c.status === "pending"
-                          ? "Pending"
-                          : "Done"}
+                          ? t("cycleTracker.statusPending")
+                          : t("cycleTracker.statusDone")}
                     </span>
                   </li>
                 ))}
@@ -164,7 +166,9 @@ export function MinerWarsComparisonPanel({
               onClick={() => void refresh()}
               disabled={loading}
               title={
-                selectedCycle?.status === "pending" ? "Refresh pending cycle" : "Refresh live cycle"
+                selectedCycle?.status === "pending"
+                  ? t("cycleTracker.refreshPending")
+                  : t("cycleTracker.refreshLive")
               }
             >
               <svg
@@ -196,7 +200,9 @@ export function MinerWarsComparisonPanel({
             {/* Section 1: Difference */}
             <div className="mwcp-section">
               <div className="mwcp-row">
-                <span className="mwcp-label">MinerWars{isActual ? "" : " (est.)"}</span>
+                <span className="mwcp-label">
+                  {isActual ? t("cycleTracker.minerWarsActual") : t("cycleTracker.minerWarsEst")}
+                </span>
                 <span className="mwcp-value">
                   {showBtcFundZeroWarning && (
                     <svg
@@ -221,9 +227,9 @@ export function MinerWarsComparisonPanel({
               </div>
               <div className="mwcp-row">
                 <span className="mwcp-label">
-                  Solo equiv (est.)
+                  {t("cycleTracker.soloEquiv")}
                   <span className="mwcp-projection-badge">
-                    {data.targetActualDays} {data.targetActualDays === 1 ? "day" : "days"}
+                    {t("cycleTracker.day", { count: data.targetActualDays })}
                   </span>
                 </span>
                 <span className="mwcp-value">
@@ -232,7 +238,7 @@ export function MinerWarsComparisonPanel({
               </div>
               <div className="mwcp-divider" />
               <div className="mwcp-row">
-                <span className="mwcp-label">Difference</span>
+                <span className="mwcp-label">{t("cycleTracker.difference")}</span>
                 <span
                   className={`mwcp-value mwcp-value--diff ${isPositive ? "mwcp-value--pos" : "mwcp-value--neg"}`}
                 >
@@ -248,11 +254,11 @@ export function MinerWarsComparisonPanel({
             <div className="mwcp-section mwcp-section--right">
               <div className="mwcp-row">
                 <span className="mwcp-label">
-                  Solo target
+                  {t("cycleTracker.soloTarget")}
                   {projecting && (
                     <span className="mwcp-projection-badge">
-                      {data.targetActualDays} {data.targetActualDays === 1 ? "day" : "days"} +{" "}
-                      {data.targetProjectedDays} projected
+                      {t("cycleTracker.day", { count: data.targetActualDays })} +{" "}
+                      {data.targetProjectedDays} {t("cycleTracker.projected")}
                     </span>
                   )}
                 </span>
@@ -262,14 +268,15 @@ export function MinerWarsComparisonPanel({
               </div>
               <div className="mwcp-divider" />
               <div className="mwcp-row">
-                <span className="mwcp-label">MinerWars progress</span>
+                <span className="mwcp-label">{t("cycleTracker.minerWarsProgress")}</span>
                 <span className="mwcp-value mwcp-value--progress">
                   {fmtBtc(effectiveMw)} <BtcIcon />
                   {effectiveProgress != null && (
                     <span
                       className={`mwcp-pct ${effectiveProgress >= 100 ? "mwcp-value--pos" : ""}`}
                     >
-                      {effectiveProgress.toFixed(1)}% of target
+                      {effectiveProgress.toFixed(1)}
+                      {t("cycleTracker.ofTarget")}
                     </span>
                   )}
                 </span>
@@ -289,11 +296,11 @@ export function MinerWarsComparisonPanel({
               <div className="mwcp-section mwcp-section--right">
                 <div className="mwcp-row">
                   <span className="mwcp-label">
-                    Clan target
+                    {t("cycleTracker.clanTarget")}
                     {projecting && (
                       <span className="mwcp-projection-badge">
-                        {data.targetActualDays} {data.targetActualDays === 1 ? "day" : "days"} +{" "}
-                        {data.targetProjectedDays} projected
+                        {t("cycleTracker.day", { count: data.targetActualDays })} +{" "}
+                        {data.targetProjectedDays} {t("cycleTracker.projected")}
                       </span>
                     )}
                   </span>
@@ -303,12 +310,13 @@ export function MinerWarsComparisonPanel({
                 </div>
                 <div className="mwcp-divider" />
                 <div className="mwcp-row">
-                  <span className="mwcp-label">Clan progress (est.)</span>
+                  <span className="mwcp-label">{t("cycleTracker.clanProgress")}</span>
                   <span className="mwcp-value mwcp-value--progress">
                     {fmtBtc(clanMinerWarsBtc)} <BtcIcon />
                     {clanProgress != null && (
                       <span className={`mwcp-pct ${clanProgress >= 100 ? "mwcp-value--pos" : ""}`}>
-                        {clanProgress.toFixed(1)}% of target
+                        {clanProgress.toFixed(1)}
+                        {t("cycleTracker.ofTarget")}
                       </span>
                     )}
                   </span>
@@ -323,11 +331,13 @@ export function MinerWarsComparisonPanel({
                 )}
                 {clanBlocksNeeded != null && clanBlocksNeeded > 0 && (
                   <div className="mwcp-row" style={{ marginTop: 4 }}>
-                    <span className="mwcp-label">Blocks needed</span>
+                    <span className="mwcp-label">{t("cycleTracker.blocksNeeded")}</span>
                     <span className="mwcp-value" style={{ fontSize: "0.8rem" }}>
-                      {clanBlocksNeeded} block{clanBlocksNeeded !== 1 ? "s" : ""}
+                      {t("cycleTracker.block", { count: clanBlocksNeeded })}
                       {btcPerBlockSats != null && (
-                        <span className="mwcp-pct">@ {btcPerBlockSats.toFixed(0)} sats/block</span>
+                        <span className="mwcp-pct">
+                          {t("cycleTracker.satsPerBlock", { sats: btcPerBlockSats.toFixed(0) })}
+                        </span>
                       )}
                     </span>
                   </div>
@@ -338,15 +348,15 @@ export function MinerWarsComparisonPanel({
 
           {showBtcFundZeroWarning && (
             <div className="mwcp-notice mwcp-notice--warn">
-              ⚠ Your league BTC fund is currently 0. MinerWars estimate will show 0 until the fund
-              start being filled.
+              ⚠ {t("cycleTracker.warnBtcFundZero")}
             </div>
           )}
           {showNoClanAnalyticsWarning && (
             <div className="mwcp-notice mwcp-notice--warn">
-              ⚠ No clan analytics (clan may be &lt;30 days old) — using{" "}
-              {isCycleLive ? "current clan power" : "clan power at cycle end"} for all rounds.
-              Estimation may be over/under-inflated.
+              ⚠{" "}
+              {isCycleLive
+                ? t("cycleTracker.warnNoClanAnalyticsLive")
+                : t("cycleTracker.warnNoClanAnalyticsDone")}
             </div>
           )}
         </>
