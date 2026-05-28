@@ -12,8 +12,8 @@ import {
 import { parseJsonSafe } from "@/lib/parse-json-safe";
 import type { CacheEntry, CacheState, RewardKey, RewardRecord } from "../types";
 
-export const MINING_SCHEMA_VERSION = 1;
-export const MINERWARS_SCHEMA_VERSION = 4;
+export const MINING_SCHEMA_VERSION = 2;
+export const MINERWARS_SCHEMA_VERSION = 5;
 
 type PriceCacheValue = {
   price: number;
@@ -49,6 +49,7 @@ export function loadCacheEntry(key: RewardKey): CacheEntry | null {
       records: parsed.records,
       totalCount: asNumber(parsed.totalCount),
       fetchedAt: asNumber(parsed.fetchedAt),
+      ...(parsed.schemaVersion != null ? { schemaVersion: parsed.schemaVersion } : {}),
       ...(parsed.pricingMode ? { pricingMode: parsed.pricingMode } : {}),
       ...(parsed.extraFiatCurrency ? { extraFiatCurrency: parsed.extraFiatCurrency } : {}),
       ...(parsed.newEntriesCount != null

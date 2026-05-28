@@ -135,6 +135,7 @@ export interface SoloIncomeListItem {
   reinvestmentInPowerNftStatusExecuted?: boolean;
   power?: number;
   totalDiscount?: number;
+  energyEfficiency?: number;
 }
 
 export interface SoloMiningRawRecord {
@@ -160,6 +161,7 @@ export interface MinerWarsRawRecord {
   incomeStatistic?: { btcCourseInUsd?: number; gmtPrice?: number };
   power?: number;
   totalDiscount?: number;
+  energyEfficiency?: number;
 }
 
 export interface WalletTxRawRecord {
@@ -227,6 +229,7 @@ export interface MiningEnrichedRecord {
   reinvested: boolean;
   totalPower: number;
   discount: number;
+  energyEfficiency?: number;
   satsPerTh?: number;
   btcPriceAtTime?: number;
   btcPriceGmt?: number;

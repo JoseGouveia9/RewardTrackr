@@ -40,6 +40,7 @@ export function transformSoloMining(
   let totalPower = 0;
   let discountMax = 0;
   const satsPerThValues: number[] = [];
+  const efficiencyValues: number[] = [];
 
   if (Array.isArray(raw.incomeList)) {
     for (const inc of raw.incomeList) {
@@ -62,6 +63,9 @@ export function transformSoloMining(
       const pw = inc?.power;
       if (pr != null && pw != null && pw > 0) {
         satsPerThValues.push((pr * 1e8) / pw);
+      }
+      if (inc?.energyEfficiency != null && inc.energyEfficiency > 0) {
+        efficiencyValues.push(inc.energyEfficiency);
       }
     }
   }
@@ -108,6 +112,10 @@ export function transformSoloMining(
     reinvested,
     totalPower,
     discount,
+    energyEfficiency:
+      efficiencyValues.length > 0
+        ? efficiencyValues.reduce((a, b) => a + b, 0) / efficiencyValues.length
+        : undefined,
     satsPerTh:
       satsPerThValues.length > 0
         ? satsPerThValues.reduce((a, b) => a + b, 0) / satsPerThValues.length
@@ -170,6 +178,8 @@ export function transformMinerWars(
     reinvested: raw.reinvestmentInPowerNftStatusExecuted === true,
     totalPower: raw.power ?? 0,
     discount: raw.totalDiscount ?? 0,
+    energyEfficiency:
+      raw.energyEfficiency != null && raw.energyEfficiency > 0 ? raw.energyEfficiency : undefined,
     btcPriceAtTime: btcPrice > 0 ? btcPrice : undefined,
     btcPriceGmt: btcPrice > 0 && gmtPrice > 0 ? btcPrice / gmtPrice : undefined,
   };
