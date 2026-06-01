@@ -24,7 +24,7 @@ import { TermsPage } from "./routes/terms-page";
 import { LS_KEY_REWARD_PREFIX } from "@/lib/storage-keys";
 import { LanguagePicker } from "@/components/language-picker/language-picker";
 import logo from "/logo.webp";
-import "./App.css";
+import "./app.css";
 
 const LAYOUT_SPRING = { layout: { type: "spring" as const, stiffness: 220, damping: 28 } };
 
