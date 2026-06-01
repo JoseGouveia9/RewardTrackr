@@ -146,6 +146,7 @@
     "enrichingSheet": "正在处理 {{name}} ({{current}}/{{total}})...",
     "skippedPending": "{{name}}：已跳过 {{count}} 条待再投资条目，将在下次导出时重试。",
     "buildingExcel": "正在生成 Excel 文件...",
+    "preparingCycleTracker": "MinerWars: 正在准备周期数据...",
     "downloaded": "Excel 文件已下载！({{details}})",
     "allFromCache": "全部来自缓存",
     "partFetched": "已获取 {{count}} 个",

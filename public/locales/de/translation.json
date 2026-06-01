@@ -146,6 +146,7 @@
     "enrichingSheet": "{{name}} anreichern ({{current}} von {{total}})...",
     "skippedPending": "{{name}}: {{count}} ausstehende Reinvestitions-Einträge übersprungen, werden beim nächsten Export wiederholt.",
     "buildingExcel": "Excel-Datei wird erstellt...",
+    "preparingCycleTracker": "MinerWars: Zyklusdaten werden vorbereitet...",
     "downloaded": "Excel-Datei heruntergeladen! ({{details}})",
     "allFromCache": "alle aus dem Cache",
     "partFetched": "{{count}} abgerufen",

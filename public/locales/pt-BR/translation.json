@@ -146,6 +146,7 @@
     "enrichingSheet": "Enriquecendo {{name}} ({{current}} de {{total}})...",
     "skippedPending": "{{name}}: {{count}} entrada(s) de reinvestimento pendente ignorada(s), será refeita no próximo exporto.",
     "buildingExcel": "Gerando arquivo Excel...",
+    "preparingCycleTracker": "MinerWars: Preparando dados dos ciclos...",
     "downloaded": "Arquivo Excel baixado! ({{details}})",
     "allFromCache": "tudo do cache",
     "partFetched": "{{count}} buscadas",

@@ -146,6 +146,7 @@
     "enrichingSheet": "Обработка {{name}} ({{current}} из {{total}})...",
     "skippedPending": "{{name}}: Пропущено {{count}} ожидающих записей реинвестирования, повтор при следующем экспорте.",
     "buildingExcel": "Создание файла Excel...",
+    "preparingCycleTracker": "MinerWars: Подготовка данных циклов...",
     "downloaded": "Файл Excel загружен! ({{details}})",
     "allFromCache": "всё из кэша",
     "partFetched": "{{count}} загружено",

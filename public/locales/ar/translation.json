@@ -146,6 +146,7 @@
     "enrichingSheet": "جارٍ إثراء {{name}} ({{current}} من {{total}})...",
     "skippedPending": "{{name}}: تجاوزنا {{count}} إدخال معلق لإعادة الاستثمار، ستُعاد المحاولة عند التصدير التالي.",
     "buildingExcel": "جارٍ إنشاء ملف Excel...",
+    "preparingCycleTracker": "MinerWars: جارٍ تحضير بيانات الدورات...",
     "downloaded": "تم تنزيل ملف Excel! ({{details}})",
     "allFromCache": "كل شيء من الذاكرة المؤقتة",
     "partFetched": "{{count}} تم جلبها",

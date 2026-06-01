@@ -146,6 +146,7 @@
     "enrichingSheet": "Enrichissement de {{name}} ({{current}} sur {{total}})...",
     "skippedPending": "{{name}} : {{count}} entrée(s) de réinvestissement en attente ignorée(s), sera réessayé au prochain export.",
     "buildingExcel": "Génération du fichier Excel...",
+    "preparingCycleTracker": "MinerWars: Préparation des données des cycles...",
     "downloaded": "Fichier Excel téléchargé ! ({{details}})",
     "allFromCache": "tout depuis le cache",
     "partFetched": "{{count}} récupérées",

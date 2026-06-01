@@ -146,6 +146,7 @@
     "enrichingSheet": "{{name}} 처리 중 ({{current}}/{{total}})...",
     "skippedPending": "{{name}}: 재투자 대기 중인 {{count}}개 항목 건너뜀, 다음 내보내기에서 재시도합니다.",
     "buildingExcel": "Excel 파일 생성 중...",
+    "preparingCycleTracker": "MinerWars: 사이클 데이터 준비 중...",
     "downloaded": "Excel 파일이 다운로드되었습니다! ({{details}})",
     "allFromCache": "모두 캐시에서",
     "partFetched": "{{count}}개 가져옴",
