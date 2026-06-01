@@ -1,9 +1,86 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import type { CycleInfo } from "../../api/minerwars-comparison";
 import { useMinerWarsComparison } from "../../hooks/use-minerwars-comparison";
+import { useOutsideClick } from "../../hooks/use-outside-click";
 import type { Currency } from "../../types";
 import { BtcIcon, GmtIcon } from "../icons/currency-icons";
 import "./minerwars-comparison-panel.css";
+
+interface CycleDropdownProps {
+  cycles: CycleInfo[];
+  selectedCycleId: number | null;
+  onSelect: (id: number) => void;
+}
+
+function CycleDropdown({ cycles, selectedCycleId, onSelect }: CycleDropdownProps) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const selectedCycle = cycles.find((c) => c.cycleId === selectedCycleId);
+
+  useOutsideClick(ref, () => setOpen(false), open);
+
+  function statusLabel(status: CycleInfo["status"]) {
+    if (status === "in-progress") return t("cycleTracker.statusLive");
+    if (status === "pending") return t("cycleTracker.statusPending");
+    return t("cycleTracker.statusDone");
+  }
+
+  return (
+    <div className="minerwars-panel-cycle-dropdown" ref={ref}>
+      <button
+        type="button"
+        className="minerwars-panel-cycle-dropdown-btn"
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+      >
+        <span>{t("cycleTracker.cycle", { id: selectedCycle?.cycleId ?? "\u2014" })}</span>
+        {selectedCycle && (
+          <span
+            className={`minerwars-panel-cycle-badge minerwars-panel-cycle-badge--${selectedCycle.status}`}
+          >
+            {statusLabel(selectedCycle.status)}
+          </span>
+        )}
+        <svg
+          className="minerwars-panel-dropdown-chevron"
+          width="10"
+          height="6"
+          viewBox="0 0 10 6"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path d="M0 0l5 6 5-6z" />
+        </svg>
+      </button>
+      {open && (
+        <ul className="minerwars-panel-cycle-dropdown-list" role="listbox">
+          {cycles.map((c) => (
+            <li
+              key={c.cycleId}
+              role="option"
+              aria-selected={c.cycleId === selectedCycleId}
+              className={`minerwars-panel-cycle-dropdown-item${c.cycleId === selectedCycleId ? " minerwars-panel-cycle-dropdown-item--active" : ""}`}
+              onClick={() => {
+                onSelect(c.cycleId);
+                setOpen(false);
+              }}
+            >
+              <span>Cycle {c.cycleId}</span>
+              <span
+                className={`minerwars-panel-cycle-badge minerwars-panel-cycle-badge--${c.status}`}
+              >
+                {statusLabel(c.status)}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 interface MinerWarsComparisonPanelProps {
   cacheVersion?: number;
@@ -41,27 +118,47 @@ export function MinerWarsComparisonPanel({
     isLoggedIn,
   } = useMinerWarsComparison({ cacheVersion, onRefreshMinerwarsTable });
 
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!dropdownOpen) return;
-    function onClickOutside(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setDropdownOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", onClickOutside);
-    return () => document.removeEventListener("mousedown", onClickOutside);
-  }, [dropdownOpen]);
-
-  const showSkeleton = loadingCycles || (loading && !data);
+  const showSkeleton = loadingCycles || loading;
 
   if (showSkeleton) {
     return (
-      <div className="mwcp mwcp--loading">
-        <span className="mwcp-spinner" aria-hidden="true" />
-        <span>{t("cycleTracker.computing")}</span>
+      <div className="minerwars-panel">
+        <div className="minerwars-panel-cycle-selector-row">
+          <div className="minerwars-panel-skeleton minerwars-panel-skeleton--dropdown" />
+          <div className="minerwars-panel-skeleton minerwars-panel-skeleton--window" />
+          <div className="minerwars-panel-skeleton minerwars-panel-skeleton--refresh" />
+        </div>
+        <div className="minerwars-panel-grid minerwars-panel-grid--3col">
+          {/* Col 1: MinerWars, Solo equiv, Difference, Maintenance, Net */}
+          <div className="minerwars-panel-section">
+            {[0, 1, 2, 3, 4].map((i) => (
+              <div key={i} className="minerwars-panel-row">
+                <div className="minerwars-panel-skeleton minerwars-panel-skeleton--label" />
+                <div className="minerwars-panel-skeleton minerwars-panel-skeleton--value" />
+              </div>
+            ))}
+          </div>
+          {/* Col 2: Solo target, MinerWars progress + bar */}
+          <div className="minerwars-panel-section minerwars-panel-section--right">
+            {[0, 1].map((i) => (
+              <div key={i} className="minerwars-panel-row">
+                <div className="minerwars-panel-skeleton minerwars-panel-skeleton--label" />
+                <div className="minerwars-panel-skeleton minerwars-panel-skeleton--value" />
+              </div>
+            ))}
+            <div className="minerwars-panel-skeleton minerwars-panel-skeleton--progress" />
+          </div>
+          {/* Col 3: Clan target, Clan progress + bar */}
+          <div className="minerwars-panel-section minerwars-panel-section--right">
+            {[0, 1].map((i) => (
+              <div key={i} className="minerwars-panel-row">
+                <div className="minerwars-panel-skeleton minerwars-panel-skeleton--label" />
+                <div className="minerwars-panel-skeleton minerwars-panel-skeleton--value" />
+              </div>
+            ))}
+            <div className="minerwars-panel-skeleton minerwars-panel-skeleton--progress" />
+          </div>
+        </div>
       </div>
     );
   }
@@ -99,126 +196,76 @@ export function MinerWarsComparisonPanel({
     data != null && data.btcFundIsZero && data.actualMinerWarsBtc == null;
 
   const showGmt = currency === "GMT" && (data?.btcPrice ?? 0) > 0 && (data?.gmtPrice ?? 0) > 0;
-  const toGmt = (btc: number) => (showGmt ? (btc * data!.btcPrice!) / data!.gmtPrice! : btc);
+  const toGmt = (btc: number) => (btc * data!.btcPrice!) / data!.gmtPrice!;
   const fmtVal = (btc: number) => (showGmt ? fmtGmt(toGmt(btc)) : fmtBtc(btc));
   const ValIcon = showGmt ? GmtIcon : BtcIcon;
 
   const selectedCycle = cycles.find((c) => c.cycleId === selectedCycleId);
 
   return (
-    <div className="mwcp">
+    <div className="minerwars-panel">
       {/* Cycle dropdown */}
       {cycles.length > 0 && (
-        <div className="mwcp-cycle-selector-row">
-          <div className="mwcp-cycle-dropdown" ref={dropdownRef}>
-            <button
-              type="button"
-              className="mwcp-cycle-dropdown-btn"
-              onClick={() => setDropdownOpen((o) => !o)}
-              aria-haspopup="listbox"
-              aria-expanded={dropdownOpen}
-            >
-              <span>{t("cycleTracker.cycle", { id: selectedCycle?.cycleId ?? "—" })}</span>
-              {selectedCycle && (
-                <span className={`mwcp-cycle-badge mwcp-cycle-badge--${selectedCycle.status}`}>
-                  {selectedCycle.status === "in-progress"
-                    ? t("cycleTracker.statusLive")
-                    : selectedCycle.status === "pending"
-                      ? t("cycleTracker.statusPending")
-                      : t("cycleTracker.statusDone")}
-                </span>
-              )}
-              <svg
-                className="mwcp-dropdown-chevron"
-                width="10"
-                height="6"
-                viewBox="0 0 10 6"
-                fill="currentColor"
-                aria-hidden="true"
-              >
-                <path d="M0 0l5 6 5-6z" />
-              </svg>
-            </button>
-            {dropdownOpen && (
-              <ul className="mwcp-cycle-dropdown-list" role="listbox">
-                {cycles.map((c) => (
-                  <li
-                    key={c.cycleId}
-                    role="option"
-                    aria-selected={c.cycleId === selectedCycleId}
-                    className={`mwcp-cycle-dropdown-item${c.cycleId === selectedCycleId ? " mwcp-cycle-dropdown-item--active" : ""}`}
-                    onClick={() => {
-                      setSelectedCycleId(c.cycleId);
-                      setDropdownOpen(false);
-                    }}
-                  >
-                    <span>Cycle {c.cycleId}</span>
-                    <span className={`mwcp-cycle-badge mwcp-cycle-badge--${c.status}`}>
-                      {c.status === "in-progress"
-                        ? t("cycleTracker.statusLive")
-                        : c.status === "pending"
-                          ? t("cycleTracker.statusPending")
-                          : t("cycleTracker.statusDone")}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+        <div className="minerwars-panel-cycle-selector-row">
+          <CycleDropdown
+            cycles={cycles}
+            selectedCycleId={selectedCycleId}
+            onSelect={setSelectedCycleId}
+          />
           {data && (
-            <span className="mwcp-window mwcp-window--inline">
-              {data.cycleStart} → {data.cycleEnd}
+            <span className="minerwars-panel-window minerwars-panel-window--inline">
+              {data.cycleStart} → {data.cycleEnd} UTC
             </span>
           )}
           {isLoggedIn &&
-          (selectedCycle?.status === "in-progress" || selectedCycle?.status === "pending") ? (
-            <button
-              type="button"
-              className="mwcp-refresh-btn"
-              onClick={() => void refresh()}
-              disabled={loading}
-              title={
-                selectedCycle?.status === "pending"
-                  ? t("cycleTracker.refreshPending")
-                  : t("cycleTracker.refreshLive")
-              }
-            >
-              <svg
-                width="13"
-                height="13"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className={loading ? "mwcp-spin" : undefined}
-                aria-hidden="true"
+            (selectedCycle?.status === "in-progress" || selectedCycle?.status === "pending") && (
+              <button
+                type="button"
+                className="minerwars-panel-refresh-btn"
+                onClick={() => void refresh()}
+                disabled={loading}
+                title={
+                  selectedCycle?.status === "pending"
+                    ? t("cycleTracker.refreshPending")
+                    : t("cycleTracker.refreshLive")
+                }
               >
-                <polyline points="23 4 23 10 17 10" />
-                <polyline points="1 20 1 14 7 14" />
-                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
-              </svg>
-            </button>
-          ) : (
-            loading && data && <span className="mwcp-spinner mwcp-spinner--sm" aria-hidden="true" />
-          )}
+                <svg
+                  width="13"
+                  height="13"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className={loading ? "minerwars-panel-spin" : undefined}
+                  aria-hidden="true"
+                >
+                  <polyline points="23 4 23 10 17 10" />
+                  <polyline points="1 20 1 14 7 14" />
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                </svg>
+              </button>
+            )}
         </div>
       )}
 
       {data && (
         <>
-          <div className={`mwcp-grid${isCycleLive && clanTargetBtc > 0 ? " mwcp-grid--3col" : ""}`}>
+          <div
+            className={`minerwars-panel-grid${isCycleLive && clanTargetBtc > 0 ? " minerwars-panel-grid--3col" : ""}`}
+          >
             {/* Section 1: Difference */}
-            <div className="mwcp-section">
-              <div className="mwcp-row">
-                <span className="mwcp-label">
+            <div className="minerwars-panel-section">
+              <div className="minerwars-panel-row">
+                <span className="minerwars-panel-label">
                   {isActual ? t("cycleTracker.minerWarsActual") : t("cycleTracker.minerWarsEst")}
                 </span>
-                <span className="mwcp-value">
+                <span className="minerwars-panel-value">
                   {showBtcFundZeroWarning && (
                     <svg
-                      className="mwcp-warn-icon"
+                      className="minerwars-panel-warn-icon"
                       width="12"
                       height="12"
                       viewBox="0 0 24 24"
@@ -237,38 +284,38 @@ export function MinerWarsComparisonPanel({
                   {fmtVal(effectiveMw)} <ValIcon />
                 </span>
               </div>
-              <div className="mwcp-row">
-                <span className="mwcp-label">
+              <div className="minerwars-panel-row">
+                <span className="minerwars-panel-label">
                   {t("cycleTracker.soloEquiv")}
-                  <span className="mwcp-projection-badge">
+                  <span className="minerwars-panel-projection-badge">
                     {t("cycleTracker.day", { count: data.targetActualDays })}
                   </span>
                 </span>
-                <span className="mwcp-value">
+                <span className="minerwars-panel-value">
                   {fmtVal(soloEquivBtc)} <ValIcon />
                 </span>
               </div>
-              <div className="mwcp-divider" />
-              <div className="mwcp-row">
-                <span className="mwcp-label">{t("cycleTracker.difference")}</span>
+              <div className="minerwars-panel-divider" />
+              <div className="minerwars-panel-row">
+                <span className="minerwars-panel-label">{t("cycleTracker.difference")}</span>
                 <span
-                  className={`mwcp-value mwcp-value--diff ${isPositive ? "mwcp-value--pos" : "mwcp-value--neg"}`}
+                  className={`minerwars-panel-value minerwars-panel-value--diff ${isPositive ? "minerwars-panel-value--pos" : "minerwars-panel-value--neg"}`}
                 >
                   {(effectiveDiff > 0 ? "+" : "") + fmtVal(effectiveDiff)} <ValIcon />
                   {effectiveDiffPct != null && (
-                    <span className="mwcp-pct">{fmtPct(effectiveDiffPct)}</span>
+                    <span className="minerwars-panel-pct">{fmtPct(effectiveDiffPct)}</span>
                   )}
                 </span>
               </div>
               {data.maintenanceBtc != null && (
                 <>
-                  <div className="mwcp-divider" />
-                  <div className="mwcp-row">
-                    <span className="mwcp-label mwcp-label--sub">
+                  <div className="minerwars-panel-divider" />
+                  <div className="minerwars-panel-row">
+                    <span className="minerwars-panel-label minerwars-panel-label--sub">
                       {t("cycleTracker.maintenanceEst")}
                     </span>
-                    <span className="mwcp-value mwcp-value--neg">
-                      {currency === "GMT" && data.maintenanceGmt != null ? (
+                    <span className="minerwars-panel-value minerwars-panel-value--neg">
+                      {showGmt && data.maintenanceGmt != null ? (
                         <>
                           {`-${fmtGmt(data.maintenanceGmt)}`} <GmtIcon />
                         </>
@@ -280,12 +327,14 @@ export function MinerWarsComparisonPanel({
                     </span>
                   </div>
                   {data.netBtc != null && (
-                    <div className="mwcp-row">
-                      <span className="mwcp-label mwcp-label--sub">{t("cycleTracker.netEst")}</span>
+                    <div className="minerwars-panel-row">
+                      <span className="minerwars-panel-label minerwars-panel-label--sub">
+                        {t("cycleTracker.netEst")}
+                      </span>
                       <span
-                        className={`mwcp-value ${(currency === "GMT" ? (data.netGmt ?? 0) : data.netBtc) >= 0 ? "mwcp-value--pos" : "mwcp-value--neg"}`}
+                        className={`minerwars-panel-value ${(showGmt ? (data.netGmt ?? 0) : data.netBtc) >= 0 ? "minerwars-panel-value--pos" : "minerwars-panel-value--neg"}`}
                       >
-                        {currency === "GMT" && data.netGmt != null ? (
+                        {showGmt && data.netGmt != null ? (
                           <>
                             {fmtGmt(data.netGmt)} <GmtIcon />
                           </>
@@ -302,29 +351,29 @@ export function MinerWarsComparisonPanel({
             </div>
 
             {/* Section 2: Solo target + progress */}
-            <div className="mwcp-section mwcp-section--right">
-              <div className="mwcp-row">
-                <span className="mwcp-label">
+            <div className="minerwars-panel-section minerwars-panel-section--right">
+              <div className="minerwars-panel-row">
+                <span className="minerwars-panel-label">
                   {t("cycleTracker.soloTarget")}
                   {projecting && (
-                    <span className="mwcp-projection-badge">
+                    <span className="minerwars-panel-projection-badge">
                       {t("cycleTracker.day", { count: data.targetActualDays })} +{" "}
                       {data.targetProjectedDays} {t("cycleTracker.projected")}
                     </span>
                   )}
                 </span>
-                <span className="mwcp-value">
+                <span className="minerwars-panel-value">
                   {fmtVal(data.targetSoloSats / 1e8)} <ValIcon />
                 </span>
               </div>
-              <div className="mwcp-divider" />
-              <div className="mwcp-row">
-                <span className="mwcp-label">{t("cycleTracker.minerWarsProgress")}</span>
-                <span className="mwcp-value mwcp-value--progress">
+              <div className="minerwars-panel-divider" />
+              <div className="minerwars-panel-row">
+                <span className="minerwars-panel-label">{t("cycleTracker.minerWarsProgress")}</span>
+                <span className="minerwars-panel-value minerwars-panel-value--progress">
                   {fmtVal(effectiveMw)} <ValIcon />
                   {effectiveProgress != null && (
                     <span
-                      className={`mwcp-pct ${effectiveProgress >= 100 ? "mwcp-value--pos" : ""}`}
+                      className={`minerwars-panel-pct ${effectiveProgress >= 100 ? "minerwars-panel-value--pos" : ""}`}
                     >
                       {effectiveProgress.toFixed(1)}
                       {t("cycleTracker.ofTarget")}
@@ -333,9 +382,9 @@ export function MinerWarsComparisonPanel({
                 </span>
               </div>
               {effectiveProgress != null && (
-                <div className="mwcp-progress-bar">
+                <div className="minerwars-panel-progress-bar">
                   <div
-                    className={`mwcp-progress-fill${effectiveProgress >= 100 ? " mwcp-progress-fill--over" : ""}`}
+                    className={`minerwars-panel-progress-fill${effectiveProgress >= 100 ? " minerwars-panel-progress-fill--over" : ""}`}
                     style={{ width: `${Math.min(effectiveProgress, 100).toFixed(1)}%` }}
                   />
                 </div>
@@ -344,28 +393,30 @@ export function MinerWarsComparisonPanel({
 
             {/* Section 3: Clan target + progress — live cycles only */}
             {isCycleLive && clanTargetBtc > 0 && (
-              <div className="mwcp-section mwcp-section--right">
-                <div className="mwcp-row">
-                  <span className="mwcp-label">
+              <div className="minerwars-panel-section minerwars-panel-section--right">
+                <div className="minerwars-panel-row">
+                  <span className="minerwars-panel-label">
                     {t("cycleTracker.clanTarget")}
                     {projecting && (
-                      <span className="mwcp-projection-badge">
+                      <span className="minerwars-panel-projection-badge">
                         {t("cycleTracker.day", { count: data.targetActualDays })} +{" "}
                         {data.targetProjectedDays} {t("cycleTracker.projected")}
                       </span>
                     )}
                   </span>
-                  <span className="mwcp-value">
+                  <span className="minerwars-panel-value">
                     {fmtVal(clanTargetBtc)} <ValIcon />
                   </span>
                 </div>
-                <div className="mwcp-divider" />
-                <div className="mwcp-row">
-                  <span className="mwcp-label">{t("cycleTracker.clanProgress")}</span>
-                  <span className="mwcp-value mwcp-value--progress">
+                <div className="minerwars-panel-divider" />
+                <div className="minerwars-panel-row">
+                  <span className="minerwars-panel-label">{t("cycleTracker.clanProgress")}</span>
+                  <span className="minerwars-panel-value minerwars-panel-value--progress">
                     {fmtVal(clanMinerWarsBtc)} <ValIcon />
                     {clanProgress != null && (
-                      <span className={`mwcp-pct ${clanProgress >= 100 ? "mwcp-value--pos" : ""}`}>
+                      <span
+                        className={`minerwars-panel-pct ${clanProgress >= 100 ? "minerwars-panel-value--pos" : ""}`}
+                      >
                         {clanProgress.toFixed(1)}
                         {t("cycleTracker.ofTarget")}
                       </span>
@@ -373,20 +424,20 @@ export function MinerWarsComparisonPanel({
                   </span>
                 </div>
                 {clanProgress != null && (
-                  <div className="mwcp-progress-bar">
+                  <div className="minerwars-panel-progress-bar">
                     <div
-                      className={`mwcp-progress-fill${clanProgress >= 100 ? " mwcp-progress-fill--over" : ""}`}
+                      className={`minerwars-panel-progress-fill${clanProgress >= 100 ? " minerwars-panel-progress-fill--over" : ""}`}
                       style={{ width: `${Math.min(clanProgress, 100).toFixed(1)}%` }}
                     />
                   </div>
                 )}
                 {clanBlocksNeeded != null && clanBlocksNeeded > 0 && (
-                  <div className="mwcp-row" style={{ marginTop: 4 }}>
-                    <span className="mwcp-label">{t("cycleTracker.blocksNeeded")}</span>
-                    <span className="mwcp-value" style={{ fontSize: "0.8rem" }}>
+                  <div className="minerwars-panel-row minerwars-panel-row--blocks-needed">
+                    <span className="minerwars-panel-label">{t("cycleTracker.blocksNeeded")}</span>
+                    <span className="minerwars-panel-value minerwars-panel-value--blocks">
                       {t("cycleTracker.block", { count: clanBlocksNeeded })}
                       {btcPerBlockSats != null && (
-                        <span className="mwcp-pct">
+                        <span className="minerwars-panel-pct">
                           {t("cycleTracker.satsPerBlock", { sats: btcPerBlockSats.toFixed(0) })}
                         </span>
                       )}
@@ -398,12 +449,12 @@ export function MinerWarsComparisonPanel({
           </div>
 
           {showBtcFundZeroWarning && (
-            <div className="mwcp-notice mwcp-notice--warn">
+            <div className="minerwars-panel-notice minerwars-panel-notice--warn">
               ⚠ {t("cycleTracker.warnBtcFundZero")}
             </div>
           )}
           {showNoClanAnalyticsWarning && (
-            <div className="mwcp-notice mwcp-notice--warn">
+            <div className="minerwars-panel-notice minerwars-panel-notice--warn">
               ⚠{" "}
               {isCycleLive
                 ? t("cycleTracker.warnNoClanAnalyticsLive")
