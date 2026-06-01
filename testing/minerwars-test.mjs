@@ -315,8 +315,13 @@ async function getSoloMiningDates(cycleStartDate, cycleEndDate) {
 }
 
 // ─── Endpoint 8: current clan power (today) ──────────────────────────────────
-async function getCurrentClanPower() {
-  const res = await post('https://api.gomining.com/api/nft-game/clan/get-my', {});
+async function getCurrentClanPower(clanId) {
+  const res = await post('https://api.gomining.com/api/nft-game/clan/get-by-id', {
+    clanId,
+    pagination: { limit: 10, skip: 0, count: 0 },
+    filters: { filterType: 'none' },
+    sort: { sortType: 'none' },
+  });
   return res.data?.power ?? null;
 }
 
@@ -377,7 +382,7 @@ async function main() {
   const [userPowerByDate, clanPowerByDate, currentClanPower] = await Promise.all([
     getUserPowerChart(CYCLE_START_DATE),
     getClanPowerAnalytics(myClanId),
-    getCurrentClanPower(),
+    getCurrentClanPower(myClanId),
   ]);
   // Last known user power from chart (most recent day entry)
   const lastUserPower = userPowerByDate.size > 0
@@ -389,9 +394,9 @@ async function main() {
     const fallback = isCycleLive
       ? `current clan power (${currentClanPower?.toFixed(4) ?? 'N/A'} TH/s)`
       : `clan power at cycle end (${clanNftPower?.toFixed(4) ?? 'N/A'} TH/s)`;
-    console.log(`  \u26a0  No clan analytics (clan may be <30 days old) \u2014 using ${fallback}. Estimation may be over/under-inflated.`);
+    console.log(`  ⚠  No clan analytics (clan may be <30 days old) — using ${fallback}. Estimation may be over/under-inflated.`);
   }
-  console.log(`  Current clan power (clan/get-my): ${currentClanPower?.toFixed(4) ?? 'N/A'} TH/s`);
+  console.log(`  Current clan power (clan/get-by-id): ${currentClanPower?.toFixed(4) ?? 'N/A'} TH/s`);
 
   // ── Step 4: Calculate rewards for ALL won rounds ──
   console.log(`\n[4] Calculating rewards for all ${userRounds.length} won rounds...`);

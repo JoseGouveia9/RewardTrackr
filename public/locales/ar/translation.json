@@ -241,7 +241,7 @@
     "statusLive": "جارية",
     "statusPending": "معلّقة",
     "statusDone": "منتهية",
-    "refreshLive": "تحديث الدورة الجارية",
+    "refreshLive": "تحديث الدورة المباشرة",
     "refreshPending": "تحديث الدورة المعلّقة",
     "minerWarsEst": "MinerWars (تقدير)",
     "minerWarsActual": "MinerWars",

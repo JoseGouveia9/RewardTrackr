@@ -1,17 +1,6 @@
-import { buildApiHeaders, getJson, postJson } from "@/lib/http";
+import { buildApiHeaders, getJson, postJson, resolveApiBase } from "@/lib/http";
 import { fetchDifficultyEpochs } from "@/features/export/api/difficulty-adjustments";
 import { LS_KEY_MW_COMPARISON, LS_KEY_MW_CYCLES, LS_KEY_REWARD_PREFIX } from "@/lib/storage-keys";
-
-function resolveApiBase(): string {
-  const envBase = (import.meta.env.VITE_API_BASE as string | undefined)?.replace(/\/$/, "");
-  if (envBase) return envBase;
-
-  if (typeof window !== "undefined" && /(^|\.)rewardtrackr\.com$/i.test(window.location.hostname)) {
-    return window.location.origin;
-  }
-
-  return "https://api.gomining.com";
-}
 
 const API = resolveApiBase();
 
@@ -377,11 +366,16 @@ async function getClanPowerAnalytics(headers: Record<string, string>, clanId: nu
   return map;
 }
 
-async function getCurrentClanPower(headers: Record<string, string>) {
+async function getCurrentClanPower(headers: Record<string, string>, clanId: number) {
   const res = await postJson<{ data: { power: number } }>(
-    `${API}/api/nft-game/clan/get-my`,
+    `${API}/api/nft-game/clan/get-by-id`,
     headers,
-    {},
+    {
+      clanId,
+      pagination: { limit: 10, skip: 0, count: 0 },
+      filters: { filterType: "none" },
+      sort: { sortType: "none" },
+    },
   );
   return res.data?.power ?? null;
 }
@@ -891,7 +885,7 @@ export async function fetchMinerWarsComparison(
   const [userPowerByDate, clanPowerByDate, currentClanPower] = await Promise.all([
     getUserPowerChart(headers, cycleStartDate),
     getClanPowerAnalytics(headers, clanId),
-    getCurrentClanPower(headers),
+    getCurrentClanPower(headers, clanId),
   ]);
 
   const lastUserPower =
