@@ -561,10 +561,8 @@ export interface RefreshCacheKeysParams {
   onCacheUpdate?: (cache: CacheState) => void;
 }
 
-/**
- * Refreshes selected reward sheets in local cache without building/downloading Excel.
- * Intended for in-app "refresh data" actions.
- */
+// Refreshes selected reward sheets in local cache without building/downloading Excel.
+// Intended for in-app "refresh data" actions.
 export async function refreshCacheKeys({
   accessToken,
   keys,

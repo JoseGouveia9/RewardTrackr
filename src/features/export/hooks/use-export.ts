@@ -8,6 +8,7 @@ import { executeExportFlow, refreshCacheKeys } from "../utils/export-flow";
 import {
   fetchAvailableCycles,
   fetchMinerWarsComparison,
+  getCachedMinerWarsComparison,
   invalidateMinerWarsCache,
   prefetchAllCompletedCycles,
 } from "@/features/data-viewer/api/minerwars-comparison";
@@ -50,17 +51,22 @@ export function useExport({
   const [loading, setLoading] = useState<boolean>(false);
   const [fetchingKeys, setFetchingKeys] = useState<Set<RewardKey>>(new Set());
 
-  const prefetchMinerWarsPanelData = useCallback((token: string): void => {
-    void (async () => {
-      const cycles = await fetchAvailableCycles(token).catch(() => []);
-      const liveOrPending = cycles.find(
-        (c) => c.status === "in-progress" || c.status === "pending",
-      );
-      if (liveOrPending) {
-        await fetchMinerWarsComparison(token, liveOrPending.cycleId).catch(() => {});
-      }
-      await prefetchAllCompletedCycles(token).catch(() => {});
-    })();
+  const prefetchMinerWarsPanelData = useCallback(async (token: string): Promise<void> => {
+    const cycles = await fetchAvailableCycles(token).catch(() => []);
+    const liveOrPending = cycles.find((c) => c.status === "in-progress" || c.status === "pending");
+    if (liveOrPending) {
+      await fetchMinerWarsComparison(token, liveOrPending.cycleId).catch(() => {});
+    }
+    await prefetchAllCompletedCycles(token).catch(() => {});
+    // Fallback: fetch completed cycles not covered by build-cache prefetch
+    // (e.g. incremental export skipped old records, so those payment days are absent)
+    const today = new Date().toISOString().slice(0, 10);
+    const uncached = cycles.filter(
+      (c) => c.cycleEnd < today && getCachedMinerWarsComparison(c.cycleId) === null,
+    );
+    for (const cycle of uncached) {
+      await fetchMinerWarsComparison(token, cycle.cycleId).catch(() => {});
+    }
   }, []);
 
   const handleClearCache = useCallback((): void => {
@@ -111,10 +117,9 @@ export function useExport({
         },
       });
       Sentry.logger.info("Export completed", { sheets: selectedKeys.length });
-      // Warm MinerWars panel data in the background: cycle list, live/pending cycle,
-      // and completed cycle comparisons.
       if (selectedKeys.includes("minerwars")) {
-        prefetchMinerWarsPanelData(storedToken);
+        onMessage(t("export.preparingCycleTracker"));
+        await prefetchMinerWarsPanelData(storedToken);
       }
       onMessage(successMessage);
       window.scrollTo({ top: 0, behavior: "smooth" });

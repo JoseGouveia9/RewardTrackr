@@ -82,6 +82,46 @@ function CycleDropdown({ cycles, selectedCycleId, onSelect }: CycleDropdownProps
   );
 }
 
+function MinerWarsSkeleton() {
+  return (
+    <div className="minerwars-panel">
+      <div className="minerwars-panel-cycle-selector-row">
+        <div className="minerwars-panel-skeleton minerwars-panel-skeleton--dropdown" />
+        <div className="minerwars-panel-skeleton minerwars-panel-skeleton--window" />
+        <div className="minerwars-panel-skeleton minerwars-panel-skeleton--refresh" />
+      </div>
+      <div className="minerwars-panel-grid minerwars-panel-grid--3col">
+        <div className="minerwars-panel-section">
+          {[0, 1, 2, 3, 4].map((i) => (
+            <div key={i} className="minerwars-panel-row">
+              <div className="minerwars-panel-skeleton minerwars-panel-skeleton--label" />
+              <div className="minerwars-panel-skeleton minerwars-panel-skeleton--value" />
+            </div>
+          ))}
+        </div>
+        <div className="minerwars-panel-section minerwars-panel-section--right">
+          {[0, 1].map((i) => (
+            <div key={i} className="minerwars-panel-row">
+              <div className="minerwars-panel-skeleton minerwars-panel-skeleton--label" />
+              <div className="minerwars-panel-skeleton minerwars-panel-skeleton--value" />
+            </div>
+          ))}
+          <div className="minerwars-panel-skeleton minerwars-panel-skeleton--progress" />
+        </div>
+        <div className="minerwars-panel-section minerwars-panel-section--right">
+          {[0, 1].map((i) => (
+            <div key={i} className="minerwars-panel-row">
+              <div className="minerwars-panel-skeleton minerwars-panel-skeleton--label" />
+              <div className="minerwars-panel-skeleton minerwars-panel-skeleton--value" />
+            </div>
+          ))}
+          <div className="minerwars-panel-skeleton minerwars-panel-skeleton--progress" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 interface MinerWarsComparisonPanelProps {
   cacheVersion?: number;
   currency?: Currency;
@@ -93,7 +133,8 @@ function fmtBtc(btc: number): string {
 }
 
 function fmtGmt(gmt: number): string {
-  return gmt.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const truncated = Math.trunc(gmt * 100) / 100;
+  return truncated.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function fmtPct(pct: number): string {
@@ -118,50 +159,9 @@ export function MinerWarsComparisonPanel({
     isLoggedIn,
   } = useMinerWarsComparison({ cacheVersion, onRefreshMinerwarsTable });
 
-  const showSkeleton = loadingCycles || loading;
+  const showSkeleton = loadingCycles || loading || (selectedCycleId !== null && !data && !error);
 
-  if (showSkeleton) {
-    return (
-      <div className="minerwars-panel">
-        <div className="minerwars-panel-cycle-selector-row">
-          <div className="minerwars-panel-skeleton minerwars-panel-skeleton--dropdown" />
-          <div className="minerwars-panel-skeleton minerwars-panel-skeleton--window" />
-          <div className="minerwars-panel-skeleton minerwars-panel-skeleton--refresh" />
-        </div>
-        <div className="minerwars-panel-grid minerwars-panel-grid--3col">
-          {/* Col 1: MinerWars, Solo equiv, Difference, Maintenance, Net */}
-          <div className="minerwars-panel-section">
-            {[0, 1, 2, 3, 4].map((i) => (
-              <div key={i} className="minerwars-panel-row">
-                <div className="minerwars-panel-skeleton minerwars-panel-skeleton--label" />
-                <div className="minerwars-panel-skeleton minerwars-panel-skeleton--value" />
-              </div>
-            ))}
-          </div>
-          {/* Col 2: Solo target, MinerWars progress + bar */}
-          <div className="minerwars-panel-section minerwars-panel-section--right">
-            {[0, 1].map((i) => (
-              <div key={i} className="minerwars-panel-row">
-                <div className="minerwars-panel-skeleton minerwars-panel-skeleton--label" />
-                <div className="minerwars-panel-skeleton minerwars-panel-skeleton--value" />
-              </div>
-            ))}
-            <div className="minerwars-panel-skeleton minerwars-panel-skeleton--progress" />
-          </div>
-          {/* Col 3: Clan target, Clan progress + bar */}
-          <div className="minerwars-panel-section minerwars-panel-section--right">
-            {[0, 1].map((i) => (
-              <div key={i} className="minerwars-panel-row">
-                <div className="minerwars-panel-skeleton minerwars-panel-skeleton--label" />
-                <div className="minerwars-panel-skeleton minerwars-panel-skeleton--value" />
-              </div>
-            ))}
-            <div className="minerwars-panel-skeleton minerwars-panel-skeleton--progress" />
-          </div>
-        </div>
-      </div>
-    );
-  }
+  if (showSkeleton) return <MinerWarsSkeleton />;
 
   if (error && !data) return null;
 
@@ -178,7 +178,6 @@ export function MinerWarsComparisonPanel({
   const projecting = (data?.targetProjectedDays ?? 0) > 0;
   const isCycleLive = data != null && data.today <= data.cycleEnd;
 
-  // Clan target (live only)
   const clanMinerWarsBtc = (data?.clanMinerWarsSats ?? 0) / 1e8;
   const clanTargetBtc = (data?.clanTargetSoloSats ?? 0) / 1e8;
   const clanProgress =
@@ -204,7 +203,6 @@ export function MinerWarsComparisonPanel({
 
   return (
     <div className="minerwars-panel">
-      {/* Cycle dropdown */}
       {cycles.length > 0 && (
         <div className="minerwars-panel-cycle-selector-row">
           <CycleDropdown
@@ -256,7 +254,6 @@ export function MinerWarsComparisonPanel({
           <div
             className={`minerwars-panel-grid${isCycleLive && clanTargetBtc > 0 ? " minerwars-panel-grid--3col" : ""}`}
           >
-            {/* Section 1: Difference */}
             <div className="minerwars-panel-section">
               <div className="minerwars-panel-row">
                 <span className="minerwars-panel-label">
@@ -350,7 +347,6 @@ export function MinerWarsComparisonPanel({
               )}
             </div>
 
-            {/* Section 2: Solo target + progress */}
             <div className="minerwars-panel-section minerwars-panel-section--right">
               <div className="minerwars-panel-row">
                 <span className="minerwars-panel-label">
@@ -391,7 +387,6 @@ export function MinerWarsComparisonPanel({
               )}
             </div>
 
-            {/* Section 3: Clan target + progress — live cycles only */}
             {isCycleLive && clanTargetBtc > 0 && (
               <div className="minerwars-panel-section minerwars-panel-section--right">
                 <div className="minerwars-panel-row">

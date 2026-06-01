@@ -72,7 +72,7 @@ export function useMinerWarsComparison({
     }
   }, []);
 
-  // Step 1: load available cycles from cache only — no API calls on initial load.
+  // Load available cycles from cache only — no API calls on initial load.
   // Cache is populated by build report / explicit refresh.
   useEffect(() => {
     const cached = getCachedCycles();
@@ -99,11 +99,11 @@ export function useMinerWarsComparison({
     return () => clearTimeout(timer);
   }, []);
 
-  // Step 2: on cycle change, read comparison from cache only (no network).
-  // Network fetches are reserved for explicit refresh/build flows.
-  const fetchComparison = useCallback((cycleId: number, allowNetwork = false): Promise<void> => {
+  // On cycle change, prefer cache; fall back to network only when cache is empty.
+  // Pass skipCache=true (refresh button) to bypass the cache and force a live fetch.
+  const fetchComparison = useCallback((cycleId: number, skipCache = false): Promise<void> => {
     // Always try cache first — works even when not logged in.
-    if (!allowNetwork) {
+    if (!skipCache) {
       const cached = getCachedMinerWarsComparison(cycleId);
       if (cached) {
         setData(cached);
@@ -142,7 +142,7 @@ export function useMinerWarsComparison({
   }, []);
 
   useEffect(() => {
-    if (selectedCycleId !== null) fetchComparison(selectedCycleId, false);
+    if (selectedCycleId !== null) fetchComparison(selectedCycleId);
     return () => abortRef.current?.abort();
   }, [selectedCycleId, fetchComparison]);
 
@@ -173,7 +173,7 @@ export function useMinerWarsComparison({
       .then((nextCycles) => {
         const nextSelected = nextCycles.find((c) => c.cycleId === selectedCycleId);
         if (nextSelected?.status === "completed") {
-          void fetchComparison(selectedCycleId, false);
+          void fetchComparison(selectedCycleId);
         }
       })
       .catch(() => {

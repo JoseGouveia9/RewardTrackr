@@ -77,11 +77,8 @@ export function fetchDifficultyAdjustments(): Promise<Map<string, DifficultyEntr
   return fetchRaw().then(parseAdjustments);
 }
 
-/**
- * Returns all difficulty retarget epochs sorted ascending by date.
- * Each entry has the date of the retarget block, the difficulty value,
- * and sats/TH/day (block subsidy only). Covers full Bitcoin history.
- */
+// Returns all difficulty retarget epochs sorted ascending by date.
+// Each entry has the date, difficulty value, and sats/TH/day (block subsidy only). Covers full Bitcoin history.
 export function fetchDifficultyEpochs(): Promise<DifficultyEpoch[]> {
   return fetchRaw().then((raw) => {
     if (!Array.isArray(raw)) return [];
