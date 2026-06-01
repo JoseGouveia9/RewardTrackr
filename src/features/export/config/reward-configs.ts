@@ -1,16 +1,6 @@
 import type { CursorPaginationItem, RewardConfig, RewardGroup, RewardKey } from "../types";
+import { resolveApiBase } from "@/lib/http";
 import { ALL_TX_FROM_TYPES } from "./wallet-types";
-
-function resolveApiBase(): string {
-  const envBase = (import.meta.env.VITE_API_BASE as string | undefined)?.replace(/\/$/, "");
-  if (envBase) return envBase;
-
-  if (typeof window !== "undefined" && /(^|\.)rewardtrackr\.com$/i.test(window.location.hostname)) {
-    return window.location.origin;
-  }
-
-  return "https://api.gomining.com";
-}
 
 const API = resolveApiBase();
 

@@ -1,6 +1,17 @@
 ﻿const REQUEST_TIMEOUT_MS = 30_000;
 const GET_TIMEOUT_MS = 15_000;
 
+export function resolveApiBase(): string {
+  const envBase = (import.meta.env.VITE_API_BASE as string | undefined)?.replace(/\/$/, "");
+  if (envBase) return envBase;
+
+  if (typeof window !== "undefined" && /(^|\.)rewardtrackr\.com$/i.test(window.location.hostname)) {
+    return window.location.origin;
+  }
+
+  return "https://api.gomining.com";
+}
+
 interface JwtPayload {
   id?: string;
   sub?: string;
