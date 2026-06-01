@@ -10,7 +10,7 @@ import {
 import { ErrorBoundary } from "@/components/error-boundary/error-boundary";
 import type { Currency, EarnView, TxView, SimpleView, PurchaseView } from "../../types";
 import type { CacheState, RewardKey } from "@/features/export/types";
-import { RowSelectionProvider } from "../../context/row-selection-context";
+import { RowSelectionProvider } from "../../stores/row-selection-context";
 import { ALL_TABS } from "../../utils/constants";
 import { loadFiatCode } from "../../utils";
 import { useDataViewerState } from "../../hooks/use-data-viewer-state";

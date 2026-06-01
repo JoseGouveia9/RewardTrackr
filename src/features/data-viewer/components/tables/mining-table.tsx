@@ -18,7 +18,7 @@ import { DateRangeFilter } from "../date-range-filter/date-range-filter";
 import { Pagination } from "../pagination/pagination";
 import { useSyncTableColumns } from "../../hooks/use-sync-table-columns";
 import { AnimatedLoadingRow } from "./animated-loading-row";
-import { useRowSelection } from "../../context/row-selection-context";
+import { useRowSelection } from "../../stores/row-selection-context";
 import { MinerWarsComparisonPanel } from "../minerwars-comparison-panel/minerwars-comparison-panel";
 
 const INFO_ICON = (
