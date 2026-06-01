@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { decodeJwt } from "@/lib/http";
 import { LS_KEY_SYNC_TOKEN } from "@/lib/storage-keys";
 import {
@@ -28,6 +28,16 @@ interface UseMinerWarsComparisonOptions {
   onRefreshMinerwarsTable?: () => Promise<void> | void;
 }
 
+function getToken(): string {
+  return sessionStorage.getItem(LS_KEY_SYNC_TOKEN) ?? "";
+}
+
+function isTokenValid(token: string): boolean {
+  if (!token) return false;
+  const decoded = decodeJwt(token);
+  return Boolean(decoded) && (decoded!.exp == null || Math.floor(Date.now() / 1000) < decoded!.exp);
+}
+
 export function useMinerWarsComparison({
   cacheVersion = 0,
   onRefreshMinerwarsTable,
@@ -40,14 +50,10 @@ export function useMinerWarsComparison({
   const [error, setError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
-  const getToken = () => sessionStorage.getItem(LS_KEY_SYNC_TOKEN) ?? "";
-  const isTokenValid = (token: string): boolean => {
-    if (!token) return false;
-    const decoded = decodeJwt(token);
-    return (
-      Boolean(decoded) && (decoded!.exp == null || Math.floor(Date.now() / 1000) < decoded!.exp)
-    );
-  };
+  // Computed once per mount — token doesn't change mid-session, and if it did
+  // the user would see a network error on the next action anyway.
+  const isLoggedIn = useMemo(() => isTokenValid(getToken()), []);
+
   const reloadCycles = useCallback(async (): Promise<CycleInfo[]> => {
     const token = getToken();
     // Always attempt fetchAvailableCycles — it reads localStorage cache first
@@ -75,6 +81,22 @@ export function useMinerWarsComparison({
       setSelectedCycleId(cached[0].cycleId);
     }
     setLoadingCycles(false);
+  }, []);
+
+  // Re-evaluate cycle statuses at UTC midnight (GoMining operates on UTC time).
+  // This ensures the status badge and refresh button update correctly without
+  // requiring a page reload when the user is in a timezone ahead of UTC.
+  useEffect(() => {
+    const now = new Date();
+    const nextUtcMidnight = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1),
+    );
+    const timer = setTimeout(() => {
+      const refreshed = getCachedCycles();
+      if (refreshed) setCycles(refreshed);
+    }, nextUtcMidnight.getTime() - now.getTime());
+
+    return () => clearTimeout(timer);
   }, []);
 
   // Step 2: on cycle change, read comparison from cache only (no network).
@@ -168,6 +190,6 @@ export function useMinerWarsComparison({
     loading,
     error,
     refresh,
-    isLoggedIn: isTokenValid(getToken()),
+    isLoggedIn,
   };
 }
