@@ -75,8 +75,57 @@
   margin: 0;
 }
 
+.auth-manual-token {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px dashed rgba(247, 147, 26, 0.45);
+  border-radius: 10px;
+  background: rgba(247, 147, 26, 0.06);
+}
+
+.auth-manual-token-label {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.auth-manual-token-input {
+  width: 100%;
+  resize: vertical;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  padding: 10px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  background: #fff;
+  color: #1a1a1a;
+}
+
+.auth-manual-token-input:focus-visible {
+  outline: 2px solid rgba(247, 147, 26, 0.45);
+  outline-offset: 1px;
+}
+
+.auth-manual-token-btn {
+  align-self: flex-end;
+}
+
 .page.theme-dark .auth-update-hint {
   color: rgba(255, 255, 255, 0.45);
+}
+
+.page.theme-dark .auth-manual-token {
+  background: rgba(247, 147, 26, 0.12);
+  border-color: rgba(247, 147, 26, 0.6);
+}
+
+.page.theme-dark .auth-manual-token-input {
+  background: rgba(7, 10, 18, 0.95);
+  color: #f3f4f7;
+  border-color: rgba(255, 255, 255, 0.24);
 }
 
 @media (max-width: 640px) {

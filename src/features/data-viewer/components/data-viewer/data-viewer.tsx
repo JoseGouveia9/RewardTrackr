@@ -10,7 +10,7 @@ import {
 import { ErrorBoundary } from "@/components/error-boundary/error-boundary";
 import type { Currency, EarnView, TxView, SimpleView, PurchaseView } from "../../types";
 import type { CacheState, RewardKey } from "@/features/export/types";
-import { RowSelectionProvider } from "../../context/row-selection-context";
+import { RowSelectionProvider } from "../../stores/row-selection-context";
 import { ALL_TABS } from "../../utils/constants";
 import { loadFiatCode } from "../../utils";
 import { useDataViewerState } from "../../hooks/use-data-viewer-state";
@@ -28,6 +28,7 @@ interface DataViewerProps {
   isFetching?: boolean;
   fetchingKeys?: Set<RewardKey>;
   cacheVersion?: number;
+  onRefreshKeys?: (keys: RewardKey[]) => Promise<void>;
   onTabSeen?: (key: RewardKey) => void;
   title?: string;
   sharedData?: Partial<CacheState> | null;
@@ -47,6 +48,7 @@ export const DataViewer = memo(function DataViewer({
   isFetching = false,
   fetchingKeys,
   cacheVersion = 0,
+  onRefreshKeys,
   onTabSeen,
   title = "Records",
   sharedData,
@@ -291,7 +293,9 @@ export const DataViewer = memo(function DataViewer({
 
   const tableAnimationKey = `${activeKey}:${
     isMiningTab
-      ? currency
+      ? activeKey === "minerwars"
+        ? "mw"
+        : currency
       : isEarnTab
         ? effectiveEarnView
         : isTxTab
@@ -487,6 +491,7 @@ export const DataViewer = memo(function DataViewer({
                       fiatCode={fiatCode}
                       isFetching={isActiveKeyFetching}
                       cacheVersion={cacheVersion}
+                      onRefreshKeys={onRefreshKeys}
                       cacheEntry={sharedData ? (sharedData[activeKey] ?? null) : undefined}
                       dateRange={dateRange}
                       setDateRange={setDateRange}
@@ -497,6 +502,7 @@ export const DataViewer = memo(function DataViewer({
                       trendsExiting={trendsExiting}
                       difficultyMap={difficultyMap}
                       pageSize={pageSize}
+                      isShared={isSharedContext}
                     />
                   ) : isEarnTab ? (
                     <SimpleEarnTable

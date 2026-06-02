@@ -1,7 +1,7 @@
 import { BrowserRouter } from "react-router";
 import { ErrorBoundary } from "@/components/error-boundary/error-boundary";
 import { ThemeProvider } from "./theme-context";
-import App from "./App";
+import App from "./app";
 
 export function Provider() {
   return (

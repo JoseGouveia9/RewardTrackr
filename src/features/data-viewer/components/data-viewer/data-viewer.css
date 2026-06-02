@@ -1088,19 +1088,19 @@
    Trend Arrow
    ============================ */
 
-.dv-trends-active .dv-cell-sub,
+.dv-trends-active .dv-cell-sub:not(.dv-cell-sub--static),
 .dv-trends-active .dv-th-sub {
   animation: dv-bop-in 0.22s ease both;
 }
 
-.dv-trends-visible .dv-cell-sub,
+.dv-trends-visible .dv-cell-sub:not(.dv-cell-sub--static),
 .dv-trends-visible .dv-th-sub {
   opacity: 1;
   max-height: 24px;
   transform: translateY(0);
 }
 
-.dv-trends-exiting .dv-cell-sub,
+.dv-trends-exiting .dv-cell-sub:not(.dv-cell-sub--static),
 .dv-trends-exiting .dv-th-sub {
   animation: dv-bop-out 0.18s ease both;
 }

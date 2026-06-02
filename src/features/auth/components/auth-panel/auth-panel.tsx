@@ -1,4 +1,4 @@
-﻿import { memo } from "react";
+﻿import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import extensionSyncImg from "../../assets/extension-sync.webp";
 import extensionSuccessImg from "../../assets/extension-success.webp";
@@ -9,10 +9,24 @@ const CHROME_WEB_STORE_URL =
 
 interface AuthPanelProps {
   onSync: () => void;
+  showManualTokenInput?: boolean;
+  onManualTokenSubmit?: (token: string) => void;
 }
 
-export const AuthPanel = memo(function AuthPanel({ onSync }: AuthPanelProps) {
+export const AuthPanel = memo(function AuthPanel({
+  onSync,
+  showManualTokenInput = false,
+  onManualTokenSubmit,
+}: AuthPanelProps) {
   const { t } = useTranslation();
+  const [manualToken, setManualToken] = useState("");
+
+  const handleManualSubmit = (): void => {
+    if (!onManualTokenSubmit) return;
+    onManualTokenSubmit(manualToken);
+    setManualToken("");
+  };
+
   return (
     <section className="panel-glass panel-auth">
       <h2>{t("auth.connectViaBrowserExtension")}</h2>
@@ -65,6 +79,24 @@ export const AuthPanel = memo(function AuthPanel({ onSync }: AuthPanelProps) {
       <button className="btn-primary btn-primary-large" onClick={onSync}>
         {t("auth.iVeSynced")}
       </button>
+
+      {showManualTokenInput && onManualTokenSubmit ? (
+        <div className="auth-manual-token">
+          <p className="auth-manual-token-label">Dev only: paste JWT token manually</p>
+          <textarea
+            className="auth-manual-token-input"
+            value={manualToken}
+            onChange={(e) => setManualToken(e.target.value)}
+            placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            rows={3}
+            autoComplete="off"
+            spellCheck={false}
+          />
+          <button className="btn-secondary auth-manual-token-btn" onClick={handleManualSubmit}>
+            Use token
+          </button>
+        </div>
+      ) : null}
 
       <p className="auth-update-hint">
         {t("auth.havingIssues")}{" "}

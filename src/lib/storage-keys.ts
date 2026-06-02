@@ -11,3 +11,7 @@ export const LS_KEY_NOTICE_OPENSOURCE = "notice_opensource_dismissed";
 export const LS_KEY_NOTICE_ANNOUNCEMENT_PREFIX = "notice_announcement_";
 export const LS_KEY_MIGRATED_PREFIX = "rt_migrated_";
 export const LS_KEY_SHARE_EXCLUSIONS = "rt_share_exclusions";
+// Persistent cache for completed MinerWars cycle comparisons (schema v1).
+export const LS_KEY_MW_COMPARISON = "rt_mw_comparison_v1";
+// Persistent cache for MinerWars cycle list (schema v1).
+export const LS_KEY_MW_CYCLES = "rt_mw_cycles_v1";

@@ -34,6 +34,7 @@ interface UseAuthReturn {
   user: AuthUser | null;
   syncedAlias: string;
   handleCheckSync: () => void;
+  handleManualTokenSync: (token: string) => void;
   handleLogout: () => void;
 }
 
@@ -131,6 +132,26 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
     }
   }, [applyToken, onMessage, t]);
 
+  const handleManualTokenSync = useCallback(
+    (token: string): void => {
+      const normalized = token.trim();
+      if (!normalized) {
+        onMessage(t("auth.noToken"));
+        return;
+      }
+
+      const success = applyToken(normalized);
+      if (success) {
+        Sentry.logger.info("User synced via manual token input");
+        onMessage(t("auth.syncedSuccessfully"));
+      } else {
+        Sentry.logger.warn("Manual token invalid or expired");
+        onMessage(t("auth.tokenInvalid"));
+      }
+    },
+    [applyToken, onMessage, t],
+  );
+
   const handleLogout = useCallback((): void => {
     clearExpiryTimer();
     sessionStorage.removeItem(LS_KEY_SYNC_TOKEN);
@@ -140,5 +161,5 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
     onMessage(t("auth.loggedOut"));
   }, [clearExpiryTimer, onMessage, t]);
 
-  return { storedToken, user, syncedAlias, handleCheckSync, handleLogout };
+  return { storedToken, user, syncedAlias, handleCheckSync, handleManualTokenSync, handleLogout };
 }

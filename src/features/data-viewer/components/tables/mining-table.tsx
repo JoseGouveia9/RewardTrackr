@@ -18,7 +18,8 @@ import { DateRangeFilter } from "../date-range-filter/date-range-filter";
 import { Pagination } from "../pagination/pagination";
 import { useSyncTableColumns } from "../../hooks/use-sync-table-columns";
 import { AnimatedLoadingRow } from "./animated-loading-row";
-import { useRowSelection } from "../../context/row-selection-context";
+import { useRowSelection } from "../../stores/row-selection-context";
+import { MinerWarsComparisonPanel } from "../minerwars-comparison-panel/minerwars-comparison-panel";
 
 const INFO_ICON = (
   <svg
@@ -222,12 +223,14 @@ export function MiningTable({
   trendsExiting,
   difficultyMap = new Map(),
   pageSize,
+  isShared = false,
 }: {
   rewardKey: RewardKey;
   currency: Currency;
   fiatCode: string;
   isFetching?: boolean;
   cacheVersion?: number;
+  onRefreshKeys?: (keys: RewardKey[]) => Promise<void>;
   cacheEntry?: CacheEntry | null;
   dateRange: DateRange;
   setDateRange: (v: DateRange) => void;
@@ -238,6 +241,7 @@ export function MiningTable({
   trendsExiting: boolean;
   difficultyMap?: Map<string, DifficultyEntry>;
   pageSize?: number;
+  isShared?: boolean;
 }) {
   const { t, i18n } = useTranslation();
   const isRtl = i18n.dir() === "rtl";
@@ -263,6 +267,7 @@ export function MiningTable({
         maintenance: getRecordField(rec, currency, "maintenance"),
         reward: getRecordField(rec, currency, "reward"),
         totalPower: Number(rec.totalPower ?? 0),
+        efficiency: rec.energyEfficiency != null ? Number(rec.energyEfficiency) : undefined,
         discount: Number(rec.discount ?? 0),
         satsPerTh: rec.satsPerTh != null ? Number(rec.satsPerTh) : undefined,
         btcPriceAtTime: rec.btcPriceAtTime != null ? Number(rec.btcPriceAtTime) : undefined,
@@ -341,6 +346,9 @@ export function MiningTable({
 
   return (
     <>
+      {rewardKey === "minerwars" && !isShared && (
+        <MinerWarsComparisonPanel cacheVersion={cacheVersion} currency={currency} />
+      )}
       <div
         className={`dv-tables-wrap dv-tables-wrap--wide${trendsExiting ? " dv-trends-exiting" : trendsAnimating ? " dv-trends-active" : showTrends ? " dv-trends-visible" : ""}`}
       >
@@ -417,7 +425,11 @@ export function MiningTable({
                   dates={rowDates}
                 />
               </th>
-              <th>{t("common.power")}</th>
+              <th>
+                {rewardKey === "solo-mining" || rewardKey === "minerwars"
+                  ? t("dataViewer.farm")
+                  : t("common.power")}
+              </th>
               <th>
                 {t("dataViewer.poolReward")}
                 {rewardKey !== "minerwars" && <InfoTooltip>{formulas.poolReward}</InfoTooltip>}
@@ -477,6 +489,14 @@ export function MiningTable({
                           row.totalPower,
                         ) + " TH"
                       : "-"}
+                    {row.efficiency != null && (
+                      <div className="dv-cell-sub dv-cell-sub--static">
+                        {new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(
+                          row.efficiency,
+                        )}{" "}
+                        W/TH
+                      </div>
+                    )}
                   </td>
                   <td>
                     <span className="dv-cell-with-icon">

@@ -24,7 +24,7 @@ import { TermsPage } from "./routes/terms-page";
 import { LS_KEY_REWARD_PREFIX } from "@/lib/storage-keys";
 import { LanguagePicker } from "@/components/language-picker/language-picker";
 import logo from "/logo.webp";
-import "./App.css";
+import "./app.css";
 
 const LAYOUT_SPRING = { layout: { type: "spring" as const, stiffness: 220, damping: 28 } };
 
@@ -102,7 +102,13 @@ function App() {
     resetConfig,
   } = useExportConfig();
 
-  const { storedToken, user, syncedAlias, handleCheckSync, handleLogout } = useAuth(setMessage);
+  const { storedToken, user, syncedAlias, handleCheckSync, handleManualTokenSync, handleLogout } =
+    useAuth(setMessage);
+
+  const isDevHost =
+    typeof window !== "undefined" &&
+    /^(localhost|127\.0\.0\.1|dev\.rewardtrackr\.com)$/i.test(window.location.hostname);
+  const showManualTokenInput = import.meta.env.DEV || isDevHost;
 
   useAccountSwitch({ user, resetConfig, setCache, setCacheVersion, setMessage });
 
@@ -111,7 +117,7 @@ function App() {
     setCacheVersion((v) => v + 1);
   }, []);
 
-  const { loading, fetchingKeys, handleExport, handleClearCache } = useExport({
+  const { loading, fetchingKeys, handleExport, refreshKeys, handleClearCache } = useExport({
     storedToken,
     selectedKeys,
     cache,
@@ -418,6 +424,7 @@ function App() {
                     isFetching={loading}
                     fetchingKeys={fetchingKeys}
                     cacheVersion={cacheVersion}
+                    onRefreshKeys={refreshKeys}
                     onTabSeen={handleTabSeen}
                     sharedData={null}
                     title={t("app.records")}
@@ -436,7 +443,11 @@ function App() {
               element={
                 !user ? (
                   <>
-                    <AuthPanel onSync={handleCheckSync} />
+                    <AuthPanel
+                      onSync={handleCheckSync}
+                      showManualTokenInput={showManualTokenInput}
+                      onManualTokenSubmit={handleManualTokenSync}
+                    />
                     <AnimatePresence mode="popLayout">
                       {message ? (
                         <motion.div layout transition={LAYOUT_SPRING}>

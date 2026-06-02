@@ -4,7 +4,14 @@ import * as Sentry from "@sentry/react";
 import { decodeJwt } from "@/lib/http";
 import { ALL_REWARD_KEYS } from "../config/reward-configs";
 import { clearAllCacheEntries } from "../utils/cache";
-import { executeExportFlow } from "../utils/export-flow";
+import { executeExportFlow, refreshCacheKeys } from "../utils/export-flow";
+import {
+  fetchAvailableCycles,
+  fetchMinerWarsComparison,
+  getCachedMinerWarsComparison,
+  invalidateMinerWarsCache,
+  prefetchAllCompletedCycles,
+} from "@/features/data-viewer/api/minerwars-comparison";
 import type { CacheState, ExtraFiatCurrency, RewardKey } from "../types";
 
 interface UseExportParams {
@@ -24,6 +31,7 @@ interface UseExportReturn {
   loading: boolean;
   fetchingKeys: Set<RewardKey>;
   handleExport: () => Promise<void>;
+  refreshKeys: (keys: RewardKey[]) => Promise<void>;
   handleClearCache: () => void;
 }
 
@@ -43,8 +51,27 @@ export function useExport({
   const [loading, setLoading] = useState<boolean>(false);
   const [fetchingKeys, setFetchingKeys] = useState<Set<RewardKey>>(new Set());
 
+  const prefetchMinerWarsPanelData = useCallback(async (token: string): Promise<void> => {
+    const cycles = await fetchAvailableCycles(token).catch(() => []);
+    const liveOrPending = cycles.find((c) => c.status === "in-progress" || c.status === "pending");
+    if (liveOrPending) {
+      await fetchMinerWarsComparison(token, liveOrPending.cycleId).catch(() => {});
+    }
+    await prefetchAllCompletedCycles(token).catch(() => {});
+    // Fallback: fetch completed cycles not covered by build-cache prefetch
+    // (e.g. incremental export skipped old records, so those payment days are absent)
+    const today = new Date().toISOString().slice(0, 10);
+    const uncached = cycles.filter(
+      (c) => c.cycleEnd < today && getCachedMinerWarsComparison(c.cycleId) === null,
+    );
+    for (const cycle of uncached) {
+      await fetchMinerWarsComparison(token, cycle.cycleId).catch(() => {});
+    }
+  }, []);
+
   const handleClearCache = useCallback((): void => {
     clearAllCacheEntries();
+    invalidateMinerWarsCache();
     onCacheUpdate(Object.fromEntries(ALL_REWARD_KEYS.map((k) => [k, null])) as CacheState);
     onMessage(t("export.cacheCleared"));
   }, [onMessage, onCacheUpdate, t]);
@@ -90,6 +117,10 @@ export function useExport({
         },
       });
       Sentry.logger.info("Export completed", { sheets: selectedKeys.length });
+      if (selectedKeys.includes("minerwars")) {
+        onMessage(t("export.preparingCycleTracker"));
+        await prefetchMinerWarsPanelData(storedToken);
+      }
       onMessage(successMessage);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (error: unknown) {
@@ -134,8 +165,65 @@ export function useExport({
     onMessage,
     onCacheUpdate,
     onStarted,
+    prefetchMinerWarsPanelData,
     t,
   ]);
 
-  return { loading, fetchingKeys, handleExport, handleClearCache };
+  const refreshKeys = useCallback(
+    async (keys: RewardKey[]): Promise<void> => {
+      if (keys.length === 0) return;
+
+      const decoded = decodeJwt(storedToken);
+      if (!decoded || (decoded.exp && Math.floor(Date.now() / 1000) >= decoded.exp)) {
+        onMessage(t("export.sessionExpired"));
+        return;
+      }
+
+      setLoading(true);
+      setFetchingKeys(new Set(keys));
+      try {
+        const updated = await refreshCacheKeys({
+          accessToken: storedToken,
+          keys,
+          cache,
+          includeWalletFiat,
+          excelFiatCurrency,
+          onMessage,
+          onCacheUpdate: (newCache) => {
+            onCacheUpdate(newCache);
+            setFetchingKeys((prev) => {
+              const next = new Set(prev);
+              for (const k of prev) {
+                if (newCache[k]) next.delete(k);
+              }
+              return next;
+            });
+          },
+        });
+        onCacheUpdate(updated);
+
+        if (keys.includes("minerwars")) {
+          prefetchMinerWarsPanelData(storedToken);
+        }
+      } catch (error: unknown) {
+        const msg = error instanceof Error ? error.message : t("export.failedGeneric");
+        onMessage(t("export.failed", { details: msg }));
+      } finally {
+        setLoading(false);
+        setFetchingKeys(new Set());
+      }
+    },
+    [
+      storedToken,
+      cache,
+      includeWalletFiat,
+      excelFiatCurrency,
+      onMessage,
+      onCacheUpdate,
+      t,
+      prefetchMinerWarsPanelData,
+    ],
+  );
+
+  return { loading, fetchingKeys, handleExport, refreshKeys, handleClearCache };
 }

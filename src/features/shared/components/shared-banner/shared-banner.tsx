@@ -43,7 +43,6 @@ export function SharedBanner({
   );
 }
 
-// A row in the community directory table.
 export function DirectoryRow({ entry }: { entry: DirectoryEntry }) {
   const { t } = useTranslation();
   const age = formatAge(new Date(entry.updatedAt).getTime());
