@@ -730,6 +730,7 @@ async function main() {
   console.log('');
   for (const r of maintRows) {
     const maintSats = r.minerMaintUSD / liveBtcPrice * 1e8;
+    const maintGmt  = gmtPriceValue > 0 ? r.minerMaintUSD / gmtPriceValue : 0;
     const totalRoundUSD = r.roundElecUSD + r.roundSvcUSD;
     console.log(`  Round ${r.round.roundId}  [${r.roundDate}  blks:${r.round.multiplier}]`);
     console.log(`    Elec  = (${KWH} x 24 x ${elapsedMWDays} x ${r.roundPower.toFixed(0)} TH x ${r.EE} W/TH [${r.EE === leagueEE && r.EE !== userEE ? 'league' : 'user'}]) / 1000`
@@ -741,7 +742,7 @@ async function main() {
     console.log(`    Share = (${r.round.multiplier}/${sumAllMultipliers}) x (${r.userTH.toFixed(2)} / ${r.clanTH.toFixed(2)})`
               + `  = ${(r.share * 100).toFixed(6)}%`);
     console.log(`    Maint = $${totalRoundUSD.toFixed(4)} x ${(r.share * 100).toFixed(6)}% x ${discountFactor.toFixed(4)} (discount)`
-              + `  = $${r.minerMaintUSD.toFixed(6)}  = ${maintSats.toFixed(2)} sats`);
+              + `  = $${r.minerMaintUSD.toFixed(6)}  = ${maintSats.toFixed(2)} sats  = ${maintGmt.toFixed(4)} GMT`);
     console.log('');
   }
 

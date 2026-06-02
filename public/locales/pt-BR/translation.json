@@ -260,7 +260,7 @@
     "block_one": "{{count}} bloco",
     "block_other": "{{count}} blocos",
     "satsPerBlock": "@ {{sats}} sats/bloco",
-    "warnBtcFundZero": "O fundo BTC da sua liga está atualmente em 0. A estimativa MinerWars mostrará 0 até o fundo começar a ser preenchido.",
+    "warnBtcFundZero": "O fundo BTC da sua liga está atualmente em 0. A estimativa MinerWars mostrará 0 até o fundo começar a ser preenchido.\nTente atualizar amanhã quando o primeiro dia do ciclo tiver sido financiado.",
     "warnNoClanAnalyticsLive": "Sem analytics do clã (o clã pode ter menos de 30 dias) — usando o poder atual do clã para todas as rodadas. A estimativa pode estar superestimada ou subestimada.",
     "warnNoClanAnalyticsDone": "Sem analytics do clã (o clã pode ter menos de 30 dias) — usando o poder do clã no final do ciclo para todas as rodadas. A estimativa pode estar superestimada ou subestimada.",
     "maintenanceEst": "Manutenção (est.)",

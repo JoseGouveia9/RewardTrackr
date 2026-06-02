@@ -445,8 +445,12 @@ export function MinerWarsComparisonPanel({
           </div>
 
           {showBtcFundZeroWarning && (
-            <div className="minerwars-panel-notice minerwars-panel-notice--warn">
-              ⚠ {t("cycleTracker.warnBtcFundZero")}
+            <div
+              className="minerwars-panel-notice minerwars-panel-notice--warn"
+              style={{ display: "flex", gap: "0.35em" }}
+            >
+              <span>⚠</span>
+              <span style={{ whiteSpace: "pre-line" }}>{t("cycleTracker.warnBtcFundZero")}</span>
             </div>
           )}
           {showNoClanAnalyticsWarning && (
