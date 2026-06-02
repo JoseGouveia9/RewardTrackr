@@ -71,12 +71,16 @@ export function getCachedMinerWarsComparison(cycleId: number): MinerWarsComparis
 }
 
 // Returns null when no cache exists (does not fetch from the API).
+// Returns stored statuses as-is — status re-evaluation only happens in
+// fetchAvailableCycles(), which is called on explicit user actions (refresh /
+// build report). This prevents "in-progress" silently flipping to "pending"
+// just because UTC midnight passed while the user had the app open.
 export function getCachedCycles(): CycleInfo[] | null {
-  if (cyclesCache) return withResolvedStatuses(cyclesCache.data);
+  if (cyclesCache) return cyclesCache.data;
   const persisted = loadPersistedCycles();
   if (persisted) {
     cyclesCache = persisted;
-    return withResolvedStatuses(persisted.data);
+    return persisted.data;
   }
   return null;
 }

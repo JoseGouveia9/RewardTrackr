@@ -80,22 +80,6 @@ export function useMinerWarsComparison({
     setLoadingCycles(false);
   }, []);
 
-  // Re-evaluate cycle statuses at UTC midnight (GoMining operates on UTC time).
-  // This ensures the status badge and refresh button update correctly without
-  // requiring a page reload when the user is in a timezone ahead of UTC.
-  useEffect(() => {
-    const now = new Date();
-    const nextUtcMidnight = new Date(
-      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1),
-    );
-    const timer = setTimeout(() => {
-      const refreshed = getCachedCycles();
-      if (refreshed) setCycles(refreshed);
-    }, nextUtcMidnight.getTime() - now.getTime());
-
-    return () => clearTimeout(timer);
-  }, []);
-
   // On cycle change, read from cache only. Network fetches are allowed only
   // when skipCache=true (explicit refresh action).
   const fetchComparison = useCallback((cycleId: number, skipCache = false): Promise<void> => {
