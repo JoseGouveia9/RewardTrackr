@@ -240,7 +240,7 @@
     "computing": "サイクル比較を計算中…",
     "cycle": "サイクル {{id}}",
     "statusLive": "進行中",
-    "statusPending": "保留中",
+    "statusPending": "保留",
     "statusDone": "完了",
     "refreshLive": "進行中のサイクルを更新",
     "refreshPending": "保留中のサイクルを更新",

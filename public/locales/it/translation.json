@@ -240,7 +240,7 @@
     "computing": "Calcolo del confronto del ciclo…",
     "cycle": "Ciclo {{id}}",
     "statusLive": "In corso",
-    "statusPending": "In attesa",
+    "statusPending": "In att.",
     "statusDone": "Completato",
     "refreshLive": "Aggiorna ciclo in corso",
     "refreshPending": "Aggiorna ciclo in attesa",

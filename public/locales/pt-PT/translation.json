@@ -240,7 +240,7 @@
     "computing": "A calcular comparação do ciclo…",
     "cycle": "Ciclo {{id}}",
     "statusLive": "Em curso",
-    "statusPending": "Pendente",
+    "statusPending": "Pend.",
     "statusDone": "Concluído",
     "refreshLive": "Atualizar ciclo em curso",
     "refreshPending": "Atualizar ciclo pendente",

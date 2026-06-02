@@ -240,7 +240,7 @@
     "computing": "جارٍ حساب مقارنة الدورة…",
     "cycle": "الدورة {{id}}",
     "statusLive": "جارية",
-    "statusPending": "معلّقة",
+    "statusPending": "معل.",
     "statusDone": "منتهية",
     "refreshLive": "تحديث الدورة المباشرة",
     "refreshPending": "تحديث الدورة المعلّقة",

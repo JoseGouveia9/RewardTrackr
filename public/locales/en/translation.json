@@ -240,7 +240,7 @@
     "computing": "Computing cycle comparison…",
     "cycle": "Cycle {{id}}",
     "statusLive": "Live",
-    "statusPending": "Pending",
+    "statusPending": "Pend.",
     "statusDone": "Done",
     "refreshLive": "Refresh live cycle",
     "refreshPending": "Refresh pending cycle",

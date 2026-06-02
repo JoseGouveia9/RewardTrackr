@@ -240,7 +240,7 @@
     "computing": "Вычисление сравнения цикла…",
     "cycle": "Цикл {{id}}",
     "statusLive": "Активный",
-    "statusPending": "Ожидание",
+    "statusPending": "Ожид.",
     "statusDone": "Завершён",
     "refreshLive": "Обновить активный цикл",
     "refreshPending": "Обновить ожидающий цикл",

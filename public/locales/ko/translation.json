@@ -240,7 +240,7 @@
     "computing": "사이클 비교 계산 중…",
     "cycle": "사이클 {{id}}",
     "statusLive": "진행 중",
-    "statusPending": "대기 중",
+    "statusPending": "대기",
     "statusDone": "완료",
     "refreshLive": "진행 중인 사이클 새로고침",
     "refreshPending": "대기 중인 사이클 새로고침",

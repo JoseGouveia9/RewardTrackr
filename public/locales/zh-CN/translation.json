@@ -240,7 +240,7 @@
     "computing": "正在计算周期比较…",
     "cycle": "周期 {{id}}",
     "statusLive": "进行中",
-    "statusPending": "待处理",
+    "statusPending": "待处",
     "statusDone": "已完成",
     "refreshLive": "刷新进行中的周期",
     "refreshPending": "刷新待处理的周期",

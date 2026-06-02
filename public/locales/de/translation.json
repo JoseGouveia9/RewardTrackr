@@ -240,7 +240,7 @@
     "computing": "Zyklusvergleich wird berechnet…",
     "cycle": "Zyklus {{id}}",
     "statusLive": "Aktiv",
-    "statusPending": "Ausstehend",
+    "statusPending": "Ausst.",
     "statusDone": "Abgeschlossen",
     "refreshLive": "Aktiven Zyklus aktualisieren",
     "refreshPending": "Ausstehenden Zyklus aktualisieren",
