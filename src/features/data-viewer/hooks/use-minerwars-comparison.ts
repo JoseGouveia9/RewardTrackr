@@ -25,7 +25,6 @@ interface UseMinerWarsComparisonResult {
 
 interface UseMinerWarsComparisonOptions {
   cacheVersion?: number;
-  onRefreshMinerwarsTable?: () => Promise<void> | void;
 }
 
 function getToken(): string {
@@ -40,7 +39,6 @@ function isTokenValid(token: string): boolean {
 
 export function useMinerWarsComparison({
   cacheVersion = 0,
-  onRefreshMinerwarsTable,
 }: UseMinerWarsComparisonOptions = {}): UseMinerWarsComparisonResult {
   const [cycles, setCycles] = useState<CycleInfo[]>([]);
   const [loadingCycles, setLoadingCycles] = useState(true);
@@ -49,6 +47,13 @@ export function useMinerWarsComparison({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  // Ref mirror of cycles — lets effects read the latest value without adding
+  // cycles as a dependency (which would cause infinite loops when reloadCycles
+  // calls setCycles inside those same effects).
+  const cyclesRef = useRef<CycleInfo[]>(cycles);
+  useEffect(() => {
+    cyclesRef.current = cycles;
+  }, [cycles]);
 
   // Computed once per mount — token doesn't change mid-session, and if it did
   // the user would see a network error on the next action anyway.
@@ -99,18 +104,16 @@ export function useMinerWarsComparison({
     return () => clearTimeout(timer);
   }, []);
 
-  // On cycle change, prefer cache; fall back to network only when cache is empty.
-  // Pass skipCache=true (refresh button) to bypass the cache and force a live fetch.
+  // On cycle change, read from cache only. Network fetches are allowed only
+  // when skipCache=true (explicit refresh action).
   const fetchComparison = useCallback((cycleId: number, skipCache = false): Promise<void> => {
-    // Always try cache first — works even when not logged in.
+    // Default path: cache-only (no API calls on cycle switch).
     if (!skipCache) {
       const cached = getCachedMinerWarsComparison(cycleId);
-      if (cached) {
-        setData(cached);
-        setError(null);
-        setLoading(false);
-        return Promise.resolve();
-      }
+      setData(cached);
+      setError(null);
+      setLoading(false);
+      return Promise.resolve();
     }
 
     // Network required — validate token.
@@ -149,24 +152,16 @@ export function useMinerWarsComparison({
   const refresh = useCallback(async () => {
     if (selectedCycleId === null) return;
 
-    const selected = cycles.find((c) => c.cycleId === selectedCycleId);
-    const today = new Date().toISOString().slice(0, 10);
-    const cycleEnded = selected ? selected.cycleEnd < today : false;
-
-    // If the cycle already ended, refresh the minerwars table first to check
-    // whether the payment entry has landed, then recompute status/panel data.
-    if (cycleEnded && onRefreshMinerwarsTable) {
-      await onRefreshMinerwarsTable();
-    }
-
     await reloadCycles().catch(() => []);
     invalidateCycleCache(selectedCycleId);
     await fetchComparison(selectedCycleId, true);
-  }, [selectedCycleId, cycles, onRefreshMinerwarsTable, reloadCycles, fetchComparison]);
+  }, [selectedCycleId, reloadCycles, fetchComparison]);
 
   useEffect(() => {
     if (cacheVersion <= 0 || selectedCycleId === null) return;
-    const selected = cycles.find((c) => c.cycleId === selectedCycleId);
+    // Use ref instead of cycles state — adding cycles here would cause an infinite
+    // loop: reloadCycles() → setCycles() → cycles changes → effect re-runs → repeat.
+    const selected = cyclesRef.current.find((c) => c.cycleId === selectedCycleId);
     if (!selected || selected.status !== "pending") return;
 
     reloadCycles()
@@ -179,7 +174,7 @@ export function useMinerWarsComparison({
       .catch(() => {
         /* ignore */
       });
-  }, [cacheVersion, selectedCycleId, cycles, reloadCycles, fetchComparison]);
+  }, [cacheVersion, selectedCycleId, reloadCycles, fetchComparison]);
 
   return {
     cycles,
