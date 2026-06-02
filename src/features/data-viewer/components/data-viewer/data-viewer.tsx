@@ -293,7 +293,9 @@ export const DataViewer = memo(function DataViewer({
 
   const tableAnimationKey = `${activeKey}:${
     isMiningTab
-      ? currency
+      ? activeKey === "minerwars"
+        ? "mw"
+        : currency
       : isEarnTab
         ? effectiveEarnView
         : isTxTab
