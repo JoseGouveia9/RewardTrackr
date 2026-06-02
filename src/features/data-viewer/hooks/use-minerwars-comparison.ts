@@ -47,14 +47,6 @@ export function useMinerWarsComparison({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
-  // Ref mirror of cycles — lets effects read the latest value without adding
-  // cycles as a dependency (which would cause infinite loops when reloadCycles
-  // calls setCycles inside those same effects).
-  const cyclesRef = useRef<CycleInfo[]>(cycles);
-  useEffect(() => {
-    cyclesRef.current = cycles;
-  }, [cycles]);
-
   // Computed once per mount — token doesn't change mid-session, and if it did
   // the user would see a network error on the next action anyway.
   const isLoggedIn = useMemo(() => isTokenValid(getToken()), []);
@@ -159,21 +151,11 @@ export function useMinerWarsComparison({
 
   useEffect(() => {
     if (cacheVersion <= 0 || selectedCycleId === null) return;
-    // Use ref instead of cycles state — adding cycles here would cause an infinite
-    // loop: reloadCycles() → setCycles() → cycles changes → effect re-runs → repeat.
-    const selected = cyclesRef.current.find((c) => c.cycleId === selectedCycleId);
-    if (!selected || selected.status !== "pending") return;
-
-    reloadCycles()
-      .then((nextCycles) => {
-        const nextSelected = nextCycles.find((c) => c.cycleId === selectedCycleId);
-        if (nextSelected?.status === "completed") {
-          void fetchComparison(selectedCycleId);
-        }
-      })
-      .catch(() => {
-        /* ignore */
-      });
+    // Build report completed — always reload cycles and refresh panel from cache.
+    // The export has written fresh comparison data, so we must re-read it here.
+    // We do not skip the cache (no network call) — the export already populated it.
+    reloadCycles().catch(() => {});
+    void fetchComparison(selectedCycleId);
   }, [cacheVersion, selectedCycleId, reloadCycles, fetchComparison]);
 
   return {
