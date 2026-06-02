@@ -176,7 +176,10 @@ export function MinerWarsComparisonPanel({
       : null;
   const isPositive = effectiveDiff >= 0;
   const projecting = (data?.targetProjectedDays ?? 0) > 0;
-  const isCycleLive = data != null && data.today <= data.cycleEnd;
+  // Treat "pending" cycles (ended but no actual payment yet) the same as live
+  // so the panel shows the round-based estimation view rather than a zeroed-out
+  // completed view. Switches to false only when actual income is confirmed.
+  const isCycleLive = data != null && data.actualMinerWarsBtc == null;
 
   const clanMinerWarsBtc = (data?.clanMinerWarsSats ?? 0) / 1e8;
   const clanTargetBtc = (data?.clanTargetSoloSats ?? 0) / 1e8;

@@ -296,7 +296,9 @@ async function _doFetchMinerWarsComparison(
   const cached = comparisonCache.get(cycleId);
   if (cached) return cached.data;
 
-  // Fast path for ended cycles: gate on date only, do NOT rely on build cache to classify as "completed".
+  // Fast path for ended cycles that have confirmed payment.
+  // Pending cycles (ended but no payment yet) fall through to the live
+  // round-based estimation path below so the panel shows estimated values.
   if (CYCLE_END_CHECK < TODAY) {
     const CYCLE_START = cycleStartDate.slice(0, 10);
     const CYCLE_END = CYCLE_END_CHECK;
@@ -323,77 +325,83 @@ async function _doFetchMinerWarsComparison(
       getUserPowerChart(headers, cycleStartDate),
     ]);
 
-    const lastUserPower =
-      userPowerByDate.size > 0 ? ([...userPowerByDate.values()].slice(-1)[0] ?? null) : null;
+    // Only use the fast path when actual payment data exists (= completed cycle).
+    // If actualMinerWarsBtc is null the cycle is "pending" — fall through to the
+    // live estimation path which computes minerWarsSats from round data.
+    if (actualMinerWarsBtc != null) {
+      const lastUserPower =
+        userPowerByDate.size > 0 ? ([...userPowerByDate.values()].slice(-1)[0] ?? null) : null;
 
-    let soloEquivSats = 0;
-    let targetSoloSats = 0;
-    let targetActualDays = 0;
-    for (const dateStr of cycleDates) {
-      if (solodays.has(dateStr)) continue;
-      const userPow = userPowerByDate.has(dateStr)
-        ? userPowerByDate.get(dateStr)!
-        : (lastUserPower ?? 0);
-      const satsPerTH = satsPerThByDate.get(dateStr) ?? latestSatsPerTH;
-      if (satsPerTH != null && userPow) {
-        soloEquivSats += satsPerTH * userPow;
-        targetSoloSats += satsPerTH * userPow;
-        targetActualDays++;
+      let soloEquivSats = 0;
+      let targetSoloSats = 0;
+      let targetActualDays = 0;
+      for (const dateStr of cycleDates) {
+        if (solodays.has(dateStr)) continue;
+        const userPow = userPowerByDate.has(dateStr)
+          ? userPowerByDate.get(dateStr)!
+          : (lastUserPower ?? 0);
+        const satsPerTH = satsPerThByDate.get(dateStr) ?? latestSatsPerTH;
+        if (satsPerTH != null && userPow) {
+          soloEquivSats += satsPerTH * userPow;
+          targetSoloSats += satsPerTH * userPow;
+          targetActualDays++;
+        }
       }
+
+      const minerWarsSats = actualMinerWarsBtc * 1e8;
+      const diffSats = minerWarsSats - soloEquivSats;
+      const diffPct = soloEquivSats > 0 ? (diffSats / soloEquivSats) * 100 : null;
+      const progressPct = targetSoloSats > 0 ? (minerWarsSats / targetSoloSats) * 100 : null;
+
+      const cycleDateSet = new Set(cycleDates);
+      const soloDaysSorted = [...solodays].filter((d) => cycleDateSet.has(d)).sort();
+      const windowLabel =
+        soloDaysSorted.length === 0
+          ? "full cycle"
+          : `excl. solo day(s): ${soloDaysSorted.join(", ")}`;
+
+      const payDay = new Date(CYCLE_END + "T00:00:00Z");
+      payDay.setUTCDate(payDay.getUTCDate() + 1);
+      const payData = getPaymentDataFromBuildCache(payDay.toISOString().slice(0, 10));
+
+      const completedResult: MinerWarsComparison = {
+        cycleId,
+        cycleStart: CYCLE_START,
+        cycleEnd: CYCLE_END,
+        today: TODAY,
+        minerWarsSats,
+        clanMinerWarsSats: null,
+        btcFundBtc: null,
+        soloEquivSats,
+        diffSats,
+        diffPct,
+        targetSoloSats,
+        progressPct,
+        targetActualDays,
+        targetProjectedDays: 0,
+        latestSatsPerTH,
+        windowLabel,
+        soloDays: soloDaysSorted,
+        hasClanAnalytics: false,
+        btcFundIsZero: false,
+        actualMinerWarsBtc,
+        clanTargetSoloSats: null,
+        btcPerBlockSats: null,
+        cycleLength: cycleDates.length,
+        maintenanceBtc: null,
+        maintenanceGmt: null,
+        rewardGmt: null,
+        netBtc: null,
+        netGmt: null,
+        btcPrice: payData?.btcPrice ?? null,
+        gmtPrice: payData?.gmtPrice ?? null,
+      };
+
+      comparisonCache.set(cycleId, { data: completedResult, ts: Date.now() });
+      persistComparison(completedResult);
+      return completedResult;
     }
-
-    const minerWarsSats = actualMinerWarsBtc != null ? actualMinerWarsBtc * 1e8 : 0;
-    const diffSats = minerWarsSats - soloEquivSats;
-    const diffPct = soloEquivSats > 0 ? (diffSats / soloEquivSats) * 100 : null;
-    const progressPct = targetSoloSats > 0 ? (minerWarsSats / targetSoloSats) * 100 : null;
-
-    const cycleDateSet = new Set(cycleDates);
-    const soloDaysSorted = [...solodays].filter((d) => cycleDateSet.has(d)).sort();
-    const windowLabel =
-      soloDaysSorted.length === 0
-        ? "full cycle"
-        : `excl. solo day(s): ${soloDaysSorted.join(", ")}`;
-
-    const payDay = new Date(CYCLE_END + "T00:00:00Z");
-    payDay.setUTCDate(payDay.getUTCDate() + 1);
-    const payData = getPaymentDataFromBuildCache(payDay.toISOString().slice(0, 10));
-
-    const completedResult: MinerWarsComparison = {
-      cycleId,
-      cycleStart: CYCLE_START,
-      cycleEnd: CYCLE_END,
-      today: TODAY,
-      minerWarsSats,
-      clanMinerWarsSats: null,
-      btcFundBtc: null,
-      soloEquivSats,
-      diffSats,
-      diffPct,
-      targetSoloSats,
-      progressPct,
-      targetActualDays,
-      targetProjectedDays: 0,
-      latestSatsPerTH,
-      windowLabel,
-      soloDays: soloDaysSorted,
-      hasClanAnalytics: false,
-      btcFundIsZero: false,
-      actualMinerWarsBtc,
-      clanTargetSoloSats: null,
-      btcPerBlockSats: null,
-      cycleLength: cycleDates.length,
-      maintenanceBtc: null,
-      maintenanceGmt: null,
-      rewardGmt: null,
-      netBtc: null,
-      netGmt: null,
-      btcPrice: payData?.btcPrice ?? null,
-      gmtPrice: payData?.gmtPrice ?? null,
-    };
-
-    comparisonCache.set(cycleId, { data: completedResult, ts: Date.now() });
-    persistComparison(completedResult);
-    return completedResult;
+    // actualMinerWarsBtc === null → pending cycle, fall through to live estimation.
   }
 
   userRounds.sort((a, b) => b.roundId - a.roundId);
