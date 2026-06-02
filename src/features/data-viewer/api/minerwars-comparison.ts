@@ -8,6 +8,7 @@ import {
   loadPersistedComparison,
   persistComparison,
   getPaymentDataFromBuildCache,
+  getActualIncomeFromBuildCache,
   getSoloDaysFromBuildCache,
   deletePersistedComparison,
 } from "../utils/minerwars-cache";
@@ -22,7 +23,6 @@ import {
   getDiscountFactor,
   getLivePrices,
   getMempoolEpochs,
-  getMinerWarsActualIncome,
   getMyNftAvgEE,
   getSoloMiningDates,
   getUserPowerChart,
@@ -115,21 +115,21 @@ export async function prefetchAllCompletedCycles(token: string): Promise<void> {
     return;
   }
 
-  const todo = cycles.filter(
-    (c) => c.cycleEnd < TODAY && loadPersistedComparison(c.cycleId) == null,
-  );
-  if (todo.length === 0) return;
-
-  const toProcess = todo.filter((c) => {
+  const todo = cycles.filter((c) => {
+    if (c.cycleEnd >= TODAY) return false;
     const payDay = new Date(c.cycleEnd + "T00:00:00Z");
     payDay.setUTCDate(payDay.getUTCDate() + 1);
-    return getPaymentDataFromBuildCache(payDay.toISOString().slice(0, 10)) !== null;
+    const payDayStr = payDay.toISOString().slice(0, 10);
+    if (getPaymentDataFromBuildCache(payDayStr) === null) return false; // no build-cache payment data
+    const persisted = loadPersistedComparison(c.cycleId);
+    // Process when: no cached comparison, OR cached comparison still has estimation (no actual).
+    return persisted === null || persisted.data.actualMinerWarsBtc === null;
   });
-  if (toProcess.length === 0) return;
+  if (todo.length === 0) return;
 
-  const earliestStart = toProcess.reduce(
+  const earliestStart = todo.reduce(
     (min, c) => (c.cycleStart < min ? c.cycleStart : min),
-    toProcess[0].cycleStart,
+    todo[0].cycleStart,
   );
   let userPowerByDate: Map<string, number>;
   try {
@@ -142,9 +142,11 @@ export async function prefetchAllCompletedCycles(token: string): Promise<void> {
 
   const epochs = await fetchDifficultyEpochs();
 
-  for (const cycle of toProcess) {
+  for (const cycle of todo) {
     try {
       const { cycleId, cycleStart: CYCLE_START, cycleEnd: CYCLE_END } = cycle;
+      // Clear stale in-memory cache so the new result is used after persist.
+      comparisonCache.delete(cycleId);
 
       const payDay = new Date(CYCLE_END + "T00:00:00Z");
       payDay.setUTCDate(payDay.getUTCDate() + 1);
@@ -315,21 +317,24 @@ async function _doFetchMinerWarsComparison(
     }
 
     const cachedSoloDays = getSoloDaysFromBuildCache(CYCLE_START, CYCLE_END);
-    const [
-      { byDate: satsPerThByDate, latestSatsPerTH },
-      solodays,
-      actualMinerWarsBtc,
-      userPowerByDate,
-    ] = await Promise.all([
-      getMempoolEpochs(cycleDates),
-      cachedSoloDays != null
-        ? Promise.resolve(cachedSoloDays)
-        : getSoloMiningDates(headers, CYCLE_START, CYCLE_END),
-      getMinerWarsActualIncome(headers, CYCLE_END),
-      getUserPowerChart(headers, cycleStartDate),
-    ]);
 
-    // Only use the fast path when actual payment data exists (= completed cycle).
+    // Actual payment comes only from the build cache (populated by a full export).
+    // Never call the income API here — the refresh button must not flip
+    // pending→completed; only a full build report does that.
+    const payDay = new Date(CYCLE_END + "T00:00:00Z");
+    payDay.setUTCDate(payDay.getUTCDate() + 1);
+    const actualMinerWarsBtc = getActualIncomeFromBuildCache(payDay.toISOString().slice(0, 10));
+
+    const [{ byDate: satsPerThByDate, latestSatsPerTH }, solodays, userPowerByDate] =
+      await Promise.all([
+        getMempoolEpochs(cycleDates),
+        cachedSoloDays != null
+          ? Promise.resolve(cachedSoloDays)
+          : getSoloMiningDates(headers, CYCLE_START, CYCLE_END),
+        getUserPowerChart(headers, cycleStartDate),
+      ]);
+
+    // Only use the fast path when actual payment data exists in the build cache.
     // If actualMinerWarsBtc is null the cycle is "pending" — fall through to the
     // live estimation path which computes minerWarsSats from round data.
     if (actualMinerWarsBtc != null) {
