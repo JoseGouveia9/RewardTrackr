@@ -213,6 +213,7 @@ export function MiningTable({
   fiatCode,
   isFetching = false,
   cacheVersion = 0,
+  minerWarsPrefetching = false,
   cacheEntry,
   dateRange,
   setDateRange,
@@ -230,6 +231,7 @@ export function MiningTable({
   fiatCode: string;
   isFetching?: boolean;
   cacheVersion?: number;
+  minerWarsPrefetching?: boolean;
   onRefreshKeys?: (keys: RewardKey[]) => Promise<void>;
   cacheEntry?: CacheEntry | null;
   dateRange: DateRange;
@@ -347,7 +349,11 @@ export function MiningTable({
   return (
     <>
       {rewardKey === "minerwars" && !isShared && (
-        <MinerWarsComparisonPanel cacheVersion={cacheVersion} currency={currency} />
+        <MinerWarsComparisonPanel
+          cacheVersion={cacheVersion}
+          currency={currency}
+          isPrefetching={minerWarsPrefetching}
+        />
       )}
       <div
         className={`dv-tables-wrap dv-tables-wrap--wide${trendsExiting ? " dv-trends-exiting" : trendsAnimating ? " dv-trends-active" : showTrends ? " dv-trends-visible" : ""}`}

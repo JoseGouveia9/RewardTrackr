@@ -1,4 +1,4 @@
-﻿import { useCallback, useState } from "react";
+﻿import { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import * as Sentry from "@sentry/react";
 import { decodeJwt } from "@/lib/http";
@@ -30,6 +30,7 @@ interface UseExportParams {
 interface UseExportReturn {
   loading: boolean;
   fetchingKeys: Set<RewardKey>;
+  isPrefetching: boolean;
   handleExport: () => Promise<void>;
   refreshKeys: (keys: RewardKey[]) => Promise<void>;
   handleClearCache: () => void;
@@ -50,6 +51,8 @@ export function useExport({
   const { t } = useTranslation();
   const [loading, setLoading] = useState<boolean>(false);
   const [fetchingKeys, setFetchingKeys] = useState<Set<RewardKey>>(new Set());
+  const [isPrefetching, setIsPrefetching] = useState(false);
+  const latestCacheRef = useRef<CacheState>(cache);
 
   const prefetchMinerWarsPanelData = useCallback(async (token: string): Promise<void> => {
     const cycles = await fetchAvailableCycles(token).catch(() => []);
@@ -106,6 +109,7 @@ export function useExport({
         onMessage,
         onStarted,
         onCacheUpdate: (newCache) => {
+          latestCacheRef.current = newCache;
           setFetchingKeys((prev) => {
             const next = new Set(prev);
             for (const k of prev) {
@@ -119,7 +123,14 @@ export function useExport({
       Sentry.logger.info("Export completed", { sheets: selectedKeys.length });
       if (selectedKeys.includes("minerwars")) {
         onMessage(t("export.preparingCycleTracker"));
-        await prefetchMinerWarsPanelData(storedToken);
+        setIsPrefetching(true);
+        try {
+          await prefetchMinerWarsPanelData(storedToken);
+          // Bump cacheVersion so the panel re-reads cache now that comparison data is ready.
+          onCacheUpdate(latestCacheRef.current);
+        } finally {
+          setIsPrefetching(false);
+        }
       }
       onMessage(successMessage);
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -225,5 +236,5 @@ export function useExport({
     ],
   );
 
-  return { loading, fetchingKeys, handleExport, refreshKeys, handleClearCache };
+  return { loading, fetchingKeys, isPrefetching, handleExport, refreshKeys, handleClearCache };
 }

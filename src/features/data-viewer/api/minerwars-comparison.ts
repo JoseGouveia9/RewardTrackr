@@ -108,18 +108,34 @@ export async function prefetchAllCompletedCycles(token: string): Promise<void> {
   const TODAY = new Date().toISOString().slice(0, 10);
   const headers = buildApiHeaders(token);
 
+  // Always fetch fresh cycles so the current live cycle is included even when
+  // stale persisted cycles are in localStorage from a previous session.
   let cycles: CycleInfo[];
   try {
-    cycles = await fetchAvailableCycles(token);
+    const fresh = await fetchAllCyclesFromApi(headers);
+    cyclesCache = { data: fresh, ts: Date.now() };
+    persistCycles(fresh);
+    cycles = withResolvedStatuses(fresh);
   } catch {
     return;
   }
 
+  // Live/pending cycles: use the full fetch path so comparison data is cached
+  // and the panel can load instantly from cache after the build report finishes.
+  const liveCycles = cycles.filter((c) => c.cycleEnd >= TODAY);
+  for (const cycle of liveCycles) {
+    try {
+      await fetchMinerWarsComparison(token, cycle.cycleId);
+    } catch {
+      // continue with next cycle on any per-cycle error
+    }
+  }
+
   const todo = cycles.filter((c) => {
-    if (c.cycleEnd >= TODAY) return false;
     const payDay = new Date(c.cycleEnd + "T00:00:00Z");
     payDay.setUTCDate(payDay.getUTCDate() + 1);
     const payDayStr = payDay.toISOString().slice(0, 10);
+    if (c.cycleEnd >= TODAY) return false;
     if (getPaymentDataFromBuildCache(payDayStr) === null) return false; // no build-cache payment data
     const persisted = loadPersistedComparison(c.cycleId);
     // Process when: no cached comparison, OR cached comparison still has estimation (no actual).

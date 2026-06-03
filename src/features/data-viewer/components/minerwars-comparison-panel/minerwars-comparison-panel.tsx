@@ -125,6 +125,7 @@ function MinerWarsSkeleton() {
 interface MinerWarsComparisonPanelProps {
   cacheVersion?: number;
   currency?: Currency;
+  isPrefetching?: boolean;
 }
 
 function fmtBtc(btc: number): string {
@@ -143,6 +144,7 @@ function fmtPct(pct: number): string {
 export function MinerWarsComparisonPanel({
   cacheVersion = 0,
   currency = "BTC",
+  isPrefetching = false,
 }: MinerWarsComparisonPanelProps) {
   const { t } = useTranslation();
   const {
@@ -157,7 +159,7 @@ export function MinerWarsComparisonPanel({
     isLoggedIn,
   } = useMinerWarsComparison({ cacheVersion });
 
-  const showSkeleton = loadingCycles || loading || (selectedCycleId !== null && !data && !error);
+  const showSkeleton = loadingCycles || loading || isPrefetching;
 
   if (showSkeleton) return <MinerWarsSkeleton />;
 

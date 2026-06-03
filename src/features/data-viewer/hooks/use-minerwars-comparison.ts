@@ -134,10 +134,25 @@ export function useMinerWarsComparison({
   }, [selectedCycleId, reloadCycles, fetchComparison]);
 
   useEffect(() => {
-    if (cacheVersion <= 0 || selectedCycleId === null) return;
+    if (cacheVersion <= 0) return;
     // Build report completed — always reload cycles and refresh panel from cache.
     // The export has written fresh comparison data, so we must re-read it here.
     // We do not skip the cache (no network call) — the export already populated it.
+    if (selectedCycleId === null) {
+      // Panel mounted after loading finished — cycles may not have been in cache
+      // at mount time. Keep the skeleton visible while we fetch them.
+      // prefetchAllCompletedCycles (called during build report) already fetched
+      // and cached all cycles including the live one, so reading from cache here
+      // is sufficient — no extra network call needed.
+      setLoadingCycles(true);
+      reloadCycles()
+        .then((list) => {
+          if (list.length > 0) setSelectedCycleId(list[0].cycleId);
+        })
+        .catch(() => {})
+        .finally(() => setLoadingCycles(false));
+      return;
+    }
     reloadCycles().catch(() => {});
     void fetchComparison(selectedCycleId);
   }, [cacheVersion, selectedCycleId, reloadCycles, fetchComparison]);
