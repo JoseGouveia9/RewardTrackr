@@ -119,19 +119,21 @@ export function useExport({
           });
           onCacheUpdate(newCache);
         },
+        onBeforeDownload: selectedKeys.includes("minerwars")
+          ? async () => {
+              onMessage(t("export.preparingCycleTracker"));
+              setIsPrefetching(true);
+              try {
+                await prefetchMinerWarsPanelData(storedToken);
+                // Bump cacheVersion so the panel re-reads cache now that comparison data is ready.
+                onCacheUpdate(latestCacheRef.current);
+              } finally {
+                setIsPrefetching(false);
+              }
+            }
+          : undefined,
       });
       Sentry.logger.info("Export completed", { sheets: selectedKeys.length });
-      if (selectedKeys.includes("minerwars")) {
-        onMessage(t("export.preparingCycleTracker"));
-        setIsPrefetching(true);
-        try {
-          await prefetchMinerWarsPanelData(storedToken);
-          // Bump cacheVersion so the panel re-reads cache now that comparison data is ready.
-          onCacheUpdate(latestCacheRef.current);
-        } finally {
-          setIsPrefetching(false);
-        }
-      }
       onMessage(successMessage);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (error: unknown) {

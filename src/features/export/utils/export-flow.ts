@@ -549,6 +549,7 @@ export interface ExportFlowParams {
   onMessage: (msg: string) => void;
   onCacheUpdate: (cache: CacheState) => void;
   onStarted?: () => void;
+  onBeforeDownload?: () => Promise<void>;
 }
 
 export interface RefreshCacheKeysParams {
@@ -664,6 +665,7 @@ export async function executeExportFlow({
   onMessage,
   onCacheUpdate,
   onStarted,
+  onBeforeDownload,
 }: ExportFlowParams): Promise<string> {
   await checkExportRateLimit(accessToken);
   onStarted?.();
@@ -880,6 +882,7 @@ export async function executeExportFlow({
     };
 
     const buffer = await buildExcelFromSheets(sheetsPayload, options);
+    if (onBeforeDownload) await onBeforeDownload();
     triggerFileDownload(buffer, `rewards-${new Date().toISOString().slice(0, 10)}.xlsx`);
 
     const freshCount = cachedKeys.length - staleKeys.length - currencyChangeKeys.size;
