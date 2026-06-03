@@ -120,8 +120,13 @@ export function useMinerWarsComparison({
       .finally(() => setLoading(false));
   }, []);
 
+  // On cycle change, read from cache. If the cache is empty (e.g. the background
+  // prefetch failed or was skipped), fall back to a network fetch automatically
+  // so the panel always populates without requiring a manual refresh.
   useEffect(() => {
-    if (selectedCycleId !== null) fetchComparison(selectedCycleId);
+    if (selectedCycleId === null) return;
+    const cached = getCachedMinerWarsComparison(selectedCycleId);
+    void fetchComparison(selectedCycleId, cached === null);
     return () => abortRef.current?.abort();
   }, [selectedCycleId, fetchComparison]);
 
