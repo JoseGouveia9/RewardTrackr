@@ -159,7 +159,11 @@ export function useMinerWarsComparison({
       return;
     }
     reloadCycles().catch(() => {});
-    void fetchComparison(selectedCycleId);
+    // Same cache-miss fallback as the selectedCycleId effect: if the background
+    // prefetch failed (e.g. rate-limited on iOS after a large export), trigger a
+    // network fetch immediately so the panel populates without user interaction.
+    const cached = getCachedMinerWarsComparison(selectedCycleId);
+    void fetchComparison(selectedCycleId, cached === null);
   }, [cacheVersion, selectedCycleId, reloadCycles, fetchComparison]);
 
   return {
