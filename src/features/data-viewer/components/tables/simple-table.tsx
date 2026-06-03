@@ -121,6 +121,20 @@ export function SimpleTable({
     [filteredRows, rowSel, excluded],
   );
 
+  // Stable currency order derived from all filtered rows so the bar never reorders
+  // when individual entries are excluded.
+  const currencyOrder = useMemo(() => {
+    const seen = new Set<string>();
+    const order: string[] = [];
+    for (const row of filteredRows) {
+      if (!seen.has(row.currency)) {
+        seen.add(row.currency);
+        order.push(row.currency);
+      }
+    }
+    return order;
+  }, [filteredRows]);
+
   const currencyTotals = useMemo(() => {
     const map = new Map<string, { reward: number; rewardInUSD: number; rewardInFiat: number }>();
     for (const row of selectedRows) {
@@ -131,8 +145,8 @@ export function SimpleTable({
         rewardInFiat: cur.rewardInFiat + row.rewardInFiat,
       });
     }
-    return [...map.entries()];
-  }, [selectedRows]);
+    return currencyOrder.filter((c) => map.has(c)).map((c) => [c, map.get(c)!] as const);
+  }, [selectedRows, currencyOrder]);
 
   const grandTotal = useMemo(
     () =>

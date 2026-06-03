@@ -758,6 +758,7 @@ export function ShareModal({
               setSelectedKeys((prev) => {
                 const updated = new Set(prev);
                 for (const k of availableSheets) {
+                  if (!updated.has(k)) continue; // never re-add explicitly deselected sheets
                   const records = cache[k]?.records ?? [];
                   if (!records.length) continue;
                   const tabKey = (k === "upgrades" ? "purchases" : k) as RewardKey;
@@ -765,7 +766,7 @@ export function ShareModal({
                   const allExcluded = records.every((r, i) =>
                     excluded.has(`${k}::${String(r.createdAt ?? "")}::${i}`),
                   );
-                  if (!allExcluded) updated.add(k);
+                  if (allExcluded) updated.delete(k);
                 }
                 return updated;
               });
