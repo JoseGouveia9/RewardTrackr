@@ -11,6 +11,7 @@ import { ErrorBoundary } from "@/components/error-boundary/error-boundary";
 import type { Currency, EarnView, TxView, SimpleView, PurchaseView } from "../../types";
 import type { CacheState, RewardKey } from "@/features/export/types";
 import { RowSelectionProvider } from "../../stores/row-selection-context";
+import { userHasMinerWarsHistory } from "../../api/minerwars-comparison";
 import { ALL_TABS } from "../../utils/constants";
 import { loadFiatCode } from "../../utils";
 import { useDataViewerState } from "../../hooks/use-data-viewer-state";
@@ -28,7 +29,6 @@ interface DataViewerProps {
   isFetching?: boolean;
   fetchingKeys?: Set<RewardKey>;
   cacheVersion?: number;
-  minerWarsPrefetching?: boolean;
   onRefreshKeys?: (keys: RewardKey[]) => Promise<void>;
   onTabSeen?: (key: RewardKey) => void;
   title?: string;
@@ -49,7 +49,6 @@ export const DataViewer = memo(function DataViewer({
   isFetching = false,
   fetchingKeys,
   cacheVersion = 0,
-  minerWarsPrefetching = false,
   onRefreshKeys,
   onTabSeen,
   title = "Records",
@@ -95,9 +94,14 @@ export const DataViewer = memo(function DataViewer({
     isFetching && (fetchingKeys === undefined || fetchingKeys.has(activeKey));
 
   const visibleTabs = useMemo(() => {
-    if (!isSharedContext || isFetching) return ALL_TABS;
+    void cacheVersion;
+    const baseTabs = userHasMinerWarsHistory()
+      ? ALL_TABS
+      : ALL_TABS.filter((t) => t.key !== "minerwars");
 
-    const filtered = ALL_TABS.filter((tab) => {
+    if (!isSharedContext || isFetching) return baseTabs;
+
+    const filtered = baseTabs.filter((tab) => {
       if (tab.key === "purchases") {
         return (
           (sharedData?.["purchases"]?.records?.length ?? 0) > 0 ||
@@ -107,8 +111,8 @@ export const DataViewer = memo(function DataViewer({
       return (sharedData?.[tab.key]?.records?.length ?? 0) > 0;
     });
 
-    return filtered.length > 0 ? filtered : ALL_TABS;
-  }, [isFetching, isSharedContext, sharedData]);
+    return filtered.length > 0 ? filtered : baseTabs;
+  }, [cacheVersion, isFetching, isSharedContext, sharedData]);
 
   useEffect(() => {
     if (!visibleTabs.some((tab) => tab.key === activeKey)) {
@@ -493,7 +497,6 @@ export const DataViewer = memo(function DataViewer({
                       fiatCode={fiatCode}
                       isFetching={isActiveKeyFetching}
                       cacheVersion={cacheVersion}
-                      minerWarsPrefetching={minerWarsPrefetching}
                       onRefreshKeys={onRefreshKeys}
                       cacheEntry={sharedData ? (sharedData[activeKey] ?? null) : undefined}
                       dateRange={dateRange}

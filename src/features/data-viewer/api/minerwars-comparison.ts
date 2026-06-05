@@ -70,6 +70,14 @@ export function getCachedMinerWarsComparison(cycleId: number): MinerWarsComparis
   return persisted.data;
 }
 
+// Returns true if the user has at least one MinerWars cycle in cache.
+// Returns false only when cycles have been fetched and confirmed empty (never participated).
+// Returns true when cache is absent (unknown — default to showing the tab).
+export function userHasMinerWarsHistory(): boolean {
+  const cycles = getCachedCycles();
+  return cycles === null || cycles.length > 0;
+}
+
 // Returns null when no cache exists (does not fetch from the API).
 // Returns stored statuses as-is — status re-evaluation only happens in
 // fetchAvailableCycles(), which is called on explicit user actions (refresh /
@@ -108,34 +116,18 @@ export async function prefetchAllCompletedCycles(token: string): Promise<void> {
   const TODAY = new Date().toISOString().slice(0, 10);
   const headers = buildApiHeaders(token);
 
-  // Always fetch fresh cycles so the current live cycle is included even when
-  // stale persisted cycles are in localStorage from a previous session.
   let cycles: CycleInfo[];
   try {
-    const fresh = await fetchAllCyclesFromApi(headers);
-    cyclesCache = { data: fresh, ts: Date.now() };
-    persistCycles(fresh);
-    cycles = withResolvedStatuses(fresh);
+    cycles = await fetchAvailableCycles(token);
   } catch {
     return;
   }
 
-  // Live/pending cycles: use the full fetch path so comparison data is cached
-  // and the panel can load instantly from cache after the build report finishes.
-  const liveCycles = cycles.filter((c) => c.cycleEnd >= TODAY);
-  for (const cycle of liveCycles) {
-    try {
-      await fetchMinerWarsComparison(token, cycle.cycleId);
-    } catch {
-      // continue with next cycle on any per-cycle error
-    }
-  }
-
   const todo = cycles.filter((c) => {
+    if (c.cycleEnd >= TODAY) return false;
     const payDay = new Date(c.cycleEnd + "T00:00:00Z");
     payDay.setUTCDate(payDay.getUTCDate() + 1);
     const payDayStr = payDay.toISOString().slice(0, 10);
-    if (c.cycleEnd >= TODAY) return false;
     if (getPaymentDataFromBuildCache(payDayStr) === null) return false; // no build-cache payment data
     const persisted = loadPersistedComparison(c.cycleId);
     // Process when: no cached comparison, OR cached comparison still has estimation (no actual).
