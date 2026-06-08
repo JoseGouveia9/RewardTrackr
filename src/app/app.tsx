@@ -615,7 +615,6 @@ function App() {
           </Routes>
 
           <motion.p className="copyright" layout transition={LAYOUT_SPRING}>
-            © 2026 José Gouveia · Moustachio ·{" "}
             <Link className="copyright-link" to="/about">
               {t("footer.about")}
             </Link>
@@ -636,6 +635,7 @@ function App() {
             >
               {t("app.feedbackSuggestions")}
             </a>
+            <br />© 2026 José Gouveia · Moustachio
           </motion.p>
         </LayoutGroup>
       </main>

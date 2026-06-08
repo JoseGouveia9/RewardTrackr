@@ -47,7 +47,7 @@
     "allSheetsStored": "Alle Tabellen gespeichert. Werden vor der Erstellung auf Updates geprüft."
   },
   "auth": {
-    "connectViaBrowserExtension": "Über Browser-Erweiterung verbinden",
+    "connectViaBrowserExtension": "Loslegen",
     "installExtension": "RewardTrackr Browser-Erweiterung installieren",
     "compatible": "Kompatibel mit Chrome, Opera und Orion (Mobile iOS).",
     "step1": "GoMining öffnen und auf das Erweiterungssymbol klicken",
@@ -55,6 +55,8 @@
     "step3": "Nach der Synchronisierung zeigt die Erweiterung 'Hallo [Name] 👋' und 'Profil synchronisiert' an",
     "step4": "Auf 'Exporter öffnen' klicken und du wirst hierher weitergeleitet",
     "iVeSynced": "Ich hab synchronisiert, Exporter öffnen",
+    "howToUseExtension": "Wie man die Erweiterung verwendet",
+    "trustedBy": "{{count}} GoMining miners vertrauen Trackr",
     "havingIssues": "Probleme beim Synchronisieren?",
     "latestVersion": "Stell sicher, dass du die neueste Version der Erweiterung hast.",
     "userId": "Benutzer-ID:",

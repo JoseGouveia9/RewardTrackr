@@ -1,27 +1,29 @@
 .lang-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(0, 0, 0, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
   padding: 20px;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .lang-modal {
-  background: rgba(28, 28, 30, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(28, 28, 30, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 20px;
-  padding: 24px;
+  padding: 22px 22px 20px;
   width: 100%;
   max-width: 440px;
   max-height: calc(100vh - 40px);
   display: flex;
   flex-direction: column;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
 }
 
 .lang-modal-header {
@@ -32,9 +34,10 @@
 }
 
 .lang-modal-title {
-  font-size: 1rem;
+  font-size: 1.05rem;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.92);
+  color: #ffffff;
+  font-family: "Space Grotesk", sans-serif;
   letter-spacing: 0.01em;
 }
 
@@ -122,14 +125,19 @@
 }
 
 /* Light theme */
+.page.theme-light .lang-overlay {
+  background: rgba(0, 0, 0, 0.45);
+}
+
 .page.theme-light .lang-modal {
-  background: rgba(255, 255, 255, 0.96);
-  border-color: rgba(0, 0, 0, 0.07);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.15);
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
 }
 
 .page.theme-light .lang-modal-title {
   color: #22283a;
+  font-family: "Space Grotesk", sans-serif;
 }
 
 .page.theme-light .lang-modal-close {

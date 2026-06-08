@@ -47,7 +47,7 @@
     "allSheetsStored": "جميع الأوراق مخزنة. سيتم التحقق من التحديثات قبل الإنشاء."
   },
   "auth": {
-    "connectViaBrowserExtension": "الاتصال عبر امتداد المتصفح",
+    "connectViaBrowserExtension": "ابدأ",
     "installExtension": "تثبيت امتداد متصفح RewardTrackr",
     "compatible": "متوافق مع Chrome وOpera وOrion (iOS للجوال).",
     "step1": "افتح GoMining وانقر على أيقونة الامتداد",
@@ -55,6 +55,8 @@
     "step3": "بعد المزامنة، يظهر الامتداد 'مرحباً [الاسم] 👋' و'تمت مزامنة الملف الشخصي'",
     "step4": "انقر على 'فتح المُصدِّر' وسيتم إعادة توجيهك إلى هنا",
     "iVeSynced": "لقد تمت المزامنة، افتح المُصدِّر",
+    "howToUseExtension": "كيفية استخدام الإضافة",
+    "trustedBy": "{{count}} miners من GoMining يثقون بـ Trackr",
     "havingIssues": "هل تواجه مشكلات في المزامنة؟",
     "latestVersion": "تأكد من أن لديك أحدث إصدار من الامتداد.",
     "userId": "معرف المستخدم:",

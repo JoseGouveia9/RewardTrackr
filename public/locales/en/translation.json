@@ -47,7 +47,7 @@
     "allSheetsStored": "All sheets stored. Will probe for updates before building."
   },
   "auth": {
-    "connectViaBrowserExtension": "Connect via Browser Extension",
+    "connectViaBrowserExtension": "Get Started",
     "installExtension": "Install the RewardTrackr browser extension",
     "compatible": "Compatible with Chrome, Opera and Orion (Mobile iOS).",
     "step1": "Open GoMining and click the extension icon",
@@ -55,6 +55,8 @@
     "step3": "Once synced, the extension shows 'Hello [name] 👋' and 'Profile synced.'",
     "step4": "Click 'Open Exporter' and you will be redirected here",
     "iVeSynced": "I've synced, open exporter",
+    "howToUseExtension": "How to use the extension",
+    "trustedBy": "Trusted by {{count}} GoMining miners",
     "havingIssues": "Having issues syncing?",
     "latestVersion": "Make sure you have the latest version of the extension.",
     "userId": "User ID:",

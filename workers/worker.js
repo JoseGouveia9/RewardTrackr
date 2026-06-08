@@ -3,6 +3,7 @@ import { handleOgRoute } from "./routes/og.js";
 import { handleDefaultProxy, handleSeProxy } from "./routes/proxy.js";
 import { handleRateLimitRoutes } from "./routes/rate-limit.js";
 import { handleShareRoutes } from "./routes/share.js";
+import { handleStatsRoute } from "./routes/stats.js";
 
 const MAX_BYTES = 5 * 1024 * 1024;
 const MAX_EXPORTS_PER_DAY = 3;
@@ -45,6 +46,9 @@ export default {
 
     const announcementResponse = await handleAnnouncementRoute({ url, request, env, jsonResponse });
     if (announcementResponse) return announcementResponse;
+
+    const statsResponse = await handleStatsRoute({ url, jsonResponse, env });
+    if (statsResponse) return statsResponse;
 
     const rateLimitResponse = await handleRateLimitRoutes({
       url,

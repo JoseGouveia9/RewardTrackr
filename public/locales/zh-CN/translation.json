@@ -47,7 +47,7 @@
     "allSheetsStored": "所有表格已存储。生成前将检查更新。"
   },
   "auth": {
-    "connectViaBrowserExtension": "通过浏览器扩展连接",
+    "connectViaBrowserExtension": "开始",
     "installExtension": "安装 RewardTrackr 浏览器扩展",
     "compatible": "兼容 Chrome、Opera 和 Orion（iOS 移动版）。",
     "step1": "打开 GoMining 并点击扩展图标",
@@ -55,6 +55,8 @@
     "step3": "同步后，扩展显示\"你好 [姓名] 👋\"和\"个人资料已同步\"",
     "step4": "点击\"打开导出器\"，您将被重定向至此处",
     "iVeSynced": "我已同步，打开导出器",
+    "howToUseExtension": "如何使用扩展程序",
+    "trustedBy": "{{count}} 位 GoMining miners 信任 Trackr",
     "havingIssues": "同步遇到问题？",
     "latestVersion": "请确保您使用的是最新版本的扩展程序。",
     "userId": "用户ID：",

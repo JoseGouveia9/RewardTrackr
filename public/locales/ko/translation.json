@@ -47,7 +47,7 @@
     "allSheetsStored": "모든 시트 저장됨. 생성 전 업데이트를 확인합니다."
   },
   "auth": {
-    "connectViaBrowserExtension": "브라우저 확장 프로그램으로 연결",
+    "connectViaBrowserExtension": "시작하기",
     "installExtension": "RewardTrackr 브라우저 확장 프로그램 설치",
     "compatible": "Chrome, Opera 및 Orion(모바일 iOS)과 호환됩니다.",
     "step1": "GoMining을 열고 확장 프로그램 아이콘 클릭",
@@ -55,6 +55,8 @@
     "step3": "동기화 후 확장 프로그램에 '안녕하세요 [이름] 👋'과 '프로필 동기화됨'이 표시됩니다",
     "step4": "'내보내기 도구 열기'를 클릭하면 이 페이지로 리디렉션됩니다",
     "iVeSynced": "동기화했습니다, 내보내기 도구 열기",
+    "howToUseExtension": "확장 프로그램 사용 방법",
+    "trustedBy": "{{count}}명의 GoMining miners가 Trackr를 신뢰합니다",
     "havingIssues": "동기화에 문제가 있나요?",
     "latestVersion": "최신 버전의 확장 프로그램이 있는지 확인하세요.",
     "userId": "사용자 ID:",

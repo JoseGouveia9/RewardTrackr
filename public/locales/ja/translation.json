@@ -47,7 +47,7 @@
     "allSheetsStored": "全シート保存済み。生成前に更新を確認します。"
   },
   "auth": {
-    "connectViaBrowserExtension": "ブラウザ拡張機能で接続",
+    "connectViaBrowserExtension": "始める",
     "installExtension": "RewardTrackrブラウザ拡張機能をインストール",
     "compatible": "Chrome、Opera、Orion（モバイルiOS）対応。",
     "step1": "GoMiningを開いて拡張機能アイコンをクリック",
@@ -55,6 +55,8 @@
     "step3": "同期後、拡張機能に「こんにちは [名前] 👋」と「プロフィール同期済み」が表示されます",
     "step4": "「エクスポーターを開く」をクリックするとここにリダイレクトされます",
     "iVeSynced": "同期しました、エクスポーターを開く",
+    "howToUseExtension": "拡張機能の使い方",
+    "trustedBy": "{{count}}人のGoMining minersが信頼しています",
     "havingIssues": "同期に問題がありますか？",
     "latestVersion": "拡張機能の最新バージョンをお持ちであることを確認してください。",
     "userId": "ユーザーID：",

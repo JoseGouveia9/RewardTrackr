@@ -1,4 +1,5 @@
 import { resolveVerifiedUser } from "../lib/auth.js";
+import { trackUserIfNew } from "./stats.js";
 
 export async function handleRateLimitRoutes({
   url,
@@ -12,6 +13,9 @@ export async function handleRateLimitRoutes({
     if (!userId) {
       return jsonResponse({ allowed: false, message: "Unauthorized." }, 401);
     }
+
+    // Track unique users for the stats counter (no-op after first call)
+    trackUserIfNew(env, userId);
 
     const day = new Date().toISOString().slice(0, 10);
     const key = `rl_${userId}_${day}`;

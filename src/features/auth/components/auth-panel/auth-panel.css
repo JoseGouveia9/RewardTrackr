@@ -2,8 +2,238 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
+  margin-left: 10%;
+  margin-right: 10%;
 }
 
+@media (max-width: 640px) {
+  .panel-auth {
+    margin-left: 0;
+    margin-right: 0;
+  }
+}
+
+.auth-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.auth-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.auth-header-top h2 {
+  margin: 0;
+}
+
+.auth-howto-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--color-text-muted, #888);
+  font-size: 0.8rem;
+  transition: color 0.15s;
+}
+
+.auth-howto-btn:hover {
+  color: #f7931a;
+}
+
+.auth-howto-btn:focus-visible {
+  outline: 2px solid rgba(247, 147, 26, 0.45);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.auth-howto-btn-icon {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.auth-install-btn {
+  display: flex;
+  text-align: center;
+  text-decoration: none;
+  padding: 16px 22px;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.auth-user-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #6d7589;
+  font-size: 0.8rem;
+  font-family: "Space Grotesk", sans-serif !important;
+  margin: 0;
+}
+
+.page.theme-dark .auth-user-count {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.auth-user-count-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #f7931a;
+  flex-shrink: 0;
+  animation: auth-dot-blink 1.2s ease-in-out infinite;
+}
+
+@keyframes auth-dot-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* Modal */
+@keyframes auth-modal-overlay-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes auth-modal-in {
+  from { opacity: 0; transform: scale(0.94) translateY(8px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.auth-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+  padding: 20px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: auth-modal-overlay-in 0.18s ease forwards;
+}
+
+.auth-modal {
+  width: 100%;
+  max-width: 680px;
+  max-height: 90dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: rgba(28, 28, 30, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: auth-modal-in 0.22s cubic-bezier(0.34, 1.26, 0.64, 1) forwards;
+}
+
+.page.theme-light .auth-modal {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+.page.theme-light .auth-modal-header {
+  border-bottom-color: rgba(0, 0, 0, 0.08);
+}
+
+.page.theme-light .auth-modal-header h3 {
+  color: #22283a;
+}
+
+.page.theme-light .auth-modal-close {
+  background: rgba(0, 0, 0, 0.06);
+  color: #6d7589;
+}
+
+.page.theme-light .auth-modal-close:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: #22283a;
+}
+
+.page.theme-light .auth-modal-body .auth-step {
+  color: #22283a;
+}
+
+.page.theme-light .auth-modal-body .auth-step-sub {
+  color: #6d7589;
+}
+
+.auth-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 22px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+.auth-modal-header h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #ffffff;
+  font-family: "Space Grotesk", sans-serif;
+}
+
+.auth-modal-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+  flex-shrink: 0;
+  font-size: 0.85rem;
+  transition: background 0.14s ease, color 0.14s ease;
+  padding: 0;
+}
+
+.auth-modal-close:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+}
+
+.auth-modal-body {
+  padding: 20px 22px 22px;
+  overflow-y: auto;
+}
+
+/* Steps inside modal */
+.auth-modal-body .auth-step {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.auth-modal-body .auth-step-sub {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+/* Steps (shared) */
 .auth-steps {
   display: flex;
   flex-direction: column;
