@@ -8,7 +8,6 @@
   z-index: 1000;
   padding: 20px;
   backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
 }
 
 .lang-modal {

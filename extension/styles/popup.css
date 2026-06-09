@@ -11,7 +11,9 @@ body {
   color: #2f3647;
 }
 
-h1, h2, h3 {
+h1,
+h2,
+h3 {
   font-family: "Space Grotesk", sans-serif;
 }
 
@@ -24,7 +26,6 @@ h1, h2, h3 {
   border: 1px solid rgba(0, 0, 0, 0.07);
   border-radius: 20px;
   backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
 }
 
 /* ── Hero title ──────────────────────────────────────────────── */
@@ -50,7 +51,9 @@ h1, h2, h3 {
   font-weight: 700;
   letter-spacing: 0.06em;
   margin-bottom: 2px;
-  transition: font-size 0.3s ease, letter-spacing 0.3s ease;
+  transition:
+    font-size 0.3s ease,
+    letter-spacing 0.3s ease;
 }
 
 .hero-label-main {
@@ -59,7 +62,7 @@ h1, h2, h3 {
 }
 
 .hero-label-accent {
-  color: #F7931A;
+  color: #f7931a;
 }
 
 .hero-title-row.synced .hero-label {
@@ -86,7 +89,10 @@ body.theme-dark .hero-title-row.synced .hero-label-main {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  transition: opacity 0.25s ease, transform 0.25s ease, max-height 0.25s ease;
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease,
+    max-height 0.25s ease;
 }
 
 .hero-greeting.visible {
@@ -116,7 +122,6 @@ body.theme-dark .hero-title-row.synced .hero-label-main {
   border: 1px solid rgba(22, 163, 74, 0.25);
   background: rgba(220, 252, 231, 0.6);
   backdrop-filter: blur(12px) saturate(140%);
-  -webkit-backdrop-filter: blur(12px) saturate(140%);
   color: #166534;
   border-radius: 14px;
   font-size: 0.78rem;
@@ -160,7 +165,6 @@ body.theme-dark .opensource-notice a {
   border: 1px solid rgba(242, 197, 123, 0.5);
   background: rgba(255, 246, 232, 0.6);
   backdrop-filter: blur(12px) saturate(140%);
-  -webkit-backdrop-filter: blur(12px) saturate(140%);
   color: #7a4d0b;
   border-radius: 14px;
   font-size: 0.78rem;
@@ -187,7 +191,7 @@ body.theme-dark .opensource-notice a {
   font-size: 0.72rem;
   font-weight: 700;
   font-family: "Space Grotesk", sans-serif;
-  color: #F7931A;
+  color: #f7931a;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -213,16 +217,19 @@ button {
   font-weight: 600;
   line-height: 1.5;
   cursor: pointer;
-  background: linear-gradient(90deg, #F7931A 0%, #E07D10 100%);
-  border-color: #E07D10;
+  background: linear-gradient(90deg, #f7931a 0%, #e07d10 100%);
+  border-color: #e07d10;
   color: #fff;
   box-shadow: 0 4px 10px rgba(247, 147, 26, 0.22);
-  transition: background 0.14s ease, border-color 0.14s ease, transform 0.14s ease;
+  transition:
+    background 0.14s ease,
+    border-color 0.14s ease,
+    transform 0.14s ease;
 }
 
 button:hover:not(:disabled) {
-  background: linear-gradient(90deg, #E8850F 0%, #CB7010 100%);
-  border-color: #CB7010;
+  background: linear-gradient(90deg, #e8850f 0%, #cb7010 100%);
+  border-color: #cb7010;
 }
 
 button:active:not(:disabled) {
@@ -262,7 +269,6 @@ button.not-ready:hover:not(:disabled) {
   line-height: 1.5;
   border: 1px solid transparent;
   backdrop-filter: blur(12px) saturate(140%);
-  -webkit-backdrop-filter: blur(12px) saturate(140%);
 }
 
 .status svg {
@@ -271,7 +277,7 @@ button.not-ready:hover:not(:disabled) {
 
 .status-ready {
   background: rgba(247, 147, 26, 0.09);
-  color: #CB7010;
+  color: #cb7010;
   border-color: rgba(247, 147, 26, 0.2);
 }
 
@@ -351,14 +357,14 @@ body.theme-dark .intro-card-text {
 }
 
 body.theme-dark button {
-  background: linear-gradient(90deg, #F7931A 0%, #E07D10 100%);
-  border-color: #E07D10;
+  background: linear-gradient(90deg, #f7931a 0%, #e07d10 100%);
+  border-color: #e07d10;
   box-shadow: 0 4px 12px rgba(247, 147, 26, 0.3);
 }
 
 body.theme-dark button:hover:not(:disabled) {
-  background: linear-gradient(90deg, #E8850F 0%, #CB7010 100%);
-  border-color: #CB7010;
+  background: linear-gradient(90deg, #e8850f 0%, #cb7010 100%);
+  border-color: #cb7010;
 }
 
 body.theme-dark button.not-ready {
@@ -374,7 +380,7 @@ body.theme-dark button.not-ready:hover:not(:disabled) {
 
 body.theme-dark .status-ready {
   background: rgba(247, 147, 26, 0.15);
-  color: #FBB060;
+  color: #fbb060;
   border-color: rgba(247, 147, 26, 0.3);
 }
 
