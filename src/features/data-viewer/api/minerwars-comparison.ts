@@ -93,21 +93,14 @@ export function getCachedCycles(): CycleInfo[] | null {
   return null;
 }
 
-// Falls back to the API when cache is empty; requires a valid token.
-// Resolves statuses and persists them back so getCachedCycles() returns
-// up-to-date statuses after any explicit refresh or build report.
+// Always re-fetches from the API — called only on explicit user actions (refresh button,
+// build report). Resolves statuses and persists them back so getCachedCycles() returns
+// up-to-date statuses (including any new live cycle) on subsequent reads.
 export async function fetchAvailableCycles(token: string): Promise<CycleInfo[]> {
-  if (!cyclesCache) {
-    const persisted = loadPersistedCycles();
-    if (persisted) {
-      cyclesCache = persisted;
-    } else {
-      const data = await fetchAllCyclesFromApi(buildApiHeaders(token));
-      cyclesCache = { data, ts: Date.now() };
-    }
-  }
+  const data = await fetchAllCyclesFromApi(buildApiHeaders(token));
+  cyclesCache = { data, ts: Date.now() };
 
-  const resolved = withResolvedStatuses(cyclesCache.data);
+  const resolved = withResolvedStatuses(data);
   // Persist resolved statuses so getCachedCycles() reflects them on subsequent reads.
   cyclesCache = { data: resolved, ts: cyclesCache.ts };
   persistCycles(resolved);
