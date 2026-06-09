@@ -140,31 +140,21 @@ export function useMinerWarsComparison({
 
   useEffect(() => {
     if (cacheVersion <= 0) return;
-    // Build report completed — always reload cycles and refresh panel from cache.
-    // The export has written fresh comparison data, so we must re-read it here.
-    // We do not skip the cache (no network call) — the export already populated it.
+    // Re-read cycles from cache only — no status re-evaluation, no network call.
+    // Status re-evaluation (withResolvedStatuses) only happens on explicit refresh
+    // (refresh button) or build report (prefetchAllCompletedCycles), which persist
+    // resolved statuses back via fetchAvailableCycles. This prevents a tab-seen
+    // cacheVersion bump from silently flipping "in-progress" → "pending".
+    const fresh = getCachedCycles();
+    if (fresh !== null) setCycles(fresh);
     if (selectedCycleId === null) {
-      // Panel mounted after loading finished — cycles may not have been in cache
-      // at mount time. Keep the skeleton visible while we fetch them.
-      // prefetchAllCompletedCycles (called during build report) already fetched
-      // and cached all cycles including the live one, so reading from cache here
-      // is sufficient — no extra network call needed.
-      setLoadingCycles(true);
-      reloadCycles()
-        .then((list) => {
-          if (list.length > 0) setSelectedCycleId(list[0].cycleId);
-        })
-        .catch(() => {})
-        .finally(() => setLoadingCycles(false));
+      if (fresh && fresh.length > 0) setSelectedCycleId(fresh[0].cycleId);
+      setLoadingCycles(false);
       return;
     }
-    reloadCycles().catch(() => {});
-    // Same cache-miss fallback as the selectedCycleId effect: if the background
-    // prefetch failed (e.g. rate-limited on iOS after a large export), trigger a
-    // network fetch immediately so the panel populates without user interaction.
     const cached = getCachedMinerWarsComparison(selectedCycleId);
     void fetchComparison(selectedCycleId, cached === null);
-  }, [cacheVersion, selectedCycleId, reloadCycles, fetchComparison]);
+  }, [cacheVersion, selectedCycleId, fetchComparison]); // reloadCycles intentionally excluded
 
   return {
     cycles,
