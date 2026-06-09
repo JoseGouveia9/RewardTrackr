@@ -163,10 +163,16 @@ export const DataViewer = memo(function DataViewer({
 
   const hasTrendsData = useMemo(() => {
     void cacheVersion;
+    if (activeKey === "minerwars") {
+      if (currency === "BTC") return false;
+      const entry = sharedData ? sharedData["minerwars"] : loadCacheEntry("minerwars");
+      if (!entry?.records?.length) return false;
+      return (entry.records as Record<string, unknown>[]).some((r) => r.btcPriceAtTime != null);
+    }
     const entry = sharedData ? sharedData["solo-mining"] : loadCacheEntry("solo-mining");
     if (!entry?.records?.length) return false;
     return (entry.records as Record<string, unknown>[]).some((r) => r.satsPerTh != null);
-  }, [cacheVersion, sharedData]);
+  }, [activeKey, currency, cacheVersion, sharedData]);
 
   const tabsWithNew = useMemo(() => {
     if (sharedData) return new Set<RewardKey>();
@@ -405,34 +411,37 @@ export const DataViewer = memo(function DataViewer({
                 </button>
               )}
               {hasViewSelector && !isMiningTab && <span className="dv-toolbar-separator">·</span>}
-              {hasActiveData && isMiningTab && activeKey == "solo-mining" && hasTrendsData && (
-                <>
-                  <button
-                    type="button"
-                    className={`dv-trends-toggle${showTrends && !trendsExiting ? " dv-trends-toggle--active" : ""}`}
-                    onClick={toggleTrends}
-                    aria-pressed={showTrends && !trendsExiting}
-                  >
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      aria-hidden="true"
+              {hasActiveData &&
+                isMiningTab &&
+                (activeKey === "solo-mining" || activeKey === "minerwars") &&
+                hasTrendsData && (
+                  <>
+                    <button
+                      type="button"
+                      className={`dv-trends-toggle${showTrends && !trendsExiting ? " dv-trends-toggle--active" : ""}`}
+                      onClick={toggleTrends}
+                      aria-pressed={showTrends && !trendsExiting}
                     >
-                      <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
-                      <polyline points="16 7 22 7 22 13" />
-                    </svg>
-                    <span className="trends-label-full">{t("dataViewer.trends")}</span>
-                    <span className="trends-label-short">{t("dataViewer.trendsShort")}</span>
-                  </button>
-                  <span className="dv-toolbar-separator">·</span>
-                </>
-              )}
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
+                        <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+                        <polyline points="16 7 22 7 22 13" />
+                      </svg>
+                      <span className="trends-label-full">{t("dataViewer.trends")}</span>
+                      <span className="trends-label-short">{t("dataViewer.trendsShort")}</span>
+                    </button>
+                    <span className="dv-toolbar-separator">·</span>
+                  </>
+                )}
               {hasActiveData && isMiningTab ? (
                 <ViewSelector
                   views={currencies}

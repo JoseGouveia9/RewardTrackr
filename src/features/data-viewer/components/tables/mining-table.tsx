@@ -298,13 +298,13 @@ export function MiningTable({
   );
 
   const hasSubLabel = useMemo(() => {
-    if (rewardKey === "minerwars" || !rows.length) return false;
+    if (!rows.length) return false;
     if (currency === "BTC") return rows.some((r) => r.satsPerTh != null);
     if (currency === "GMT") return rows.some((r) => r.btcPriceGmt != null);
     if (currency === "USD") return rows.some((r) => r.btcPriceAtTime != null);
     if (currency === "FIAT") return rows.some((r) => r.btcPriceFiat != null);
     return false;
-  }, [rewardKey, currency, rows]);
+  }, [currency, rows]);
 
   const hasSatsLabel = useMemo(
     () => rewardKey !== "minerwars" && rows.some((r) => r.satsPerTh != null),
@@ -509,105 +509,84 @@ export function MiningTable({
                       {formatMiningValue(row.poolReward, currency)}
                       <MiningCurrencyIcon currency={currency} fiatCode={fiatCode} />
                     </span>
-                    {showTrends &&
-                      rewardKey !== "minerwars" &&
-                      currency === "BTC" &&
-                      row.satsPerTh != null && (
-                        <div className="dv-cell-sub">
-                          Sats/TH:{" "}
-                          {(Math.floor(row.satsPerTh * 100) / 100).toLocaleString(undefined, {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}{" "}
-                          Sats
-                          {isDiffDay && (
-                            <TrendArrow current={row.satsPerTh} prev={prevRow?.satsPerTh} />
-                          )}
-                        </div>
-                      )}
-                    {showTrends &&
-                      rewardKey !== "minerwars" &&
-                      currency === "GMT" &&
-                      row.btcPriceGmt != null && (
-                        <div className="dv-cell-sub">
-                          {t("dataViewer.btcPrice")}:{" "}
-                          {row.btcPriceGmt.toLocaleString(undefined, { maximumFractionDigits: 0 })}{" "}
-                          GMT
-                          <TrendArrow current={row.btcPriceGmt} prev={prevRow?.btcPriceGmt} />
-                        </div>
-                      )}
-                    {showTrends &&
-                      rewardKey !== "minerwars" &&
-                      currency === "GMT" &&
-                      row.satsPerTh != null && (
-                        <div className="dv-cell-sub">
-                          Sats/TH:{" "}
-                          {(Math.floor(row.satsPerTh * 100) / 100).toLocaleString(undefined, {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}{" "}
-                          Sats
-                          {isDiffDay && (
-                            <TrendArrow current={row.satsPerTh} prev={prevRow?.satsPerTh} />
-                          )}
-                        </div>
-                      )}
-                    {showTrends &&
-                      rewardKey !== "minerwars" &&
-                      currency === "USD" &&
-                      row.btcPriceAtTime != null && (
-                        <div className="dv-cell-sub">
-                          {t("dataViewer.btcPrice")}:{" "}
-                          {row.btcPriceAtTime.toLocaleString(undefined, {
-                            maximumFractionDigits: 0,
-                          })}{" "}
-                          USD
-                          <TrendArrow current={row.btcPriceAtTime} prev={prevRow?.btcPriceAtTime} />
-                        </div>
-                      )}
-                    {showTrends &&
-                      rewardKey !== "minerwars" &&
-                      currency === "USD" &&
-                      row.satsPerTh != null && (
-                        <div className="dv-cell-sub">
-                          Sats/TH:{" "}
-                          {(Math.floor(row.satsPerTh * 100) / 100).toLocaleString(undefined, {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}{" "}
-                          Sats
-                          {isDiffDay && (
-                            <TrendArrow current={row.satsPerTh} prev={prevRow?.satsPerTh} />
-                          )}
-                        </div>
-                      )}
-                    {showTrends &&
-                      rewardKey !== "minerwars" &&
-                      currency === "FIAT" &&
-                      row.btcPriceFiat != null && (
-                        <div className="dv-cell-sub">
-                          {t("dataViewer.btcPrice")}:{" "}
-                          {row.btcPriceFiat.toLocaleString(undefined, { maximumFractionDigits: 0 })}{" "}
-                          {fiatCode}
-                          <TrendArrow current={row.btcPriceFiat} prev={prevRow?.btcPriceFiat} />
-                        </div>
-                      )}
-                    {showTrends &&
-                      rewardKey !== "minerwars" &&
-                      currency === "FIAT" &&
-                      row.satsPerTh != null && (
-                        <div className="dv-cell-sub">
-                          Sats/TH:{" "}
-                          {(Math.floor(row.satsPerTh * 100) / 100).toLocaleString(undefined, {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}{" "}
-                          Sats
-                          {isDiffDay && (
-                            <TrendArrow current={row.satsPerTh} prev={prevRow?.satsPerTh} />
-                          )}
-                        </div>
-                      )}
+                    {showTrends && currency === "BTC" && row.satsPerTh != null && (
+                      <div className="dv-cell-sub">
+                        Sats/TH:{" "}
+                        {(Math.floor(row.satsPerTh * 100) / 100).toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}{" "}
+                        Sats
+                        {isDiffDay && (
+                          <TrendArrow current={row.satsPerTh} prev={prevRow?.satsPerTh} />
+                        )}
+                      </div>
+                    )}
+                    {showTrends && currency === "GMT" && row.btcPriceGmt != null && (
+                      <div className="dv-cell-sub">
+                        {t("dataViewer.btcPrice")}:{" "}
+                        {row.btcPriceGmt.toLocaleString(undefined, { maximumFractionDigits: 0 })}{" "}
+                        GMT
+                        <TrendArrow current={row.btcPriceGmt} prev={prevRow?.btcPriceGmt} />
+                      </div>
+                    )}
+                    {showTrends && currency === "GMT" && row.satsPerTh != null && (
+                      <div className="dv-cell-sub">
+                        Sats/TH:{" "}
+                        {(Math.floor(row.satsPerTh * 100) / 100).toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}{" "}
+                        Sats
+                        {isDiffDay && (
+                          <TrendArrow current={row.satsPerTh} prev={prevRow?.satsPerTh} />
+                        )}
+                      </div>
+                    )}
+                    {showTrends && currency === "USD" && row.btcPriceAtTime != null && (
+                      <div className="dv-cell-sub">
+                        {t("dataViewer.btcPrice")}:{" "}
+                        {row.btcPriceAtTime.toLocaleString(undefined, {
+                          maximumFractionDigits: 0,
+                        })}{" "}
+                        USD
+                        <TrendArrow current={row.btcPriceAtTime} prev={prevRow?.btcPriceAtTime} />
+                      </div>
+                    )}
+                    {showTrends && currency === "USD" && row.satsPerTh != null && (
+                      <div className="dv-cell-sub">
+                        Sats/TH:{" "}
+                        {(Math.floor(row.satsPerTh * 100) / 100).toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}{" "}
+                        Sats
+                        {isDiffDay && (
+                          <TrendArrow current={row.satsPerTh} prev={prevRow?.satsPerTh} />
+                        )}
+                      </div>
+                    )}
+                    {showTrends && currency === "FIAT" && row.btcPriceFiat != null && (
+                      <div className="dv-cell-sub">
+                        {t("dataViewer.btcPrice")}:{" "}
+                        {row.btcPriceFiat.toLocaleString(undefined, { maximumFractionDigits: 0 })}{" "}
+                        {fiatCode}
+                        <TrendArrow current={row.btcPriceFiat} prev={prevRow?.btcPriceFiat} />
+                      </div>
+                    )}
+                    {showTrends && currency === "FIAT" && row.satsPerTh != null && (
+                      <div className="dv-cell-sub">
+                        Sats/TH:{" "}
+                        {(Math.floor(row.satsPerTh * 100) / 100).toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}{" "}
+                        Sats
+                        {isDiffDay && (
+                          <TrendArrow current={row.satsPerTh} prev={prevRow?.satsPerTh} />
+                        )}
+                      </div>
+                    )}
                   </td>
                   <td>
                     <span className="dv-cell-with-icon">
