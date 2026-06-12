@@ -133,6 +133,7 @@ export function useMinerWarsComparison({
   const refresh = useCallback(async () => {
     if (selectedCycleId === null) return;
 
+    setLoading(true);
     await reloadCycles().catch(() => []);
     invalidateCycleCache(selectedCycleId);
     await fetchComparison(selectedCycleId, true);
