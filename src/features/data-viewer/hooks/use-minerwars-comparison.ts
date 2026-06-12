@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { decodeJwt } from "@/lib/http";
 import { LS_KEY_SYNC_TOKEN } from "@/lib/storage-keys";
 import {
@@ -47,9 +47,44 @@ export function useMinerWarsComparison({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
-  // Computed once per mount — token doesn't change mid-session, and if it did
-  // the user would see a network error on the next action anyway.
-  const isLoggedIn = useMemo(() => isTokenValid(getToken()), []);
+  const [isLoggedIn, setIsLoggedIn] = useState(() => isTokenValid(getToken()));
+
+  // Cross-tab: storage event fires when another tab sets/removes the token
+  useEffect(() => {
+    const check = () => setIsLoggedIn(isTokenValid(getToken()));
+    window.addEventListener("storage", check);
+    return () => window.removeEventListener("storage", check);
+  }, []);
+
+  // Same-tab API 401: rt:session-expired is dispatched by postJson on unauthorized response
+  useEffect(() => {
+    const handleExpired = () => setIsLoggedIn(false);
+    window.addEventListener("rt:session-expired", handleExpired);
+    return () => window.removeEventListener("rt:session-expired", handleExpired);
+  }, []);
+
+  // Same-tab expiry: re-check timed exactly to the JWT exp claim
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    const decoded = decodeJwt(getToken());
+    if (decoded?.exp == null) return;
+    const msUntilExpiry = decoded.exp * 1000 - Date.now();
+    if (msUntilExpiry <= 0) {
+      setIsLoggedIn(false);
+      return;
+    }
+    const timer = setTimeout(() => setIsLoggedIn(isTokenValid(getToken())), msUntilExpiry + 100);
+    return () => clearTimeout(timer);
+  }, [isLoggedIn]);
+
+  // Same-tab token injection (e.g. from browser extension): poll while logged out
+  useEffect(() => {
+    if (isLoggedIn) return;
+    const interval = setInterval(() => {
+      if (isTokenValid(getToken())) setIsLoggedIn(true);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [isLoggedIn]);
 
   const reloadCycles = useCallback(async (): Promise<CycleInfo[]> => {
     const token = getToken();

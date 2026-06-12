@@ -106,6 +106,18 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
     return () => window.removeEventListener("storage", handleStorage);
   }, [applyToken, t]);
 
+  useEffect(() => {
+    const handleApiExpiry = (): void => {
+      clearExpiryTimer();
+      sessionStorage.removeItem(LS_KEY_SYNC_TOKEN);
+      setUser(null);
+      setStoredToken("");
+      onMessage(t("auth.sessionExpired"));
+    };
+    window.addEventListener("rt:session-expired", handleApiExpiry);
+    return () => window.removeEventListener("rt:session-expired", handleApiExpiry);
+  }, [clearExpiryTimer, onMessage, t]);
+
   // Polls sessionStorage for a token written by the browser extension (cross-context write)
   useEffect(() => {
     if (user) return;

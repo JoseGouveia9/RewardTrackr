@@ -63,6 +63,9 @@ export async function postJson<TResponse = unknown>(
         (data?.error as string) ||
         text?.slice(0, 300) ||
         `HTTP ${response.status}`;
+      if (response.status === 401) {
+        window.dispatchEvent(new CustomEvent("rt:session-expired"));
+      }
       throw new Error(message);
     }
 
