@@ -243,6 +243,7 @@ export async function prefetchAllCompletedCycles(token: string): Promise<void> {
         netGmt: null,
         btcPrice: histBtcPrice,
         gmtPrice: histGmtPrice,
+        zeroedRounds: null,
       };
 
       persistComparison(result);
@@ -575,7 +576,8 @@ async function _doFetchMinerWarsComparison(
           ? (round.multiplier / sumAllMultipliers) * (userTH / clanTH)
           : 0;
       const roundMaintUSD = (roundElecUSD + roundSvcUSD) * share * maintDiscountFactor;
-      const roundUserSats = btcPerBlock * round.multiplier * (clanTH > 0 ? userTH / clanTH : 0) * 1e8;
+      const roundUserSats =
+        btcPerBlock * round.multiplier * (clanTH > 0 ? userTH / clanTH : 0) * 1e8;
       const roundMaintSats = roundMaintUSD / maintBtcPrice;
       if (roundMaintSats > roundUserSats) {
         zeroedRounds.push({ roundId: round.roundId, blocks: round.multiplier });
