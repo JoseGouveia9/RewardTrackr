@@ -1,4 +1,4 @@
-{
+﻿{
   "common": {
     "back": "Indietro",
     "cancel": "Annulla",
@@ -265,8 +265,8 @@
     "warnBtcFundZero": "Il fondo BTC della tua lega è attualmente 0. La stima MinerWars mostrerà 0 finché il fondo non inizierà ad essere alimentato.\nRiprova domani quando il primo giorno del ciclo sarà stato finanziato.",
     "warnNoClanAnalyticsLive": "Nessuna analisi del clan (il clan potrebbe avere meno di 30 giorni) — usando la potenza attuale del clan per tutti i round. La stima potrebbe essere sovrastimata o sottostimata.",
     "warnNoClanAnalyticsDone": "Nessuna analisi del clan (il clan potrebbe avere meno di 30 giorni) — usando la potenza del clan a fine ciclo per tutti i round. La stima potrebbe essere sovrastimata o sottostimata.",
-    "warnZeroedRounds": "I seguenti round sono stati esclusi dalla manutenzione perché la manutenzione ha superato la ricompensa stimata:",
-    "warnZeroedRoundsItem": "Round {{roundId}} con {{blocks}} blocchi",
+    "warnZeroedRounds": "I seguenti blocchi sono stati esclusi dalla manutenzione perche la manutenzione ha superato la ricompensa stimata:",
+    "warnZeroedRoundsItem": "Blocco {{blockNumber}} con moltiplicatore x{{multiplier}}",
     "maintenanceEst": "Manutenzione (stim.)",
     "netEst": "Netto (stim.)"
   },

@@ -549,7 +549,7 @@ async function _doFetchMinerWarsComparison(
   let netBtc: number | null = null;
   let netGmt: number | null = null;
 
-  const zeroedRounds: Array<{ roundId: number; blocks: number }> = [];
+  const zeroedRounds: Array<{ blockNumber: number; multiplier: number }> = [];
   if (maintBtcPrice > 0 && elapsedMWDays > 0) {
     let totalMaintUSD = 0;
     let cumulativeMWSats = 0;
@@ -580,7 +580,7 @@ async function _doFetchMinerWarsComparison(
         btcPerBlock * round.multiplier * (clanTH > 0 ? userTH / clanTH : 0) * 1e8;
       const roundMaintSats = roundMaintUSD / maintBtcPrice;
       if (roundMaintSats > roundUserSats) {
-        zeroedRounds.push({ roundId: round.roundId, blocks: round.multiplier });
+        zeroedRounds.push({ blockNumber: round.blockNumber, multiplier: round.multiplier });
       } else {
         totalMaintUSD += roundMaintUSD;
         cumulativeMWSats += roundUserSats;

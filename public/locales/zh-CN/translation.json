@@ -1,4 +1,4 @@
-{
+﻿{
   "common": {
     "back": "返回",
     "cancel": "取消",
@@ -265,8 +265,8 @@
     "warnBtcFundZero": "您的联赛BTC基金目前为0。在基金开始充入之前，MinerWars估算将显示为0。\n当周期第一天完成注资后，请明天再刷新查看。",
     "warnNoClanAnalyticsLive": "无公会分析数据（公会可能不足30天）— 对所有回合使用当前公会算力。估算可能偏高或偏低。",
     "warnNoClanAnalyticsDone": "无公会分析数据（公会可能不足30天）— 对所有回合使用周期结束时的公会算力。估算可能偏高或偏低。",
-    "warnZeroedRounds": "以下轮次因维护费用超过预估奖励而被排除在维护计算之外：",
-    "warnZeroedRoundsItem": "第 {{roundId}} 轮（{{blocks}} 个区块）",
+    "warnZeroedRounds": "以下区块因维护费用超过预计奖励而被排除在维护计算之外：",
+    "warnZeroedRoundsItem": "区块 {{blockNumber}}（倍率 x{{multiplier}}）",
     "maintenanceEst": "维护费用（估算）",
     "netEst": "净收益（估算）"
   },

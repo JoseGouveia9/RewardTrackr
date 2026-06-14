@@ -467,10 +467,10 @@ export function MinerWarsComparisonPanel({
                 {t("cycleTracker.warnZeroedRounds")}
                 <ul style={{ margin: "0.3em 0 0 1em", padding: 0 }}>
                   {zeroedRounds!.map((r) => (
-                    <li key={r.roundId}>
+                    <li key={r.blockNumber}>
                       {t("cycleTracker.warnZeroedRoundsItem", {
-                        roundId: r.roundId,
-                        blocks: r.blocks,
+                        blockNumber: r.blockNumber,
+                        multiplier: r.multiplier,
                       })}
                     </li>
                   ))}

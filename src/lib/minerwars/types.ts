@@ -61,7 +61,7 @@ export interface MinerWarsComparison {
   /** Live GMT price in USD at computation time. null when unavailable. */
   gmtPrice: number | null;
   /** Rounds zeroed because maintenance exceeded reward. null when maintenance not computed. */
-  zeroedRounds: Array<{ roundId: number; blocks: number }> | null;
+  zeroedRounds: Array<{ blockNumber: number; multiplier: number }> | null;
 }
 
 export function getCycleStartTuesdayUTC(dateStr: string): string {

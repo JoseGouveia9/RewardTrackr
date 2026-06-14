@@ -9,6 +9,7 @@ export const MULTIPLIERS = [1, 2, 4, 8, 16, 32, 64, 128, 256];
 
 export type RoundRow = {
   roundId: number;
+  blockNumber: number;
   multiplier: number;
   leagueId: number;
   clanId: number;
@@ -53,6 +54,7 @@ export async function getCycleRounds(
       if (r.cycleId === resolvedId) {
         collected.push({
           roundId: r.roundId as number,
+          blockNumber: r.blockNumber as number,
           multiplier: r.multiplier as number,
           leagueId: r.leagueId as number,
           clanId: r.clanId as number,
