@@ -1,5 +1,5 @@
 import { LS_KEY_MW_COMPARISON, LS_KEY_MW_CYCLES, LS_KEY_REWARD_PREFIX } from "@/lib/storage-keys";
-import { type CycleInfo, type MinerWarsComparison } from "../types/minerwars";
+import { type CycleInfo, type MinerWarsComparison } from "./types";
 
 // Bump to force recomputation when the persisted comparison shape changes.
 export const MW_COMPARISON_SCHEMA_VERSION = 2;
@@ -164,10 +164,7 @@ export function getSoloDaysFromBuildCache(
   }
 }
 
-export function resolveCycleStatus(
-  cycleEnd: string,
-  today: string,
-): import("../types/minerwars").CycleStatus {
+export function resolveCycleStatus(cycleEnd: string, today: string): import("./types").CycleStatus {
   if (cycleEnd >= today) return "in-progress";
   const paymentDay = new Date(cycleEnd + "T00:00:00Z");
   paymentDay.setUTCDate(paymentDay.getUTCDate() + 1);

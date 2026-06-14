@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams, useNavigate, useLocation } from "react-router";
 import { DataViewer } from "@/features/data-viewer";
-import { SharedBanner, fetchSharedProfile } from "@/features/shared";
-import type { SharedProfile } from "@/features/shared";
+import { SharedBanner, fetchSharedProfile } from "@/features/sharing";
+import type { SharedProfile } from "@/features/sharing";
 
 export function SharedView() {
   const { t } = useTranslation();

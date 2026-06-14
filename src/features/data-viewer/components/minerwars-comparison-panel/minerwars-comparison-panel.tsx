@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { CycleInfo } from "../../api/minerwars-comparison";
+import type { CycleInfo } from "@/lib/minerwars/comparison";
 import { useMinerWarsComparison } from "../../hooks/use-minerwars-comparison";
 import { useOutsideClick } from "../../hooks/use-outside-click";
 import type { Currency } from "../../types";

@@ -1,8 +1,8 @@
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
-import type { CacheState, RewardKey } from "@/features/export/types";
-import { DataViewer } from "@/features/data-viewer/components/data-viewer/data-viewer";
+import type { CacheState, RewardKey } from "@/types/rewards";
+import { DataViewer } from "@/features/data-viewer";
 import type { ExclusionRecord } from "../../hooks/use-share-exclusions";
 import "./share-filter-modal.css";
 

@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { TransactionFilter } from "../transaction-filter/transaction-filter";
 import { WalletPricingOptions } from "../wallet-pricing-options/wallet-pricing-options";
 import { ExtraFiatOptions } from "../extra-fiat-options/extra-fiat-options";
-import type { ExtraFiatCurrency, RewardKey } from "../../types";
+import type { ExtraFiatCurrency, RewardKey } from "@/types/rewards";
 import "./export-options.css";
 
 const popVariants = {

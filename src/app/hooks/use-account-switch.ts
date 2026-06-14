@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import type { AuthUser } from "@/features/auth";
-import { clearAllCacheEntries, loadAllCacheEntries } from "@/features/export/utils/cache";
-import type { CacheState } from "@/features/export";
+import { clearAllCacheEntries, loadAllCacheEntries } from "@/lib/reward-cache";
+import type { CacheState } from "@/types/rewards";
 import { LS_KEY_EXPORT_CONFIG, LS_KEY_LAST_SYNC_USER } from "@/lib/storage-keys";
 
 interface AccountSwitchOptions {

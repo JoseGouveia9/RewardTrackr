@@ -1,6 +1,6 @@
 import { buildApiHeaders } from "@/lib/http";
-import { fetchDifficultyEpochs } from "@/features/export/api/difficulty-adjustments";
-import { cycleEndFromStart, toDateStr } from "../types/minerwars";
+import { fetchDifficultyEpochs } from "./difficulty-adjustments";
+import { cycleEndFromStart, toDateStr } from "./types";
 import {
   resolveCycleStatus,
   loadPersistedCycles,
@@ -11,7 +11,7 @@ import {
   getActualIncomeFromBuildCache,
   getSoloDaysFromBuildCache,
   deletePersistedComparison,
-} from "../utils/minerwars-cache";
+} from "./cache";
 import {
   clearPowerChartCache,
   fetchAllCyclesFromApi,
@@ -26,12 +26,12 @@ import {
   getMyNftAvgEE,
   getSoloMiningDates,
   getUserPowerChart,
-} from "./minerwars-api";
+} from "./api";
 
 // Re-export types so existing import paths keep working
-export type { CycleStatus, CycleInfo, MinerWarsComparison } from "../types/minerwars";
+export type { CycleStatus, CycleInfo, MinerWarsComparison } from "./types";
 
-import type { CycleInfo, MinerWarsComparison } from "../types/minerwars";
+import type { CycleInfo, MinerWarsComparison } from "./types";
 
 const comparisonCache = new Map<number, { data: MinerWarsComparison; ts: number }>();
 const inFlightRequests = new Map<number, Promise<MinerWarsComparison>>();

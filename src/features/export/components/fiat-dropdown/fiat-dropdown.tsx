@@ -1,9 +1,9 @@
 ﻿import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import { FIAT_OPTIONS } from "../../config/currencies";
+import { FIAT_OPTIONS } from "@/config/currencies";
 import "./fiat-dropdown.css";
-import type { ExtraFiatCurrency } from "../../types";
+import type { ExtraFiatCurrency } from "@/types/rewards";
 
 interface FiatDropdownProps {
   value: ExtraFiatCurrency;

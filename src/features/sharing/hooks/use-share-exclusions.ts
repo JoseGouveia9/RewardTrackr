@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { LS_KEY_SHARE_EXCLUSIONS } from "@/lib/storage-keys";
-import type { RewardKey } from "@/features/export/types";
+import type { RewardKey } from "@/types/rewards";
 
 export type ExclusionRecord = Partial<Record<RewardKey, string[]>>;
 

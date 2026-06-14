@@ -2,8 +2,8 @@
 import { useTranslation } from "react-i18next";
 import * as Sentry from "@sentry/react";
 import { decodeJwt } from "@/lib/http";
-import { ALL_REWARD_KEYS } from "../config/reward-configs";
-import { clearAllCacheEntries } from "../utils/cache";
+import { ALL_REWARD_KEYS } from "@/config/reward-configs";
+import { clearAllCacheEntries } from "@/lib/reward-cache";
 import { executeExportFlow, refreshCacheKeys } from "../utils/export-flow";
 import {
   fetchAvailableCycles,
@@ -11,8 +11,8 @@ import {
   getCachedMinerWarsComparison,
   invalidateMinerWarsCache,
   prefetchAllCompletedCycles,
-} from "@/features/data-viewer/api/minerwars-comparison";
-import type { CacheState, ExtraFiatCurrency, RewardKey } from "../types";
+} from "@/lib/minerwars/comparison";
+import type { CacheState, ExtraFiatCurrency, RewardKey } from "@/types/rewards";
 
 interface UseExportParams {
   storedToken: string;

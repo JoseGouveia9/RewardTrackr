@@ -1,4 +1,4 @@
-import type { RewardKey } from "@/features/export/types";
+import type { RewardKey } from "@/types/rewards";
 
 export type Currency = "BTC" | "GMT" | "USD" | "FIAT";
 export type TabKind = "mining" | "simple" | "earn" | "tx" | "purchase";

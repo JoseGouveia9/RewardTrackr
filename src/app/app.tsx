@@ -2,15 +2,15 @@ import { useCallback, useEffect, useRef, useMemo, useState, type KeyboardEvent }
 import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
 import { Routes, Route, Navigate, Link, useNavigate, useLocation } from "react-router";
 import { AppNotice } from "@/components/app-notice/app-notice";
-import { loadAllCacheEntries } from "@/features/export/utils/cache";
+import { loadAllCacheEntries } from "@/lib/reward-cache";
 import { AuthPanel, HeaderUserMenu, useAuth } from "@/features/auth";
 import { SupportButton } from "@/components/support-button/support-button";
 import { SheetSelector, ExportOptions, useExport, useExportConfig } from "@/features/export";
-import type { CacheState, RewardKey } from "@/features/export";
+import type { CacheState, RewardKey } from "@/types/rewards";
 import { AnnouncementBanner } from "@/components/announcement-banner/announcement-banner";
 import { ReferralButton } from "@/components/referral-button/referral-button";
 import { DataViewerButton, DataViewer } from "@/features/data-viewer";
-import { ShareModal, CommunityPage } from "@/features/shared";
+import { ShareModal, CommunityPage } from "@/features/sharing";
 import { ErrorBoundary } from "@/components/error-boundary/error-boundary";
 import { useTheme } from "./theme-context";
 import { useTranslation } from "react-i18next";

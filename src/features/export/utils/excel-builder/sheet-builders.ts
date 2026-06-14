@@ -6,7 +6,7 @@ import type {
   SimpleEarnEnrichedRecord,
   StandardEnrichedRecord,
   WalletTxEnrichedRecord,
-} from "../../types";
+} from "@/types/rewards";
 import {
   FMT_BTC,
   FMT_DATE,

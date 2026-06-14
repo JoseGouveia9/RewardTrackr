@@ -1,4 +1,4 @@
-import { CURRENCY_TO_COINGECKO } from "../config/currencies";
+import { CURRENCY_TO_COINGECKO } from "@/config/currencies";
 import type {
   CoinGeckoPriceCacheValue,
   EnrichedRecord,
@@ -8,7 +8,7 @@ import type {
   RewardRecord,
   SimpleEarnRawRecord,
   WalletTxEnrichedRecord,
-} from "../types";
+} from "@/types/rewards";
 import { fetchCoinGeckoPrice } from "../api/coingecko";
 import { getRate, prefetchAdditionalRates, prefetchExchangeRates } from "../api/fx-rates";
 import {

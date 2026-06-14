@@ -1,4 +1,4 @@
-import type { CacheState } from "@/features/export/types";
+import type { CacheState } from "@/types/rewards";
 
 export interface OwnedProfile {
   id: string;

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import type { RewardKey } from "@/features/export/types";
+import type { RewardKey } from "@/types/rewards";
 
 interface TabListProps {
   tabs: { key: RewardKey; label: string }[];

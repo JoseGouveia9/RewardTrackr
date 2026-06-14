@@ -1,5 +1,5 @@
 import type { DirectoryEntry, SharedProfile } from "../types";
-import type { CacheState } from "@/features/export/types";
+import type { CacheState } from "@/types/rewards";
 
 const RAW_BASE = "https://raw.githubusercontent.com/JoseGouveia9/rewardtrackr-shared/main/shared";
 

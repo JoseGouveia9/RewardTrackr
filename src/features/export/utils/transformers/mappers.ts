@@ -1,5 +1,5 @@
-import { CURRENCY_TO_COINGECKO, WALLET_TO_CURRENCY } from "../../config/currencies";
-import { TX_FROM_TYPE_LABEL } from "../../config/wallet-types";
+import { CURRENCY_TO_COINGECKO, WALLET_TO_CURRENCY } from "@/config/currencies";
+import { TX_FROM_TYPE_LABEL } from "@/config/wallet-types";
 import type {
   CoinGeckoPriceCacheValue,
   ExistingPriceRawRecord,
@@ -14,7 +14,7 @@ import type {
   UpgradeRawRecord,
   WalletTxEnrichedRecord,
   WalletTxRawRecord,
-} from "../../types";
+} from "@/types/rewards";
 import { fetchCoinGeckoPrice } from "../../api/coingecko";
 
 function usdToGmt(usd: number, gmtPrice: number): number {

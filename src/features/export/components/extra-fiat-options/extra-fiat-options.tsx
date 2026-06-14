@@ -2,7 +2,7 @@ import { memo, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { FiatDropdown } from "../fiat-dropdown/fiat-dropdown";
-import type { ExtraFiatCurrency } from "../../types";
+import type { ExtraFiatCurrency } from "@/types/rewards";
 
 const rowLayoutSpring = {
   layout: { type: "spring" as const, stiffness: 220, damping: 28 },

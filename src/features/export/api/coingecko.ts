@@ -4,7 +4,7 @@ import type {
   CoinGeckoPriceCacheValue,
   CoinGeckoPriceResult,
   CoinGeckoPriceTuple,
-} from "../types";
+} from "@/types/rewards";
 
 export { LS_KEY_PRICE_CACHE };
 

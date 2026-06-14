@@ -1,7 +1,7 @@
 ﻿import i18n from "@/i18n";
-import { CURRENCY_TO_COINGECKO } from "../config/currencies";
-import { WALLET_TX_KEYS } from "../config/wallet-types";
-import { ALL_REWARD_KEYS } from "../config/reward-configs";
+import { CURRENCY_TO_COINGECKO } from "@/config/currencies";
+import { WALLET_TX_KEYS } from "@/config/wallet-types";
+import { ALL_REWARD_KEYS } from "@/config/reward-configs";
 import {
   LS_KEY_MIGRATED_PREFIX,
   LS_KEY_MW_COMPARISON,
@@ -10,7 +10,7 @@ import {
   LS_KEY_REWARD_PREFIX,
 } from "@/lib/storage-keys";
 import { parseJsonSafe } from "@/lib/parse-json-safe";
-import type { CacheEntry, CacheState, RewardKey, RewardRecord } from "../types";
+import type { CacheEntry, CacheState, RewardKey, RewardRecord } from "@/types/rewards";
 
 export const MINING_SCHEMA_VERSION = 2;
 export const MINERWARS_SCHEMA_VERSION = 5;

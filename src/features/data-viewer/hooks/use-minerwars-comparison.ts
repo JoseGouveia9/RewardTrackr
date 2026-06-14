@@ -9,7 +9,7 @@ import {
   invalidateCycleCache,
   type CycleInfo,
   type MinerWarsComparison,
-} from "../api/minerwars-comparison";
+} from "@/lib/minerwars/comparison";
 
 interface UseMinerWarsComparisonResult {
   cycles: CycleInfo[];

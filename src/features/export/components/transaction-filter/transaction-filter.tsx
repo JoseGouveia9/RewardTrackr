@@ -1,6 +1,6 @@
 ﻿import { memo } from "react";
 import { useTranslation } from "react-i18next";
-import { TX_CHECKBOX_OPTIONS } from "../../config/wallet-types";
+import { TX_CHECKBOX_OPTIONS } from "@/config/wallet-types";
 
 interface TransactionFilterProps {
   selectedTxFromTypes: string[];

@@ -1,12 +1,7 @@
 import { getJson, postJson, resolveApiBase } from "@/lib/http";
-import { fetchDifficultyEpochs } from "@/features/export/api/difficulty-adjustments";
-import {
-  getCycleStartTuesdayUTC,
-  cycleEndFromStart,
-  toDateStr,
-  type CycleInfo,
-} from "../types/minerwars";
-import { getActualIncomeFromBuildCache, resolveCycleStatus } from "../utils/minerwars-cache";
+import { fetchDifficultyEpochs } from "./difficulty-adjustments";
+import { getCycleStartTuesdayUTC, cycleEndFromStart, toDateStr, type CycleInfo } from "./types";
+import { getActualIncomeFromBuildCache, resolveCycleStatus } from "./cache";
 
 const API = resolveApiBase();
 
@@ -181,6 +176,51 @@ export async function getMyNftAvgEE(headers: Record<string, string>): Promise<nu
     .map((n) => n.energyEfficiency)
     .filter((v): v is number => v != null && v > 0);
   return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+}
+
+/** Returns count, total TH power, and power-weighted avg energy efficiency for all owned NFTs. */
+export async function getMyNftStats(
+  headers: Record<string, string>,
+): Promise<{ count: number; totalPower: number; avgEE: number | null }> {
+  const res = await postJson<{ data: { array: Array<Record<string, unknown>> } }>(
+    `${API}/api/nft/get-my`,
+    headers,
+    {},
+  );
+  const arr = res.data?.array ?? [];
+  let totalPower = 0;
+  let weightedEE = 0;
+  let hasSomeEE = false;
+  for (const n of arr) {
+    const p = Number(n.power ?? 0);
+    totalPower += p;
+    const ee = n.energyEfficiency != null ? Number(n.energyEfficiency) : null;
+    if (ee != null && p > 0) {
+      weightedEE += p * ee;
+      hasSomeEE = true;
+    }
+  }
+  const avgEE = hasSomeEE && totalPower > 0 ? weightedEE / totalPower : null;
+  return { count: arr.length, totalPower, avgEE };
+}
+
+/** Returns the bonus miner power and energy efficiency (if the user has one). */
+export async function getBonusMinerStats(
+  headers: Record<string, string>,
+): Promise<{ power: number; energyEfficiency: number | null } | null> {
+  try {
+    const res = await postJson<{
+      data: { miner?: { power?: number; energy_efficiency?: number } };
+    }>(`${API}/bm/api/bonus-miner/client/find-one`, headers, {});
+    const miner = res.data?.miner;
+    const power = miner?.power;
+    if (typeof power !== "number" || power <= 0) return null;
+    const energyEfficiency =
+      typeof miner?.energy_efficiency === "number" ? miner.energy_efficiency : null;
+    return { power, energyEfficiency };
+  } catch {
+    return null;
+  }
 }
 
 export async function getCycleClanData(

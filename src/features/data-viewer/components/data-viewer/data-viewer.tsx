@@ -2,16 +2,16 @@
 import type React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { loadCacheEntry } from "@/features/export/utils/cache";
+import { loadCacheEntry } from "@/lib/reward-cache";
 import {
   fetchDifficultyAdjustments,
   type DifficultyEntry,
-} from "@/features/export/api/difficulty-adjustments";
+} from "@/lib/minerwars/difficulty-adjustments";
 import { ErrorBoundary } from "@/components/error-boundary/error-boundary";
 import type { Currency, EarnView, TxView, SimpleView, PurchaseView } from "../../types";
-import type { CacheState, RewardKey } from "@/features/export/types";
+import type { CacheState, RewardKey } from "@/types/rewards";
 import { RowSelectionProvider } from "../../stores/row-selection-context";
-import { userHasMinerWarsHistory } from "../../api/minerwars-comparison";
+import { userHasMinerWarsHistory } from "@/lib/minerwars/comparison";
 import { ALL_TABS } from "../../utils/constants";
 import { loadFiatCode } from "../../utils";
 import { useDataViewerState } from "../../hooks/use-data-viewer-state";

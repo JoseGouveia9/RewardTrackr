@@ -1,9 +1,9 @@
 ﻿import { memo, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { REWARD_GROUPS } from "../../config/reward-configs";
+import { REWARD_GROUPS } from "@/config/reward-configs";
 import "./sheet-selector.css";
-import { formatAge } from "../../utils/cache";
-import type { CacheState, RewardGroup } from "../../types";
+import { formatAge } from "@/lib/reward-cache";
+import type { CacheState, RewardGroup } from "@/types/rewards";
 
 interface SheetSelectorProps {
   cache: CacheState;

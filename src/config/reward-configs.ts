@@ -1,4 +1,4 @@
-import type { CursorPaginationItem, RewardConfig, RewardGroup, RewardKey } from "../types";
+import type { CursorPaginationItem, RewardConfig, RewardGroup, RewardKey } from "@/types/rewards";
 import { resolveApiBase } from "@/lib/http";
 import { ALL_TX_FROM_TYPES } from "./wallet-types";
 

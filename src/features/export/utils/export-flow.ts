@@ -1,6 +1,6 @@
 ﻿import i18n from "@/i18n";
-import { WALLET_TX_KEYS } from "../config/wallet-types";
-import { REWARD_CONFIG_MAP, ALL_REWARD_KEYS } from "../config/reward-configs";
+import { WALLET_TX_KEYS } from "@/config/wallet-types";
+import { REWARD_CONFIG_MAP, ALL_REWARD_KEYS } from "@/config/reward-configs";
 import { buildApiHeaders, postJson } from "@/lib/http";
 import { enrichRecords, reenrichFiatValues } from "./transformers";
 import { getSessionPriceCache } from "../api/coingecko";
@@ -17,7 +17,7 @@ import type {
   RewardRecord,
   RewardRequestBody,
   RewardSheetPayload,
-} from "../types";
+} from "@/types/rewards";
 import {
   MINERWARS_SCHEMA_VERSION,
   MINING_SCHEMA_VERSION,
@@ -25,7 +25,7 @@ import {
   filterCacheableRecords,
   persistPriceCache,
   saveCacheEntry,
-} from "./cache";
+} from "@/lib/reward-cache";
 
 const WORKER_URL =
   (import.meta.env.VITE_WORKER_URL as string | undefined)?.replace(/\/$/, "") ?? "";

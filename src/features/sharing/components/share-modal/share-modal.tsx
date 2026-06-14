@@ -9,7 +9,7 @@ import {
   deleteMySharedProfile,
   buildShareLink,
 } from "../../api";
-import type { CacheState, RewardKey } from "@/features/export/types";
+import type { CacheState, RewardKey } from "@/types/rewards";
 import { useShareExclusions } from "../../hooks/use-share-exclusions";
 import { ShareFilterModal } from "../share-filter-modal/share-filter-modal";
 
@@ -28,8 +28,8 @@ const SHEET_I18N_KEY: Record<string, string> = {
 };
 import type { OwnedProfile } from "../../types";
 import "./share-modal.css";
-import { ALL_REWARD_KEYS } from "@/features/export/config/reward-configs";
-import { formatAge } from "@/features/export/utils/cache";
+import { ALL_REWARD_KEYS } from "@/config/reward-configs";
+import { formatAge } from "@/lib/reward-cache";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { AppNotice } from "@/components/app-notice/app-notice";
 

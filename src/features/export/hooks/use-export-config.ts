@@ -1,8 +1,8 @@
 ﻿import { useCallback, useEffect, useMemo, useReducer } from "react";
-import { ALL_REWARD_KEYS } from "../config/reward-configs";
-import { WALLET_TX_KEYS } from "../config/wallet-types";
+import { ALL_REWARD_KEYS } from "@/config/reward-configs";
+import { WALLET_TX_KEYS } from "@/config/wallet-types";
 import { LS_KEY_EXPORT_CONFIG } from "@/lib/storage-keys";
-import type { ExtraFiatCurrency, RewardGroup, RewardKey } from "../types";
+import type { ExtraFiatCurrency, RewardGroup, RewardKey } from "@/types/rewards";
 
 interface ExportConfigState {
   selectedKeys: RewardKey[];

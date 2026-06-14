@@ -1,6 +1,6 @@
 import ExcelJS from "exceljs";
-import { REWARD_CONFIG_MAP } from "../config/reward-configs";
-import { WALLET_TX_KEYS } from "../config/wallet-types";
+import { REWARD_CONFIG_MAP } from "@/config/reward-configs";
+import { WALLET_TX_KEYS } from "@/config/wallet-types";
 import type {
   ExtraFiatCurrency,
   FetchRewardsOptions,
@@ -11,7 +11,7 @@ import type {
   SimpleEarnEnrichedRecord,
   StandardEnrichedRecord,
   WalletTxEnrichedRecord,
-} from "../types";
+} from "@/types/rewards";
 import {
   buildMiningSheet,
   buildMultiCurrencySheet,

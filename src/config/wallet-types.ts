@@ -1,4 +1,4 @@
-import type { RewardKey } from "../types";
+import type { RewardKey } from "@/types/rewards";
 
 export const WALLET_TX_KEYS = new Set<RewardKey>([
   "bounty",

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { fetchAnnouncement } from "@/features/shared";
-import type { Announcement } from "@/features/shared";
+import { fetchAnnouncement } from "@/features/sharing";
+import type { Announcement } from "@/features/sharing";
 import {
   LS_KEY_NOTICE_RATE_LIMITS,
   LS_KEY_NOTICE_UNOFFICIAL,

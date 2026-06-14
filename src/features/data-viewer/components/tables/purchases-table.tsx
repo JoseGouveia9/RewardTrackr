@@ -1,7 +1,7 @@
 ﻿import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { loadCacheEntry } from "@/features/export/utils/cache";
-import type { CacheEntry } from "@/features/export/types";
+import { loadCacheEntry } from "@/lib/reward-cache";
+import type { CacheEntry } from "@/types/rewards";
 import type { PurchaseView, DateRange } from "../../types";
 import { PAGE_SIZE } from "../../utils/constants";
 import {

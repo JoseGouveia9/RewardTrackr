@@ -1,6 +1,6 @@
 ﻿import { getJson, getJsonTolerant } from "@/lib/http";
 import { LS_KEY_FX_CACHE } from "@/lib/storage-keys";
-import type { ExtraFiatCurrency, FxLatestResponse, FxTimeseriesResponse } from "../types";
+import type { ExtraFiatCurrency, FxLatestResponse, FxTimeseriesResponse } from "@/types/rewards";
 
 const FX_TIMESERIES_API = "https://api.fxratesapi.com/timeseries";
 const FX_LATEST_API = "https://api.exchangerate-api.com/v4/latest/USD";

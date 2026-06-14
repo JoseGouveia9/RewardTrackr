@@ -1,7 +1,7 @@
 ﻿import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { loadCacheEntry } from "@/features/export/utils/cache";
-import type { CacheEntry, RewardKey } from "@/features/export/types";
+import { loadCacheEntry } from "@/lib/reward-cache";
+import type { CacheEntry, RewardKey } from "@/types/rewards";
 import type { TxView, DateRange } from "../../types";
 import { PAGE_SIZE } from "../../utils/constants";
 import {
@@ -11,7 +11,7 @@ import {
   fmtDate,
   fmtDateTime,
 } from "../../utils";
-import { TX_LABEL_TO_KEY } from "@/features/export/config/wallet-types";
+import { TX_LABEL_TO_KEY } from "@/config/wallet-types";
 import { GmtIcon, UsdIcon, FiatIcon } from "../icons/currency-icons";
 import { DateRangeFilter } from "../date-range-filter/date-range-filter";
 import { TypeCheckFilter } from "../type-check-filter/type-check-filter";

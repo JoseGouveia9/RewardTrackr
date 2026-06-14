@@ -1,6 +1,6 @@
 import ExcelJS from "exceljs";
 import type { Worksheet } from "exceljs";
-import type { ExtraFiatCurrency } from "../../types";
+import type { ExtraFiatCurrency } from "@/types/rewards";
 
 export const FMT_DATE = "dd/mm/yyyy hh:mm:ss";
 export const FMT_BTC = "0.00000000";

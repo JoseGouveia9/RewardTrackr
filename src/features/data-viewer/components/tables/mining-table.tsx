@@ -1,8 +1,8 @@
 ﻿import { useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { loadCacheEntry, wasCacheMigrated } from "@/features/export/utils/cache";
-import type { CacheEntry, RewardKey } from "@/features/export/types";
-import type { DifficultyEntry } from "@/features/export/api/difficulty-adjustments";
+import { loadCacheEntry, wasCacheMigrated } from "@/lib/reward-cache";
+import type { CacheEntry, RewardKey } from "@/types/rewards";
+import type { DifficultyEntry } from "@/lib/minerwars/difficulty-adjustments";
 import type { Currency, DateRange } from "../../types";
 import { PAGE_SIZE } from "../../utils/constants";
 import {

@@ -65,22 +65,39 @@ export default tseslint.config(
               from: ["./src/features", "./src/app"],
               message: "Shared types must not import from features or app.",
             },
+            {
+              target: "./src/config",
+              from: ["./src/features", "./src/app"],
+              message: "Shared config must not import from features or app.",
+            },
             // features cannot import from app
             {
               target: "./src/features",
               from: "./src/app",
               message: "Features must not import from the app layer.",
             },
-            // no cross-feature imports
+            // no cross-feature imports (exception: sharing may build on data-viewer)
             {
               target: "./src/features/auth",
-              from: "./src/features/export",
+              from: ["./src/features/export", "./src/features/data-viewer", "./src/features/sharing"],
               message: "Cross-feature imports are not allowed.",
             },
             {
               target: "./src/features/export",
-              from: "./src/features/auth",
+              from: ["./src/features/auth", "./src/features/data-viewer", "./src/features/sharing"],
               message: "Cross-feature imports are not allowed.",
+            },
+            {
+              target: "./src/features/data-viewer",
+              from: ["./src/features/auth", "./src/features/export", "./src/features/sharing"],
+              message:
+                "Cross-feature imports are not allowed. data-viewer must not depend on sharing (sharing builds on data-viewer, not the reverse).",
+            },
+            {
+              target: "./src/features/sharing",
+              from: ["./src/features/auth", "./src/features/export"],
+              message:
+                "Cross-feature imports are not allowed. sharing may only import from data-viewer.",
             },
           ],
         },

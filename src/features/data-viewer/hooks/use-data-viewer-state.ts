@@ -1,5 +1,5 @@
 ﻿import { useState } from "react";
-import type { RewardKey } from "@/features/export/types";
+import type { RewardKey } from "@/types/rewards";
 import type { Currency, DateRange } from "../types";
 import { EMPTY_DATE_RANGE } from "../utils/constants";
 

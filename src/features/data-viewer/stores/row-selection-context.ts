@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react";
-import type { RewardKey } from "@/features/export/types";
+import type { RewardKey } from "@/types/rewards";
 
 export interface RowSelectionContextValue {
   exclusions: Partial<Record<RewardKey, string[]>>;

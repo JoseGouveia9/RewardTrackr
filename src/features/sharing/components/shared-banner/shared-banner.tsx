@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
 import type { DirectoryEntry } from "../../types";
 import "./shared-banner.css";
-import { formatAge } from "@/features/export/utils/cache";
+import { formatAge } from "@/lib/reward-cache";
 
 export function SharedBanner({
   profile,
