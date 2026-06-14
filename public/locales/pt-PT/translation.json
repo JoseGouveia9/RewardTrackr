@@ -265,6 +265,8 @@
     "warnBtcFundZero": "O fundo BTC da tua liga está atualmente a 0. A estimativa MinerWars mostrará 0 até o fundo começar a ser preenchido.\nTenta atualizar amanhã quando o primeiro dia do ciclo tiver sido financiado.",
     "warnNoClanAnalyticsLive": "Sem analytics do clã (o clã pode ter menos de 30 dias) — usando o poder atual do clã para todas as rondas. A estimativa pode estar inflacionada ou desinflacionada.",
     "warnNoClanAnalyticsDone": "Sem analytics do clã (o clã pode ter menos de 30 dias) — usando o poder do clã no final do ciclo para todas as rondas. A estimativa pode estar inflacionada ou desinflacionada.",
+    "warnZeroedRounds": "As seguintes rondas foram excluídas da manutenção pois o custo de manutenção superou a recompensa estimada:",
+    "warnZeroedRoundsItem": "Ronda {{roundId}} com {{blocks}} blocos",
     "maintenanceEst": "Manutenção (est.)",
     "netEst": "Líquido (est.)"
   },

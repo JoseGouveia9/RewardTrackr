@@ -265,6 +265,8 @@
     "warnBtcFundZero": "Der BTC-Fonds deiner Liga ist derzeit 0. Die MinerWars-Schätzung zeigt 0, bis der Fonds aufgefüllt wird.\nVersuche es morgen erneut, wenn der erste Tag des Zyklus finanziert wurde.",
     "warnNoClanAnalyticsLive": "Keine Clan-Analysen (der Clan ist möglicherweise kürzer als 30 Tage) — aktuelle Clan-Power für alle Runden verwendet. Die Schätzung kann über- oder untertrieben sein.",
     "warnNoClanAnalyticsDone": "Keine Clan-Analysen (der Clan ist möglicherweise kürzer als 30 Tage) — Clan-Power am Zyklusende für alle Runden verwendet. Die Schätzung kann über- oder untertrieben sein.",
+    "warnZeroedRounds": "Die folgenden Runden wurden von der Wartung ausgeschlossen, da die Wartungskosten die geschätzte Belohnung überschritten:",
+    "warnZeroedRoundsItem": "Runde {{roundId}} mit {{blocks}} Blöcken",
     "maintenanceEst": "Wartung (Schätz.)",
     "netEst": "Netto (Schätz.)"
   },

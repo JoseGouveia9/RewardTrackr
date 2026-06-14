@@ -434,7 +434,7 @@ export async function getMempoolEpochs(cycleDates: string[]) {
   for (const dateStr of cycleDates) {
     let applicable: (typeof epochs)[0] | null = null;
     for (const ep of epochs) {
-      if (ep.date <= dateStr) applicable = ep;
+      if (ep.date < dateStr) applicable = ep;
     }
     if (applicable) byDate.set(dateStr, applicable.satsPerTH);
   }

@@ -176,7 +176,7 @@ export async function prefetchAllCompletedCycles(token: string): Promise<void> {
       for (const dateStr of cycleDates) {
         let applicable: (typeof epochs)[0] | null = null;
         for (const ep of epochs) {
-          if (ep.date <= dateStr) applicable = ep;
+          if (ep.date < dateStr) applicable = ep;
         }
         if (applicable) satsPerThByDate.set(dateStr, applicable.satsPerTH);
       }
@@ -410,6 +410,7 @@ async function _doFetchMinerWarsComparison(
         netGmt: null,
         btcPrice: payData?.btcPrice ?? null,
         gmtPrice: payData?.gmtPrice ?? null,
+        zeroedRounds: null,
       };
 
       comparisonCache.set(cycleId, { data: completedResult, ts: Date.now() });
@@ -547,6 +548,7 @@ async function _doFetchMinerWarsComparison(
   let netBtc: number | null = null;
   let netGmt: number | null = null;
 
+  const zeroedRounds: Array<{ roundId: number; blocks: number }> = [];
   if (maintBtcPrice > 0 && elapsedMWDays > 0) {
     let totalMaintUSD = 0;
     let cumulativeMWSats = 0;
@@ -572,8 +574,15 @@ async function _doFetchMinerWarsComparison(
         clanTH > 0 && sumAllMultipliers > 0
           ? (round.multiplier / sumAllMultipliers) * (userTH / clanTH)
           : 0;
-      totalMaintUSD += (roundElecUSD + roundSvcUSD) * share * maintDiscountFactor;
-      cumulativeMWSats += btcPerBlock * round.multiplier * (clanTH > 0 ? userTH / clanTH : 0) * 1e8;
+      const roundMaintUSD = (roundElecUSD + roundSvcUSD) * share * maintDiscountFactor;
+      const roundUserSats = btcPerBlock * round.multiplier * (clanTH > 0 ? userTH / clanTH : 0) * 1e8;
+      const roundMaintSats = roundMaintUSD / maintBtcPrice;
+      if (roundMaintSats > roundUserSats) {
+        zeroedRounds.push({ roundId: round.roundId, blocks: round.multiplier });
+      } else {
+        totalMaintUSD += roundMaintUSD;
+        cumulativeMWSats += roundUserSats;
+      }
     }
     maintenanceBtc = totalMaintUSD / maintBtcPrice;
     maintenanceGmt = maintGmtPrice > 0 ? totalMaintUSD / maintGmtPrice : null;
@@ -658,6 +667,7 @@ async function _doFetchMinerWarsComparison(
     netGmt,
     btcPrice: maintBtcPrice > 0 ? maintBtcPrice : null,
     gmtPrice: maintGmtPrice > 0 ? maintGmtPrice : null,
+    zeroedRounds: maintBtcPrice > 0 && elapsedMWDays > 0 ? zeroedRounds : null,
   };
 
   comparisonCache.set(cycleId, { data: result, ts: Date.now() });

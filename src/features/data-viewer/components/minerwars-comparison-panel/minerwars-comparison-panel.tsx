@@ -196,6 +196,8 @@ export function MinerWarsComparisonPanel({
     data != null && !data.hasClanAnalytics && data.actualMinerWarsBtc == null;
   const showBtcFundZeroWarning =
     data != null && data.btcFundIsZero && data.actualMinerWarsBtc == null;
+  const zeroedRounds = data?.zeroedRounds ?? null;
+  const showZeroedRoundsWarning = zeroedRounds != null && zeroedRounds.length > 0;
 
   const showGmt = currency === "GMT" && (data?.btcPrice ?? 0) > 0 && (data?.gmtPrice ?? 0) > 0;
   const toGmt = (btc: number) => (btc * data!.btcPrice!) / data!.gmtPrice!;
@@ -453,6 +455,27 @@ export function MinerWarsComparisonPanel({
             >
               <span>⚠</span>
               <span style={{ whiteSpace: "pre-line" }}>{t("cycleTracker.warnBtcFundZero")}</span>
+            </div>
+          )}
+          {showZeroedRoundsWarning && (
+            <div
+              className="minerwars-panel-notice minerwars-panel-notice--warn"
+              style={{ display: "flex", gap: "0.35em" }}
+            >
+              <span>⚠</span>
+              <span>
+                {t("cycleTracker.warnZeroedRounds")}
+                <ul style={{ margin: "0.3em 0 0 1em", padding: 0 }}>
+                  {zeroedRounds!.map((r) => (
+                    <li key={r.roundId}>
+                      {t("cycleTracker.warnZeroedRoundsItem", {
+                        roundId: r.roundId,
+                        blocks: r.blocks,
+                      })}
+                    </li>
+                  ))}
+                </ul>
+              </span>
             </div>
           )}
           {showNoClanAnalyticsWarning && (
