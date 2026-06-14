@@ -267,6 +267,8 @@
     "warnNoClanAnalyticsDone": "クランのアナリティクスがありません（クランが30日未満の可能性があります）— サイクル終了時のクランパワーを全ラウンドに使用。推定値が過大または過小評価される可能性があります。",
     "warnZeroedRounds": "以下のブロックはメンテナンス費用が報酬の見積もりを超えたため、メンテナンスから除外されました：",
     "warnZeroedRoundsItem": "ブロック {{blockNumber}}（倍率 x{{multiplier}}）",
+    "warnZeroedRoundsHintGmt": "ヒント: GMT支払い割引を少なくとも{{recommendedGmtPct}}%に増やすことで、これらのブロックのゼロ化を防げる可能性があります（現在のBTC価格 ${{btcPrice}}）。",
+    "warnZeroedRoundsHintBtcPrice": "現在のGMT割引は{{currentGmtPct}}%ですが、最大20%にしても現在のBTC価格（${{btcPrice}}）はこれらのブロックのリーグメンテナンスコストをカバーするには低すぎます。"
     "maintenanceEst": "メンテナンス（推定）",
     "netEst": "純利益（推定）"
   },

@@ -244,6 +244,7 @@ export async function prefetchAllCompletedCycles(token: string): Promise<void> {
         btcPrice: histBtcPrice,
         gmtPrice: histGmtPrice,
         zeroedRounds: null,
+        zeroedRoundsHint: null,
       };
 
       persistComparison(result);
@@ -412,6 +413,7 @@ async function _doFetchMinerWarsComparison(
         btcPrice: payData?.btcPrice ?? null,
         gmtPrice: payData?.gmtPrice ?? null,
         zeroedRounds: null,
+        zeroedRoundsHint: null,
       };
 
       comparisonCache.set(cycleId, { data: completedResult, ts: Date.now() });
@@ -501,17 +503,19 @@ async function _doFetchMinerWarsComparison(
     { byDate: satsPerThByDate, latestSatsPerTH },
     solodays,
     actualMinerWarsBtc,
-    maintDiscountFactor,
+    maintDiscountData,
     maintPrices,
     maintUserEE,
   ] = await Promise.all([
     getMempoolEpochs(cycleDates),
     getSoloMiningDates(headers, CYCLE_START, CYCLE_END),
     Promise.resolve(null),
-    getDiscountFactor(headers).catch(() => 1),
+    getDiscountFactor(headers).catch(() => ({ factor: 1, gmtDiscount: 0 })),
     getLivePrices().catch(() => ({ btcPrice: 0, gmtPrice: 0 })),
     getMyNftAvgEE(headers).catch(() => null),
   ]);
+  const maintDiscountFactor = maintDiscountData.factor;
+  const maintGmtDiscount = maintDiscountData.gmtDiscount;
 
   let minerWarsSats = 0;
   let clanMinerWarsSats = 0;
@@ -532,8 +536,8 @@ async function _doFetchMinerWarsComparison(
     if (satsPerTH != null && userPow) soloEquivSats += satsPerTH * userPow;
   }
 
-  const diffSats = minerWarsSats - soloEquivSats;
-  const diffPct = soloEquivSats > 0 ? (diffSats / soloEquivSats) * 100 : null;
+  let diffSats = minerWarsSats - soloEquivSats;
+  let diffPct = soloEquivSats > 0 ? (diffSats / soloEquivSats) * 100 : null;
 
   // Maintenance estimation (per-round official formula)
   const KWH = 0.05; // $/kWh - GoMining platform constant
@@ -550,6 +554,8 @@ async function _doFetchMinerWarsComparison(
   let netGmt: number | null = null;
 
   const zeroedRounds: Array<{ blockNumber: number; multiplier: number }> = [];
+  const zeroedRoundIds = new Set<number>();
+  let worstMinTotalDiscount = 0; // tracks the hardest zeroed round's required total discount
   if (maintBtcPrice > 0 && elapsedMWDays > 0) {
     let totalMaintUSD = 0;
     let cumulativeMWSats = 0;
@@ -578,9 +584,16 @@ async function _doFetchMinerWarsComparison(
       const roundMaintUSD = (roundElecUSD + roundSvcUSD) * share * maintDiscountFactor;
       const roundUserSats =
         btcPerBlock * round.multiplier * (clanTH > 0 ? userTH / clanTH : 0) * 1e8;
-      const roundMaintSats = roundMaintUSD / maintBtcPrice;
+      const roundMaintSats = (roundMaintUSD / maintBtcPrice) * 1e8;
       if (roundMaintSats > roundUserSats) {
         zeroedRounds.push({ blockNumber: round.blockNumber, multiplier: round.multiplier });
+        zeroedRoundIds.add(round.roundId);
+        // Compute minimum total discount that would prevent zeroing this round
+        const rawMaintSats =
+          maintDiscountFactor > 0 ? roundMaintSats / maintDiscountFactor : Infinity;
+        const minDiscFactor = rawMaintSats > 0 ? roundUserSats / rawMaintSats : 0;
+        const minTotalDisc = 1 - minDiscFactor;
+        if (minTotalDisc > worstMinTotalDiscount) worstMinTotalDiscount = minTotalDisc;
       } else {
         totalMaintUSD += roundMaintUSD;
         cumulativeMWSats += roundUserSats;
@@ -588,10 +601,35 @@ async function _doFetchMinerWarsComparison(
     }
     maintenanceBtc = totalMaintUSD / maintBtcPrice;
     maintenanceGmt = maintGmtPrice > 0 ? totalMaintUSD / maintGmtPrice : null;
+    // Subtract zeroed rounds from reward totals so comparison and net are consistent
+    for (const [roundId, { userBtc, date }] of roundRewards) {
+      if (zeroedRoundIds.has(roundId) && !solodays.has(date)) {
+        minerWarsSats -= userBtc * 1e8;
+      }
+    }
+    diffSats = minerWarsSats - soloEquivSats;
+    diffPct = soloEquivSats > 0 ? (diffSats / soloEquivSats) * 100 : null;
     const effectiveMwBtc = actualMinerWarsBtc ?? minerWarsSats / 1e8;
     rewardGmt = maintGmtPrice > 0 ? (effectiveMwBtc * maintBtcPrice) / maintGmtPrice : null;
     netBtc = effectiveMwBtc - maintenanceBtc;
     netGmt = rewardGmt != null && maintenanceGmt != null ? rewardGmt - maintenanceGmt : null;
+  }
+
+  const GMT_DISCOUNT_MAX = 0.2;
+  let zeroedRoundsHint: MinerWarsComparison["zeroedRoundsHint"] = null;
+  if (zeroedRounds.length > 0 && maintBtcPrice > 0) {
+    const nonGmtDiscount = 1 - maintDiscountFactor - maintGmtDiscount;
+    const recommendedGmtDiscount = worstMinTotalDiscount - nonGmtDiscount;
+    if (recommendedGmtDiscount > GMT_DISCOUNT_MAX) {
+      zeroedRoundsHint = {
+        kind: "btcPriceTooLow",
+        currentGmtPct: Math.round(maintGmtDiscount * 100),
+      };
+    } else {
+      // Round up to nearest 0.1% to ensure it actually clears the threshold
+      const pct = Math.ceil(Math.max(recommendedGmtDiscount, 0) * 100);
+      zeroedRoundsHint = { kind: "increaseGmtDiscount", recommendedGmtPct: pct };
+    }
   }
 
   const fullCycleDates: string[] = [];
@@ -670,6 +708,7 @@ async function _doFetchMinerWarsComparison(
     btcPrice: maintBtcPrice > 0 ? maintBtcPrice : null,
     gmtPrice: maintGmtPrice > 0 ? maintGmtPrice : null,
     zeroedRounds: maintBtcPrice > 0 && elapsedMWDays > 0 ? zeroedRounds : null,
+    zeroedRoundsHint: maintBtcPrice > 0 && elapsedMWDays > 0 ? zeroedRoundsHint : null,
   };
 
   comparisonCache.set(cycleId, { data: result, ts: Date.now() });

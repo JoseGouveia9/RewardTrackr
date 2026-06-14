@@ -62,6 +62,19 @@ export interface MinerWarsComparison {
   gmtPrice: number | null;
   /** Rounds zeroed because maintenance exceeded reward. null when maintenance not computed. */
   zeroedRounds: Array<{ blockNumber: number; multiplier: number }> | null;
+  /** Hint explaining why rounds were zeroed. null when no zeroed rounds or maintenance not computed. */
+  zeroedRoundsHint:
+    | {
+        kind: "increaseGmtDiscount";
+        /** Minimum GMT pay discount % needed to prevent zeroing at the current BTC price. */
+        recommendedGmtPct: number;
+      }
+    | {
+        kind: "btcPriceTooLow";
+        /** User's actual GMT pay discount % at time of computation. */
+        currentGmtPct: number;
+      }
+    | null;
 }
 
 export function getCycleStartTuesdayUTC(dateStr: string): string {

@@ -267,6 +267,8 @@
     "warnNoClanAnalyticsDone": "Sem analytics do clã (o clã pode ter menos de 30 dias) — usando o poder do clã no final do ciclo para todas as rondas. A estimativa pode estar inflacionada ou desinflacionada.",
     "warnZeroedRounds": "Os seguintes blocos foram excluidos da manutencao porque a manutencao excedeu a recompensa estimada:",
     "warnZeroedRoundsItem": "Bloco {{blockNumber}} com multiplicador x{{multiplier}}",
+    "warnZeroedRoundsHintGmt": "Sugestão: aumentar o desconto de pagamento em GMT para pelo menos {{recommendedGmtPct}}% pode evitar que estes blocos sejam zerados (ao preço atual de BTC de ${{btcPrice}}).",
+    "warnZeroedRoundsHintBtcPrice": "O seu desconto GMT atual é de {{currentGmtPct}}%, mas mesmo ao máximo de 20%, o preço atual do BTC (${{btcPrice}}) é demasiado baixo para cobrir o custo de manutenção da sua liga nestes blocos.",
     "maintenanceEst": "Manutenção (est.)",
     "netEst": "Líquido (est.)"
   },

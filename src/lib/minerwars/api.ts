@@ -151,7 +151,9 @@ export async function getLivePrices(): Promise<{ btcPrice: number; gmtPrice: num
   return { gmtPrice: gmtRes.data?.value ?? 0, btcPrice: btcRes.data ?? 0 };
 }
 
-export async function getDiscountFactor(headers: Record<string, string>): Promise<number> {
+export async function getDiscountFactor(
+  headers: Record<string, string>,
+): Promise<{ factor: number; gmtDiscount: number }> {
   const res = await postJson<{
     data: {
       dailyMaintenanceDiscount?: number;
@@ -160,12 +162,11 @@ export async function getDiscountFactor(headers: Record<string, string>): Promis
     };
   }>(`${API}/api/user/get-my-nft-discount`, headers, {});
   const d = res.data ?? {};
-  return (
-    1 -
-    ((d.dailyMaintenanceDiscount ?? 0) +
-      (d.levelDiscount ?? 0) +
-      (d.discountByMaintenanceInGmt ?? 0))
-  );
+  const gmtDiscount = d.discountByMaintenanceInGmt ?? 0;
+  return {
+    factor: 1 - ((d.dailyMaintenanceDiscount ?? 0) + (d.levelDiscount ?? 0) + gmtDiscount),
+    gmtDiscount,
+  };
 }
 
 export async function getMyNftAvgEE(headers: Record<string, string>): Promise<number | null> {

@@ -267,6 +267,8 @@
     "warnNoClanAnalyticsDone": "클랜 분석 데이터 없음 (클랜이 30일 미만일 수 있음) — 모든 라운드에 사이클 종료 시 클랜 파워를 사용합니다. 추정값이 과대 또는 과소 평가될 수 있습니다.",
     "warnZeroedRounds": "다음 블록은 유지비가 예상 보상을 초과하여 유지비 계산에서 제외되었습니다:",
     "warnZeroedRoundsItem": "블록 {{blockNumber}} (x{{multiplier}} 배수)",
+    "warnZeroedRoundsHintGmt": "팁: GMT 결제 할인을 최소 {{recommendedGmtPct}}%로 높이면 이 블록들의 제로화를 방지할 수 있습니다(현재 BTC 가격 ${{btcPrice}}).",
+    "warnZeroedRoundsHintBtcPrice": "현재 GMT 할인율은 {{currentGmtPct}}%이지만, 최대 20%로 올려도 현재 BTC 가격(${{btcPrice}})은 이 블록들의 리그 유지보수 비용을 충당하기에 너무 낮습니다.",
     "maintenanceEst": "유지비용 (추정)",
     "netEst": "순수익 (추정)"
   },

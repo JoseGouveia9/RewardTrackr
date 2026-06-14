@@ -267,6 +267,8 @@
     "warnNoClanAnalyticsDone": "Nessuna analisi del clan (il clan potrebbe avere meno di 30 giorni) — usando la potenza del clan a fine ciclo per tutti i round. La stima potrebbe essere sovrastimata o sottostimata.",
     "warnZeroedRounds": "I seguenti blocchi sono stati esclusi dalla manutenzione perche la manutenzione ha superato la ricompensa stimata:",
     "warnZeroedRoundsItem": "Blocco {{blockNumber}} con moltiplicatore x{{multiplier}}",
+    "warnZeroedRoundsHintGmt": "Suggerimento: aumentare il tuo sconto di pagamento GMT ad almeno {{recommendedGmtPct}}% potrebbe evitare che questi blocchi vengano azzerati (al prezzo attuale di BTC di ${{btcPrice}}).",
+    "warnZeroedRoundsHintBtcPrice": "Il tuo sconto GMT attuale è del {{currentGmtPct}}%, ma anche al massimo del 20%, il prezzo attuale del BTC (${{btcPrice}}) è troppo basso per coprire i costi di manutenzione della tua lega per questi blocchi.",
     "maintenanceEst": "Manutenzione (stim.)",
     "netEst": "Netto (stim.)"
   },

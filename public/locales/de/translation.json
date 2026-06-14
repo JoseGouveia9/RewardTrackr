@@ -267,6 +267,8 @@
     "warnNoClanAnalyticsDone": "Keine Clan-Analysen (der Clan ist möglicherweise kürzer als 30 Tage) — Clan-Power am Zyklusende für alle Runden verwendet. Die Schätzung kann über- oder untertrieben sein.",
     "warnZeroedRounds": "Die folgenden Bloecke wurden von der Wartung ausgeschlossen, da die Wartungskosten die geschaetzte Belohnung ueberstiegen:",
     "warnZeroedRoundsItem": "Block {{blockNumber}} mit Multiplikator x{{multiplier}}",
+    "warnZeroedRoundsHintGmt": "Tipp: Eine Erhöhung deines GMT-Zahlungsrabatts auf mindestens {{recommendedGmtPct}}% könnte verhindern, dass diese Blöcke nullgesetzt werden (beim aktuellen BTC-Preis von ${{btcPrice}}).",
+    "warnZeroedRoundsHintBtcPrice": "Dein aktueller GMT-Rabatt beträgt {{currentGmtPct}}%, aber selbst beim Maximum von 20% ist der aktuelle BTC-Preis (${{btcPrice}}) zu niedrig, um die Wartungskosten deiner Liga für diese Blöcke zu decken.",
     "maintenanceEst": "Wartung (Schätz.)",
     "netEst": "Netto (Schätz.)"
   },

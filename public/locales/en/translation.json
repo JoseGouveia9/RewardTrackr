@@ -268,6 +268,8 @@
     "warnNoClanAnalyticsDone": "No clan analytics (clan may be <30 days old) — using clan power at cycle end for all rounds. Estimation may be over/under-inflated.",
     "warnZeroedRounds": "The following blocks were excluded from maintenance because maintenance exceeded the estimated reward:",
     "warnZeroedRoundsItem": "Block {{blockNumber}} with multiplier x{{multiplier}}",
+    "warnZeroedRoundsHintGmt": "Tip: increasing your GMT pay discount to at least {{recommendedGmtPct}}% could prevent these blocks from being zeroed (at current BTC price ${{btcPrice}}).",
+    "warnZeroedRoundsHintBtcPrice": "Your current GMT pay discount is {{currentGmtPct}}%, but even at the 20% maximum, the current BTC price (${{btcPrice}}) is too low to cover your league's maintenance cost for these blocks.",
     "maintenanceEst": "Maintenance (est.)",
     "netEst": "Net (est.)"
   },

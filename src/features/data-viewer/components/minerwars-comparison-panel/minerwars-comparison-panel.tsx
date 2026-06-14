@@ -198,6 +198,7 @@ export function MinerWarsComparisonPanel({
     data != null && data.btcFundIsZero && data.actualMinerWarsBtc == null;
   const zeroedRounds = data?.zeroedRounds ?? null;
   const showZeroedRoundsWarning = zeroedRounds != null && zeroedRounds.length > 0;
+  const zeroedRoundsHint = data?.zeroedRoundsHint ?? null;
 
   const showGmt = currency === "GMT" && (data?.btcPrice ?? 0) > 0 && (data?.gmtPrice ?? 0) > 0;
   const toGmt = (btc: number) => (btc * data!.btcPrice!) / data!.gmtPrice!;
@@ -265,7 +266,7 @@ export function MinerWarsComparisonPanel({
                   {isActual ? t("cycleTracker.minerWarsActual") : t("cycleTracker.minerWarsEst")}
                 </span>
                 <span className="minerwars-panel-value">
-                  {showBtcFundZeroWarning && (
+                  {(showBtcFundZeroWarning || showZeroedRoundsWarning) && (
                     <svg
                       className="minerwars-panel-warn-icon"
                       width="12"
@@ -371,6 +372,24 @@ export function MinerWarsComparisonPanel({
               <div className="minerwars-panel-row">
                 <span className="minerwars-panel-label">{t("cycleTracker.minerWarsProgress")}</span>
                 <span className="minerwars-panel-value minerwars-panel-value--progress">
+                  {showZeroedRoundsWarning && (
+                    <svg
+                      className="minerwars-panel-warn-icon"
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                      <line x1="12" y1="9" x2="12" y2="13" />
+                      <line x1="12" y1="17" x2="12.01" y2="17" />
+                    </svg>
+                  )}
                   {fmtVal(effectiveMw)} <ValIcon />
                   {effectiveProgress != null && (
                     <span
@@ -475,6 +494,28 @@ export function MinerWarsComparisonPanel({
                     </li>
                   ))}
                 </ul>
+                {zeroedRoundsHint && (
+                  <p style={{ margin: "0.5em 0 0", fontStyle: "italic", opacity: 0.85 }}>
+                    {zeroedRoundsHint.kind === "increaseGmtDiscount"
+                      ? t("cycleTracker.warnZeroedRoundsHintGmt", {
+                          recommendedGmtPct: zeroedRoundsHint.recommendedGmtPct.toString(),
+                          btcPrice:
+                            data!.btcPrice != null
+                              ? Math.round(data!.btcPrice).toLocaleString()
+                              : "?",
+                        })
+                      : t("cycleTracker.warnZeroedRoundsHintBtcPrice", {
+                          currentGmtPct: (
+                            (zeroedRoundsHint as { kind: "btcPriceTooLow"; currentGmtPct?: number })
+                              .currentGmtPct ?? 0
+                          ).toString(),
+                          btcPrice:
+                            data!.btcPrice != null
+                              ? Math.round(data!.btcPrice).toLocaleString()
+                              : "?",
+                        })}
+                  </p>
+                )}
               </span>
             </div>
           )}

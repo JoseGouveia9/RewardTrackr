@@ -267,6 +267,8 @@
     "warnNoClanAnalyticsDone": "Sin análisis del clan (el clan puede tener menos de 30 días) — usando el poder del clan al final del ciclo para todas las rondas. La estimación puede estar sobreestimada o subestimada.",
     "warnZeroedRounds": "Los siguientes bloques fueron excluidos del mantenimiento porque el mantenimiento supero la recompensa estimada:",
     "warnZeroedRoundsItem": "Bloque {{blockNumber}} con multiplicador x{{multiplier}}",
+    "warnZeroedRoundsHintGmt": "Consejo: aumentar tu descuento de pago en GMT a al menos {{recommendedGmtPct}}% podría evitar que estos bloques sean anulados (al precio actual de BTC de ${{btcPrice}}).",
+    "warnZeroedRoundsHintBtcPrice": "Tu descuento GMT actual es del {{currentGmtPct}}%, pero incluso al máximo del 20%, el precio actual de BTC (${{btcPrice}}) es demasiado bajo para cubrir el coste de mantenimiento de tu liga en estos bloques.",
     "maintenanceEst": "Mantenimiento (est.)",
     "netEst": "Neto (est.)"
   },

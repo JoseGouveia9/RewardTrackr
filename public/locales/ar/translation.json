@@ -267,6 +267,8 @@
     "warnNoClanAnalyticsDone": "لا توجد تحليلات للعشيرة (قد تكون أقل من 30 يومًا) — يُستخدم طاقة العشيرة في نهاية الدورة لجميع الجولات. قد يكون التقدير مبالغًا فيه أو منخفضًا.",
     "warnZeroedRounds": "تم استبعاد الكتل التالية من الصيانة لأن تكلفة الصيانة تجاوزت المكافأة المقدرة:",
     "warnZeroedRoundsItem": "كتلة {{blockNumber}} بمضاعف x{{multiplier}}",
+    "warnZeroedRoundsHintGmt": "نصيحة: زيادة خصم الدفع بـ GMT إلى {{recommendedGmtPct}}% على الأقل يمكن أن يمنع تصفير هذه الكتل (عند سعر BTC الحالي ${{btcPrice}}).",
+    "warnZeroedRoundsHintBtcPrice": "خصم GMT الحالي لديك هو {{currentGmtPct}}%، ولكن حتى عند الحد الأقصى البالغ 20%، فإن سعر BTC الحالي (${{btcPrice}}) منخفض جدًا لتغطية تكاليف صيانة دوريك على هذه الكتل."
     "maintenanceEst": "الصيانة (تقدير)",
     "netEst": "الصافي (تقدير)"
   },
