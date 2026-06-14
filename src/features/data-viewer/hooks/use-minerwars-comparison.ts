@@ -63,26 +63,27 @@ export function useMinerWarsComparison({
     return () => window.removeEventListener("rt:session-expired", handleExpired);
   }, []);
 
-  // Same-tab expiry: re-check timed exactly to the JWT exp claim
+  // Same-tab expiry: mirror useAuth's 30s-early logout so the button disappears
+  // at the same time the user state is cleared.
   useEffect(() => {
     if (!isLoggedIn) return;
     const decoded = decodeJwt(getToken());
     if (decoded?.exp == null) return;
-    const msUntilExpiry = decoded.exp * 1000 - Date.now();
+    const msUntilExpiry = decoded.exp * 1000 - Date.now() - 30_000;
     if (msUntilExpiry <= 0) {
       setIsLoggedIn(false);
       return;
     }
-    const timer = setTimeout(() => setIsLoggedIn(isTokenValid(getToken())), msUntilExpiry + 100);
+    const timer = setTimeout(() => setIsLoggedIn(false), msUntilExpiry);
     return () => clearTimeout(timer);
   }, [isLoggedIn]);
 
-  // Same-tab token injection (e.g. from browser extension): poll while logged out
+  // Same-tab token injection (e.g. from browser extension): match useAuth's 1s poll
   useEffect(() => {
     if (isLoggedIn) return;
     const interval = setInterval(() => {
       if (isTokenValid(getToken())) setIsLoggedIn(true);
-    }, 2000);
+    }, 1000);
     return () => clearInterval(interval);
   }, [isLoggedIn]);
 

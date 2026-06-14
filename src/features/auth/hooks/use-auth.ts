@@ -58,6 +58,17 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
     }
   }, []);
 
+  const performLogout = useCallback(
+    (message: string) => {
+      clearExpiryTimer();
+      sessionStorage.removeItem(LS_KEY_SYNC_TOKEN);
+      setUser(null);
+      setStoredToken("");
+      onMessage(message);
+    },
+    [clearExpiryTimer, onMessage],
+  );
+
   const scheduleExpiry = useCallback(
     (exp: number | null) => {
       clearExpiryTimer();
@@ -65,14 +76,12 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
       // Log out 30s before actual expiry to avoid a mid-export auth failure
       const msUntilExpiry = exp * 1000 - Date.now() - 30_000;
       if (msUntilExpiry <= 0) return;
-      expiryTimer.current = setTimeout(() => {
-        sessionStorage.removeItem(LS_KEY_SYNC_TOKEN);
-        setUser(null);
-        setStoredToken("");
-        onMessage(t("auth.sessionExpired"));
-      }, msUntilExpiry);
+      expiryTimer.current = setTimeout(
+        () => performLogout(t("auth.sessionExpired")),
+        msUntilExpiry,
+      );
     },
-    [clearExpiryTimer, onMessage, t],
+    [clearExpiryTimer, performLogout, t],
   );
 
   const applyToken = useCallback(
@@ -107,16 +116,10 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
   }, [applyToken, t]);
 
   useEffect(() => {
-    const handleApiExpiry = (): void => {
-      clearExpiryTimer();
-      sessionStorage.removeItem(LS_KEY_SYNC_TOKEN);
-      setUser(null);
-      setStoredToken("");
-      onMessage(t("auth.sessionExpired"));
-    };
+    const handleApiExpiry = () => performLogout(t("auth.sessionExpired"));
     window.addEventListener("rt:session-expired", handleApiExpiry);
     return () => window.removeEventListener("rt:session-expired", handleApiExpiry);
-  }, [clearExpiryTimer, onMessage, t]);
+  }, [performLogout, t]);
 
   // Polls sessionStorage for a token written by the browser extension (cross-context write)
   useEffect(() => {
@@ -165,13 +168,9 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
   );
 
   const handleLogout = useCallback((): void => {
-    clearExpiryTimer();
-    sessionStorage.removeItem(LS_KEY_SYNC_TOKEN);
-    setUser(null);
-    setStoredToken("");
     Sentry.logger.info("User logged out");
-    onMessage(t("auth.loggedOut"));
-  }, [clearExpiryTimer, onMessage, t]);
+    performLogout(t("auth.loggedOut"));
+  }, [performLogout, t]);
 
   return { storedToken, user, syncedAlias, handleCheckSync, handleManualTokenSync, handleLogout };
 }

@@ -1,6 +1,7 @@
-﻿import { memo, useEffect, useRef, useState } from "react";
+﻿import { memo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
+import { useOutsideClick } from "../../../data-viewer/hooks/use-outside-click";
 import type { AuthUser } from "../../types";
 import "./header-user-menu.css";
 
@@ -39,16 +40,7 @@ export const HeaderUserMenu = memo(function HeaderUserMenu({
   const ref = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
 
-  useEffect(() => {
-    if (!open) return;
-    function onMouseDown(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", onMouseDown);
-    return () => document.removeEventListener("mousedown", onMouseDown);
-  }, [open]);
+  useOutsideClick(ref, () => setOpen(false), open);
 
   return (
     <div className="user-menu-wrapper" ref={ref}>

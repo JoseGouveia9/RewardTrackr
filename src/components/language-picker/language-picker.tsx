@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { AnimatePresence, motion } from "framer-motion";
 import { LANGUAGES, applyDocumentDir } from "@/i18n";
+import { useEscapeKey } from "@/hooks/use-escape-key";
 import "./language-picker.css";
 
 interface LanguagePickerProps {
@@ -13,14 +14,7 @@ export function LanguagePicker({ open, onClose }: LanguagePickerProps) {
   const { i18n, t } = useTranslation();
   const overlayRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!open) return;
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-    }
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [open, onClose]);
+  useEscapeKey(onClose, open);
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";

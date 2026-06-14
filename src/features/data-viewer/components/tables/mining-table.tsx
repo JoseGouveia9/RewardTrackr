@@ -1,5 +1,4 @@
-﻿import { useMemo, useRef, type ReactNode } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+﻿import { useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { loadCacheEntry, wasCacheMigrated } from "@/features/export/utils/cache";
 import type { CacheEntry, RewardKey } from "@/features/export/types";
@@ -20,82 +19,90 @@ import { useSyncTableColumns } from "../../hooks/use-sync-table-columns";
 import { AnimatedLoadingRow } from "./animated-loading-row";
 import { useRowSelection } from "../../stores/row-selection-context";
 import { MinerWarsComparisonPanel } from "../minerwars-comparison-panel/minerwars-comparison-panel";
+import {
+  TrendArrow,
+  Frac,
+  InfoTooltip,
+  AnimatedTotalsWrapper,
+  TableNoResultsRow,
+} from "./table-cell-utils";
 
-const INFO_ICON = (
-  <svg
-    width="11"
-    height="11"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className="dv-info-icon"
-    aria-hidden="true"
-  >
-    <circle cx="12" cy="12" r="10" />
-    <path d="M12 16v-4" />
-    <path d="M12 8h.01" />
-  </svg>
-);
+type MiningRow = {
+  date: string;
+  rowId: string;
+  poolReward: number;
+  maintenance: number;
+  reward: number;
+  totalPower: number;
+  efficiency?: number;
+  discount: number;
+  satsPerTh?: number;
+  btcPriceAtTime?: number;
+  btcPriceGmt?: number;
+  btcPriceFiat?: number;
+};
 
-function TrendArrow({
-  current,
-  prev,
-  integer,
+function PoolRewardSubLabels({
+  currency,
+  fiatCode,
+  row,
+  prevRow,
+  isDiffDay,
+  showTrends,
 }: {
-  current: number | undefined;
-  prev: number | undefined;
-  integer?: boolean;
+  currency: Currency;
+  fiatCode: string;
+  row: MiningRow;
+  prevRow?: MiningRow;
+  isDiffDay: boolean;
+  showTrends: boolean;
 }) {
-  if (current == null || prev == null) return null;
-  const a = integer ? Math.round(current) : current;
-  const b = integer ? Math.round(prev) : prev;
-  const delta = a - b;
-  if (delta === 0) return null;
-  const up = delta > 0;
-  return (
-    <svg
-      className={`dv-trend${up ? " dv-trend--up" : " dv-trend--down"}`}
-      width="8"
-      height="8"
-      viewBox="0 0 10 10"
-      fill="currentColor"
-      aria-hidden="true"
-    >
-      {up ? <polygon points="5,1 9,9 1,9" /> : <polygon points="1,1 9,1 5,9" />}
-    </svg>
-  );
-}
+  const { t } = useTranslation();
+  if (!showTrends) return null;
 
-function Frac({ num, den }: { num: ReactNode; den: ReactNode }) {
-  return (
-    <span className="dv-math-frac">
-      <span className="dv-math-num">{num}</span>
-      <span className="dv-math-den">{den}</span>
-    </span>
-  );
-}
+  const fmtSats = (v: number) =>
+    (Math.floor(v * 100) / 100).toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
 
-function InfoTooltip({
-  children,
-  align = "center",
-}: {
-  children: ReactNode;
-  align?: "center" | "right" | "left";
-}) {
-  const mod =
-    align === "right"
-      ? " dv-formula-tooltip--right"
-      : align === "left"
-        ? " dv-formula-tooltip--left"
-        : "";
+  const priceValue =
+    currency === "GMT"
+      ? row.btcPriceGmt
+      : currency === "USD"
+        ? row.btcPriceAtTime
+        : currency === "FIAT"
+          ? row.btcPriceFiat
+          : undefined;
+
+  const prevPriceValue =
+    currency === "GMT"
+      ? prevRow?.btcPriceGmt
+      : currency === "USD"
+        ? prevRow?.btcPriceAtTime
+        : currency === "FIAT"
+          ? prevRow?.btcPriceFiat
+          : undefined;
+
+  const priceUnit =
+    currency === "GMT" ? "GMT" : currency === "USD" ? "USD" : currency === "FIAT" ? fiatCode : null;
+
   return (
-    <span className="dv-info-wrap">
-      {INFO_ICON}
-      <span className={`dv-formula-tooltip${mod}`}>{children}</span>
-    </span>
+    <>
+      {priceValue != null && priceUnit && (
+        <div className="dv-cell-sub">
+          {t("dataViewer.btcPrice")}:{" "}
+          {priceValue.toLocaleString(undefined, { maximumFractionDigits: 0 })} {priceUnit}
+          <TrendArrow current={priceValue} prev={prevPriceValue} />
+        </div>
+      )}
+      {row.satsPerTh != null && (
+        <div className="dv-cell-sub">
+          Sats/TH: {fmtSats(row.satsPerTh)} Sats
+          {isDiffDay && <TrendArrow current={row.satsPerTh} prev={prevRow?.satsPerTh} />}
+        </div>
+      )}
+    </>
   );
 }
 
@@ -358,56 +365,46 @@ export function MiningTable({
       <div
         className={`dv-tables-wrap dv-tables-wrap--wide${trendsExiting ? " dv-trends-exiting" : trendsAnimating ? " dv-trends-active" : showTrends ? " dv-trends-visible" : ""}`}
       >
-        <AnimatePresence initial={false}>
-          {selectedRows.length > 0 && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
-              style={{ overflowY: "clip" }}
-            >
-              <table ref={totalsRef} className="dv-table dv-table-totals">
-                <colgroup>
-                  <col className="dv-column-date" />
-                  <col className="dv-column-value" />
-                  <col className="dv-column-value" />
-                  <col className="dv-column-value" />
-                  <col className="dv-column-value" />
-                  <col className="dv-column-value" />
-                </colgroup>
-                <tbody>
-                  <tr>
-                    <td className="dv-totals-label">{t("common.total")}</td>
-                    <td />
-                    <td>
-                      <span className="dv-total-cell-label">{t("dataViewer.poolReward")}</span>
-                      <span className="dv-total-cell-value dv-cell-with-icon">
-                        {formatMiningValue(totals.poolReward, currency)}
-                        <MiningCurrencyIcon currency={currency} fiatCode={fiatCode} />
-                      </span>
-                    </td>
-                    <td>
-                      <span className="dv-total-cell-label">{t("dataViewer.maintenance")}</span>
-                      <span className="dv-total-cell-value dv-cell-with-icon">
-                        {formatMiningValue(totals.maintenance, currency)}
-                        <MiningCurrencyIcon currency={currency} fiatCode={fiatCode} />
-                      </span>
-                    </td>
-                    <td />
-                    <td>
-                      <span className="dv-total-cell-label">{t("dataViewer.reward")}</span>
-                      <span className="dv-total-cell-value dv-total-cell-value--accent dv-cell-with-icon">
-                        {formatMiningValue(totals.reward, currency)}
-                        <MiningCurrencyIcon currency={currency} fiatCode={fiatCode} />
-                      </span>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <AnimatedTotalsWrapper show={selectedRows.length > 0}>
+          <table ref={totalsRef} className="dv-table dv-table-totals">
+            <colgroup>
+              <col className="dv-column-date" />
+              <col className="dv-column-value" />
+              <col className="dv-column-value" />
+              <col className="dv-column-value" />
+              <col className="dv-column-value" />
+              <col className="dv-column-value" />
+            </colgroup>
+            <tbody>
+              <tr>
+                <td className="dv-totals-label">{t("common.total")}</td>
+                <td />
+                <td>
+                  <span className="dv-total-cell-label">{t("dataViewer.poolReward")}</span>
+                  <span className="dv-total-cell-value dv-cell-with-icon">
+                    {formatMiningValue(totals.poolReward, currency)}
+                    <MiningCurrencyIcon currency={currency} fiatCode={fiatCode} />
+                  </span>
+                </td>
+                <td>
+                  <span className="dv-total-cell-label">{t("dataViewer.maintenance")}</span>
+                  <span className="dv-total-cell-value dv-cell-with-icon">
+                    {formatMiningValue(totals.maintenance, currency)}
+                    <MiningCurrencyIcon currency={currency} fiatCode={fiatCode} />
+                  </span>
+                </td>
+                <td />
+                <td>
+                  <span className="dv-total-cell-label">{t("dataViewer.reward")}</span>
+                  <span className="dv-total-cell-value dv-total-cell-value--accent dv-cell-with-icon">
+                    {formatMiningValue(totals.reward, currency)}
+                    <MiningCurrencyIcon currency={currency} fiatCode={fiatCode} />
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </AnimatedTotalsWrapper>
 
         <table
           ref={dataRef}
@@ -465,13 +462,7 @@ export function MiningTable({
           </thead>
           <tbody>
             <AnimatedLoadingRow show={isFetching && filteredRows.length > 0} colSpan={6} />
-            {filteredRows.length === 0 && (
-              <tr>
-                <td colSpan={6} className="dv-loading-cell">
-                  {t("dataViewer.noFilterResults")}
-                </td>
-              </tr>
-            )}
+            {filteredRows.length === 0 && <TableNoResultsRow colSpan={6} />}
             {pageRows.map((row, i) => {
               const prevRow = filteredRows[page * effectivePageSize + i + 1];
               const diffEntry = difficultyMap.get(row.date.slice(0, 10));
@@ -509,84 +500,14 @@ export function MiningTable({
                       {formatMiningValue(row.poolReward, currency)}
                       <MiningCurrencyIcon currency={currency} fiatCode={fiatCode} />
                     </span>
-                    {showTrends && currency === "BTC" && row.satsPerTh != null && (
-                      <div className="dv-cell-sub">
-                        Sats/TH:{" "}
-                        {(Math.floor(row.satsPerTh * 100) / 100).toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}{" "}
-                        Sats
-                        {isDiffDay && (
-                          <TrendArrow current={row.satsPerTh} prev={prevRow?.satsPerTh} />
-                        )}
-                      </div>
-                    )}
-                    {showTrends && currency === "GMT" && row.btcPriceGmt != null && (
-                      <div className="dv-cell-sub">
-                        {t("dataViewer.btcPrice")}:{" "}
-                        {row.btcPriceGmt.toLocaleString(undefined, { maximumFractionDigits: 0 })}{" "}
-                        GMT
-                        <TrendArrow current={row.btcPriceGmt} prev={prevRow?.btcPriceGmt} />
-                      </div>
-                    )}
-                    {showTrends && currency === "GMT" && row.satsPerTh != null && (
-                      <div className="dv-cell-sub">
-                        Sats/TH:{" "}
-                        {(Math.floor(row.satsPerTh * 100) / 100).toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}{" "}
-                        Sats
-                        {isDiffDay && (
-                          <TrendArrow current={row.satsPerTh} prev={prevRow?.satsPerTh} />
-                        )}
-                      </div>
-                    )}
-                    {showTrends && currency === "USD" && row.btcPriceAtTime != null && (
-                      <div className="dv-cell-sub">
-                        {t("dataViewer.btcPrice")}:{" "}
-                        {row.btcPriceAtTime.toLocaleString(undefined, {
-                          maximumFractionDigits: 0,
-                        })}{" "}
-                        USD
-                        <TrendArrow current={row.btcPriceAtTime} prev={prevRow?.btcPriceAtTime} />
-                      </div>
-                    )}
-                    {showTrends && currency === "USD" && row.satsPerTh != null && (
-                      <div className="dv-cell-sub">
-                        Sats/TH:{" "}
-                        {(Math.floor(row.satsPerTh * 100) / 100).toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}{" "}
-                        Sats
-                        {isDiffDay && (
-                          <TrendArrow current={row.satsPerTh} prev={prevRow?.satsPerTh} />
-                        )}
-                      </div>
-                    )}
-                    {showTrends && currency === "FIAT" && row.btcPriceFiat != null && (
-                      <div className="dv-cell-sub">
-                        {t("dataViewer.btcPrice")}:{" "}
-                        {row.btcPriceFiat.toLocaleString(undefined, { maximumFractionDigits: 0 })}{" "}
-                        {fiatCode}
-                        <TrendArrow current={row.btcPriceFiat} prev={prevRow?.btcPriceFiat} />
-                      </div>
-                    )}
-                    {showTrends && currency === "FIAT" && row.satsPerTh != null && (
-                      <div className="dv-cell-sub">
-                        Sats/TH:{" "}
-                        {(Math.floor(row.satsPerTh * 100) / 100).toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}{" "}
-                        Sats
-                        {isDiffDay && (
-                          <TrendArrow current={row.satsPerTh} prev={prevRow?.satsPerTh} />
-                        )}
-                      </div>
-                    )}
+                    <PoolRewardSubLabels
+                      currency={currency}
+                      fiatCode={fiatCode}
+                      row={row}
+                      prevRow={prevRow}
+                      isDiffDay={isDiffDay}
+                      showTrends={showTrends}
+                    />
                   </td>
                   <td>
                     <span className="dv-cell-with-icon">

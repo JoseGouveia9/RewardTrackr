@@ -1,5 +1,18 @@
 import { motion } from "framer-motion";
 
+function parseParts(text: string) {
+  return text.split(/(\[[^\]]+\]\([^)]+\))/g).map((part, i) => {
+    const match = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+    return match ? (
+      <a key={i} href={match[2]} target="_blank" rel="noopener noreferrer">
+        {match[1]}
+      </a>
+    ) : (
+      part
+    );
+  });
+}
+
 function getMessageType(msg: string): "success" | "error" | "loading" {
   const lower = msg.toLowerCase();
   if (
@@ -91,18 +104,6 @@ export function MessageBanner({ message, onClose }: MessageBannerProps) {
   const newlineIdx = message.indexOf("\n");
   const mainMessage = newlineIdx === -1 ? message : message.slice(0, newlineIdx);
   const hintMessage = newlineIdx === -1 ? null : message.slice(newlineIdx + 1);
-
-  const parseParts = (text: string) =>
-    text.split(/(\[[^\]]+\]\([^)]+\))/g).map((part, i) => {
-      const match = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
-      return match ? (
-        <a key={i} href={match[2]} target="_blank" rel="noopener noreferrer">
-          {match[1]}
-        </a>
-      ) : (
-        part
-      );
-    });
 
   return (
     <motion.div

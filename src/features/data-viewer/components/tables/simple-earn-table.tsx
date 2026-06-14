@@ -1,5 +1,4 @@
 ﻿import { useEffect, useMemo, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { loadCacheEntry } from "@/features/export/utils/cache";
 import type { CacheEntry, RewardKey } from "@/features/export/types";
@@ -18,6 +17,16 @@ import { Pagination } from "../pagination/pagination";
 import { useSyncTableColumns } from "../../hooks/use-sync-table-columns";
 import { AnimatedLoadingRow } from "./animated-loading-row";
 import { useRowSelection } from "../../stores/row-selection-context";
+import { TableEmptyState, AnimatedTotalsWrapper, TableNoResultsRow } from "./table-cell-utils";
+
+function earnRowValue(
+  row: { reward: number; rewardInUSD: number; rewardInFiat: number; currency: string },
+  earnView: EarnView,
+) {
+  if (earnView === "USD") return { v: row.rewardInUSD, c: "USD" };
+  if (earnView === "FIAT") return { v: row.rewardInFiat, c: "FIAT" };
+  return { v: row.reward, c: row.currency };
+}
 
 export function SimpleEarnTable({
   rewardKey,
@@ -166,77 +175,43 @@ export function SimpleEarnTable({
     <FiatIcon code={fiatCode} />
   );
 
-  function earnRowValue(row: {
-    reward: number;
-    rewardInUSD: number;
-    rewardInFiat: number;
-    currency: string;
-  }) {
-    if (earnView === "USD") return { v: row.rewardInUSD, c: "USD" };
-    if (earnView === "FIAT") return { v: row.rewardInFiat, c: "FIAT" };
-    return { v: row.reward, c: row.currency };
-  }
-
   if (!entry) {
-    return (
-      <div className="dv-empty">
-        {isFetching ? (
-          <span className="dv-loading-inline">
-            <span className="dv-spinner" aria-hidden="true" />
-            <span>{t("dataViewer.fetchingData")}</span>
-          </span>
-        ) : (
-          t("dataViewer.noData")
-        )}
-      </div>
-    );
+    return <TableEmptyState isFetching={isFetching} />;
   }
 
   return (
     <>
       <div className="dv-tables-wrap dv-tables-wrap--scroll">
-        {}
-        <AnimatePresence initial={false}>
-          {selectedRows.length > 0 && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
-              style={{ overflowY: "clip" }}
-            >
-              <table ref={totalsRef} className="dv-table dv-table-totals">
-                <colgroup>
-                  <col className="dv-column-date" />
-                  <col className="dv-column-value" />
-                  <col className="dv-column-rate" />
-                  <col className="dv-column-value" />
-                </colgroup>
-                <tbody>
-                  <tr>
-                    <td className="dv-totals-label">{t("common.total")}</td>
-                    <td />
-                    <td />
-                    <td>
-                      <span className="dv-total-cell-label">{t("dataViewer.reward")}</span>
-                      <span className="dv-total-cell-value dv-total-cell-value--accent dv-cell-with-icon">
-                        {isEarnNative
-                          ? formatCurrencyValue(earnGrandTotal.reward, nativeCurrency)
-                          : formatCurrencyValue(
-                              isEarnUsd ? earnGrandTotal.rewardInUSD : earnGrandTotal.rewardInFiat,
-                              isEarnUsd ? "USD" : "FIAT",
-                            )}
-                        {earnTotalIcon}
-                      </span>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <AnimatedTotalsWrapper show={selectedRows.length > 0}>
+          <table ref={totalsRef} className="dv-table dv-table-totals">
+            <colgroup>
+              <col className="dv-column-date" />
+              <col className="dv-column-value" />
+              <col className="dv-column-rate" />
+              <col className="dv-column-value" />
+            </colgroup>
+            <tbody>
+              <tr>
+                <td className="dv-totals-label">{t("common.total")}</td>
+                <td />
+                <td />
+                <td>
+                  <span className="dv-total-cell-label">{t("dataViewer.reward")}</span>
+                  <span className="dv-total-cell-value dv-total-cell-value--accent dv-cell-with-icon">
+                    {isEarnNative
+                      ? formatCurrencyValue(earnGrandTotal.reward, nativeCurrency)
+                      : formatCurrencyValue(
+                          isEarnUsd ? earnGrandTotal.rewardInUSD : earnGrandTotal.rewardInFiat,
+                          isEarnUsd ? "USD" : "FIAT",
+                        )}
+                    {earnTotalIcon}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </AnimatedTotalsWrapper>
 
-        {}
         <table
           ref={dataRef}
           className={`dv-table dv-table-data${rowSel ? " dv-selection-mode" : ""}`}
@@ -264,15 +239,9 @@ export function SimpleEarnTable({
           </thead>
           <tbody>
             <AnimatedLoadingRow show={isFetching && finalRows.length > 0} colSpan={4} />
-            {filteredRows.length === 0 && (
-              <tr>
-                <td colSpan={4} className="dv-loading-cell">
-                  {t("dataViewer.noFilterResults")}
-                </td>
-              </tr>
-            )}
+            {filteredRows.length === 0 && <TableNoResultsRow colSpan={4} />}
             {pageRows.map((row, i) => {
-              const { v, c } = earnRowValue(row);
+              const { v, c } = earnRowValue(row, earnView);
               const icon = isEarnNative ? (
                 <AnyCurrencyIcon currency={row.currency} />
               ) : isEarnUsd ? (

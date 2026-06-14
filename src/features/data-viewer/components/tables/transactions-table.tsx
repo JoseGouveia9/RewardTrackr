@@ -1,5 +1,4 @@
 ﻿import { useEffect, useMemo, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { loadCacheEntry } from "@/features/export/utils/cache";
 import type { CacheEntry, RewardKey } from "@/features/export/types";
@@ -20,6 +19,16 @@ import { Pagination } from "../pagination/pagination";
 import { useSyncTableColumns } from "../../hooks/use-sync-table-columns";
 import { AnimatedLoadingRow } from "./animated-loading-row";
 import { useRowSelection } from "../../stores/row-selection-context";
+import { TableEmptyState, AnimatedTotalsWrapper, TableNoResultsRow } from "./table-cell-utils";
+
+function rowValue(
+  row: { reward: number; rewardInUSD: number; rewardInFiat: number },
+  txView: TxView,
+) {
+  if (txView === "USD") return { v: row.rewardInUSD, c: "USD" };
+  if (txView === "FIAT") return { v: row.rewardInFiat, c: "FIAT" };
+  return { v: row.reward, c: "GMT" };
+}
 
 export function TransactionsTable({
   rewardKey,
@@ -126,12 +135,6 @@ export function TransactionsTable({
   const rewardIcon =
     txView === "GMT" ? <GmtIcon /> : txView === "USD" ? <UsdIcon /> : <FiatIcon code={fiatCode} />;
 
-  function rowValue(row: { reward: number; rewardInUSD: number; rewardInFiat: number }) {
-    if (txView === "USD") return { v: row.rewardInUSD, c: "USD" };
-    if (txView === "FIAT") return { v: row.rewardInFiat, c: "FIAT" };
-    return { v: row.reward, c: "GMT" };
-  }
-
   const selectedRows = useMemo(
     () => (rowSel ? filteredRows.filter((r) => !excluded.has(r.rowId)) : filteredRows),
     [filteredRows, rowSel, excluded],
@@ -151,60 +154,37 @@ export function TransactionsTable({
   );
 
   if (!entry) {
-    return (
-      <div className="dv-empty">
-        {isFetching ? (
-          <span className="dv-loading-inline">
-            <span className="dv-spinner" aria-hidden="true" />
-            <span>{t("dataViewer.fetchingData")}</span>
-          </span>
-        ) : (
-          t("dataViewer.noData")
-        )}
-      </div>
-    );
+    return <TableEmptyState isFetching={isFetching} />;
   }
 
-  const { v: totalV, c: totalC } = rowValue(totalValues);
+  const { v: totalV, c: totalC } = rowValue(totalValues, txView);
 
   return (
     <>
       <div className="dv-tables-wrap">
-        {}
-        <AnimatePresence initial={false}>
-          {selectedRows.length > 0 && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
-              style={{ overflowY: "clip" }}
-            >
-              <table ref={totalsRef} className="dv-table dv-table-totals">
-                <colgroup>
-                  <col className="dv-column-date" />
-                  <col className="dv-column-type" />
-                  <col className="dv-column-value" />
-                </colgroup>
-                <tbody>
-                  <tr>
-                    <td className="dv-totals-label">{t("common.total")}</td>
-                    <td />
-                    <td>
-                      <span className="dv-total-cell-label">{t("dataViewer.reward")}</span>
-                      <span className="dv-total-cell-value dv-total-cell-value--accent dv-cell-with-icon">
-                        {formatCurrencyValue(totalV, totalC)}
-                        {rewardIcon}
-                      </span>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <AnimatedTotalsWrapper show={selectedRows.length > 0}>
+          <table ref={totalsRef} className="dv-table dv-table-totals">
+            <colgroup>
+              <col className="dv-column-date" />
+              <col className="dv-column-type" />
+              <col className="dv-column-value" />
+            </colgroup>
+            <tbody>
+              <tr>
+                <td className="dv-totals-label">{t("common.total")}</td>
+                <td />
+                <td>
+                  <span className="dv-total-cell-label">{t("dataViewer.reward")}</span>
+                  <span className="dv-total-cell-value dv-total-cell-value--accent dv-cell-with-icon">
+                    {formatCurrencyValue(totalV, totalC)}
+                    {rewardIcon}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </AnimatedTotalsWrapper>
 
-        {}
         <table
           ref={dataRef}
           className={`dv-table dv-table-data${rowSel ? " dv-selection-mode" : ""}`}
@@ -242,15 +222,9 @@ export function TransactionsTable({
           </thead>
           <tbody>
             <AnimatedLoadingRow show={isFetching && finalRows.length > 0} colSpan={3} />
-            {filteredRows.length === 0 && (
-              <tr>
-                <td colSpan={3} className="dv-loading-cell">
-                  {t("dataViewer.noFilterResults")}
-                </td>
-              </tr>
-            )}
+            {filteredRows.length === 0 && <TableNoResultsRow colSpan={3} />}
             {pageRows.map((row, i) => {
-              const { v, c } = rowValue(row);
+              const { v, c } = rowValue(row, txView);
               const ids = row.groupIds;
               const isExcluded = rowSel ? ids.every((id) => excluded.has(id)) : false;
               return (

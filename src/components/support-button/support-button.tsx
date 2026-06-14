@@ -2,6 +2,7 @@
 import { useTranslation } from "react-i18next";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEscapeKey } from "@/hooks/use-escape-key";
+import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { createPortal } from "react-dom";
 import "./support-button.css";
 
@@ -94,23 +95,13 @@ const ADDRESSES = [
 
 function CopyButton({ value }: { value: string }) {
   const { t } = useTranslation();
-  const [copied, setCopied] = useState(false);
-
-  const handleCopy = () => {
-    navigator.clipboard
-      .writeText(value)
-      .then(() => {
-        setCopied(true);
-        setTimeout(() => setCopied(false), 1500);
-      })
-      .catch(() => undefined);
-  };
+  const [copied, copy] = useCopyToClipboard(1500);
 
   return (
     <button
       type="button"
       className="support-copy-button"
-      onClick={handleCopy}
+      onClick={() => copy(value)}
       aria-label={t("support.copyAddress")}
     >
       {copied ? (
