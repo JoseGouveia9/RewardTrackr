@@ -1,6 +1,6 @@
 import { handleAnnouncementRoute } from "./routes/announcement.js";
 import { handleOgRoute } from "./routes/og.js";
-import { handleDefaultProxy, handleSeProxy } from "./routes/proxy.js";
+import { handleDefaultProxy, handleSeProxy, handleBonusMinerProxy } from "./routes/proxy.js";
 import { handleRateLimitRoutes } from "./routes/rate-limit.js";
 import { handleShareRoutes } from "./routes/share.js";
 import { handleStatsRoute } from "./routes/stats.js";
@@ -75,6 +75,13 @@ export default {
       corsHeaders: CORS_HEADERS,
     });
     if (seProxyResponse) return seProxyResponse;
+
+    const bmProxyResponse = await handleBonusMinerProxy({
+      url,
+      request,
+      corsHeaders: CORS_HEADERS,
+    });
+    if (bmProxyResponse) return bmProxyResponse;
 
     return handleDefaultProxy({
       url,

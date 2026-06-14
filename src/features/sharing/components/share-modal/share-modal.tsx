@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -12,6 +12,13 @@ import {
 import type { CacheState, RewardKey } from "@/types/rewards";
 import { useShareExclusions } from "../../hooks/use-share-exclusions";
 import { ShareFilterModal } from "../share-filter-modal/share-filter-modal";
+
+// Dev-only: the PNG share-card generator is excluded from production builds.
+const ShareCardModal = lazy(() =>
+  import("../share-card-modal/share-card-modal").then((m) => ({
+    default: m.ShareCardModal,
+  })),
+);
 
 const SHEET_I18N_KEY: Record<string, string> = {
   "solo-mining": "tabs.soloMining",
@@ -95,6 +102,7 @@ export function ShareModal({
 
   const { exclusions, commitExclusions } = useShareExclusions();
   const [filterModalOpen, setFilterModalOpen] = useState(false);
+  const [shareCardOpen, setShareCardOpen] = useState(false);
 
   const availableSheets = useMemo(() => ALL_REWARD_KEYS.filter((k) => !!cache[k]), [cache]);
   const [selectedKeys, setSelectedKeys] = useState<Set<RewardKey>>(new Set(availableSheets));
@@ -641,6 +649,31 @@ export function ShareModal({
                               ? t("share.updateData")
                               : t("common.share")}
                         </button>
+                        {import.meta.env.DEV && (
+                          <button
+                            type="button"
+                            className="share-modal-button share-modal-button--ghost"
+                            onClick={() => setShareCardOpen(true)}
+                            disabled={status === "loading"}
+                          >
+                            <svg
+                              width="14"
+                              height="14"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              aria-hidden="true"
+                            >
+                              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                              <circle cx="8.5" cy="8.5" r="1.5" />
+                              <polyline points="21 15 16 10 5 21" />
+                            </svg>
+                            {t("share.generateImage")}
+                          </button>
+                        )}
                         <button
                           type="button"
                           className="share-modal-button share-modal-button--ghost"
@@ -776,6 +809,12 @@ export function ShareModal({
           />
         )}
       </AnimatePresence>
+
+      {import.meta.env.DEV && shareCardOpen && (
+        <Suspense fallback={null}>
+          <ShareCardModal isOpen={shareCardOpen} onClose={() => setShareCardOpen(false)} />
+        </Suspense>
+      )}
     </>
   );
 }

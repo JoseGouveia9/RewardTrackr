@@ -38,6 +38,11 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (p) => p.replace(/^\/gomining-api\/se/, ""),
       },
+      "/gomining-api/bm": {
+        target: "https://api.bonus-miner.gomining.com",
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/gomining-api\/bm/, ""),
+      },
       "/gomining-api": {
         target: "https://api.gomining.com",
         changeOrigin: true,
