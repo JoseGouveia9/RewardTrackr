@@ -68,19 +68,14 @@ export function TabList({
                     width: { duration: 0.2, ease: "easeOut" },
                     marginLeft: { duration: 0.2, ease: "easeOut" },
                   }}
-                  style={{
-                    overflow: "hidden",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    flexShrink: 0,
-                  }}
+                  className="dv-tab-spinner-wrapper"
                   aria-hidden="true"
                 >
                   <motion.span
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ type: "spring", stiffness: 420, damping: 13 }}
-                    style={{ display: "inline-flex", flexShrink: 0 }}
+                    className="dv-tab-spinner-inner"
                   >
                     <span className="dv-spinner dv-tab-spinner" />
                   </motion.span>

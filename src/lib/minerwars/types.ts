@@ -60,21 +60,47 @@ export interface MinerWarsComparison {
   btcPrice: number | null;
   /** Live GMT price in USD at computation time. null when unavailable. */
   gmtPrice: number | null;
-  /** Rounds zeroed because maintenance exceeded reward. null when maintenance not computed. */
-  zeroedRounds: Array<{ blockNumber: number; multiplier: number }> | null;
-  /** Hint explaining why rounds were zeroed. null when no zeroed rounds or maintenance not computed. */
-  zeroedRoundsHint:
-    | {
-        kind: "increaseGmtDiscount";
-        /** Minimum GMT pay discount % needed to prevent zeroing at the current BTC price. */
-        recommendedGmtPct: number;
-      }
-    | {
-        kind: "btcPriceTooLow";
-        /** User's actual GMT pay discount % at time of computation. */
-        currentGmtPct: number;
-      }
-    | null;
+  /** Rounds zeroed because maintenance exceeded reward, split by which EE tier was active. null when maintenance not computed or no rounds were zeroed. */
+  zeroedRounds: {
+    /** Zeroed rounds that used user EE (before solo threshold was crossed). */
+    userEE: Array<{ blockNumber: number; multiplier: number }>;
+    /** Zeroed rounds that used league EE (after solo threshold was crossed). */
+    leagueEE: Array<{ blockNumber: number; multiplier: number }>;
+  } | null;
+  /** Hints explaining why rounds were zeroed, split by which EE tier was active. null when no zeroed rounds or maintenance not computed. */
+  zeroedRoundsHint: {
+    /** Hint for rounds that used league EE (after solo threshold was crossed). null if no league-EE rounds were zeroed. */
+    leagueEE:
+      | {
+          kind: "increaseGmtDiscount";
+          /** Minimum GMT pay discount % needed to prevent zeroing these league-EE rounds. */
+          recommendedGmtPct: number;
+        }
+      | { kind: "btcPriceTooLow" }
+      | null;
+    /** Hint for rounds that used the user's personal EE (before solo threshold). null if no user-EE rounds were zeroed. */
+    userEE:
+      | {
+          kind: "increaseGmtDiscount";
+          /** Minimum GMT pay discount % needed to prevent zeroing these user-EE rounds. */
+          recommendedGmtPct: number;
+        }
+      | {
+          kind: "improveEE";
+          /** Maximum W/TH the user should have to prevent zeroing at current GMT % (floored, ≥ 15). */
+          recommendedEE: number;
+          /** Maximum W/TH needed if GMT discount were maxed at 20% (floored, ≥ 15). */
+          recommendedEEAtMaxGmt: number;
+          /** User's actual EE at time of computation. */
+          currentEE: number;
+        }
+      | {
+          kind: "btcPriceTooLow";
+          /** User's actual GMT pay discount % at time of computation. */
+          currentGmtPct: number;
+        }
+      | null;
+  } | null;
 }
 
 export function getCycleStartTuesdayUTC(dateStr: string): string {

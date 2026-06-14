@@ -43,14 +43,13 @@ export const ExportOptions = memo(function ExportOptions({
         {selectedKeys.includes("transactions") && (
           <motion.section
             key="tx-filter"
-            className="panel-glass"
+            className="panel-glass export-options-tx-filter-section"
             variants={popVariants}
             initial="initial"
             animate="animate"
             exit="exit"
             layout
             transition={{ layout: { type: "spring", stiffness: 220, damping: 28 } }}
-            style={{ overflow: "clip", isolation: "isolate" }}
           >
             <TransactionFilter
               selectedTxFromTypes={selectedTxFromTypes}
@@ -63,14 +62,13 @@ export const ExportOptions = memo(function ExportOptions({
         {walletSheetsSelected && (
           <motion.section
             key="wallet-pricing"
-            className="panel-glass"
+            className="panel-glass export-options-wallet-section"
             variants={popVariants}
             initial="initial"
             animate="animate"
             exit="exit"
             layout="position"
             transition={{ layout: { type: "spring", stiffness: 220, damping: 28 } }}
-            style={{ overflow: "clip" }}
           >
             <WalletPricingOptions
               includeWalletFiat={includeWalletFiat}

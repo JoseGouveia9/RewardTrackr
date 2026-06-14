@@ -1186,14 +1186,13 @@ export function ShareCardModal({
                     value={selMonth}
                     options={MONTH_NAMES.map((m, i) => ({ label: m, value: i }))}
                     onChange={(v) => setSelMonth(Number(v))}
-                    style={{ visibility: period === "month" ? "visible" : "hidden", flex: 1 }}
+                    style={{ visibility: period === "month" ? "visible" : "hidden" }}
                   />
                 )}
                 <ScPicker
                   value={selYear}
                   options={yearOptions.map((y) => ({ label: String(y), value: y }))}
                   onChange={(v) => setSelYear(Number(v))}
-                  style={{ flex: 1 }}
                 />
               </div>
             </div>

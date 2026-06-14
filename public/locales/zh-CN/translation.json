@@ -267,8 +267,9 @@
     "warnNoClanAnalyticsDone": "无公会分析数据（公会可能不足30天）— 对所有回合使用周期结束时的公会算力。估算可能偏高或偏低。",
     "warnZeroedRounds": "以下区块因维护费用超过预计奖励而被排除在维护计算之外：",
     "warnZeroedRoundsItem": "区块 {{blockNumber}}（倍率 x{{multiplier}}）",
-    "warnZeroedRoundsHintGmt": "提示：将GMT支付折扣提高到至少{{recommendedGmtPct}}%可以防止这些区块被归零（当前BTC价格 ${{btcPrice}}）。",
-    "warnZeroedRoundsHintBtcPrice": "您当前的GMT折扣为{{currentGmtPct}}%，但即使达到20%上限，当前BTC价格（${{btcPrice}}）也不足以覆盖这些区块的联赛维护成本。",
+    "warnZeroedRoundsGroupUserEE": "个人EE区块 ({{count}})",
+    "warnZeroedRoundsGroupLeagueEE": "联赛EE区块 ({{count}})",
+    "warnZeroedRoundsHintGmt": "提示：将GMT支付折扣提高到至少{{recommendedGmtPct}}%可以防止这些区块被归零（当前BTC价格 ${{btcPrice}}）。",    "warnZeroedRoundsHintEE": "提示：在GMT最大折扣20%时，将您的NFT效率提高至{{recommendedEEAtMaxGmt}} W/TH及以下可能防止这些区块被归零（您当前效率：{{currentEE}} W/TH）。",    "warnZeroedRoundsHintBtcPrice": "您当前的GMT折扣为{{currentGmtPct}}%，但即使达到20%上限，当前BTC价格（${{btcPrice}}）也不足以覆盖这些区块的维护成本。",    "warnZeroedRoundsLeagueHintGmt": "提示：将GMT支付折扣提高到至少{{recommendedGmtPct}}%也可以防止您的联赛区块被归零（当前BTC价格 ${{btcPrice}}）。",    "warnZeroedRoundsLeagueHintBtcPrice": "即使达到GMT最大20%，当前BTC价格（${{btcPrice}}）也不足以覆盖这些区块的联赛维护成本。",    "warnZeroedRoundsHintLabelUserEE": "个人 EE 奖励提示：",    "warnZeroedRoundsHintLabelLeagueEE": "联赛 EE 奖励提示：",
     "maintenanceEst": "维护费用（估算）",
     "netEst": "净收益（估算）"
   },

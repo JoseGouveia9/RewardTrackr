@@ -1956,6 +1956,22 @@
   flex-shrink: 0;
 }
 
+.dv-tab-spinner-wrapper {
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.dv-tab-spinner-inner {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.dv-animated-totals {
+  overflow-y: clip;
+}
+
 @keyframes dv-spin {
   to {
     transform: rotate(360deg);

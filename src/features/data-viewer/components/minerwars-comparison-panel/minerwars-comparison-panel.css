@@ -378,6 +378,59 @@
   margin-top: 8px;
 }
 
+.minerwars-panel-notice--flex {
+  display: flex;
+  gap: 0.35em;
+}
+
+.minerwars-panel-notice-preline {
+  white-space: pre-line;
+}
+
+.minerwars-panel-zeroed-list {
+  margin: 0.3em 0 0 1em;
+  padding: 0;
+}
+
+.minerwars-panel-zeroed-group {
+  margin-top: 0.4em;
+}
+
+.minerwars-panel-zeroed-group-summary {
+  cursor: pointer;
+  user-select: none;
+  font-weight: 600;
+  opacity: 0.9;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.3em;
+}
+
+.minerwars-panel-zeroed-group-summary::-webkit-details-marker {
+  display: none;
+}
+
+.minerwars-panel-zeroed-group-summary::before {
+  content: "▶";
+  font-size: 0.6em;
+  opacity: 0.7;
+  transition: transform 0.15s ease;
+}
+
+.minerwars-panel-zeroed-group[open] .minerwars-panel-zeroed-group-summary::before {
+  transform: rotate(90deg);
+}
+
+.minerwars-panel-zeroed-hint {
+  margin: 0.5em 0 0;
+  opacity: 0.85;
+}
+
+.minerwars-panel-zeroed-hint-label {
+  font-style: normal;
+}
+
 .minerwars-panel-notice--warn {
   background: rgba(234, 179, 8, 0.12);
   border: 1px solid rgba(234, 179, 8, 0.35);

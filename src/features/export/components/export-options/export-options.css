@@ -200,6 +200,16 @@
   color: #ffffff;
 }
 
+/* Animated sections (overflow clip prevents layout-animation overflow) */
+.export-options-tx-filter-section {
+  overflow: clip;
+  isolation: isolate;
+}
+
+.export-options-wallet-section {
+  overflow: clip;
+}
+
 .page.theme-dark .wallet-option-row,
 .page.theme-dark .transaction-filter-item {
   background: rgba(247, 147, 26, 0.1);

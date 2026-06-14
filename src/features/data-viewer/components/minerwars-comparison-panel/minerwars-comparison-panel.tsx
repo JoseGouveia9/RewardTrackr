@@ -197,8 +197,11 @@ export function MinerWarsComparisonPanel({
   const showBtcFundZeroWarning =
     data != null && data.btcFundIsZero && data.actualMinerWarsBtc == null;
   const zeroedRounds = data?.zeroedRounds ?? null;
-  const showZeroedRoundsWarning = zeroedRounds != null && zeroedRounds.length > 0;
+  const showZeroedRoundsWarning = zeroedRounds != null;
   const zeroedRoundsHint = data?.zeroedRoundsHint ?? null;
+  const hintUserEE = zeroedRoundsHint?.userEE ?? null;
+  const hintLeagueEE = zeroedRoundsHint?.leagueEE ?? null;
+  const hintBtcPrice = data?.btcPrice != null ? Math.round(data.btcPrice).toLocaleString() : "?";
 
   const showGmt = currency === "GMT" && (data?.btcPrice ?? 0) > 0 && (data?.gmtPrice ?? 0) > 0;
   const toGmt = (btc: number) => (btc * data!.btcPrice!) / data!.gmtPrice!;
@@ -468,51 +471,90 @@ export function MinerWarsComparisonPanel({
           </div>
 
           {showBtcFundZeroWarning && (
-            <div
-              className="minerwars-panel-notice minerwars-panel-notice--warn"
-              style={{ display: "flex", gap: "0.35em" }}
-            >
+            <div className="minerwars-panel-notice minerwars-panel-notice--warn minerwars-panel-notice--flex">
               <span>⚠</span>
-              <span style={{ whiteSpace: "pre-line" }}>{t("cycleTracker.warnBtcFundZero")}</span>
+              <span className="minerwars-panel-notice-preline">
+                {t("cycleTracker.warnBtcFundZero")}
+              </span>
             </div>
           )}
           {showZeroedRoundsWarning && (
-            <div
-              className="minerwars-panel-notice minerwars-panel-notice--warn"
-              style={{ display: "flex", gap: "0.35em" }}
-            >
+            <div className="minerwars-panel-notice minerwars-panel-notice--warn minerwars-panel-notice--flex">
               <span>⚠</span>
               <span>
                 {t("cycleTracker.warnZeroedRounds")}
-                <ul style={{ margin: "0.3em 0 0 1em", padding: 0 }}>
-                  {zeroedRounds!.map((r) => (
-                    <li key={r.blockNumber}>
-                      {t("cycleTracker.warnZeroedRoundsItem", {
-                        blockNumber: r.blockNumber,
-                        multiplier: r.multiplier,
+                {zeroedRounds!.userEE.length > 0 && (
+                  <details className="minerwars-panel-zeroed-group">
+                    <summary className="minerwars-panel-zeroed-group-summary">
+                      {t("cycleTracker.warnZeroedRoundsGroupUserEE", {
+                        count: zeroedRounds!.userEE.length,
                       })}
-                    </li>
-                  ))}
-                </ul>
-                {zeroedRoundsHint && (
-                  <p style={{ margin: "0.5em 0 0", fontStyle: "italic", opacity: 0.85 }}>
-                    {zeroedRoundsHint.kind === "increaseGmtDiscount"
+                    </summary>
+                    <ul className="minerwars-panel-zeroed-list">
+                      {zeroedRounds!.userEE.map((r) => (
+                        <li key={r.blockNumber}>
+                          {t("cycleTracker.warnZeroedRoundsItem", {
+                            blockNumber: r.blockNumber,
+                            multiplier: r.multiplier,
+                          })}
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                )}
+                {zeroedRounds!.leagueEE.length > 0 && (
+                  <details className="minerwars-panel-zeroed-group">
+                    <summary className="minerwars-panel-zeroed-group-summary">
+                      {t("cycleTracker.warnZeroedRoundsGroupLeagueEE", {
+                        count: zeroedRounds!.leagueEE.length,
+                      })}
+                    </summary>
+                    <ul className="minerwars-panel-zeroed-list">
+                      {zeroedRounds!.leagueEE.map((r) => (
+                        <li key={r.blockNumber}>
+                          {t("cycleTracker.warnZeroedRoundsItem", {
+                            blockNumber: r.blockNumber,
+                            multiplier: r.multiplier,
+                          })}
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                )}
+                {hintUserEE && (
+                  <p className="minerwars-panel-zeroed-hint">
+                    <strong className="minerwars-panel-zeroed-hint-label">
+                      {t("cycleTracker.warnZeroedRoundsHintLabelUserEE")}
+                    </strong>{" "}
+                    {hintUserEE.kind === "increaseGmtDiscount"
                       ? t("cycleTracker.warnZeroedRoundsHintGmt", {
-                          recommendedGmtPct: zeroedRoundsHint.recommendedGmtPct.toString(),
-                          btcPrice:
-                            data!.btcPrice != null
-                              ? Math.round(data!.btcPrice).toLocaleString()
-                              : "?",
+                          recommendedGmtPct: hintUserEE.recommendedGmtPct.toString(),
+                          btcPrice: hintBtcPrice,
                         })
-                      : t("cycleTracker.warnZeroedRoundsHintBtcPrice", {
-                          currentGmtPct: (
-                            (zeroedRoundsHint as { kind: "btcPriceTooLow"; currentGmtPct?: number })
-                              .currentGmtPct ?? 0
-                          ).toString(),
-                          btcPrice:
-                            data!.btcPrice != null
-                              ? Math.round(data!.btcPrice).toLocaleString()
-                              : "?",
+                      : hintUserEE.kind === "improveEE"
+                        ? t("cycleTracker.warnZeroedRoundsHintEE", {
+                            recommendedEE: hintUserEE.recommendedEE.toString(),
+                            recommendedEEAtMaxGmt: hintUserEE.recommendedEEAtMaxGmt.toString(),
+                            currentEE: hintUserEE.currentEE.toString(),
+                          })
+                        : t("cycleTracker.warnZeroedRoundsHintBtcPrice", {
+                            currentGmtPct: hintUserEE.currentGmtPct.toString(),
+                            btcPrice: hintBtcPrice,
+                          })}
+                  </p>
+                )}
+                {hintLeagueEE && (
+                  <p className="minerwars-panel-zeroed-hint">
+                    <strong className="minerwars-panel-zeroed-hint-label">
+                      {t("cycleTracker.warnZeroedRoundsHintLabelLeagueEE")}
+                    </strong>{" "}
+                    {hintLeagueEE.kind === "increaseGmtDiscount"
+                      ? t("cycleTracker.warnZeroedRoundsLeagueHintGmt", {
+                          recommendedGmtPct: hintLeagueEE.recommendedGmtPct.toString(),
+                          btcPrice: hintBtcPrice,
+                        })
+                      : t("cycleTracker.warnZeroedRoundsLeagueHintBtcPrice", {
+                          btcPrice: hintBtcPrice,
                         })}
                   </p>
                 )}

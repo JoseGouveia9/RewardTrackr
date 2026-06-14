@@ -553,9 +553,19 @@ async function _doFetchMinerWarsComparison(
   let netBtc: number | null = null;
   let netGmt: number | null = null;
 
-  const zeroedRounds: Array<{ blockNumber: number; multiplier: number }> = [];
+  const zeroedRounds = {
+    userEE: [] as Array<{ blockNumber: number; multiplier: number }>,
+    leagueEE: [] as Array<{ blockNumber: number; multiplier: number }>,
+  };
   const zeroedRoundIds = new Set<number>();
-  let worstMinTotalDiscount = 0; // tracks the hardest zeroed round's required total discount
+  const GMT_DISCOUNT_MAX = 0.2;
+  const EE_MIN = 15; // minimum achievable EE (W/TH)
+  const nonGmtDiscount = 1 - maintDiscountFactor - maintGmtDiscount;
+  const discFactorAtMaxGmt = 1 - (nonGmtDiscount + GMT_DISCOUNT_MAX);
+  let worstMinTotalDiscountUserEE = 0; // worst required total discount for zeroed user-EE rounds
+  let worstMinTotalDiscountLeagueEE = 0; // worst required total discount for zeroed league-EE rounds
+  let worstMaxUserEE = Infinity; // minimum break-even EE across zeroed user-EE rounds
+  let worstMaxUserEEAtMaxGmt = Infinity; // same but assuming 20% GMT discount
   if (maintBtcPrice > 0 && elapsedMWDays > 0) {
     let totalMaintUSD = 0;
     let cumulativeMWSats = 0;
@@ -586,18 +596,43 @@ async function _doFetchMinerWarsComparison(
         btcPerBlock * round.multiplier * (clanTH > 0 ? userTH / clanTH : 0) * 1e8;
       const roundMaintSats = (roundMaintUSD / maintBtcPrice) * 1e8;
       if (roundMaintSats > roundUserSats) {
-        zeroedRounds.push({ blockNumber: round.blockNumber, multiplier: round.multiplier });
+        const isLeagueEE = cumulativeMWSats >= soloEquivSats;
+        zeroedRounds[isLeagueEE ? "leagueEE" : "userEE"].push({
+          blockNumber: round.blockNumber,
+          multiplier: round.multiplier,
+        });
         zeroedRoundIds.add(round.roundId);
         // Compute minimum total discount that would prevent zeroing this round
         const rawMaintSats =
           maintDiscountFactor > 0 ? roundMaintSats / maintDiscountFactor : Infinity;
         const minDiscFactor = rawMaintSats > 0 ? roundUserSats / rawMaintSats : 0;
         const minTotalDisc = 1 - minDiscFactor;
-        if (minTotalDisc > worstMinTotalDiscount) worstMinTotalDiscount = minTotalDisc;
+        // EE recommendation: track separately by which EE tier was active
+        if (isLeagueEE) {
+          if (minTotalDisc > worstMinTotalDiscountLeagueEE)
+            worstMinTotalDiscountLeagueEE = minTotalDisc;
+        } else {
+          if (minTotalDisc > worstMinTotalDiscountUserEE)
+            worstMinTotalDiscountUserEE = minTotalDisc;
+          const elecCoeff =
+            (KWH * 24 * elapsedMWDays * roundPower * share * maintDiscountFactor * 1e8) /
+            (maintBtcPrice * 1000);
+          const svcSats =
+            (SVC * elapsedMWDays * roundPower * share * maintDiscountFactor * 1e8) / maintBtcPrice;
+          const maxEE = elecCoeff > 0 ? (roundUserSats - svcSats) / elecCoeff : -Infinity;
+          if (maxEE < worstMaxUserEE) worstMaxUserEE = maxEE;
+          // Same calculation assuming GMT is maxed at 20%
+          const r = maintDiscountFactor > 0 ? discFactorAtMaxGmt / maintDiscountFactor : 0;
+          const elecCoeffMaxGmt = elecCoeff * r;
+          const svcSatsMaxGmt = svcSats * r;
+          const maxEEAtMaxGmt =
+            elecCoeffMaxGmt > 0 ? (roundUserSats - svcSatsMaxGmt) / elecCoeffMaxGmt : -Infinity;
+          if (maxEEAtMaxGmt < worstMaxUserEEAtMaxGmt) worstMaxUserEEAtMaxGmt = maxEEAtMaxGmt;
+        }
       } else {
         totalMaintUSD += roundMaintUSD;
-        cumulativeMWSats += roundUserSats;
       }
+      cumulativeMWSats += roundUserSats; // always advance threshold, even for zeroed rounds
     }
     maintenanceBtc = totalMaintUSD / maintBtcPrice;
     maintenanceGmt = maintGmtPrice > 0 ? totalMaintUSD / maintGmtPrice : null;
@@ -615,20 +650,55 @@ async function _doFetchMinerWarsComparison(
     netGmt = rewardGmt != null && maintenanceGmt != null ? rewardGmt - maintenanceGmt : null;
   }
 
-  const GMT_DISCOUNT_MAX = 0.2;
   let zeroedRoundsHint: MinerWarsComparison["zeroedRoundsHint"] = null;
-  if (zeroedRounds.length > 0 && maintBtcPrice > 0) {
-    const nonGmtDiscount = 1 - maintDiscountFactor - maintGmtDiscount;
-    const recommendedGmtDiscount = worstMinTotalDiscount - nonGmtDiscount;
-    if (recommendedGmtDiscount > GMT_DISCOUNT_MAX) {
-      zeroedRoundsHint = {
-        kind: "btcPriceTooLow",
-        currentGmtPct: Math.round(maintGmtDiscount * 100),
-      };
-    } else {
-      // Round up to nearest 0.1% to ensure it actually clears the threshold
-      const pct = Math.ceil(Math.max(recommendedGmtDiscount, 0) * 100);
-      zeroedRoundsHint = { kind: "increaseGmtDiscount", recommendedGmtPct: pct };
+  if ((zeroedRounds.userEE.length > 0 || zeroedRounds.leagueEE.length > 0) && maintBtcPrice > 0) {
+    let leagueEEHint:
+      | { kind: "increaseGmtDiscount"; recommendedGmtPct: number }
+      | { kind: "btcPriceTooLow" }
+      | null = null;
+    if (worstMinTotalDiscountLeagueEE > 0) {
+      const recGmt = worstMinTotalDiscountLeagueEE - nonGmtDiscount;
+      if (recGmt <= GMT_DISCOUNT_MAX) {
+        leagueEEHint = {
+          kind: "increaseGmtDiscount",
+          recommendedGmtPct: Math.ceil(Math.max(recGmt, 0) * 100),
+        };
+      } else {
+        leagueEEHint = { kind: "btcPriceTooLow" };
+      }
+    }
+
+    let userEEHint:
+      | { kind: "increaseGmtDiscount"; recommendedGmtPct: number }
+      | {
+          kind: "improveEE";
+          recommendedEE: number;
+          recommendedEEAtMaxGmt: number;
+          currentEE: number;
+        }
+      | { kind: "btcPriceTooLow"; currentGmtPct: number }
+      | null = null;
+    if (worstMinTotalDiscountUserEE > 0) {
+      const recGmt = worstMinTotalDiscountUserEE - nonGmtDiscount;
+      if (recGmt <= GMT_DISCOUNT_MAX) {
+        userEEHint = {
+          kind: "increaseGmtDiscount",
+          recommendedGmtPct: Math.ceil(Math.max(recGmt, 0) * 100),
+        };
+      } else if (worstMaxUserEE >= EE_MIN) {
+        userEEHint = {
+          kind: "improveEE",
+          recommendedEE: Math.floor(worstMaxUserEE),
+          recommendedEEAtMaxGmt: Math.max(Math.floor(worstMaxUserEEAtMaxGmt), EE_MIN),
+          currentEE: userEE,
+        };
+      } else {
+        userEEHint = { kind: "btcPriceTooLow", currentGmtPct: Math.round(maintGmtDiscount * 100) };
+      }
+    }
+
+    if (leagueEEHint !== null || userEEHint !== null) {
+      zeroedRoundsHint = { leagueEE: leagueEEHint, userEE: userEEHint };
     }
   }
 
@@ -707,7 +777,12 @@ async function _doFetchMinerWarsComparison(
     netGmt,
     btcPrice: maintBtcPrice > 0 ? maintBtcPrice : null,
     gmtPrice: maintGmtPrice > 0 ? maintGmtPrice : null,
-    zeroedRounds: maintBtcPrice > 0 && elapsedMWDays > 0 ? zeroedRounds : null,
+    zeroedRounds:
+      maintBtcPrice > 0 &&
+      elapsedMWDays > 0 &&
+      (zeroedRounds.userEE.length > 0 || zeroedRounds.leagueEE.length > 0)
+        ? zeroedRounds
+        : null,
     zeroedRoundsHint: maintBtcPrice > 0 && elapsedMWDays > 0 ? zeroedRoundsHint : null,
   };
 

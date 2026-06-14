@@ -2,7 +2,7 @@ import { LS_KEY_MW_COMPARISON, LS_KEY_MW_CYCLES, LS_KEY_REWARD_PREFIX } from "@/
 import { type CycleInfo, type MinerWarsComparison } from "./types";
 
 // Bump to force recomputation when the persisted comparison shape changes.
-export const MW_COMPARISON_SCHEMA_VERSION = 2;
+export const MW_COMPARISON_SCHEMA_VERSION = 3;
 
 export type CyclesStoreEntry = { data: CycleInfo[]; ts: number };
 
