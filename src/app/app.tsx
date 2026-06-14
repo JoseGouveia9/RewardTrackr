@@ -117,18 +117,19 @@ function App() {
     setCacheVersion((v) => v + 1);
   }, []);
 
-  const { loading, fetchingKeys, handleExport, refreshKeys, handleClearCache } = useExport({
-    storedToken,
-    selectedKeys,
-    cache,
-    includeWalletFiat,
-    includeExcelFiat,
-    excelFiatCurrency,
-    selectedTxFromTypes,
-    onMessage: setMessage,
-    onCacheUpdate: handleCacheUpdate,
-    onStarted: useCallback(() => void navigate("/records"), [navigate]),
-  });
+  const { loading, fetchingKeys, isPrefetching, handleExport, refreshKeys, handleClearCache } =
+    useExport({
+      storedToken,
+      selectedKeys,
+      cache,
+      includeWalletFiat,
+      includeExcelFiat,
+      excelFiatCurrency,
+      selectedTxFromTypes,
+      onMessage: setMessage,
+      onCacheUpdate: handleCacheUpdate,
+      onStarted: useCallback(() => void navigate("/records"), [navigate]),
+    });
 
   const displayAlias = syncedAlias || user?.alias?.trim() || "User";
 
@@ -424,6 +425,7 @@ function App() {
                     isFetching={loading}
                     fetchingKeys={fetchingKeys}
                     cacheVersion={cacheVersion}
+                    minerWarsPrefetching={isPrefetching}
                     onRefreshKeys={refreshKeys}
                     onTabSeen={handleTabSeen}
                     sharedData={null}

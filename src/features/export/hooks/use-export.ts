@@ -9,6 +9,7 @@ import {
   fetchAvailableCycles,
   fetchMinerWarsComparison,
   getCachedMinerWarsComparison,
+  invalidateCycleCache,
   invalidateMinerWarsCache,
   prefetchAllCompletedCycles,
 } from "@/lib/minerwars/comparison";
@@ -58,6 +59,11 @@ export function useExport({
     const cycles = await fetchAvailableCycles(token).catch(() => []);
     const liveOrPending = cycles.find((c) => c.status === "in-progress" || c.status === "pending");
     if (liveOrPending) {
+      // Force a fresh recompute for the live/pending cycle. Without invalidating,
+      // fetchMinerWarsComparison's fast-path returns the stale persisted comparison
+      // (it only recomputes completed cycles missing actuals), so a build report
+      // would not refresh the in-progress cycle's estimation with the new data.
+      invalidateCycleCache(liveOrPending.cycleId);
       await fetchMinerWarsComparison(token, liveOrPending.cycleId).catch(() => {});
     }
     await prefetchAllCompletedCycles(token).catch(() => {});
