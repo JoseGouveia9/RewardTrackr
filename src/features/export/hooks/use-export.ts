@@ -90,7 +90,7 @@ export function useExport({
 
     const decoded = decodeJwt(storedToken);
     if (!decoded || (decoded.exp && Math.floor(Date.now() / 1000) >= decoded.exp)) {
-      onMessage(t("export.sessionExpired"));
+      window.dispatchEvent(new CustomEvent("rt:session-expired"));
       return;
     }
 
@@ -169,6 +169,7 @@ export function useExport({
             ? t("export.sessionExpired")
             : t("export.failed", { details: msg }),
       );
+      if (isAuth) window.dispatchEvent(new CustomEvent("rt:session-expired"));
     } finally {
       setLoading(false);
       setFetchingKeys(new Set());
@@ -194,7 +195,7 @@ export function useExport({
 
       const decoded = decodeJwt(storedToken);
       if (!decoded || (decoded.exp && Math.floor(Date.now() / 1000) >= decoded.exp)) {
-        onMessage(t("export.sessionExpired"));
+        window.dispatchEvent(new CustomEvent("rt:session-expired"));
         return;
       }
 

@@ -131,8 +131,8 @@ export function useMinerWarsComparison({
     // Network required — validate token.
     const token = getToken();
     if (!token || !isTokenValid(token)) {
+      window.dispatchEvent(new CustomEvent("rt:session-expired"));
       setData(null);
-      setError("Session expired");
       setLoading(false);
       return Promise.resolve();
     }
