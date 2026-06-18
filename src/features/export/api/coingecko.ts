@@ -12,6 +12,58 @@ const COINGECKO_MAX_RETRIES = 10;
 const COINGECKO_RETRY_WAIT_MS = 60_000;
 const COINGECKO_FETCH_TIMEOUT_MS = 15_000;
 
+/** Maps CoinGecko IDs → CryptoCompare symbols for the fallback API. */
+const COINGECKO_TO_CRYPTOCOMPARE: Record<string, string> = {
+  "gmt-token": "GMTT",
+  bitcoin: "BTC",
+  ethereum: "ETH",
+  binancecoin: "BNB",
+  solana: "SOL",
+  "the-open-network": "TON",
+};
+
+async function fetchCryptoComparePrice(
+  coingeckoId: string,
+  createdAtIso: string,
+): Promise<CoinGeckoPriceResult | null> {
+  const symbol = COINGECKO_TO_CRYPTOCOMPARE[coingeckoId];
+  if (!symbol) {
+    console.warn(`[CryptoCompare] No symbol mapping for coingeckoId "${coingeckoId}"`);
+    return null;
+  }
+  const toTs = Math.floor(new Date(createdAtIso).getTime() / 1000);
+  const apiKey = import.meta.env.VITE_CRYPTOCOMPARE_API_KEY ?? "";
+  const url = `https://min-api.cryptocompare.com/data/v2/histohour?fsym=${symbol}&tsym=USD&limit=2&toTs=${toTs}${apiKey ? `&api_key=${apiKey}` : ""}`;
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), COINGECKO_FETCH_TIMEOUT_MS);
+    let response: Response;
+    try {
+      response = await fetch(url, { signal: controller.signal });
+    } finally {
+      clearTimeout(timeout);
+    }
+    const text = await response.text();
+    if (!response.ok) return null;
+    const data = JSON.parse(text) as {
+      Response?: string;
+      Data?: { Data?: Array<{ time: number; close: number }> };
+    };
+    if (data.Response !== "Success" || !data.Data?.Data?.length) return null;
+    const points = data.Data.Data.filter((p) => p.time > 0 && p.close > 0);
+    if (!points.length) return null;
+    const best = points.reduce((a, b) =>
+      Math.abs(a.time - toTs) <= Math.abs(b.time - toTs) ? a : b,
+    );
+    return {
+      price: best.close,
+      priceTimestamp: new Date(best.time * 1000).toISOString(),
+    };
+  } catch {
+    return null;
+  }
+}
+
 const SHARED_PRICE_CACHE = new Map<string, CoinGeckoPriceCacheValue>();
 let priceCacheSeeded = false;
 
@@ -74,6 +126,7 @@ export async function fetchCoinGeckoPrice(
   }
 
   const d = new Date(createdAtIso);
+  if (isNaN(d.getTime())) return null;
   const cacheKey = `${coingeckoId}_${d.toISOString().slice(0, 16)}`;
 
   if (priceCache.has(cacheKey)) {
@@ -108,6 +161,13 @@ export async function fetchCoinGeckoPrice(
         data = text ? (JSON.parse(text) as CoinGeckoMarketRangeResponse) : null;
         // eslint-disable-next-line no-empty
       } catch {}
+
+      if (response.status === 401) {
+        const fallback = await fetchCryptoComparePrice(coingeckoId, createdAtIso);
+        if (fallback) priceCache.set(cacheKey, fallback);
+        else priceCache.set(cacheKey, null);
+        return fallback;
+      }
 
       const isRateLimited = data?.status?.error_code === 429 || response.status === 429;
       if (!response.ok || isRateLimited) {

@@ -559,7 +559,7 @@ async function _doFetchMinerWarsComparison(
   };
   const zeroedRoundIds = new Set<number>();
   const GMT_DISCOUNT_MAX = 0.2;
-  const EE_MIN = 15; // minimum achievable EE (W/TH)
+  const EE_MIN = 12; // minimum achievable EE (W/TH)
   const nonGmtDiscount = 1 - maintDiscountFactor - maintGmtDiscount;
   const discFactorAtMaxGmt = 1 - (nonGmtDiscount + GMT_DISCOUNT_MAX);
   let worstMinTotalDiscountUserEE = 0; // worst required total discount for zeroed user-EE rounds
