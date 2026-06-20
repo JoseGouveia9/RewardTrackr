@@ -15,7 +15,7 @@ export async function handleRateLimitRoutes({
     }
 
     // Track unique users for the stats counter (no-op after first call)
-    trackUserIfNew(env, userId);
+    await trackUserIfNew(env, userId);
 
     const day = new Date().toISOString().slice(0, 10);
     const key = `rl_${userId}_${day}`;

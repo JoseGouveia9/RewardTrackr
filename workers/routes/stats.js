@@ -1,3 +1,5 @@
+import { resolveVerifiedUser } from "../lib/auth.js";
+
 const TOTAL_KEY = "stats:total";
 const SEEN_PREFIX = "seen:";
 
@@ -27,9 +29,23 @@ export async function trackUserIfNew(env, userId) {
   }
 }
 
-export async function handleStatsRoute({ url, jsonResponse, env }) {
+export async function handleStatsRoute({ url, request, jsonResponse, env }) {
   if (url.pathname !== "/api/stats") return null;
 
+  // POST /api/stats — track user then return total
+  if (request.method === "POST") {
+    const userId = await resolveVerifiedUser(request);
+    if (userId) await trackUserIfNew(env, userId);
+
+    try {
+      const total = await env.STATS.get(TOTAL_KEY);
+      return jsonResponse({ total: total ? parseInt(total, 10) : 0 });
+    } catch {
+      return jsonResponse({ total: 0 });
+    }
+  }
+
+  // GET /api/stats — return total only
   try {
     const total = await env.STATS.get(TOTAL_KEY);
     return jsonResponse({ total: total ? parseInt(total, 10) : 0 });

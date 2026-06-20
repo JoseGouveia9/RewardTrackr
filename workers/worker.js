@@ -47,7 +47,7 @@ export default {
     const announcementResponse = await handleAnnouncementRoute({ url, request, env, jsonResponse });
     if (announcementResponse) return announcementResponse;
 
-    const statsResponse = await handleStatsRoute({ url, jsonResponse, env });
+    const statsResponse = await handleStatsRoute({ url, request, jsonResponse, env });
     if (statsResponse) return statsResponse;
 
     const rateLimitResponse = await handleRateLimitRoutes({
