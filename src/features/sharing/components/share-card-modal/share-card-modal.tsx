@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { loadCacheEntry } from "@/lib/reward-cache";
+import { buildOccurrenceIds } from "@/lib/row-ids";
 import { LS_KEY_SYNC_ALIAS, LS_KEY_SYNC_TOKEN } from "@/lib/storage-keys";
 import { buildApiHeaders } from "@/lib/http";
 import { getMyNftStats, getBonusMinerStats } from "@/lib/minerwars/api";
@@ -945,29 +946,17 @@ export function ShareCardModal({
           const dfp = filterByDate(purchRecs, range);
           const dfu = filterByDate(upgrRecs, range);
           const excSet = new Set(exclusions["purchases"] ?? []);
-          const fp = dfp.filter(
-            (r, i) =>
-              !excSet.has(
-                `purchases::${String((r as Record<string, unknown>).createdAt ?? "")}::${i}`,
-              ),
-          );
-          const fu = dfu.filter(
-            (r, i) =>
-              !excSet.has(
-                `upgrades::${String((r as Record<string, unknown>).createdAt ?? "")}::${i}`,
-              ),
-          );
+          const idsP = buildOccurrenceIds(dfp, "purchases");
+          const fp = dfp.filter((_, i) => !excSet.has(idsP[i]));
+          const idsU = buildOccurrenceIds(dfu, "upgrades");
+          const fu = dfu.filter((_, i) => !excSet.has(idsU[i]));
           records = [...fp, ...fu];
         } else {
           const raw = loadCacheEntry(tab.key as RewardKey)?.records ?? [];
           const dfRaw = filterByDate(raw, range);
           const excSet = new Set(exclusions[tab.key as RewardKey] ?? []);
-          records = dfRaw.filter(
-            (r, i) =>
-              !excSet.has(
-                `${tab.key}::${String((r as Record<string, unknown>).createdAt ?? "")}::${i}`,
-              ),
-          );
+          const ids = buildOccurrenceIds(dfRaw, tab.key);
+          records = dfRaw.filter((_, i) => !excSet.has(ids[i]));
         }
         if (!records.length) return [];
         const isMining = tab.key === "solo-mining" || tab.key === "minerwars";

@@ -1,6 +1,7 @@
 ﻿import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { loadCacheEntry } from "@/lib/reward-cache";
+import { buildOccurrenceIds } from "@/lib/row-ids";
 import type { CacheEntry, RewardKey } from "@/types/rewards";
 import type { EarnView, DateRange } from "../../types";
 import { PAGE_SIZE } from "../../utils/constants";
@@ -65,6 +66,7 @@ export function SimpleEarnTable({
 
   const rows = useMemo(() => {
     if (!entry?.records?.length) return [];
+    const ids = buildOccurrenceIds(entry.records, rewardKey);
     return entry.records.map((r, i) => {
       const rec = r as Record<string, unknown>;
       const reward = Number(rec.reward ?? 0);
@@ -73,7 +75,7 @@ export function SimpleEarnTable({
       const apr = Number(rec.apr ?? 0);
       return {
         date: String(rec.createdAt ?? ""),
-        rowId: `${rewardKey}::${String(rec.createdAt ?? "")}::${i}`,
+        rowId: ids[i],
         asset: String(rec.asset ?? rec.currency ?? ""),
         currency: String(rec.currency ?? ""),
         apr: Number.isFinite(apr) ? apr : 0,

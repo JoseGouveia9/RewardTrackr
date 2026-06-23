@@ -1,6 +1,7 @@
 ﻿import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { loadCacheEntry } from "@/lib/reward-cache";
+import { buildOccurrenceIds } from "@/lib/row-ids";
 import type { CacheEntry, RewardKey } from "@/types/rewards";
 import type { TxView, DateRange } from "../../types";
 import { PAGE_SIZE } from "../../utils/constants";
@@ -68,6 +69,7 @@ export function TransactionsTable({
 
   const allRows = useMemo(() => {
     if (!entry?.records?.length) return [];
+    const ids = buildOccurrenceIds(entry.records, rewardKey);
     return entry.records.map((r, i) => {
       const rec = r as Record<string, unknown>;
       const reward = Number(rec.reward ?? 0);
@@ -75,7 +77,7 @@ export function TransactionsTable({
       const rewardInFiat = Number(rec.rewardInFiat ?? 0);
       return {
         date: String(rec.createdAt ?? ""),
-        rowId: `${rewardKey}::${String(rec.createdAt ?? "")}::${i}`,
+        rowId: ids[i],
         txType: String(rec.txType ?? rec.fromType ?? ""),
         reward: Number.isFinite(reward) ? reward : 0,
         rewardInUSD: Number.isFinite(rewardInUSD) ? rewardInUSD : 0,

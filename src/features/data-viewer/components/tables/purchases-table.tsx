@@ -1,6 +1,7 @@
 ﻿import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { loadCacheEntry } from "@/lib/reward-cache";
+import { buildOccurrenceIds } from "@/lib/row-ids";
 import type { CacheEntry } from "@/types/rewards";
 import type { PurchaseView, DateRange } from "../../types";
 import { PAGE_SIZE } from "../../utils/constants";
@@ -63,6 +64,7 @@ export function PurchasesTable({
 
   function parseEntry(entry: ReturnType<typeof loadCacheEntry>, keyPrefix: string) {
     if (!entry?.records?.length) return [];
+    const ids = buildOccurrenceIds(entry.records, keyPrefix);
     return entry.records.map((r, i) => {
       const rec = r as Record<string, unknown>;
       const valueUsd = Number(rec.valueUsd ?? 0);
@@ -70,7 +72,7 @@ export function PurchasesTable({
       const reward = rec.reward != null ? Number(rec.reward) : undefined;
       return {
         date: String(rec.createdAt ?? ""),
-        rowId: `${keyPrefix}::${String(rec.createdAt ?? "")}::${i}`,
+        rowId: ids[i],
         type: String(rec.type ?? ""),
         currency: String(rec.currency ?? ""),
         reward: reward != null && Number.isFinite(reward) ? reward : undefined,

@@ -1,6 +1,7 @@
 ﻿import { useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { loadCacheEntry, wasCacheMigrated } from "@/lib/reward-cache";
+import { buildOccurrenceIds } from "@/lib/row-ids";
 import type { CacheEntry, RewardKey } from "@/types/rewards";
 import type { DifficultyEntry } from "@/lib/minerwars/difficulty-adjustments";
 import type { Currency, DateRange } from "../../types";
@@ -267,11 +268,12 @@ export function MiningTable({
 
   const rows = useMemo(() => {
     if (!entry?.records?.length) return [];
+    const ids = buildOccurrenceIds(entry.records, rewardKey);
     return entry.records.map((r, i) => {
       const rec = r as Record<string, unknown>;
       return {
         date: String(rec.createdAt ?? ""),
-        rowId: `${rewardKey}::${String(rec.createdAt ?? "")}::${i}`,
+        rowId: ids[i],
         poolReward: getRecordField(rec, currency, "poolReward"),
         maintenance: getRecordField(rec, currency, "maintenance"),
         reward: getRecordField(rec, currency, "reward"),

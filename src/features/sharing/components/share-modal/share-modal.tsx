@@ -37,6 +37,7 @@ import type { OwnedProfile } from "../../types";
 import "./share-modal.css";
 import { ALL_REWARD_KEYS } from "@/config/reward-configs";
 import { formatAge } from "@/lib/reward-cache";
+import { buildOccurrenceIds } from "@/lib/row-ids";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { AppNotice } from "@/components/app-notice/app-notice";
 
@@ -119,8 +120,9 @@ export function ShareModal({
       const hasExistingExclusions = (result[tabKey] ?? []).some((id) => id.startsWith(`${k}::`));
       if (!hasExistingExclusions) continue;
       const existing = new Set(result[tabKey] ?? []);
+      const ids = buildOccurrenceIds(entry.records, k);
       for (let i = 0; i < entry.newEntriesCount && i < entry.records.length; i++) {
-        existing.add(`${k}::${String(entry.records[i].createdAt ?? "")}::${i}`);
+        existing.add(ids[i]);
       }
       result[tabKey] = [...existing];
     }
@@ -132,7 +134,8 @@ export function ShareModal({
     if (!records || records.length === 0) return false;
     const tabKey = key === "upgrades" ? "purchases" : key;
     const excluded = new Set(effectiveExclusions[tabKey] ?? []);
-    return records.every((r, i) => excluded.has(`${key}::${String(r.createdAt ?? "")}::${i}`));
+    const ids = buildOccurrenceIds(records, key);
+    return records.every((_, i) => excluded.has(ids[i]));
   }
 
   const sheetsToShare = availableSheets.filter((k) => selectedKeys.has(k) && !isAllExcluded(k));
@@ -198,9 +201,8 @@ export function ShareModal({
         if (!entry) continue;
         const tabKey = (k === "upgrades" ? "purchases" : k) as RewardKey;
         const excluded = new Set(exclusions[tabKey] ?? []);
-        const filtered = entry.records.filter(
-          (r, i) => !excluded.has(`${k}::${String(r.createdAt ?? "")}::${i}`),
-        );
+        const ids = buildOccurrenceIds(entry.records, k);
+        const filtered = entry.records.filter((_, i) => !excluded.has(ids[i]));
         sheets[k] =
           filtered.length === entry.records.length
             ? entry
@@ -505,12 +507,9 @@ export function ShareModal({
                           const excludedCount = comboKeys.reduce((sum, ck) => {
                             const tabKey = (ck === "upgrades" ? "purchases" : ck) as RewardKey;
                             const excSet = new Set(effectiveExclusions[tabKey] ?? []);
-                            return (
-                              sum +
-                              (cache[ck]?.records ?? []).filter((r, i) =>
-                                excSet.has(`${ck}::${String(r.createdAt ?? "")}::${i}`),
-                              ).length
-                            );
+                            const ckRecords = cache[ck]?.records ?? [];
+                            const ids = buildOccurrenceIds(ckRecords, ck);
+                            return sum + ckRecords.filter((_, i) => excSet.has(ids[i])).length;
                           }, 0);
                           const visibleCount = totalRecords - excludedCount;
                           const label = isCombo
@@ -777,9 +776,7 @@ export function ShareModal({
               for (const k of availableSheets) {
                 if (selectedKeys.has(k)) continue;
                 const tabKey = k === "upgrades" ? "purchases" : k;
-                const ids = (cache[k]?.records ?? []).map(
-                  (r, i) => `${k}::${String(r.createdAt ?? "")}::${i}`,
-                );
+                const ids = buildOccurrenceIds(cache[k]?.records ?? [], k);
                 const existing = new Set(result[tabKey] ?? []);
                 ids.forEach((id) => existing.add(id));
                 result[tabKey] = [...existing];
@@ -796,9 +793,8 @@ export function ShareModal({
                   if (!records.length) continue;
                   const tabKey = (k === "upgrades" ? "purchases" : k) as RewardKey;
                   const excluded = new Set(next[tabKey] ?? []);
-                  const allExcluded = records.every((r, i) =>
-                    excluded.has(`${k}::${String(r.createdAt ?? "")}::${i}`),
-                  );
+                  const ids = buildOccurrenceIds(records, k);
+                  const allExcluded = records.every((_, i) => excluded.has(ids[i]));
                   if (allExcluded) updated.delete(k);
                 }
                 return updated;
