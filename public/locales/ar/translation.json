@@ -1,4 +1,4 @@
-﻿{
+{
   "common": {
     "back": "رجوع",
     "cancel": "إلغاء",
@@ -270,10 +270,10 @@
     "warnZeroedRoundsGroupUserEE": "كتل EE الشخصية ({{count}})",
     "warnZeroedRoundsGroupLeagueEE": "كتل EE للدوري ({{count}})",
     "warnZeroedRoundsHintGmt": "زيادة خصم الدفع بـ GMT إلى {{recommendedGmtPct}}% على الأقل يمكن أن يمنع تصفير هذه الكتل (سعر BTC الحالي ${{btcPrice}}).",
-    "warnZeroedRoundsHintEE": "نصيحة: مع الحد الأقصى لخصم GMT بنسبة 20%، تحسين كفاءة NFT إلى {{recommendedEEAtMaxGmt}} W/TH أو أقل يمكن أن يمنع تصفير هذه الكتل (كفاءتك الحالية: {{currentEE}} W/TH).",,,
+    "warnZeroedRoundsHintEE": "نصيحة: مع الحد الأقصى لخصم GMT بنسبة 20%، تحسين كفاءة NFT إلى {{recommendedEEAtMaxGmt}} W/TH أو أقل يمكن أن يمنع تصفير هذه الكتل (كفاءتك الحالية: {{currentEE}} W/TH).",
     "warnZeroedRoundsHintBtcPrice": "خصم GMT الحالي لديك هو {{currentGmtPct}}%، ولكن حتى عند الحد الأقصى البالغ 20%، فإن سعر BTC الحالي (${{btcPrice}}) منخفض جدًا لتغطية تكاليف صيانتك على هذه الكتل.",
-    "warnZeroedRoundsLeagueHintGmt": "زيادة خصم الدفع بـ GMT إلى {{recommendedGmtPct}}% على الأقل يمكن أن يمنع أيضًا تصفير كتل دوريك (سعر BTC الحالي ${{btcPrice}}).",,
-    "warnZeroedRoundsLeagueHintBtcPrice": "حتى عند الحد الأقصى البالغ 20% من GMT، فإن سعر BTC الحالي (${{btcPrice}}) منخفض جدًا لتغطية تكاليف صيانة دوريك على هذه الكتل."
+    "warnZeroedRoundsLeagueHintGmt": "زيادة خصم الدفع بـ GMT إلى {{recommendedGmtPct}}% على الأقل يمكن أن يمنع أيضًا تصفير كتل دوريك (سعر BTC الحالي ${{btcPrice}}).",
+    "warnZeroedRoundsLeagueHintBtcPrice": "حتى عند الحد الأقصى البالغ 20% من GMT، فإن سعر BTC الحالي (${{btcPrice}}) منخفض جدًا لتغطية تكاليف صيانة دوريك على هذه الكتل.",
     "warnZeroedRoundsHintLabelUserEE": "نصيحة مكافآت EE الشخصية:",
     "warnZeroedRoundsHintLabelLeagueEE": "نصيحة مكافآت EE الدوري:",
     "maintenance": "الصيانة",
