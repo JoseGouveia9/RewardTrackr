@@ -102,6 +102,10 @@ export function getPaymentDataFromBuildCache(paymentDayStr: string): {
   actualBtc: number;
   btcPrice: number | null;
   gmtPrice: number | null;
+  maintenanceBtc: number;
+  maintenanceGmt: number | null;
+  netBtc: number;
+  netGmt: number | null;
 } | null {
   try {
     const raw = localStorage.getItem(LS_KEY_REWARD_PREFIX + "minerwars");
@@ -118,13 +122,22 @@ export function getPaymentDataFromBuildCache(paymentDayStr: string): {
     let totalGmt = 0;
     let hasGmt = false;
     let btcPrice: number | null = null;
+    // Maintenance + net come straight from the enriched MinerWars table rows.
+    let maintenanceBtc = 0;
+    let maintenanceGmt = 0;
+    let netBtc = 0;
+    let netGmt = 0;
 
     for (const r of matches) {
       totalBtc += Number(r.poolReward ?? 0);
+      maintenanceBtc += Number(r.maintenance ?? 0);
+      netBtc += Number(r.reward ?? 0);
       if (r.poolRewardGMT != null) {
         totalGmt += Number(r.poolRewardGMT);
         hasGmt = true;
       }
+      if (r.maintenanceGMT != null) maintenanceGmt += Number(r.maintenanceGMT);
+      if (r.rewardGMT != null) netGmt += Number(r.rewardGMT);
       if (btcPrice === null && r.btcPriceAtTime != null) {
         btcPrice = Number(r.btcPriceAtTime);
       }
@@ -132,8 +145,26 @@ export function getPaymentDataFromBuildCache(paymentDayStr: string): {
 
     // Rule of three: store ratio directly as btcPrice=totalGmt / gmtPrice=totalBtc
     // so toGmt(btc) = btc × totalGmt / totalBtc with a single division (no floating-point drift)
-    if (!hasGmt || totalBtc === 0) return { actualBtc: totalBtc, btcPrice: null, gmtPrice: null };
-    return { actualBtc: totalBtc, btcPrice: totalGmt, gmtPrice: totalBtc };
+    if (!hasGmt || totalBtc === 0) {
+      return {
+        actualBtc: totalBtc,
+        btcPrice: null,
+        gmtPrice: null,
+        maintenanceBtc,
+        maintenanceGmt: null,
+        netBtc,
+        netGmt: null,
+      };
+    }
+    return {
+      actualBtc: totalBtc,
+      btcPrice: totalGmt,
+      gmtPrice: totalBtc,
+      maintenanceBtc,
+      maintenanceGmt,
+      netBtc,
+      netGmt,
+    };
   } catch {
     return null;
   }

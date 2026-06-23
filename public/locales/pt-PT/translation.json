@@ -276,6 +276,9 @@
     "warnZeroedRoundsLeagueHintBtcPrice": "Mesmo ao máximo de 20% de GMT, o preço atual do BTC (${{btcPrice}}) é demasiado baixo para cobrir o custo de manutenção da sua liga nestes blocos.",
     "warnZeroedRoundsHintLabelUserEE": "Sugestão de recompensas EE pessoal:",
     "warnZeroedRoundsHintLabelLeagueEE": "Sugestão de recompensas EE da liga:",
+    "maintenance": "Manutenção",
+    "maintenanceShare": "{{pct}}% da recompensa do MinerWars",
+    "net": "Líquido",
     "maintenanceEst": "Manutenção (est.)",
     "netEst": "Líquido (est.)"
   },

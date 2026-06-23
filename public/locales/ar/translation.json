@@ -276,6 +276,9 @@
     "warnZeroedRoundsLeagueHintBtcPrice": "حتى عند الحد الأقصى البالغ 20% من GMT، فإن سعر BTC الحالي (${{btcPrice}}) منخفض جدًا لتغطية تكاليف صيانة دوريك على هذه الكتل."
     "warnZeroedRoundsHintLabelUserEE": "نصيحة مكافآت EE الشخصية:",
     "warnZeroedRoundsHintLabelLeagueEE": "نصيحة مكافآت EE الدوري:",
+    "maintenance": "الصيانة",
+    "maintenanceShare": "{{pct}}% من مكافأة MinerWars",
+    "net": "الصافي",
     "maintenanceEst": "الصيانة (تقدير)",
     "netEst": "الصافي (تقدير)"
   },

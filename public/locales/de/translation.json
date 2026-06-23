@@ -276,6 +276,9 @@
     "warnZeroedRoundsLeagueHintBtcPrice": "Selbst beim maximalen GMT-Rabatt von 20% ist der aktuelle BTC-Preis (${{btcPrice}}) zu niedrig, um die Wartungskosten deiner Liga für diese Blöcke zu decken.",
     "warnZeroedRoundsHintLabelUserEE": "Persönliche EE-Belohnungen Tipp:",
     "warnZeroedRoundsHintLabelLeagueEE": "Liga-EE-Belohnungen Tipp:",
+    "maintenance": "Wartung",
+    "maintenanceShare": "{{pct}}% der MinerWars-Belohnung",
+    "net": "Netto",
     "maintenanceEst": "Wartung (Schätz.)",
     "netEst": "Netto (Schätz.)"
   },

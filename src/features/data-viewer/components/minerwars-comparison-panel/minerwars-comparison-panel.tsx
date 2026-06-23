@@ -176,6 +176,12 @@ export function MinerWarsComparisonPanel({
       : null;
   const isPositive = effectiveDiff >= 0;
   const projecting = (data?.targetProjectedDays ?? 0) > 0;
+  // Maintenance as a share of the MinerWars reward (est. or actual). Shown inline
+  // on the maintenance row for both live and completed cycles.
+  const maintenancePct =
+    data?.maintenanceBtc != null && effectiveMw > 0
+      ? (data.maintenanceBtc / effectiveMw) * 100
+      : null;
   // Treat "pending" cycles (ended but no actual payment yet) the same as live
   // so the panel shows the round-based estimation view rather than a zeroed-out
   // completed view. Switches to false only when actual income is confirmed.
@@ -318,7 +324,7 @@ export function MinerWarsComparisonPanel({
                   <div className="minerwars-panel-divider" />
                   <div className="minerwars-panel-row">
                     <span className="minerwars-panel-label minerwars-panel-label--sub">
-                      {t("cycleTracker.maintenanceEst")}
+                      {isActual ? t("cycleTracker.maintenance") : t("cycleTracker.maintenanceEst")}
                     </span>
                     <span className="minerwars-panel-value minerwars-panel-value--neg">
                       {showGmt && data.maintenanceGmt != null ? (
@@ -330,12 +336,17 @@ export function MinerWarsComparisonPanel({
                           {`-${fmtBtc(data.maintenanceBtc)}`} <BtcIcon />
                         </>
                       )}
+                      {maintenancePct != null && (
+                        <span className="minerwars-panel-caption">
+                          {t("cycleTracker.maintenanceShare", { pct: maintenancePct.toFixed(1) })}
+                        </span>
+                      )}
                     </span>
                   </div>
                   {data.netBtc != null && (
                     <div className="minerwars-panel-row">
                       <span className="minerwars-panel-label minerwars-panel-label--sub">
-                        {t("cycleTracker.netEst")}
+                        {isActual ? t("cycleTracker.net") : t("cycleTracker.netEst")}
                       </span>
                       <span
                         className={`minerwars-panel-value ${(showGmt ? (data.netGmt ?? 0) : data.netBtc) >= 0 ? "minerwars-panel-value--pos" : "minerwars-panel-value--neg"}`}

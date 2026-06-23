@@ -278,6 +278,9 @@
     "warnZeroedRoundsLeagueHintBtcPrice": "Даже при максимуме 20% скидки GMT, текущая цена BTC (${{btcPrice}}) слишком низка для покрытия затрат на обслуживание вашей лиги по этим блокам.",
     "warnZeroedRoundsHintLabelUserEE": "Совет по личным EE-наградам:",
     "warnZeroedRoundsHintLabelLeagueEE": "Совет по EE-наградам лиги:",
+    "maintenance": "Обслуживание",
+    "maintenanceShare": "{{pct}}% от награды MinerWars",
+    "net": "Чистый",
     "maintenanceEst": "Обслуживание (оцен.)",
     "netEst": "Чистый (оцен.)"
   },
