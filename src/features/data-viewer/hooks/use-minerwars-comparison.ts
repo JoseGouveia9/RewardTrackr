@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { decodeJwt } from "@/lib/http";
 import { LS_KEY_SYNC_TOKEN } from "@/lib/storage-keys";
+import { resolveCycleStatus, persistCycles } from "@/lib/minerwars/cache";
 import {
   fetchAvailableCycles,
   fetchMinerWarsComparison,
   getCachedCycles,
   getCachedMinerWarsComparison,
   invalidateCycleCache,
+  syncMinerWarsSheet,
   type CycleInfo,
   type MinerWarsComparison,
 } from "@/lib/minerwars/comparison";
@@ -170,7 +172,23 @@ export function useMinerWarsComparison({
     if (selectedCycleId === null) return;
 
     setLoading(true);
-    await reloadCycles().catch(() => []);
+    const list = await reloadCycles().catch(() => []);
+
+    // If pending cycles exist, sync minerwars rewards sheet and recompute statuses if new entries arrived
+    if (list.some((c) => c.status === "pending")) {
+      const { newEntries } = await syncMinerWarsSheet(getToken()).catch(() => ({ newEntries: 0 }));
+      if (newEntries > 0) {
+        // Recompute cycle statuses with new rewards data
+        const today = new Date().toISOString().slice(0, 10);
+        const updatedList = list.map((c) => ({
+          ...c,
+          status: resolveCycleStatus(c.cycleEnd, today),
+        }));
+        setCycles(updatedList);
+        persistCycles(updatedList);
+      }
+    }
+
     invalidateCycleCache(selectedCycleId);
     await fetchComparison(selectedCycleId, true);
 

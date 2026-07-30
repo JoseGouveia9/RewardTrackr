@@ -790,3 +790,62 @@ async function _doFetchMinerWarsComparison(
   persistComparison(result);
   return result;
 }
+
+export async function syncMinerWarsSheet(token: string): Promise<{ newEntries: number }> {
+  try {
+    const { REWARD_CONFIG_MAP } = await import("@/config/reward-configs");
+    const { loadCacheEntry, saveCacheEntry, MINERWARS_SCHEMA_VERSION } =
+      await import("@/lib/reward-cache");
+    const { postJson } = await import("@/lib/http");
+
+    const config = REWARD_CONFIG_MAP["minerwars"];
+    if (!config) return { newEntries: 0 };
+
+    const prev = loadCacheEntry("minerwars");
+    const prevCount = prev?.records.length ?? 0;
+    const headers = buildApiHeaders(token);
+
+    // Fetch minerwars records via direct API call (simplified approach)
+    // Use same pagination as export-flow would use
+    let allRecords: Record<string, unknown>[] = [];
+    let skip = 0;
+    const limit = 100;
+
+    while (true) {
+      const body = config.buildBody?.(skip) ?? { skip, limit };
+      try {
+        const response = await postJson(config.apiUrl, headers, body);
+        const records = Array.isArray(response?.data?.array) ? response.data.array : [];
+        if (records.length === 0) break;
+        allRecords = allRecords.concat(records);
+        if (records.length < limit) break;
+        skip += limit;
+      } catch {
+        break;
+      }
+    }
+
+    if (allRecords.length === 0) return { newEntries: 0 };
+
+    const newEntriesCount = Math.max(0, allRecords.length - prevCount);
+
+    if (newEntriesCount > 0) {
+      const entry = {
+        sheetName: config.sheetName,
+        records: allRecords,
+        totalCount: allRecords.length,
+        fetchedAt: Date.now(),
+        schemaVersion: MINERWARS_SCHEMA_VERSION,
+        extraFiatCurrency: prev?.extraFiatCurrency,
+        pricingMode: prev?.pricingMode ?? "fiat-off",
+        removedCreated: 0,
+        newEntriesCount,
+      };
+      saveCacheEntry("minerwars", entry);
+    }
+
+    return { newEntries: newEntriesCount };
+  } catch {
+    return { newEntries: 0 };
+  }
+}
