@@ -971,7 +971,7 @@ export async function executeExportFlow({
     // MinerWars cycle tracker: fetch after all sheets to ensure build report has fresh data
     if (selectedKeys.includes("minerwars")) {
       try {
-        onMessage(i18n.t("export.preparingCycleTracker"));
+        onMessage(i18n.t("export.preparingCycleTracker")); // Skeleton loading indicator
         const cycles = await fetchAvailableCycles(accessToken).catch(() => []);
         const liveOrPending = cycles.find(
           (c) => c.status === "in-progress" || c.status === "pending",
