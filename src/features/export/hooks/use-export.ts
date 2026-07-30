@@ -5,14 +5,7 @@ import { decodeJwt } from "@/lib/http";
 import { ALL_REWARD_KEYS } from "@/config/reward-configs";
 import { clearAllCacheEntries } from "@/lib/reward-cache";
 import { executeExportFlow, refreshCacheKeys } from "../utils/export-flow";
-import {
-  fetchAvailableCycles,
-  fetchMinerWarsComparison,
-  getCachedMinerWarsComparison,
-  invalidateCycleCache,
-  invalidateMinerWarsCache,
-  prefetchAllCompletedCycles,
-} from "@/lib/minerwars/comparison";
+import { invalidateMinerWarsCache } from "@/lib/minerwars/comparison";
 import type { CacheState, ExtraFiatCurrency, RewardKey } from "@/types/rewards";
 
 interface UseExportParams {
@@ -31,7 +24,6 @@ interface UseExportParams {
 interface UseExportReturn {
   loading: boolean;
   fetchingKeys: Set<RewardKey>;
-  isPrefetching: boolean;
   handleExport: () => Promise<void>;
   refreshKeys: (keys: RewardKey[]) => Promise<void>;
   handleClearCache: () => void;
@@ -52,31 +44,7 @@ export function useExport({
   const { t } = useTranslation();
   const [loading, setLoading] = useState<boolean>(false);
   const [fetchingKeys, setFetchingKeys] = useState<Set<RewardKey>>(new Set());
-  const [isPrefetching, setIsPrefetching] = useState(false);
   const latestCacheRef = useRef<CacheState>(cache);
-
-  const prefetchMinerWarsPanelData = useCallback(async (token: string): Promise<void> => {
-    const cycles = await fetchAvailableCycles(token).catch(() => []);
-    const liveOrPending = cycles.find((c) => c.status === "in-progress" || c.status === "pending");
-    if (liveOrPending) {
-      // Force a fresh recompute for the live/pending cycle. Without invalidating,
-      // fetchMinerWarsComparison's fast-path returns the stale persisted comparison
-      // (it only recomputes completed cycles missing actuals), so a build report
-      // would not refresh the in-progress cycle's estimation with the new data.
-      invalidateCycleCache(liveOrPending.cycleId);
-      await fetchMinerWarsComparison(token, liveOrPending.cycleId).catch(() => {});
-    }
-    await prefetchAllCompletedCycles(token).catch(() => {});
-    // Fallback: fetch completed cycles not covered by build-cache prefetch
-    // (e.g. incremental export skipped old records, so those payment days are absent)
-    const today = new Date().toISOString().slice(0, 10);
-    const uncached = cycles.filter(
-      (c) => c.cycleEnd < today && getCachedMinerWarsComparison(c.cycleId) === null,
-    );
-    for (const cycle of uncached) {
-      await fetchMinerWarsComparison(token, cycle.cycleId).catch(() => {});
-    }
-  }, []);
 
   const handleClearCache = useCallback((): void => {
     clearAllCacheEntries();
@@ -125,19 +93,7 @@ export function useExport({
           });
           onCacheUpdate(newCache);
         },
-        onBeforeDownload: selectedKeys.includes("minerwars")
-          ? async () => {
-              onMessage(t("export.preparingCycleTracker"));
-              setIsPrefetching(true);
-              try {
-                await prefetchMinerWarsPanelData(storedToken);
-                // Bump cacheVersion so the panel re-reads cache now that comparison data is ready.
-                onCacheUpdate(latestCacheRef.current);
-              } finally {
-                setIsPrefetching(false);
-              }
-            }
-          : undefined,
+        onBeforeDownload: undefined,
       });
       Sentry.logger.info("Export completed", { sheets: selectedKeys.length });
       onMessage(successMessage);
@@ -185,7 +141,6 @@ export function useExport({
     onMessage,
     onCacheUpdate,
     onStarted,
-    prefetchMinerWarsPanelData,
     t,
   ]);
 
@@ -221,10 +176,6 @@ export function useExport({
           },
         });
         onCacheUpdate(updated);
-
-        if (keys.includes("minerwars")) {
-          prefetchMinerWarsPanelData(storedToken);
-        }
       } catch (error: unknown) {
         const msg = error instanceof Error ? error.message : t("export.failedGeneric");
         onMessage(t("export.failed", { details: msg }));
@@ -233,17 +184,8 @@ export function useExport({
         setFetchingKeys(new Set());
       }
     },
-    [
-      storedToken,
-      cache,
-      includeWalletFiat,
-      excelFiatCurrency,
-      onMessage,
-      onCacheUpdate,
-      t,
-      prefetchMinerWarsPanelData,
-    ],
+    [storedToken, cache, includeWalletFiat, excelFiatCurrency, onMessage, onCacheUpdate, t],
   );
 
-  return { loading, fetchingKeys, isPrefetching, handleExport, refreshKeys, handleClearCache };
+  return { loading, fetchingKeys, handleExport, refreshKeys, handleClearCache };
 }

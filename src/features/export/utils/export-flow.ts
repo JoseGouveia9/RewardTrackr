@@ -3,7 +3,14 @@ import { WALLET_TX_KEYS } from "@/config/wallet-types";
 import { REWARD_CONFIG_MAP, ALL_REWARD_KEYS } from "@/config/reward-configs";
 import { buildApiHeaders, postJson } from "@/lib/http";
 import { enrichRecords, reenrichFiatValues } from "./transformers";
-import { getSessionPriceCache } from "../api/coingecko";
+import { getSessionPriceCache, persistPriceCache } from "../api/coingecko";
+import {
+  fetchAvailableCycles,
+  fetchMinerWarsComparison,
+  getCachedMinerWarsComparison,
+  invalidateCycleCache,
+  prefetchAllCompletedCycles,
+} from "@/lib/minerwars/comparison";
 import { buildExcelFromSheets } from "./excel-builder";
 import type {
   CacheState,
@@ -141,18 +148,40 @@ function buildRequestBody(config: RewardConfig, pointer: number | string): Rewar
   }
 }
 
+interface FetchCheckpointIO {
+  resume?: { records: RewardRecord[]; pointer: number | string; pageCount?: number };
+  onPage?: (state: {
+    records: RewardRecord[];
+    pointer: number | string;
+    totalCount: number | null;
+    pageCount: number;
+  }) => void;
+}
+
 async function fetchAllPages(
   config: RewardConfig,
   accessToken: string,
   incremental?: IncrementalFetchOptions,
   onProgress?: (msg: string) => void,
   displayName?: string,
+  checkpoint?: FetchCheckpointIO,
 ): Promise<{ records: unknown[]; totalCount: number | null }> {
   const headers = buildApiHeaders(accessToken);
   const all: unknown[] = [];
   let pointer: number | string = getInitialPointer(config);
   let guard = 0;
   let totalCount: number | null = null;
+
+  const seenCreatedAt = new Set<string>();
+  if (checkpoint?.resume && !incremental?.knownCreatedAt?.length) {
+    for (const r of checkpoint.resume.records as RewardRecord[]) {
+      all.push(r);
+      const ca = String((r as Record<string, unknown>)?.createdAt || "");
+      if (ca) seenCreatedAt.add(ca);
+    }
+    pointer = checkpoint.resume.pointer;
+    guard = checkpoint.resume.pageCount ?? 0;
+  }
 
   const knownCreatedAt = new Set(
     incremental?.knownCreatedAt?.filter((v): v is string => typeof v === "string") ?? [],
@@ -200,6 +229,13 @@ async function fetchAllPages(
       all.push(...newItems);
       if (expectedNewItems > 0 && all.length >= expectedNewItems) break;
       if (newItems.length === 0) break;
+    } else if (seenCreatedAt.size > 0) {
+      for (const item of page) {
+        const ca = String((item as Record<string, unknown>)?.createdAt || "");
+        if (ca && seenCreatedAt.has(ca)) continue;
+        all.push(item);
+        if (ca) seenCreatedAt.add(ca);
+      }
     } else {
       all.push(...page);
     }
@@ -216,23 +252,26 @@ async function fetchAllPages(
 
     if (page.length < config.pageSize) break;
 
-    if (config.pagination === "cursor") {
+    let nextPointer: number | string | null = null;
+    if (config.pagination === "cursor" || config.pagination === "date-cursor") {
       const last = page[page.length - 1] as Record<string, unknown>;
-      const next = config.getNextCursor?.(last as { createdAt: string }) ?? null;
-      if (!next || next === pointer) break;
-      pointer = next;
-      continue;
+      const next = config.getNextCursor?.(last as CursorPaginationItem) ?? null;
+      if (next && next !== pointer) nextPointer = next;
+    } else {
+      nextPointer = (pointer as number) + config.pageSize;
     }
 
-    if (config.pagination === "date-cursor") {
-      const last = page[page.length - 1] as Record<string, unknown>;
-      const next = config.getNextCursor(last as CursorPaginationItem);
-      if (!next || next === pointer) break;
-      pointer = next;
-      continue;
+    if (!incrementalMode && checkpoint?.onPage && (guard % 5 === 0 || nextPointer === null)) {
+      checkpoint.onPage({
+        records: all as RewardRecord[],
+        pointer: nextPointer ?? pointer,
+        totalCount,
+        pageCount: guard,
+      });
     }
 
-    pointer = (pointer as number) + config.pageSize;
+    if (nextPointer === null) break;
+    pointer = nextPointer;
   }
 
   return { records: all, totalCount };
@@ -854,6 +893,41 @@ export async function executeExportFlow({
       onCacheUpdate(updatedCache);
     }
 
+    // MinerWars cycle tracker: fetch after all sheets to ensure build report has fresh data
+    if (selectedKeys.includes("minerwars")) {
+      try {
+        onMessage(i18n.t("export.preparingCycleTracker"));
+        const cycles = await fetchAvailableCycles(accessToken).catch(() => []);
+        const liveOrPending = cycles.find(
+          (c) => c.status === "in-progress" || c.status === "pending",
+        );
+        if (liveOrPending) {
+          invalidateCycleCache(liveOrPending.cycleId);
+          await fetchMinerWarsComparison(accessToken, liveOrPending.cycleId).catch(() => {});
+        }
+        await prefetchAllCompletedCycles(accessToken).catch(() => {});
+        const today = new Date().toISOString().slice(0, 10);
+        const uncached = cycles.filter(
+          (c) => c.cycleEnd < today && getCachedMinerWarsComparison(c.cycleId) === null,
+        );
+        for (const cycle of uncached) {
+          await fetchMinerWarsComparison(accessToken, cycle.cycleId).catch(() => {});
+        }
+      } catch {
+        // Fallback: allow build to continue even if cycle prefetch fails
+        if (!("hasMinerWarsHistory" in window)) {
+          try {
+            const raw = localStorage.getItem("mw-comparison-cache");
+            if (raw && raw.length > 0) {
+              onMessage(i18n.t("export.preparingCycleTracker"));
+            }
+          } catch {
+            // ignore
+          }
+        }
+      }
+    }
+
     onMessage(i18n.t("export.buildingExcel"));
     const sheetsPayload: RewardSheetPayload[] = selectedKeys.flatMap((key) => {
       const cached = updatedCache[key];
@@ -884,6 +958,9 @@ export async function executeExportFlow({
     const buffer = await buildExcelFromSheets(sheetsPayload, options);
     if (onBeforeDownload) await onBeforeDownload();
     triggerFileDownload(buffer, `rewards-${new Date().toISOString().slice(0, 10)}.xlsx`);
+
+    // Persist the price cache session to localStorage for next reload
+    persistPriceCache(priceCache);
 
     const freshCount = cachedKeys.length - staleKeys.length - currencyChangeKeys.size;
     const parts: string[] = [];

@@ -9,7 +9,7 @@ import type {
 export { LS_KEY_PRICE_CACHE };
 
 const COINGECKO_MAX_RETRIES = 10;
-const COINGECKO_RETRY_WAIT_MS = 60_000;
+const COINGECKO_RETRY_WAIT_MS = 65_000; // CoinGecko's free tier resets its rate limit each minute, so wait just over 60s
 const COINGECKO_FETCH_TIMEOUT_MS = 15_000;
 
 /** Maps CoinGecko IDs → CryptoCompare symbols for the fallback API. */
@@ -112,6 +112,21 @@ function findNearestPrice(prices: CoinGeckoPriceTuple[], targetMs: number) {
   const timestampMs = best[0] ?? null;
   if (!Number.isFinite(price) || !Number.isFinite(timestampMs)) return null;
   return { price, timestampMs };
+}
+
+export function persistPriceCache(cache: Map<string, CoinGeckoPriceCacheValue>): void {
+  try {
+    const obj: Record<string, CoinGeckoPriceCacheValue> = {};
+    for (const [k, v] of cache.entries()) obj[k] = v;
+    localStorage.setItem(LS_KEY_PRICE_CACHE, JSON.stringify(obj));
+  } catch {
+    // ignore
+  }
+}
+
+export function clearSessionPriceCache(): void {
+  SHARED_PRICE_CACHE.clear();
+  priceCacheSeeded = false;
 }
 
 export async function fetchCoinGeckoPrice(
