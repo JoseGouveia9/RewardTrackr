@@ -589,6 +589,7 @@ export interface ExportFlowParams {
   onCacheUpdate: (cache: CacheState) => void;
   onStarted?: () => void;
   onBeforeDownload?: () => Promise<void>;
+  onMinerWarsPrefetchingChange?: (prefetching: boolean) => void;
 }
 
 export interface RefreshCacheKeysParams {
@@ -705,6 +706,7 @@ export async function executeExportFlow({
   onCacheUpdate,
   onStarted,
   onBeforeDownload,
+  onMinerWarsPrefetchingChange,
 }: ExportFlowParams): Promise<string> {
   await checkExportRateLimit(accessToken);
   onStarted?.();
@@ -971,6 +973,7 @@ export async function executeExportFlow({
     // MinerWars cycle tracker: fetch after all sheets to ensure build report has fresh data
     if (selectedKeys.includes("minerwars")) {
       try {
+        onMinerWarsPrefetchingChange?.(true);
         onMessage(i18n.t("export.preparingCycleTracker")); // Skeleton loading indicator
         const cycles = await fetchAvailableCycles(accessToken).catch(() => []);
         const liveOrPending = cycles.find(
@@ -1000,6 +1003,8 @@ export async function executeExportFlow({
             // ignore
           }
         }
+      } finally {
+        onMinerWarsPrefetchingChange?.(false);
       }
     }
 

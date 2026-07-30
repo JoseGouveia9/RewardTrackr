@@ -45,8 +45,7 @@ export function useExport({
   const { t } = useTranslation();
   const [loading, setLoading] = useState<boolean>(false);
   const [fetchingKeys, setFetchingKeys] = useState<Set<RewardKey>>(new Set());
-  // TODO: Set to true during MinerWars prefetch, false when complete (for skeleton loading UI)
-  const minerWarsPrefetching = false;
+  const [minerWarsPrefetching, setMinerWarsPrefetching] = useState(false);
   const latestCacheRef = useRef<CacheState>(cache);
 
   const handleClearCache = useCallback((): void => {
@@ -97,6 +96,7 @@ export function useExport({
           onCacheUpdate(newCache);
         },
         onBeforeDownload: undefined,
+        onMinerWarsPrefetchingChange: setMinerWarsPrefetching,
       });
       Sentry.logger.info("Export completed", { sheets: selectedKeys.length });
       onMessage(successMessage);

@@ -117,7 +117,14 @@ function App() {
     setCacheVersion((v) => v + 1);
   }, []);
 
-  const { loading, fetchingKeys, handleExport, refreshKeys, handleClearCache } = useExport({
+  const {
+    loading,
+    fetchingKeys,
+    minerWarsPrefetching,
+    handleExport,
+    refreshKeys,
+    handleClearCache,
+  } = useExport({
     storedToken,
     selectedKeys,
     cache,
@@ -424,7 +431,7 @@ function App() {
                     isFetching={loading}
                     fetchingKeys={fetchingKeys}
                     cacheVersion={cacheVersion}
-                    minerWarsPrefetching={false}
+                    minerWarsPrefetching={minerWarsPrefetching}
                     onRefreshKeys={refreshKeys}
                     onTabSeen={handleTabSeen}
                     sharedData={null}
