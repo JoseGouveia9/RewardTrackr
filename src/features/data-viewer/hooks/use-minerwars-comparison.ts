@@ -170,27 +170,12 @@ export function useMinerWarsComparison({
     if (selectedCycleId === null) return;
 
     setLoading(true);
-    const list = await reloadCycles().catch(() => []);
-
-    // If pending cycles exist, prefetch comparisons to sync cache before recomputing statuses
-    if (list.some((c) => c.status === "pending")) {
-      const MAX_PREFETCH = 12;
-      const toWarm = list
-        .filter((c) => {
-          if (c.cycleId === selectedCycleId) return false;
-          if (c.status === "in-progress") return true;
-          return getCachedMinerWarsComparison(c.cycleId) === null;
-        })
-        .slice(0, MAX_PREFETCH);
-      for (const c of toWarm) {
-        void fetchMinerWarsComparison(getToken(), c.cycleId).catch(() => {});
-      }
-    }
-
+    await reloadCycles().catch(() => []);
     invalidateCycleCache(selectedCycleId);
     await fetchComparison(selectedCycleId, true);
 
     // Warm-up: pre-fetch up to 12 other cycles while viewing selected
+    // Prioritize in-progress cycles and uncached entries
     const warmList = getCachedCycles();
     if (warmList) {
       const MAX_WARM_CYCLES = 12;
