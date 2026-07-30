@@ -32,6 +32,7 @@ import {
 export type { CycleStatus, CycleInfo, MinerWarsComparison } from "./types";
 
 import type { CycleInfo, MinerWarsComparison } from "./types";
+import type { RewardRecord } from "@/types/rewards";
 
 const comparisonCache = new Map<number, { data: MinerWarsComparison; ts: number }>();
 const inFlightRequests = new Map<number, Promise<MinerWarsComparison>>();
@@ -812,10 +813,14 @@ export async function syncMinerWarsSheet(token: string): Promise<{ newEntries: n
     const limit = 100;
 
     while (true) {
-      const body = config.buildBody?.(skip) ?? { skip, limit };
+      const body = config.buildBody
+        ? (config.buildBody as (skip: number) => Record<string, unknown>)(skip)
+        : { skip, limit };
       try {
-        const response = await postJson(config.apiUrl, headers, body);
-        const records = Array.isArray(response?.data?.array) ? response.data.array : [];
+        const response = (await postJson(config.apiUrl, headers, body)) as Record<string, unknown>;
+        const records = Array.isArray((response?.data as Record<string, unknown>)?.array)
+          ? ((response.data as Record<string, unknown>).array as Record<string, unknown>[])
+          : [];
         if (records.length === 0) break;
         allRecords = allRecords.concat(records);
         if (records.length < limit) break;
@@ -830,18 +835,18 @@ export async function syncMinerWarsSheet(token: string): Promise<{ newEntries: n
     const newEntriesCount = Math.max(0, allRecords.length - prevCount);
 
     if (newEntriesCount > 0) {
-      const entry = {
-        sheetName: config.sheetName,
-        records: allRecords,
-        totalCount: allRecords.length,
-        fetchedAt: Date.now(),
-        schemaVersion: MINERWARS_SCHEMA_VERSION,
-        extraFiatCurrency: prev?.extraFiatCurrency,
-        pricingMode: prev?.pricingMode ?? "fiat-off",
-        removedCreated: 0,
-        newEntriesCount,
-      };
-      saveCacheEntry("minerwars", entry);
+      saveCacheEntry(
+        "minerwars",
+        config.sheetName,
+        allRecords as unknown as RewardRecord[],
+        allRecords.length,
+        {
+          schemaVersion: MINERWARS_SCHEMA_VERSION,
+          extraFiatCurrency: prev?.extraFiatCurrency,
+          pricingMode: prev?.pricingMode ?? "fiat-off",
+          newEntriesCount,
+        },
+      );
     }
 
     return { newEntries: newEntriesCount };
