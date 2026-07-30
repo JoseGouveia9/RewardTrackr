@@ -3,7 +3,7 @@ import { WALLET_TX_KEYS } from "@/config/wallet-types";
 import { REWARD_CONFIG_MAP, ALL_REWARD_KEYS } from "@/config/reward-configs";
 import { buildApiHeaders, postJson } from "@/lib/http";
 import { enrichRecords, reenrichFiatValues } from "./transformers";
-import { getSessionPriceCache, persistPriceCache } from "../api/coingecko";
+import { getSessionPriceCache, persistCoinGeckoPriceCache } from "../api/coingecko";
 import {
   fetchAvailableCycles,
   fetchMinerWarsComparison,
@@ -960,7 +960,7 @@ export async function executeExportFlow({
     triggerFileDownload(buffer, `rewards-${new Date().toISOString().slice(0, 10)}.xlsx`);
 
     // Persist the price cache session to localStorage for next reload
-    persistPriceCache(priceCache);
+    persistCoinGeckoPriceCache(priceCache);
 
     const freshCount = cachedKeys.length - staleKeys.length - currencyChangeKeys.size;
     const parts: string[] = [];

@@ -114,7 +114,7 @@ function findNearestPrice(prices: CoinGeckoPriceTuple[], targetMs: number) {
   return { price, timestampMs };
 }
 
-export function persistPriceCache(cache: Map<string, CoinGeckoPriceCacheValue>): void {
+export function persistCoinGeckoPriceCache(cache: Map<string, CoinGeckoPriceCacheValue>): void {
   try {
     const obj: Record<string, CoinGeckoPriceCacheValue> = {};
     for (const [k, v] of cache.entries()) obj[k] = v;
