@@ -24,6 +24,7 @@ interface UseExportParams {
 interface UseExportReturn {
   loading: boolean;
   fetchingKeys: Set<RewardKey>;
+  minerWarsPrefetching: boolean;
   handleExport: () => Promise<void>;
   refreshKeys: (keys: RewardKey[]) => Promise<void>;
   handleClearCache: () => void;
@@ -44,6 +45,8 @@ export function useExport({
   const { t } = useTranslation();
   const [loading, setLoading] = useState<boolean>(false);
   const [fetchingKeys, setFetchingKeys] = useState<Set<RewardKey>>(new Set());
+  // TODO: Set to true during MinerWars prefetch, false when complete (for skeleton loading UI)
+  const minerWarsPrefetching = false;
   const latestCacheRef = useRef<CacheState>(cache);
 
   const handleClearCache = useCallback((): void => {
@@ -187,5 +190,12 @@ export function useExport({
     [storedToken, cache, includeWalletFiat, excelFiatCurrency, onMessage, onCacheUpdate, t],
   );
 
-  return { loading, fetchingKeys, handleExport, refreshKeys, handleClearCache };
+  return {
+    loading,
+    fetchingKeys,
+    minerWarsPrefetching,
+    handleExport,
+    refreshKeys,
+    handleClearCache,
+  };
 }
