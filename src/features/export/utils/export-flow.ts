@@ -823,20 +823,27 @@ export async function executeExportFlow({
       onCacheUpdate(updatedCache);
     }
 
-    // wallet-tx enrichment makes slow, rate-limited CoinGecko calls — process last to not block others
-    const fetchedOrdered = [
-      ...fetched.filter((f) => f.config.enrichType !== "wallet-tx-coingecko"),
-      ...fetched.filter((f) => f.config.enrichType === "wallet-tx-coingecko"),
-    ];
-    for (let i = 0; i < fetchedOrdered.length; i++) {
-      const { config, rawRecords, totalCount, useIncremental } = fetchedOrdered[i];
+    // PHASE 1: Enrich non-wallet-tx sheets + wallet-tx WITHOUT fiat (cache immediately)
+    type RawForCoinGecko = {
+      config: RewardConfig;
+      records: unknown[];
+      totalCount: number | null;
+      useIncremental: boolean;
+    };
+    const rawForCoinGecko: RawForCoinGecko[] = [];
+
+    const fetchedNonWalletTx = fetched.filter((f) => f.config.enrichType !== "wallet-tx-coingecko");
+    const fetchedWalletTx = fetched.filter((f) => f.config.enrichType === "wallet-tx-coingecko");
+
+    for (let i = 0; i < fetchedNonWalletTx.length; i++) {
+      const { config, rawRecords, totalCount, useIncremental } = fetchedNonWalletTx[i];
       const key = config.key;
 
       onMessage(
         i18n.t("export.enrichingSheet", {
           name: tSheetName(key, config.sheetName),
           current: i + 1,
-          total: fetchedOrdered.length,
+          total: fetchedNonWalletTx.length + fetchedWalletTx.length,
         }),
       );
       const enriched = await enrichRecords(
@@ -893,6 +900,73 @@ export async function executeExportFlow({
       onCacheUpdate(updatedCache);
     }
 
+    // PHASE 1.5: Enrich wallet-tx WITHOUT fiat, cache immediately, queue for phase 2
+    for (let i = 0; i < fetchedWalletTx.length; i++) {
+      const { config, rawRecords, totalCount, useIncremental } = fetchedWalletTx[i];
+      const key = config.key;
+
+      onMessage(
+        i18n.t("export.enrichingSheet", {
+          name: tSheetName(key, config.sheetName),
+          current: fetchedNonWalletTx.length + i + 1,
+          total: fetchedNonWalletTx.length + fetchedWalletTx.length,
+        }),
+      );
+
+      // Enrich WITHOUT fiat for immediate cache
+      const enriched = await enrichRecords(
+        config,
+        rawRecords,
+        priceCache,
+        false, // NO fiat yet
+        excelFiatCurrency,
+        onMessage,
+      );
+      const fallbackTotalCount =
+        typeof totalCount === "number" ? totalCount : (enriched as RewardRecord[]).length;
+      const prepared = filterCacheableRecords(key, enriched as RewardRecord[], fallbackTotalCount);
+
+      const currentEntry = updatedCache[key];
+      const recordsForCache =
+        useIncremental && currentEntry
+          ? mergeRecords(currentEntry.records, prepared.records)
+          : prepared.records;
+      const newEntriesCount = !currentEntry
+        ? recordsForCache.length
+        : Math.max(0, recordsForCache.length - currentEntry.records.length);
+
+      const extras = {
+        ...cacheExtras(key, false, excelFiatCurrency),
+        newEntriesCount,
+      };
+      const hasApiTotalCount =
+        typeof totalCount === "number" && (totalCount > 0 || prepared.records.length === 0);
+      const totalCountForCache = hasApiTotalCount ? totalCount : recordsForCache.length;
+
+      saveCacheEntry(key, config.sheetName, recordsForCache, totalCountForCache, extras);
+      persistPriceCache(key, recordsForCache);
+
+      updatedCache = {
+        ...updatedCache,
+        [key]: {
+          sheetName: config.sheetName,
+          records: recordsForCache,
+          totalCount: totalCountForCache,
+          fetchedAt: Date.now(),
+          ...extras,
+        },
+      };
+      onCacheUpdate(updatedCache);
+
+      // Queue for phase 2 CoinGecko pricing
+      rawForCoinGecko.push({
+        config,
+        records: rawRecords,
+        totalCount,
+        useIncremental,
+      });
+    }
+
     // MinerWars cycle tracker: fetch after all sheets to ensure build report has fresh data
     if (selectedKeys.includes("minerwars")) {
       try {
@@ -928,6 +1002,69 @@ export async function executeExportFlow({
       }
     }
 
+    // PHASE 2: Enrich wallet-tx WITH fiat (CoinGecko - slow, rate-limited)
+    if (rawForCoinGecko.length > 0) {
+      onMessage(i18n.t("export.enrichingSheet", { name: "Pricing", current: 1, total: 1 }));
+    }
+
+    for (let i = 0; i < rawForCoinGecko.length; i++) {
+      const { config, records, totalCount, useIncremental } = rawForCoinGecko[i];
+      const key = config.key;
+
+      onMessage(
+        i18n.t("export.enrichingSheet", {
+          name: tSheetName(key, config.sheetName),
+          current: i + 1,
+          total: rawForCoinGecko.length,
+        }),
+      );
+
+      // Enrich WITH fiat for phase 2
+      const enriched = await enrichRecords(
+        config,
+        records,
+        priceCache,
+        includeWalletFiat,
+        excelFiatCurrency,
+        onMessage,
+      );
+      const fallbackTotalCount =
+        typeof totalCount === "number" ? totalCount : (enriched as RewardRecord[]).length;
+      const prepared = filterCacheableRecords(key, enriched as RewardRecord[], fallbackTotalCount);
+
+      const currentEntry = updatedCache[key];
+      const recordsForCache =
+        useIncremental && currentEntry
+          ? mergeRecords(currentEntry.records, prepared.records)
+          : prepared.records;
+
+      const extras = {
+        ...cacheExtras(key, includeWalletFiat, excelFiatCurrency),
+        newEntriesCount: 0,
+      };
+      const hasApiTotalCount =
+        typeof totalCount === "number" && (totalCount > 0 || prepared.records.length === 0);
+      const totalCountForCache = hasApiTotalCount ? totalCount : recordsForCache.length;
+
+      saveCacheEntry(key, config.sheetName, recordsForCache, totalCountForCache, extras);
+      persistPriceCache(key, recordsForCache);
+
+      updatedCache = {
+        ...updatedCache,
+        [key]: {
+          sheetName: config.sheetName,
+          records: recordsForCache,
+          totalCount: totalCountForCache,
+          fetchedAt: Date.now(),
+          ...extras,
+        },
+      };
+      onCacheUpdate(updatedCache);
+    }
+
+    // Persist the price cache session to localStorage for next reload
+    persistCoinGeckoPriceCache(priceCache);
+
     onMessage(i18n.t("export.buildingExcel"));
     const sheetsPayload: RewardSheetPayload[] = selectedKeys.flatMap((key) => {
       const cached = updatedCache[key];
@@ -958,9 +1095,6 @@ export async function executeExportFlow({
     const buffer = await buildExcelFromSheets(sheetsPayload, options);
     if (onBeforeDownload) await onBeforeDownload();
     triggerFileDownload(buffer, `rewards-${new Date().toISOString().slice(0, 10)}.xlsx`);
-
-    // Persist the price cache session to localStorage for next reload
-    persistCoinGeckoPriceCache(priceCache);
 
     const freshCount = cachedKeys.length - staleKeys.length - currencyChangeKeys.size;
     const parts: string[] = [];
