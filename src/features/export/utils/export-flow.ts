@@ -931,17 +931,18 @@ export async function executeExportFlow({
         useIncremental && currentEntry
           ? mergeRecords(currentEntry.records, prepared.records)
           : prepared.records;
-      const newEntriesCount = !currentEntry
-        ? recordsForCache.length
-        : Math.max(0, recordsForCache.length - currentEntry.records.length);
 
-      const extras = {
-        ...cacheExtras(key, false, excelFiatCurrency),
-        newEntriesCount,
-      };
       const hasApiTotalCount =
         typeof totalCount === "number" && (totalCount > 0 || prepared.records.length === 0);
       const totalCountForCache = hasApiTotalCount ? totalCount : recordsForCache.length;
+
+      // Phase 1.5: Cache WITHOUT fiat values yet (will be enriched in phase 2)
+      // Don't reference extraFiatCurrency until phase 2 enrichment completes
+      const extras = {
+        schemaVersion: MINING_SCHEMA_VERSION,
+        pricingMode: "fiat-off" as const,
+        extraFiatCurrency: undefined,
+      };
 
       saveCacheEntry(key, config.sheetName, recordsForCache, totalCountForCache, extras);
       persistPriceCache(key, recordsForCache);
