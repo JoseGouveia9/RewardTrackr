@@ -12,6 +12,17 @@ export function resolveApiBase(): string {
   return "https://api.gomining.com";
 }
 
+export function resolveBonusMinerApiBase(): string {
+  const envBase = (import.meta.env.VITE_BONUS_MINER_API_BASE as string | undefined)?.replace(/\/$/, "");
+  if (envBase) return envBase;
+
+  if (typeof window !== "undefined" && /(^|\.)rewardtrackr\.com$/i.test(window.location.hostname)) {
+    return `${window.location.origin}/gomining-api/bm`;
+  }
+
+  return "https://api.bonus-miner.gomining.com";
+}
+
 interface JwtPayload {
   id?: string;
   sub?: string;
