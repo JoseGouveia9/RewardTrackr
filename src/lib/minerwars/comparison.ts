@@ -593,8 +593,11 @@ async function _doFetchMinerWarsComparison(
           ? (round.multiplier / sumAllMultipliers) * (userTH / clanTH)
           : 0;
       const roundMaintUSD = (roundElecUSD + roundSvcUSD) * share * maintDiscountFactor;
-      const roundUserSats =
-        btcPerBlock * round.multiplier * (clanTH > 0 ? userTH / clanTH : 0) * 1e8;
+      // Reward to compare against maintenance: the official per-round formula (mult/sumMult
+      // × btcFund × round-power-ratio × userTH/clanTH), already computed above and stored in
+      // roundRewards — NOT the btcPerBlock approximation, which assumes every round's power
+      // ratio is 1 and so misprices any round that deviates from the cycle average.
+      const roundUserSats = (roundRewards.get(round.roundId)?.userBtc ?? 0) * 1e8;
       const roundMaintSats = (roundMaintUSD / maintBtcPrice) * 1e8;
       if (roundMaintSats > roundUserSats) {
         const isLeagueEE = cumulativeMWSats >= soloEquivSats;
