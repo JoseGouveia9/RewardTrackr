@@ -54,12 +54,29 @@
           <p id="greeting" class="hero-greeting"></p>
         </div>
       </div>
-      <p class="screen-subtitle">Connect your GoMining session and sync to RewardTrackr in one click.</p>
-      <button id="syncBtn">Sync to RewardTrackr</button>
+      <p id="syncSubtitle" class="screen-subtitle">Connect your GoMining session and sync to RewardTrackr in one click.</p>
+      <button id="syncBtn" class="flat-cta">Open RewardTrackr Web</button>
+      <p id="ctaOr" class="cta-or hidden">OR</p>
+      <button id="mobileQrBtn" class="qr-trigger-btn flat-cta hidden" type="button">RewardTrackr App - QR Login</button>
       <div id="status" class="status"></div>
-      <p class="copyright">© 2026 José Gouveia · Moustachio</p>
+      <div id="qrInlinePanel" class="qr-inline-panel hidden" aria-hidden="true">
+        <div class="qr-inline-head">
+          <button id="qrInlineBack" class="qr-inline-back" type="button" aria-label="Back">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <polyline points="15 18 9 12 15 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></polyline>
+            </svg>
+          </button>
+          <div class="qr-inline-copy">
+            <p class="qr-title qr-enter-title">QR Login</p>
+            <p class="qr-subtitle qr-enter-subtitle">In the RewardTrackr App, choose Login with QR code and scan this.</p>
+          </div>
+        </div>
+        <div id="qrInlineCode" class="qr-code qr-enter-qr" role="img" aria-label="RewardTrackr mobile login QR code"></div>
+      </div>
+      <p id="syncCopyright" class="copyright">© 2026 José Gouveia · Moustachio</p>
     </div>
 
+    <script src="../scripts/vendor/qrcode-generator.js"></script>
     <script src="../scripts/popup.js"></script>
   </body>
 </html>

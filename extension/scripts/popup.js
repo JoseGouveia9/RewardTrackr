@@ -65,8 +65,18 @@
   // DOM refs
 
   const syncBtn = document.getElementById("syncBtn");
+  const ctaOrEl = document.getElementById("ctaOr");
   const statusEl = document.getElementById("status");
   const greetingEl = document.getElementById("greeting");
+  const syncHeroRowEl = document.querySelector("#syncScreen .hero-title-row");
+  const mobileQrBtn = document.getElementById("mobileQrBtn");
+  const syncSubtitleEl = document.getElementById("syncSubtitle");
+  const syncCopyrightEl = document.getElementById("syncCopyright");
+  const qrInlinePanelEl = document.getElementById("qrInlinePanel");
+  const qrInlineBackEl = document.getElementById("qrInlineBack");
+  const qrInlineCodeEl = document.getElementById("qrInlineCode");
+
+  let lastSyncedToken = null;
 
   // Status icons
 
@@ -102,6 +112,70 @@
     greetingEl.textContent = `Hello ${alias} 👋`;
     titleRow?.classList.add("synced");
     requestAnimationFrame(() => greetingEl.classList.add("visible"));
+  }
+
+  function setBaseViewVisible(visible) {
+    syncHeroRowEl?.classList.toggle("hidden", !visible);
+    syncSubtitleEl?.classList.toggle("hidden", !visible);
+    syncBtn?.classList.toggle("hidden", !visible);
+    statusEl?.classList.toggle("hidden", !visible);
+    syncCopyrightEl?.classList.toggle("hidden", !visible);
+    if (!mobileQrBtn) return;
+    if (!visible) {
+      mobileQrBtn.classList.add("hidden");
+      ctaOrEl?.classList.add("hidden");
+      return;
+    }
+    mobileQrBtn.classList.toggle("hidden", !lastSyncedToken);
+    ctaOrEl?.classList.toggle("hidden", !lastSyncedToken);
+  }
+
+  function closeQrInlinePanelImmediate() {
+    qrInlinePanelEl?.classList.remove("is-entering", "is-leaving");
+    qrInlineCodeEl && (qrInlineCodeEl.innerHTML = "");
+    qrInlinePanelEl?.classList.add("hidden");
+    qrInlinePanelEl?.setAttribute("aria-hidden", "true");
+    setBaseViewVisible(true);
+  }
+
+  function resetQrState() {
+    closeQrInlinePanelImmediate();
+    lastSyncedToken = null;
+    if (mobileQrBtn) {
+      mobileQrBtn.classList.add("hidden");
+      mobileQrBtn.disabled = true;
+    }
+    ctaOrEl?.classList.add("hidden");
+  }
+
+  function buildMobileQrPayload(token) {
+    // Keep payload compact for easier camera scans while still identifying our format.
+    return `RTQR1:${token}`;
+  }
+
+  function renderQr(token) {
+    if (!qrInlineCodeEl || typeof qrcode !== "function") return;
+    const payload = buildMobileQrPayload(token);
+    const qr = qrcode(0, "M");
+    qr.addData(payload);
+    qr.make();
+    qrInlineCodeEl.innerHTML = qr.createSvgTag(6, 0);
+  }
+
+  function openQrInlinePanel() {
+    if (!lastSyncedToken) return;
+    renderQr(lastSyncedToken);
+    setBaseViewVisible(false);
+    qrInlinePanelEl?.classList.remove("hidden", "is-entering", "is-leaving");
+    qrInlinePanelEl?.setAttribute("aria-hidden", "false");
+  }
+
+  function showQrButton(token) {
+    lastSyncedToken = token;
+    if (!mobileQrBtn) return;
+    mobileQrBtn.classList.remove("hidden");
+    mobileQrBtn.disabled = false;
+    ctaOrEl?.classList.remove("hidden");
   }
 
   // Sets the sync button's label, click handler, and disabled/not-ready visual state.
@@ -163,6 +237,7 @@
   // Checks the active tab URL and the GoMining access_token cookie to determine which button state to show.
   async function updateReadyStatus() {
     try {
+      resetQrState();
       const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
       const activeUrl = activeTab?.url ?? "";
       const onCorrectSite =
@@ -172,8 +247,17 @@
       const hasToken = Boolean(cookie?.value);
 
       if (onCorrectSite && hasToken && !isTokenExpired(cookie.value)) {
-        setStatus("Ready to sync.", "ready");
-        setButtonState("Sync to RewardTrackr", syncProfile);
+        setStatus("Validating session...", "loading");
+        try {
+          await withTimeout(fetchGoMiningProfile(cookie.value), 1800);
+          setStatus("Ready to sync.", "ready");
+          setButtonState("Sync to RewardTrackr", syncProfile);
+        } catch {
+          // Token can exist during intermediate auth steps (e.g. 2FA) but still
+          // not represent a fully authenticated GoMining session yet.
+          setStatus("Finish login/2FA on app.gomining.com first.", "error");
+          setButtonState("Not Ready", null, { disabled: true, notReady: true });
+        }
       } else if (!onCorrectSite) {
         setStatus("Open app.gomining.com to continue.", "error");
         setButtonState("Not Ready", null, { disabled: true, notReady: true });
@@ -240,6 +324,7 @@
   // and shows the Open RewardTrackr button on success.
   async function syncProfile() {
     setWelcome(null);
+    resetQrState();
     setButtonState("Syncing...", null, { disabled: true });
     setStatus("Reading cookie...", "loading");
 
@@ -268,12 +353,18 @@
           .map((t) => withTimeout(injectTokenIntoTab(t.id, cookie.value, alias), 1200))
       );
 
-      setButtonState("Open RewardTrackr", () => openRewardTrackr(cookie.value, alias));
+      showQrButton(cookie.value);
+
+      setButtonState("Open RewardTrackr Web", () => openRewardTrackr(cookie.value, alias));
     } catch (error) {
+      resetQrState();
       setStatus(`Error: ${error instanceof Error ? error.message : "Unexpected error"}`, "error");
       setButtonState("Sync to RewardTrackr", syncProfile);
     }
   }
+
+  mobileQrBtn?.addEventListener("click", openQrInlinePanel);
+  qrInlineBackEl?.addEventListener("click", closeQrInlinePanelImmediate);
 
   // Screen navigation
 
