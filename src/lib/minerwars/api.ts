@@ -28,10 +28,14 @@ export function clearPowerChartCache(): void {
 export async function getCycleRounds(
   headers: Record<string, string>,
   targetCycleId: number | null,
-): Promise<{ cycleId: number | null; cycleStartDate: string | null; rounds: RoundRow[] }> {
+): Promise<{
+  cycleId: number | null;
+  cycleStartDate: string | null;
+  rounds: RoundRow[];
+  allCycleRounds: Awaited<ReturnType<typeof getAllRoundsInCycle>> | null;
+}> {
   const limit = 40;
   let resolvedId: number | null = targetCycleId;
-  let cycleStartDate: string | null = null;
   const collected: RoundRow[] = [];
   let skip = 0;
 
@@ -45,10 +49,7 @@ export async function getCycleRounds(
     if (array.length === 0) break;
 
     // Auto-detect: use the most recent cycle from the first page
-    if (resolvedId === null) {
-      resolvedId = array[0].cycleId as number;
-      cycleStartDate = getCycleStartTuesdayUTC(array[0].endedAt as string);
-    }
+    if (resolvedId === null) resolvedId = array[0].cycleId as number;
 
     for (const r of array) {
       if (r.cycleId === resolvedId) {
@@ -61,7 +62,6 @@ export async function getCycleRounds(
           endedAt: r.endedAt as string,
           cycleId: r.cycleId as number,
         });
-        if (!cycleStartDate) cycleStartDate = getCycleStartTuesdayUTC(r.endedAt as string);
       }
     }
 
@@ -71,13 +71,28 @@ export async function getCycleRounds(
     skip += limit;
   }
 
-  return { cycleId: resolvedId, cycleStartDate, rounds: collected };
+  // Earliest startedAt across all rounds in the cycle, not one round's calendar date —
+  // a cycle's closing round lands minutes after the Tuesday boundary, which broke the
+  // old "round back to nearest Tuesday" heuristic.
+  let cycleStartDate: string | null = null;
+  let allCycleRounds: Awaited<ReturnType<typeof getAllRoundsInCycle>> | null = null;
+  if (resolvedId !== null && collected.length > 0) {
+    const leagueId = collected[0].leagueId;
+    allCycleRounds = await getAllRoundsInCycle(headers, resolvedId, leagueId);
+    const earliestStart = allCycleRounds
+      .map((r) => r.startedAt)
+      .filter((s): s is string => !!s)
+      .sort()[0];
+    if (earliestStart) cycleStartDate = `${earliestStart.slice(0, 10)}T00:00:00.000Z`;
+  }
+
+  return { cycleId: resolvedId, cycleStartDate, rounds: collected, allCycleRounds };
 }
 
 export async function fetchAllCyclesFromApi(headers: Record<string, string>): Promise<CycleInfo[]> {
   const limit = 40;
   let skip = 0;
-  const seen = new Map<number, CycleInfo>();
+  const endedAtByCycle = new Map<number, string[]>();
   const TODAY = new Date().toISOString().slice(0, 10);
 
   while (true) {
@@ -91,23 +106,28 @@ export async function fetchAllCyclesFromApi(headers: Record<string, string>): Pr
 
     for (const r of array) {
       const id = r.cycleId as number;
-      if (!seen.has(id)) {
-        const cycleStart = getCycleStartTuesdayUTC(r.endedAt as string).slice(0, 10);
-        const cycleEnd = cycleEndFromStart(cycleStart);
-        seen.set(id, {
-          cycleId: id,
-          cycleStart,
-          cycleEnd,
-          status: resolveCycleStatus(cycleEnd, TODAY),
-        });
-      }
+      const list = endedAtByCycle.get(id) ?? [];
+      list.push(r.endedAt as string);
+      endedAtByCycle.set(id, list);
     }
 
     if (array.length < limit) break;
     skip += limit;
   }
 
-  return [...seen.values()].sort((a, b) => b.cycleId - a.cycleId);
+  // See getCycleRounds() for why this uses the median endedAt of each cycle's rounds
+  // instead of the first one seen — a single round near a cycle boundary can resolve to
+  // the wrong week.
+  const result: CycleInfo[] = [];
+  for (const [id, endedAtList] of endedAtByCycle) {
+    const sorted = [...endedAtList].sort();
+    const median = sorted[Math.floor(sorted.length / 2)];
+    const cycleStart = getCycleStartTuesdayUTC(median).slice(0, 10);
+    const cycleEnd = cycleEndFromStart(cycleStart);
+    result.push({ cycleId: id, cycleStart, cycleEnd, status: resolveCycleStatus(cycleEnd, TODAY) });
+  }
+
+  return result.sort((a, b) => b.cycleId - a.cycleId);
 }
 
 export async function getAllRoundsInCycle(
@@ -115,7 +135,13 @@ export async function getAllRoundsInCycle(
   cycleId: number,
   leagueId: number,
 ) {
-  const collected: Array<{ id: number; power: number; multiplier: number; active: boolean }> = [];
+  const collected: Array<{
+    id: number;
+    power: number;
+    multiplier: number;
+    active: boolean;
+    startedAt: string | null;
+  }> = [];
   const limit = 50;
   let skip = 0;
   let total: number | null = null;
@@ -134,6 +160,7 @@ export async function getAllRoundsInCycle(
         power: Number(r.power ?? 0),
         multiplier: Number(r.multiplier ?? 0),
         active: Boolean(r.active),
+        startedAt: (r.startedAt as string) ?? null,
       });
     }
     if (collected.length >= (total ?? 0) || array.length < limit) break;
@@ -309,7 +336,7 @@ export async function getUserPowerChart(
     powerChartCache && powerChartCache.start < reqStart ? powerChartCache.start : reqStart;
 
   const end = new Date();
-  end.setHours(23, 59, 59, 999);
+  end.setUTCHours(23, 59, 59, 999);
 
   const res = await postJson<{ data: Array<{ label: string; value: number }> }>(
     `${API}/api/nft/my-computing-power-chart`,

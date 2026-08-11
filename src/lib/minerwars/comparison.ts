@@ -302,6 +302,7 @@ async function _doFetchMinerWarsComparison(
     cycleId,
     cycleStartDate,
     rounds: userRounds,
+    allCycleRounds: prefetchedCycleRounds,
   } = await getCycleRounds(headers, targetCycleId);
   if (!cycleId || !cycleStartDate || userRounds.length === 0) {
     throw new Error("No rounds found for selected cycle");
@@ -429,7 +430,9 @@ async function _doFetchMinerWarsComparison(
   const leagueId = refRound.leagueId;
   const clanId = refRound.clanId;
 
-  const allCycleRounds = await getAllRoundsInCycle(headers, cycleId, leagueId);
+  // getCycleRounds() already fetched this (to derive cycleStartDate) — reuse it instead
+  // of fetching the same round set again.
+  const allCycleRounds = prefetchedCycleRounds ?? (await getAllRoundsInCycle(headers, cycleId, leagueId));
   const completedRounds = allCycleRounds.filter((r) => !r.active && r.power > 0);
   const sumAllMultipliers = completedRounds.reduce((s, r) => s + r.multiplier, 0);
   const totalPowerSum = completedRounds.reduce((s, r) => s + r.power, 0);
