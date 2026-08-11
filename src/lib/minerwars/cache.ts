@@ -1,10 +1,30 @@
-import { LS_KEY_MW_COMPARISON, LS_KEY_MW_CYCLES, LS_KEY_REWARD_PREFIX } from "@/lib/storage-keys";
+import {
+  LS_KEY_MW_COMPARISON,
+  LS_KEY_MW_CYCLES,
+  LS_KEY_MW_DAY_GATE,
+  LS_KEY_REWARD_PREFIX,
+} from "@/lib/storage-keys";
 import { type CycleInfo, type MinerWarsComparison } from "./types";
 
 // Bump to force recomputation when the persisted comparison shape changes.
 export const MW_COMPARISON_SCHEMA_VERSION = 3;
 
 export type CyclesStoreEntry = { data: CycleInfo[]; ts: number };
+
+export type DayGateSignal = {
+  btcFundBtc: number;
+  totalMinedBlocks: number;
+  latestRoundId: number;
+};
+
+export type DayGateEntry = {
+  cycleStart: string;
+  cycleEnd: string;
+  effectiveCutoff: string;
+  clockCutoff: string;
+  signal: DayGateSignal;
+  ts: number;
+};
 
 export function loadPersistedCycles(): CyclesStoreEntry | null {
   try {
@@ -71,6 +91,43 @@ export function persistComparison(data: MinerWarsComparison): void {
     const store: Record<string, unknown> = raw ? (JSON.parse(raw) as Record<string, unknown>) : {};
     store[String(data.cycleId)] = { data, ts: Date.now(), v: MW_COMPARISON_SCHEMA_VERSION };
     localStorage.setItem(LS_KEY_MW_COMPARISON, JSON.stringify(store));
+  } catch {
+    // ignore quota errors
+  }
+}
+
+export function loadDayGateState(cycleId: number): DayGateEntry | null {
+  try {
+    const raw = localStorage.getItem(LS_KEY_MW_DAY_GATE);
+    if (!raw) return null;
+    const store = JSON.parse(raw) as Record<string, unknown>;
+    const entry = store[String(cycleId)] as DayGateEntry | undefined;
+    if (!entry || typeof entry !== "object") return null;
+    if (
+      typeof entry.cycleStart !== "string" ||
+      typeof entry.cycleEnd !== "string" ||
+      typeof entry.effectiveCutoff !== "string" ||
+      typeof entry.clockCutoff !== "string" ||
+      typeof entry.ts !== "number" ||
+      !entry.signal ||
+      typeof entry.signal.btcFundBtc !== "number" ||
+      typeof entry.signal.totalMinedBlocks !== "number" ||
+      typeof entry.signal.latestRoundId !== "number"
+    ) {
+      return null;
+    }
+    return entry;
+  } catch {
+    return null;
+  }
+}
+
+export function persistDayGateState(cycleId: number, entry: DayGateEntry): void {
+  try {
+    const raw = localStorage.getItem(LS_KEY_MW_DAY_GATE);
+    const store: Record<string, unknown> = raw ? (JSON.parse(raw) as Record<string, unknown>) : {};
+    store[String(cycleId)] = entry;
+    localStorage.setItem(LS_KEY_MW_DAY_GATE, JSON.stringify(store));
   } catch {
     // ignore quota errors
   }

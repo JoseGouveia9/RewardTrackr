@@ -7,6 +7,9 @@ import {
   persistCycles,
   loadPersistedComparison,
   persistComparison,
+  loadDayGateState,
+  persistDayGateState,
+  type DayGateSignal,
   getPaymentDataFromBuildCache,
   getActualIncomeFromBuildCache,
   getSoloDaysFromBuildCache,
@@ -37,6 +40,93 @@ import type { RewardRecord } from "@/types/rewards";
 const comparisonCache = new Map<number, { data: MinerWarsComparison; ts: number }>();
 const inFlightRequests = new Map<number, Promise<MinerWarsComparison>>();
 let cyclesCache: { data: CycleInfo[]; ts: number } | null = null;
+const DAY_GATE_TIMEOUT_UTC_HOUR = 3;
+
+function dateToUtcDayStamp(dateStr: string): number {
+  return Date.parse(`${dateStr}T00:00:00.000Z`);
+}
+
+function previousUtcDay(dateStr: string): string {
+  const d = new Date(`${dateStr}T00:00:00.000Z`);
+  d.setUTCDate(d.getUTCDate() - 1);
+  return d.toISOString().slice(0, 10);
+}
+
+function resolveEffectiveCutoffDate(params: {
+  cycleId: number;
+  cycleStart: string;
+  cycleEnd: string;
+  clockCutoff: string;
+  signal: DayGateSignal;
+}): string {
+  const { cycleId, cycleStart, cycleEnd, clockCutoff, signal } = params;
+  const prev = loadDayGateState(cycleId);
+  const timeoutAt = Date.parse(`${clockCutoff}T${String(DAY_GATE_TIMEOUT_UTC_HOUR).padStart(2, "0")}:00:00.000Z`);
+  const timeoutPassed = Date.now() >= timeoutAt;
+  const rollbackCutoff =
+    clockCutoff > cycleStart ? previousUtcDay(clockCutoff) : clockCutoff;
+
+  if (!prev || prev.cycleStart !== cycleStart || prev.cycleEnd !== cycleEnd) {
+    // First run after introducing day-gate: if we're in the midnight lag window,
+    // start from previous UTC day until fund/blocks/rounds freshness catches up.
+    const initialEffectiveCutoff = timeoutPassed ? clockCutoff : rollbackCutoff;
+    persistDayGateState(cycleId, {
+      cycleStart,
+      cycleEnd,
+      effectiveCutoff: initialEffectiveCutoff,
+      clockCutoff,
+      signal,
+      ts: Date.now(),
+    });
+    return initialEffectiveCutoff;
+  }
+
+  if (clockCutoff < prev.effectiveCutoff) {
+    persistDayGateState(cycleId, {
+      ...prev,
+      clockCutoff,
+      signal,
+      ts: Date.now(),
+    });
+    return clockCutoff;
+  }
+
+  const dayGap = Math.floor(
+    (dateToUtcDayStamp(clockCutoff) - dateToUtcDayStamp(prev.effectiveCutoff)) / (24 * 60 * 60 * 1000),
+  );
+  const economicsChanged = Math.abs(signal.btcFundBtc - prev.signal.btcFundBtc) > 1e-12;
+
+  // Migration safety: if a previous build already advanced to clockCutoff during the
+  // lag window, roll back to previous day until freshness moves or timeout passes.
+  if (
+    clockCutoff > cycleStart &&
+    prev.effectiveCutoff === clockCutoff &&
+    !economicsChanged &&
+    !timeoutPassed
+  ) {
+    persistDayGateState(cycleId, {
+      cycleStart,
+      cycleEnd,
+      effectiveCutoff: rollbackCutoff,
+      clockCutoff,
+      signal,
+      ts: Date.now(),
+    });
+    return rollbackCutoff;
+  }
+
+  const shouldAdvance = dayGap > 1 || economicsChanged || timeoutPassed;
+  const effectiveCutoff = shouldAdvance ? clockCutoff : prev.effectiveCutoff;
+  persistDayGateState(cycleId, {
+    cycleStart,
+    cycleEnd,
+    effectiveCutoff,
+    clockCutoff,
+    signal,
+    ts: Date.now(),
+  });
+  return effectiveCutoff;
+}
 
 function withResolvedStatuses(cycles: CycleInfo[]): CycleInfo[] {
   const today = new Date().toISOString().slice(0, 10);
@@ -460,11 +550,24 @@ async function _doFetchMinerWarsComparison(
   const CYCLE_START = cycleStartDate.slice(0, 10);
   const isCycleLive = TODAY >= CYCLE_START && TODAY <= CYCLE_END;
 
-  const cycleCutoff = CYCLE_END < TODAY ? CYCLE_END : TODAY;
+  const clockCutoff = CYCLE_END < TODAY ? CYCLE_END : TODAY;
+  const effectiveCutoff = isCycleLive
+    ? resolveEffectiveCutoffDate({
+        cycleId,
+        cycleStart: CYCLE_START,
+        cycleEnd: CYCLE_END,
+        clockCutoff,
+        signal: {
+          btcFundBtc: btcFund,
+          totalMinedBlocks,
+          latestRoundId: userRounds[0]?.roundId ?? 0,
+        },
+      })
+    : clockCutoff;
   const cycleDates: string[] = [];
   for (
     let d = new Date(cycleStartDate);
-    d.toISOString().slice(0, 10) <= cycleCutoff;
+    d.toISOString().slice(0, 10) <= effectiveCutoff;
     d.setUTCDate(d.getUTCDate() + 1)
   ) {
     cycleDates.push(d.toISOString().slice(0, 10));

@@ -15,3 +15,5 @@ export const LS_KEY_SHARE_EXCLUSIONS = "rt_share_exclusions";
 export const LS_KEY_MW_COMPARISON = "rt_mw_comparison_v1";
 // Persistent cache for MinerWars cycle list (schema v1).
 export const LS_KEY_MW_CYCLES = "rt_mw_cycles_v1";
+// Persistent per-cycle state used to prevent midnight day-rollover spikes.
+export const LS_KEY_MW_DAY_GATE = "rt_mw_day_gate_v1";
