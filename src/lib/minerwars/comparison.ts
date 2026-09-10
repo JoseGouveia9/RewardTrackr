@@ -324,6 +324,7 @@ async function _doFetchMinerWarsComparison(
 
   const CYCLE_END = CYCLE_END_CHECK;
   const CYCLE_START = cycleStartDate.slice(0, 10);
+  const isCycleLive = TODAY >= CYCLE_START && TODAY <= CYCLE_END;
 
   const cycleCutoff = CYCLE_END < TODAY ? CYCLE_END : TODAY;
   const cycleDates: string[] = [];
@@ -335,7 +336,13 @@ async function _doFetchMinerWarsComparison(
     cycleDates.push(d.toISOString().slice(0, 10));
   }
 
-  const elapsedComparisonDates = cycleDates;
+  // A live cycle's day-1 fund/reward figures aren't settled yet (the round schedule
+  // takes a day to populate), so day 1 is excluded from the elapsed-day count while the
+  // cycle is still in progress. Once the cycle completes, its historical data is fully
+  // settled, so no day is excluded then. (Confirmed against mobile: an earlier attempt to
+  // drop this exclusion, believing it was a bug, was itself wrong — the diagnostic script
+  // that "confirmed" it was misleading.)
+  const elapsedComparisonDates = isCycleLive ? cycleDates.slice(1) : cycleDates;
 
   // Reconstructed per-day clan TH: for each day, who actually participated for our clan
   // in that day's last completed round (see getClanThByDate()) — preferred over
