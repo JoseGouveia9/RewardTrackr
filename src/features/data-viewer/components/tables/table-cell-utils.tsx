@@ -1,25 +1,9 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import type { ReactNode } from "react";
+import { InfoIcon, TrendDeltaIcon } from "../icons";
 
-const INFO_ICON = (
-  <svg
-    width="11"
-    height="11"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className="dv-info-icon"
-    aria-hidden="true"
-  >
-    <circle cx="12" cy="12" r="10" />
-    <path d="M12 16v-4" />
-    <path d="M12 8h.01" />
-  </svg>
-);
+const INFO_ICON = <InfoIcon className="dv-info-icon" />;
 
 export function TrendArrow({
   current,
@@ -37,16 +21,7 @@ export function TrendArrow({
   if (delta === 0) return null;
   const up = delta > 0;
   return (
-    <svg
-      className={`dv-trend${up ? " dv-trend--up" : " dv-trend--down"}`}
-      width="8"
-      height="8"
-      viewBox="0 0 10 10"
-      fill="currentColor"
-      aria-hidden="true"
-    >
-      {up ? <polygon points="5,1 9,9 1,9" /> : <polygon points="1,1 9,1 5,9" />}
-    </svg>
+    <TrendDeltaIcon up={up} className={`dv-trend${up ? " dv-trend--up" : " dv-trend--down"}`} />
   );
 }
 

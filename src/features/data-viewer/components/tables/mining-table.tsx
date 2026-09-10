@@ -1,4 +1,4 @@
-﻿import { useMemo, useRef } from "react";
+﻿import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { loadCacheEntry, wasCacheMigrated } from "@/lib/reward-cache";
 import { buildOccurrenceIds } from "@/lib/row-ids";
@@ -14,12 +14,16 @@ import {
   fmtDate,
 } from "../../utils";
 import { MiningCurrencyIcon } from "../icons/currency-icons";
+import { MinerWarsIcon, RecordsIcon, ShareIcon } from "../icons";
 import { DateRangeFilter } from "../date-range-filter/date-range-filter";
 import { Pagination } from "../pagination/pagination";
 import { useSyncTableColumns } from "../../hooks/use-sync-table-columns";
 import { AnimatedLoadingRow } from "./animated-loading-row";
 import { useRowSelection } from "../../stores/row-selection-context";
 import { MinerWarsComparisonPanel } from "../minerwars-comparison-panel/minerwars-comparison-panel";
+import { MinerWarsShareModal } from "../minerwars-comparison-panel/minerwars-share-modal";
+import type { MinerWarsShareSnapshot } from "../minerwars-comparison-panel/minerwars-share-types";
+import { getCachedCycles } from "@/lib/minerwars/comparison";
 import {
   TrendArrow,
   Frac,
@@ -233,6 +237,8 @@ export function MiningTable({
   difficultyMap = new Map(),
   pageSize,
   isShared = false,
+  onCycleTrackerOpenChange,
+  minerWarsShareDisabled = false,
 }: {
   rewardKey: RewardKey;
   currency: Currency;
@@ -252,9 +258,25 @@ export function MiningTable({
   difficultyMap?: Map<string, DifficultyEntry>;
   pageSize?: number;
   isShared?: boolean;
+  onCycleTrackerOpenChange?: (open: boolean) => void;
+  minerWarsShareDisabled?: boolean;
 }) {
   const { t, i18n } = useTranslation();
   const isRtl = i18n.dir() === "rtl";
+  const [showCycleTracker, setShowCycleTracker] = useState(false);
+  const [cycleTrackerMounted, setCycleTrackerMounted] = useState(false);
+  const [minerWarsShareOpen, setMinerWarsShareOpen] = useState(false);
+  const [minerWarsShareSnapshot, setMinerWarsShareSnapshot] =
+    useState<MinerWarsShareSnapshot | null>(null);
+  const [cycleTrackerCurrency, setCycleTrackerCurrency] = useState<Currency>(currency);
+  useEffect(() => {
+    if (showCycleTracker) setCycleTrackerMounted(true);
+  }, [showCycleTracker]);
+  useEffect(() => {
+    if (!showCycleTracker) {
+      setCycleTrackerCurrency(currency);
+    }
+  }, [currency, showCycleTracker]);
   const rowSel = useRowSelection();
   const excluded = useMemo(() => new Set(rowSel?.exclusions[rewardKey] ?? []), [rowSel, rewardKey]);
   const formulas = useMemo(() => buildFormulas(t, currency, fiatCode), [t, currency, fiatCode]);
@@ -338,6 +360,28 @@ export function MiningTable({
     [selectedRows],
   );
 
+  const isMinerWarsUnshared = rewardKey === "minerwars" && !isShared;
+  const hasCachedCycleTrackerData = useMemo(() => {
+    if (!isMinerWarsUnshared) return false;
+    void cacheVersion;
+    const cycles = getCachedCycles();
+    return Boolean(cycles && cycles.length > 0);
+  }, [cacheVersion, isMinerWarsUnshared]);
+  const cycleTrackerExtraFiatCode = entry?.extraFiatCurrency ?? null;
+
+  useEffect(() => {
+    if (!hasCachedCycleTrackerData && showCycleTracker) {
+      setShowCycleTracker(false);
+    }
+  }, [hasCachedCycleTrackerData, showCycleTracker]);
+
+  useEffect(() => {
+    onCycleTrackerOpenChange?.(
+      isMinerWarsUnshared && hasCachedCycleTrackerData && showCycleTracker,
+    );
+    return () => onCycleTrackerOpenChange?.(false);
+  }, [hasCachedCycleTrackerData, isMinerWarsUnshared, onCycleTrackerOpenChange, showCycleTracker]);
+
   if (!entry) {
     return (
       <div className="dv-empty">
@@ -355,15 +399,8 @@ export function MiningTable({
     );
   }
 
-  return (
+  const tableContent = (
     <>
-      {rewardKey === "minerwars" && !isShared && (
-        <MinerWarsComparisonPanel
-          cacheVersion={cacheVersion}
-          currency={currency}
-          isPrefetching={minerWarsPrefetching}
-        />
-      )}
       <div
         className={`dv-tables-wrap dv-tables-wrap--wide${trendsExiting ? " dv-trends-exiting" : trendsAnimating ? " dv-trends-active" : showTrends ? " dv-trends-visible" : ""}`}
       >
@@ -535,6 +572,69 @@ export function MiningTable({
         total={filteredRows.length}
         onChange={setPage}
         pageSize={effectivePageSize}
+      />
+    </>
+  );
+
+  return (
+    <>
+      {isMinerWarsUnshared && hasCachedCycleTrackerData && (
+        <div className="dv-minerwars-toolbar">
+          <button
+            type="button"
+            className={`dv-minerwars-toggle-btn${showCycleTracker ? " dv-minerwars-toggle-btn--active" : ""}`}
+            onClick={() => setShowCycleTracker((o) => !o)}
+          >
+            {showCycleTracker ? <RecordsIcon /> : <MinerWarsIcon />}
+            {showCycleTracker
+              ? `${t("tabs.minerWars")} ${t("common.records")}`
+              : t("cycleTracker.title")}
+          </button>
+          {showCycleTracker && (
+            <button
+              type="button"
+              className={`dv-minerwars-share-btn${minerWarsShareDisabled || !minerWarsShareSnapshot ? " dv-minerwars-share-btn--disabled" : ""}`}
+              onClick={
+                minerWarsShareDisabled || !minerWarsShareSnapshot
+                  ? undefined
+                  : () => setMinerWarsShareOpen(true)
+              }
+              aria-label={t("dataViewer.shareRecordsLabel")}
+              title={t("common.share")}
+              aria-disabled={minerWarsShareDisabled || !minerWarsShareSnapshot}
+            >
+              <ShareIcon />
+            </button>
+          )}
+        </div>
+      )}
+      {isMinerWarsUnshared && hasCachedCycleTrackerData ? (
+        <div className="dv-minerwars-slider-viewport">
+          <div
+            className={`dv-minerwars-slider-track${showCycleTracker ? " dv-minerwars-slider-track--open" : ""}`}
+          >
+            <div className="dv-minerwars-slider-pane">{tableContent}</div>
+            <div className="dv-minerwars-slider-pane">
+              {cycleTrackerMounted && (
+                <MinerWarsComparisonPanel
+                  cacheVersion={cacheVersion}
+                  currency={cycleTrackerCurrency}
+                  onCurrencyChange={setCycleTrackerCurrency}
+                  extraFiatCode={cycleTrackerExtraFiatCode}
+                  isPrefetching={minerWarsPrefetching}
+                  onShareSnapshotChange={setMinerWarsShareSnapshot}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      ) : (
+        tableContent
+      )}
+      <MinerWarsShareModal
+        open={minerWarsShareOpen}
+        snapshot={minerWarsShareSnapshot}
+        onClose={() => setMinerWarsShareOpen(false)}
       />
     </>
   );

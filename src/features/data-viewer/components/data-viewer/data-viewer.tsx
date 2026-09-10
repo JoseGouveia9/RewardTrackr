@@ -1,27 +1,21 @@
 ﻿import { memo, useEffect, useMemo, useRef, useState } from "react";
 import type React from "react";
-import { AnimatePresence, motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { loadCacheEntry } from "@/lib/reward-cache";
 import {
   fetchDifficultyAdjustments,
   type DifficultyEntry,
 } from "@/lib/minerwars/difficulty-adjustments";
-import { ErrorBoundary } from "@/components/error-boundary/error-boundary";
 import type { Currency, EarnView, TxView, SimpleView, PurchaseView } from "../../types";
 import type { CacheState, RewardKey } from "@/types/rewards";
-import { RowSelectionProvider } from "../../stores/row-selection-context";
 import { userHasMinerWarsHistory } from "@/lib/minerwars/comparison";
 import { ALL_TABS } from "../../utils/constants";
 import { loadFiatCode } from "../../utils";
 import { useDataViewerState } from "../../hooks/use-data-viewer-state";
-import { MiningTable } from "../tables/mining-table";
-import { SimpleTable } from "../tables/simple-table";
-import { SimpleEarnTable } from "../tables/simple-earn-table";
-import { TransactionsTable } from "../tables/transactions-table";
-import { PurchasesTable } from "../tables/purchases-table";
-import { TabList } from "../tab-list/tab-list";
-import { ViewSelector } from "../view-selector/view-selector";
+import { DataViewerHeader } from "./data-viewer-header";
+import { DataViewerContent } from "./data-viewer-content";
+import { DataViewerTabs } from "./data-viewer-tabs";
+import { RecordsGridIcon } from "../icons";
 import "./data-viewer.css";
 
 interface DataViewerProps {
@@ -31,13 +25,17 @@ interface DataViewerProps {
   cacheVersion?: number;
   minerWarsPrefetching?: boolean;
   onRefreshKeys?: (keys: RewardKey[]) => Promise<void>;
+  onRefreshRecords?: () => Promise<void>;
+  onDownloadRecords?: () => Promise<void>;
+  onOpenBuildSettings?: () => void;
   onTabSeen?: (key: RewardKey) => void;
-  title?: string;
+  title?: string | null;
   sharedData?: Partial<CacheState> | null;
   banner?: React.ReactNode;
   onShare?: () => void;
   shareDisabled?: boolean;
   hideHeader?: boolean;
+  showBackButton?: boolean;
   pageSize?: number;
   rowSelection?: {
     exclusions: Partial<Record<RewardKey, string[]>>;
@@ -52,6 +50,9 @@ export const DataViewer = memo(function DataViewer({
   cacheVersion = 0,
   minerWarsPrefetching = false,
   onRefreshKeys,
+  onRefreshRecords,
+  onDownloadRecords,
+  onOpenBuildSettings,
   onTabSeen,
   title = "Records",
   sharedData,
@@ -59,6 +60,7 @@ export const DataViewer = memo(function DataViewer({
   onShare,
   shareDisabled = false,
   hideHeader = false,
+  showBackButton = true,
   pageSize,
   rowSelection,
 }: DataViewerProps) {
@@ -261,10 +263,10 @@ export const DataViewer = memo(function DataViewer({
   ];
   const showSimpleSelector = simpleHasUsd || simpleHasFiat;
 
-  const { t } = useTranslation();
   const [showTrends, setShowTrends] = useState(false);
   const [trendsAnimating, setTrendsAnimating] = useState(false);
   const [trendsExiting, setTrendsExiting] = useState(false);
+  const [isMinerWarsTrackerOpen, setIsMinerWarsTrackerOpen] = useState(false);
   const exitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const animTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -319,167 +321,88 @@ export const DataViewer = memo(function DataViewer({
             : effectiveSimpleView
   }:${effectiveGroupByDay ? "grouped" : "raw"}`;
 
+  const showMiningViewSelector =
+    hasActiveData && isMiningTab && !(activeKey === "minerwars" && isMinerWarsTrackerOpen);
+  const showMiningTrendsToggle =
+    hasActiveData &&
+    isMiningTab &&
+    hasTrendsData &&
+    (activeKey === "solo-mining" || (activeKey === "minerwars" && !isMinerWarsTrackerOpen));
+  const hideRecordsHeaderActions = activeKey === "minerwars" && isMinerWarsTrackerOpen;
+  const showRecordsShareButton = Boolean(onShare) && !hideRecordsHeaderActions;
+  const showRecordsRefreshButton = Boolean(onRefreshRecords) && !hideRecordsHeaderActions;
+  const showRecordsDownloadButton = Boolean(onDownloadRecords) && !hideRecordsHeaderActions;
+  const showBuildSettingsButton = Boolean(onOpenBuildSettings) && !hideRecordsHeaderActions;
+  const showRecordsHeaderActionGroup =
+    showRecordsShareButton ||
+    showRecordsRefreshButton ||
+    showRecordsDownloadButton ||
+    showBuildSettingsButton;
+  const showMiningHeaderControlGroup = showMiningTrendsToggle || showMiningViewSelector;
+  const handleRefreshRecordsClick = () => {
+    if (onRefreshRecords) void onRefreshRecords();
+  };
+  const handleDownloadRecordsClick = () => {
+    if (onDownloadRecords) void onDownloadRecords();
+  };
+
   return (
     <>
       {banner}
       <div className="dv-page">
-        {}
-        {!hideHeader && (
-          <div className="dv-header">
-            <div className="dv-header-left">
-              <button
-                type="button"
-                className="dv-back-button"
-                onClick={onClose}
-                aria-label={t("common.back")}
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d="M19 12H5" />
-                  <path d="M12 19l-7-7 7-7" />
-                </svg>
-                <span>{t("common.back")}</span>
-              </button>
-              {title ? <span className="dv-title">{title}</span> : null}
-              {onShare && (
-                <button
-                  type="button"
-                  className={`dv-share-button${shareDisabled ? " dv-share-button--disabled" : ""}`}
-                  onClick={shareDisabled ? undefined : onShare}
-                  aria-disabled={shareDisabled}
-                  aria-label={t("dataViewer.shareRecordsLabel")}
-                  title={
-                    shareDisabled ? "Export in progress — share after it completes" : undefined
-                  }
-                >
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
-                    <circle cx="18" cy="5" r="3" />
-                    <circle cx="6" cy="12" r="3" />
-                    <circle cx="18" cy="19" r="3" />
-                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
-                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-                  </svg>
-                  <span>{t("common.share")}</span>
-                </button>
-              )}
-            </div>
+        <DataViewerHeader
+          hideHeader={hideHeader}
+          showBackButton={showBackButton}
+          onClose={onClose}
+          title={title}
+          onShare={onShare}
+          shareDisabled={shareDisabled}
+          onRefreshRecords={showRecordsRefreshButton ? handleRefreshRecordsClick : undefined}
+          onDownloadRecords={showRecordsDownloadButton ? handleDownloadRecordsClick : undefined}
+          onOpenBuildSettings={showBuildSettingsButton ? onOpenBuildSettings : undefined}
+          hasActiveData={hasActiveData}
+          isMiningTab={isMiningTab}
+          isEarnTab={isEarnTab}
+          isTxTab={isTxTab}
+          isPurchaseTab={isPurchaseTab}
+          groupByDay={groupByDay}
+          onToggleGroupByDay={() => setGroupByDay((v) => !v)}
+          hasViewSelector={hasViewSelector}
+          showRecordsHeaderActionGroup={showRecordsHeaderActionGroup}
+          showRecordsShareButton={showRecordsShareButton}
+          showRecordsRefreshButton={showRecordsRefreshButton}
+          showRecordsDownloadButton={showRecordsDownloadButton}
+          showBuildSettingsButton={showBuildSettingsButton}
+          showMiningHeaderControlGroup={showMiningHeaderControlGroup}
+          showMiningTrendsToggle={showMiningTrendsToggle}
+          showTrends={showTrends}
+          trendsExiting={trendsExiting}
+          onToggleTrends={toggleTrends}
+          showMiningViewSelector={showMiningViewSelector}
+          currencies={currencies}
+          currency={currency}
+          onSelectMiningCurrency={(k) => {
+            setCurrency(k);
+            setSharedView(k === "USD" ? "USD" : k === "FIAT" ? "FIAT" : "NATIVE");
+          }}
+          earnViews={earnViews}
+          effectiveEarnView={effectiveEarnView}
+          onSelectEarnView={setView}
+          txViews={txViews}
+          effectiveTxView={effectiveTxView}
+          showTxSelector={showTxSelector}
+          onSelectTxView={(k) => setView(k === "GMT" ? "NATIVE" : k)}
+          purchaseViews={purchaseViews}
+          effectivePurchaseView={effectivePurchaseView}
+          onSelectPurchaseView={setView}
+          simpleViews={simpleViews}
+          effectiveSimpleView={effectiveSimpleView}
+          showSimpleSelector={showSimpleSelector}
+          onSelectSimpleView={setView}
+        />
 
-            {}
-            <div className="dv-toolbar">
-              {hasActiveData && !isMiningTab && (
-                <button
-                  type="button"
-                  className={`dv-group-button${groupByDay ? " dv-group-button--active" : ""}`}
-                  onClick={() => setGroupByDay((v) => !v)}
-                  title={t("dataViewer.groupByDay")}
-                  aria-pressed={groupByDay}
-                >
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
-                    <line x1="3" y1="6" x2="21" y2="6" />
-                    <line x1="3" y1="12" x2="15" y2="12" />
-                    <line x1="3" y1="18" x2="15" y2="18" />
-                    <polyline points="17 15 20 18 23 15" />
-                  </svg>
-                  <span>{t("dataViewer.groupByDay")}</span>
-                </button>
-              )}
-              {hasViewSelector && !isMiningTab && <span className="dv-toolbar-separator">·</span>}
-              {hasActiveData &&
-                isMiningTab &&
-                (activeKey === "solo-mining" || activeKey === "minerwars") &&
-                hasTrendsData && (
-                  <>
-                    <button
-                      type="button"
-                      className={`dv-trends-toggle${showTrends && !trendsExiting ? " dv-trends-toggle--active" : ""}`}
-                      onClick={toggleTrends}
-                      aria-pressed={showTrends && !trendsExiting}
-                    >
-                      <svg
-                        width="14"
-                        height="14"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        aria-hidden="true"
-                      >
-                        <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
-                        <polyline points="16 7 22 7 22 13" />
-                      </svg>
-                      <span className="trends-label-full">{t("dataViewer.trends")}</span>
-                      <span className="trends-label-short">{t("dataViewer.trendsShort")}</span>
-                    </button>
-                    <span className="dv-toolbar-separator">·</span>
-                  </>
-                )}
-              {hasActiveData && isMiningTab ? (
-                <ViewSelector
-                  views={currencies}
-                  activeKey={currency}
-                  onSelect={(k) => {
-                    setCurrency(k);
-                    setSharedView(k === "USD" ? "USD" : k === "FIAT" ? "FIAT" : "NATIVE");
-                  }}
-                />
-              ) : hasActiveData && isEarnTab ? (
-                <ViewSelector views={earnViews} activeKey={effectiveEarnView} onSelect={setView} />
-              ) : hasActiveData && isTxTab && showTxSelector ? (
-                <ViewSelector
-                  views={txViews}
-                  activeKey={effectiveTxView}
-                  onSelect={(k) => setView(k === "GMT" ? "NATIVE" : k)}
-                />
-              ) : hasActiveData && isPurchaseTab ? (
-                <ViewSelector
-                  views={purchaseViews}
-                  activeKey={effectivePurchaseView}
-                  onSelect={setView}
-                />
-              ) : hasActiveData && showSimpleSelector ? (
-                <ViewSelector
-                  views={simpleViews}
-                  activeKey={effectiveSimpleView}
-                  onSelect={setView}
-                />
-              ) : null}
-            </div>
-          </div>
-        )}
-
-        {}
-        <TabList
+        <DataViewerTabs
+          hidden={hideRecordsHeaderActions}
           tabs={visibleTabs}
           activeKey={activeKey}
           onSelect={setActiveKey}
@@ -489,103 +412,39 @@ export const DataViewer = memo(function DataViewer({
         />
 
         {}
-        <div className="dv-content">
-          <RowSelectionProvider value={rowSelectionContextValue}>
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.div
-                key={tableAnimationKey}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.14, ease: "easeOut" }}
-              >
-                <ErrorBoundary>
-                  {isMiningTab ? (
-                    <MiningTable
-                      key={activeKey}
-                      rewardKey={activeKey}
-                      currency={currency}
-                      fiatCode={fiatCode}
-                      isFetching={isActiveKeyFetching}
-                      cacheVersion={cacheVersion}
-                      minerWarsPrefetching={minerWarsPrefetching}
-                      onRefreshKeys={onRefreshKeys}
-                      cacheEntry={sharedData ? (sharedData[activeKey] ?? null) : undefined}
-                      dateRange={dateRange}
-                      setDateRange={setDateRange}
-                      page={miningPage}
-                      setPage={setMiningPage}
-                      showTrends={showTrends}
-                      trendsAnimating={trendsAnimating}
-                      trendsExiting={trendsExiting}
-                      difficultyMap={difficultyMap}
-                      pageSize={pageSize}
-                      isShared={isSharedContext}
-                    />
-                  ) : isEarnTab ? (
-                    <SimpleEarnTable
-                      key={activeKey}
-                      rewardKey={activeKey}
-                      fiatCode={fiatCode}
-                      earnView={effectiveEarnView}
-                      isFetching={isActiveKeyFetching}
-                      cacheVersion={cacheVersion}
-                      cacheEntry={sharedData ? (sharedData[activeKey] ?? null) : undefined}
-                      groupByDay={effectiveGroupByDay}
-                      dateRange={dateRange}
-                      setDateRange={setDateRange}
-                      pageSize={pageSize}
-                    />
-                  ) : isTxTab ? (
-                    <TransactionsTable
-                      key={activeKey}
-                      rewardKey={activeKey}
-                      fiatCode={fiatCode}
-                      txView={effectiveTxView}
-                      isFetching={isActiveKeyFetching}
-                      cacheVersion={cacheVersion}
-                      cacheEntry={sharedData ? (sharedData[activeKey] ?? null) : undefined}
-                      groupByDay={effectiveGroupByDay}
-                      dateRange={dateRange}
-                      setDateRange={setDateRange}
-                      pageSize={pageSize}
-                    />
-                  ) : isPurchaseTab ? (
-                    <PurchasesTable
-                      key={activeKey}
-                      fiatCode={fiatCode}
-                      purchaseView={effectivePurchaseView}
-                      isFetching={isActiveKeyFetching}
-                      cacheVersion={cacheVersion}
-                      purchasesCacheEntry={
-                        sharedData ? (sharedData["purchases"] ?? null) : undefined
-                      }
-                      upgradesCacheEntry={sharedData ? (sharedData["upgrades"] ?? null) : undefined}
-                      groupByDay={effectiveGroupByDay}
-                      dateRange={dateRange}
-                      setDateRange={setDateRange}
-                      pageSize={pageSize}
-                    />
-                  ) : (
-                    <SimpleTable
-                      key={activeKey}
-                      rewardKey={activeKey}
-                      fiatCode={fiatCode}
-                      simpleView={effectiveSimpleView}
-                      isFetching={isActiveKeyFetching}
-                      cacheVersion={cacheVersion}
-                      cacheEntry={sharedData ? (sharedData[activeKey] ?? null) : undefined}
-                      groupByDay={effectiveGroupByDay}
-                      dateRange={dateRange}
-                      setDateRange={setDateRange}
-                      pageSize={pageSize}
-                    />
-                  )}
-                </ErrorBoundary>
-              </motion.div>
-            </AnimatePresence>
-          </RowSelectionProvider>
-        </div>
+        <DataViewerContent
+          rowSelectionContextValue={rowSelectionContextValue}
+          tableAnimationKey={tableAnimationKey}
+          activeKey={activeKey}
+          isMiningTab={isMiningTab}
+          isEarnTab={isEarnTab}
+          isTxTab={isTxTab}
+          isPurchaseTab={isPurchaseTab}
+          currency={currency}
+          fiatCode={fiatCode}
+          isActiveKeyFetching={isActiveKeyFetching}
+          cacheVersion={cacheVersion}
+          minerWarsPrefetching={minerWarsPrefetching}
+          onRefreshKeys={onRefreshKeys}
+          sharedData={sharedData}
+          effectiveGroupByDay={effectiveGroupByDay}
+          dateRange={dateRange}
+          setDateRange={setDateRange}
+          miningPage={miningPage}
+          setMiningPage={setMiningPage}
+          showTrends={showTrends}
+          trendsAnimating={trendsAnimating}
+          trendsExiting={trendsExiting}
+          difficultyMap={difficultyMap}
+          pageSize={pageSize}
+          isSharedContext={isSharedContext}
+          setIsMinerWarsTrackerOpen={setIsMinerWarsTrackerOpen}
+          shareDisabled={shareDisabled}
+          effectiveEarnView={effectiveEarnView}
+          effectiveTxView={effectiveTxView}
+          effectivePurchaseView={effectivePurchaseView}
+          effectiveSimpleView={effectiveSimpleView}
+        />
       </div>
     </>
   );
@@ -610,22 +469,7 @@ export const DataViewerButton = memo(function DataViewerButton({
       onClick={onClick}
       aria-label={t("app.records")}
     >
-      <svg
-        width="16"
-        height="16"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-      >
-        <rect x="3" y="3" width="7" height="7" rx="1" />
-        <rect x="14" y="3" width="7" height="7" rx="1" />
-        <rect x="3" y="14" width="7" height="7" rx="1" />
-        <rect x="14" y="14" width="7" height="7" rx="1" />
-      </svg>
+      <RecordsGridIcon />
       <span>{t("app.records")}</span>
       {hasNew ? <span className="dv-new-badge dv-new-badge--button">{t("common.new")}</span> : null}
     </button>

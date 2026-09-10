@@ -31,7 +31,20 @@ function HowToModal({ onClose }: { onClose: () => void }) {
         <div className="auth-modal-header">
           <h3>{t("auth.howToUseExtension")}</h3>
           <button className="auth-modal-close" onClick={onClose} aria-label="Close">
-            ✕
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
           </button>
         </div>
         <div className="auth-modal-body">
@@ -118,7 +131,22 @@ export const AuthPanel = memo(function AuthPanel({
             )}
           </div>
           <button className="auth-howto-btn" onClick={openHowTo}>
-            <span className="auth-howto-btn-icon">?</span>
+            <svg
+              className="auth-howto-btn-icon"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <path d="M9.09 9a3 3 0 1 1 5.82 1c0 2-3 2-3 4" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
             {t("auth.howToUseExtension")}
           </button>
         </div>
