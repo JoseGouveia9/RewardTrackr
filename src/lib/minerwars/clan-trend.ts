@@ -41,6 +41,23 @@ async function fetchClanLeaderboardStatsWithRetry(
   return null;
 }
 
+// A thrown/empty result here can be genuinely "no round data that cycle" or a transient
+// hiccup/rate-limit (these calls fan out to several sub-requests internally) — a false
+// negative would silently degrade the day-by-day reconstruction to the cruder single-point
+// estimate below AND persist that as a permanent cache entry, so retry a few times first.
+async function withRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
+  let lastErr: unknown;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastErr = err;
+      if (i < attempts - 1) await sleep(500 * (i + 1));
+    }
+  }
+  throw lastErr;
+}
+
 // Sole place clan-trend history is network-fetched. Warms the cache; a no-op once
 // everything's already warmed.
 export async function warmClanTrendHistory(
@@ -83,16 +100,18 @@ export async function warmClanTrendHistory(
       const blocksMined = snapshot.blocksMined ?? 0;
       const btcMined = snapshot.btcMined ?? 0;
 
-      const allCycleRounds = await getAllRoundsInCycle(headers, cycle.cycleId, leagueId).catch(
-        () => [],
+      const allCycleRounds = await withRetry(() =>
+        getAllRoundsInCycle(headers, cycle.cycleId, leagueId),
       );
-      const clanThByDate = await getClanThByDate(
-        headers,
-        allCycleRounds.filter((round) => !round.active && round.power > 0),
-        leagueId,
-        clanId,
-        `${calculatedAt}T00:00:00.000Z`,
-      ).catch(() => new Map<string, number>());
+      const clanThByDate = await withRetry(() =>
+        getClanThByDate(
+          headers,
+          allCycleRounds.filter((round) => !round.active && round.power > 0),
+          leagueId,
+          clanId,
+          `${calculatedAt}T00:00:00.000Z`,
+        ),
+      );
 
       let targetBtc: number;
       if (clanThByDate.size > 0) {

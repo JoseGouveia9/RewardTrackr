@@ -495,9 +495,10 @@ export const MinerWarsShareCard = forwardRef<HTMLDivElement, CardProps>(function
             },
           )
         : [];
-    const trendBlocks = clanTrendPoints.map((point) => point.blocksMined);
-    const trendLabels = clanTrendPoints.map((point) => `#${point.cycleId}`);
-    const trendTargetPct = clanTrendPoints.map((point) =>
+    const chartTrendPoints = clanTrendPoints.slice(-15);
+    const trendBlocks = chartTrendPoints.map((point) => point.blocksMined);
+    const trendLabels = chartTrendPoints.map((point) => `#${point.cycleId}`);
+    const trendTargetPct = chartTrendPoints.map((point) =>
       point.targetBtc > 0 ? (point.btcMined / point.targetBtc) * 100 : 0,
     );
     const recordPct = cmp ? computeClanRecordPct(clanTrendPoints, cmp.cycleId) : null;
