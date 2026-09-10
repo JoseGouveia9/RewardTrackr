@@ -323,7 +323,6 @@ async function _doFetchMinerWarsComparison(
 
   const CYCLE_END = CYCLE_END_CHECK;
   const CYCLE_START = cycleStartDate.slice(0, 10);
-  const isCycleLive = TODAY >= CYCLE_START && TODAY <= CYCLE_END;
 
   const cycleCutoff = CYCLE_END < TODAY ? CYCLE_END : TODAY;
   const cycleDates: string[] = [];
@@ -335,7 +334,13 @@ async function _doFetchMinerWarsComparison(
     cycleDates.push(d.toISOString().slice(0, 10));
   }
 
-  const elapsedComparisonDates = isCycleLive ? cycleDates.slice(1) : cycleDates;
+  // BUG FIX: this used to drop the cycle's very first day (cycleDates.slice(1)) for a
+  // live cycle only, causing day 1 to be miscategorized as "projected" instead of
+  // "past" — so it fell back to lastClanPower/lastUserPower instead of that day's
+  // actual clanPowerByDate/userPowerByDate reading. A completed cycle already used the
+  // full `cycleDates` range with no slice, so this special-case for live cycles was
+  // inconsistent and had no matching justification.
+  const elapsedComparisonDates = cycleDates;
 
   const roundRewards = new Map<number, { userBtc: number; clanBtc: number; date: string }>();
   for (const round of userRounds) {
