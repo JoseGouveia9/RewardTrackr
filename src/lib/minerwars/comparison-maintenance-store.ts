@@ -4,13 +4,17 @@ import { loadHistoricalPrices, persistHistoricalPrices } from "./cache";
 import { addUtcDays } from "./date-range";
 import { getHistoricalPrices, type RoundRow } from "./api";
 
-const MW_SIM_INPUTS_SCHEMA_VERSION = 1;
+const MW_SIM_INPUTS_SCHEMA_VERSION = 2;
 
 export type MaintenanceRecomputeInputs = {
   userRounds: RoundRow[];
   completedRoundsMap: Map<number, { power: number }>;
   userPowerByDate: Map<string, number>;
   clanPowerByDate: Map<string, number>;
+  // Reconstructed from that day's actual leaderboard participants (see
+  // getClanThByDate()) — preferred over clanPowerByDate/currentClanPower/clanNftPower
+  // when available, since it correctly reflects members who've since left the clan.
+  clanThByDate: Map<string, number>;
   currentClanPower: number | null;
   clanNftPower: number | null;
   lastUserPower: number | null;
@@ -39,6 +43,7 @@ type PersistedMaintenanceRecomputeInputs = {
   completedRoundsMap: Array<[number, { power: number }]>;
   userPowerByDate: Array<[string, number]>;
   clanPowerByDate: Array<[string, number]>;
+  clanThByDate: Array<[string, number]>;
   currentClanPower: number | null;
   clanNftPower: number | null;
   lastUserPower: number | null;
@@ -96,6 +101,7 @@ function serializeMaintInputs(
     completedRoundsMap: Array.from(inputs.completedRoundsMap.entries()),
     userPowerByDate: Array.from(inputs.userPowerByDate.entries()),
     clanPowerByDate: Array.from(inputs.clanPowerByDate.entries()),
+    clanThByDate: Array.from(inputs.clanThByDate.entries()),
     currentClanPower: inputs.currentClanPower,
     clanNftPower: inputs.clanNftPower,
     lastUserPower: inputs.lastUserPower,
@@ -127,6 +133,7 @@ function deserializeMaintInputs(raw: unknown): MaintenanceRecomputeInputs | null
     completedRoundsMap: new Map(parsed.completedRoundsMap ?? []),
     userPowerByDate: new Map(parsed.userPowerByDate ?? []),
     clanPowerByDate: new Map(parsed.clanPowerByDate ?? []),
+    clanThByDate: new Map(parsed.clanThByDate ?? []),
     currentClanPower: parsed.currentClanPower ?? null,
     clanNftPower: parsed.clanNftPower ?? null,
     lastUserPower: parsed.lastUserPower ?? null,

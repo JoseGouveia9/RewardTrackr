@@ -37,6 +37,7 @@ export function computeMaintenanceAndNet(
     completedRoundsMap,
     userPowerByDate,
     clanPowerByDate,
+    clanThByDate,
     currentClanPower,
     clanNftPower,
     lastUserPower,
@@ -102,11 +103,13 @@ export function computeMaintenanceAndNet(
         ? userPowerByDate.get(roundDate)!
         : (lastUserPower ?? 0);
       const isToday = roundDate >= today;
-      const clanTH = clanPowerByDate.has(roundDate)
-        ? clanPowerByDate.get(roundDate)!
-        : isToday
-          ? (currentClanPower ?? clanNftPower ?? 1)
-          : (clanNftPower ?? 1);
+      const clanTH = clanThByDate.has(roundDate)
+        ? clanThByDate.get(roundDate)!
+        : clanPowerByDate.has(roundDate)
+          ? clanPowerByDate.get(roundDate)!
+          : isToday
+            ? (currentClanPower ?? clanNftPower ?? 1)
+            : (clanNftPower ?? 1);
       const isLeagueEE = cumulativeMWSats >= soloEquivSats;
       const ee = isLeagueEE ? leagueEE : userEE;
       const roundElecUSD = (KWH * 24 * elapsedMWDays * roundPower * ee) / 1000;
@@ -325,6 +328,12 @@ export function simulateMaintenanceAndNet(
       lastUserPower: overrides.th,
       clanPowerByDate: new Map(
         Array.from(inputs.clanPowerByDate.entries()).map(([date, power]) => [
+          date,
+          Math.max(0, power + delta),
+        ]),
+      ),
+      clanThByDate: new Map(
+        Array.from(inputs.clanThByDate.entries()).map(([date, power]) => [
           date,
           Math.max(0, power + delta),
         ]),

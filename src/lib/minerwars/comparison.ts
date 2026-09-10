@@ -19,6 +19,7 @@ import {
   fetchAllCyclesFromApi,
   getAllRoundsInCycle,
   getClanPowerAnalytics,
+  getClanThByDate,
   getCurrentClanPower,
   getCycleRounds,
   getCycleClanData,
@@ -334,13 +335,19 @@ async function _doFetchMinerWarsComparison(
     cycleDates.push(d.toISOString().slice(0, 10));
   }
 
-  // BUG FIX: this used to drop the cycle's very first day (cycleDates.slice(1)) for a
-  // live cycle only, causing day 1 to be miscategorized as "projected" instead of
-  // "past" — so it fell back to lastClanPower/lastUserPower instead of that day's
-  // actual clanPowerByDate/userPowerByDate reading. A completed cycle already used the
-  // full `cycleDates` range with no slice, so this special-case for live cycles was
-  // inconsistent and had no matching justification.
   const elapsedComparisonDates = cycleDates;
+
+  // Reconstructed per-day clan TH: for each day, who actually participated for our clan
+  // in that day's last completed round (see getClanThByDate()) — preferred over
+  // clanPowerByDate/currentClanPower/clanNftPower below since it correctly reflects
+  // members who've since left the clan.
+  const clanThByDate = await getClanThByDate(
+    headers,
+    completedRounds,
+    leagueId,
+    clanId,
+    cycleStartDate,
+  ).catch(() => new Map<string, number>());
 
   const roundRewards = new Map<number, { userBtc: number; clanBtc: number; date: string }>();
   for (const round of userRounds) {
@@ -352,11 +359,13 @@ async function _doFetchMinerWarsComparison(
     const effectiveUserPower = userPowerByDate.has(roundDate)
       ? userPowerByDate.get(roundDate)!
       : (lastUserPower ?? 0);
-    const effectiveClanPower = clanPowerByDate.has(roundDate)
-      ? clanPowerByDate.get(roundDate)!
-      : isToday
-        ? (currentClanPower ?? clanNftPower ?? 1)
-        : (clanNftPower ?? 1);
+    const effectiveClanPower = clanThByDate.has(roundDate)
+      ? clanThByDate.get(roundDate)!
+      : clanPowerByDate.has(roundDate)
+        ? clanPowerByDate.get(roundDate)!
+        : isToday
+          ? (currentClanPower ?? clanNftPower ?? 1)
+          : (clanNftPower ?? 1);
 
     const powerRatio = entry.power / avgRoundNftPower;
     const clanReward = btcPerBlock * round.multiplier;
@@ -432,6 +441,7 @@ async function _doFetchMinerWarsComparison(
     completedRoundsMap,
     userPowerByDate,
     clanPowerByDate,
+    clanThByDate,
     currentClanPower,
     clanNftPower,
     lastUserPower,
@@ -510,9 +520,11 @@ async function _doFetchMinerWarsComparison(
     }
 
     const clanPow = isPast
-      ? clanPowerByDate.has(dateStr)
-        ? clanPowerByDate.get(dateStr)!
-        : lastClanPower
+      ? clanThByDate.has(dateStr)
+        ? clanThByDate.get(dateStr)!
+        : clanPowerByDate.has(dateStr)
+          ? clanPowerByDate.get(dateStr)!
+          : lastClanPower
       : lastClanPower;
     if (satsPerTH != null && clanPow) clanTargetSoloSats += satsPerTH * clanPow;
   }
