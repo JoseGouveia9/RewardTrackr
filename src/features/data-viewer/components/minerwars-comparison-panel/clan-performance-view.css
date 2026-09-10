@@ -412,6 +412,24 @@
   color: #6b7280;
 }
 
+.clan-view-member-left-tag {
+  align-self: flex-start;
+  margin-top: 2px;
+  border-radius: 999px;
+  padding: 1px 7px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  background: rgba(220, 38, 38, 0.14);
+  color: #f87171;
+}
+
+.page.theme-light .clan-view-member-left-tag {
+  background: rgba(220, 38, 38, 0.1);
+  color: #dc2626;
+}
+
 .clan-view-share-block {
   display: flex;
   flex-direction: column;

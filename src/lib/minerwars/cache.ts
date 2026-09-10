@@ -1,5 +1,6 @@
 import {
   LS_KEY_MW_CLAN_PERF,
+  LS_KEY_MW_CLAN_TREND,
   LS_KEY_MW_COMPARISON,
   LS_KEY_MW_CYCLES,
   LS_KEY_MW_HISTORICAL_PRICES,
@@ -329,6 +330,32 @@ export function persistRoundParticipants(roundId: number, userIds: number[]): vo
     const store: Record<string, number[]> = raw ? JSON.parse(raw) : {};
     store[String(roundId)] = userIds;
     localStorage.setItem(LS_KEY_MW_ROUND_PARTICIPANTS, JSON.stringify(store));
+  } catch {
+    // ignore quota errors
+  }
+}
+
+export type ClanTrendEntry =
+  | { kind: "point"; blocksMined: number; btcMined: number; targetBtc: number }
+  | { kind: "skip" };
+
+export function loadClanTrendEntry(cycleId: number): ClanTrendEntry | null {
+  try {
+    const raw = localStorage.getItem(LS_KEY_MW_CLAN_TREND);
+    if (!raw) return null;
+    const store = JSON.parse(raw) as Record<string, ClanTrendEntry>;
+    return store[String(cycleId)] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export function persistClanTrendEntry(cycleId: number, entry: ClanTrendEntry): void {
+  try {
+    const raw = localStorage.getItem(LS_KEY_MW_CLAN_TREND);
+    const store: Record<string, ClanTrendEntry> = raw ? JSON.parse(raw) : {};
+    store[String(cycleId)] = entry;
+    localStorage.setItem(LS_KEY_MW_CLAN_TREND, JSON.stringify(store));
   } catch {
     // ignore quota errors
   }

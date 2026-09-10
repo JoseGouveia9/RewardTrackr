@@ -421,6 +421,7 @@ export function MinerWarsComparisonPanel({
           extraFiatRate={extraFiatRate}
           btcPrice={data?.btcPrice ?? null}
           gmtPrice={data?.gmtPrice ?? null}
+          isLiveCycle={selectedCycle?.status === "in-progress"}
         />
       ) : (
         <>

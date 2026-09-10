@@ -182,6 +182,8 @@ export async function getAllRoundsInCycle(
     power: number;
     multiplier: number;
     active: boolean;
+    startedAt: string | null;
+    endedAt: string | null;
     winnerClanId: number | null;
   }> = [];
   const limit = 50;
@@ -202,6 +204,8 @@ export async function getAllRoundsInCycle(
         power: Number(r.power ?? 0),
         multiplier: Number(r.multiplier ?? 0),
         active: Boolean(r.active),
+        startedAt: (r.startedAt as string) ?? null,
+        endedAt: (r.endedAt as string) ?? null,
         winnerClanId: (r.winnerClanId as number | null) ?? null,
       });
     }
@@ -871,6 +875,118 @@ export async function getRoundClanParticipants(
   }
 
   return scoreByUser;
+}
+
+const LEAGUE_LEADERBOARD_PAGE_CONCURRENCY = 8;
+
+export type LeagueThEntry = { th: number; alias: string | null };
+
+// Whole-league TH-by-user snapshot as of `calculatedAt`, unfiltered by clan — used by
+// getClanThByDate() to look up the TH of clan-round participants (who may since have
+// left the clan, or the clan's roster endpoint may not reflect their historical TH).
+async function getLeagueThByUser(
+  headers: Record<string, string>,
+  calculatedAt: string,
+  leagueId: number,
+): Promise<Map<number, LeagueThEntry>> {
+  const limit = 50;
+
+  type LeaderboardPage = {
+    data: {
+      count: number;
+      me: { user: { userId: number; alias: string }; nftPower?: number } | null;
+      participants: Array<{ user: { userId: number; alias: string }; nftPower?: number }>;
+    };
+  };
+
+  const map = new Map<number, LeagueThEntry>();
+  function applyPage(res: LeaderboardPage, skip: number): void {
+    if (skip === 0 && res.data.me?.user?.userId != null) {
+      map.set(res.data.me.user.userId, {
+        th: res.data.me.nftPower ?? 0,
+        alias: res.data.me.user.alias ?? null,
+      });
+    }
+    for (const p of res.data.participants ?? []) {
+      if (p.user?.userId != null)
+        map.set(p.user.userId, { th: p.nftPower ?? 0, alias: p.user.alias ?? null });
+    }
+  }
+
+  const firstPage = await postJson<LeaderboardPage>(
+    `${API}/api/nft-game/user-leaderboard/index`,
+    headers,
+    {
+      calculatedAt,
+      leagueId,
+      pagination: { skip: 0, limit },
+    },
+  );
+  applyPage(firstPage, 0);
+
+  const total = firstPage.data.count ?? 0;
+  const pageCount = Math.ceil(total / limit);
+  if (pageCount > 1) {
+    const remainingSkips = Array.from({ length: pageCount - 1 }, (_, i) => (i + 1) * limit);
+    await mapWithConcurrency(remainingSkips, LEAGUE_LEADERBOARD_PAGE_CONCURRENCY, async (skip) => {
+      const res = await postJson<LeaderboardPage>(
+        `${API}/api/nft-game/user-leaderboard/index`,
+        headers,
+        {
+          calculatedAt,
+          leagueId,
+          pagination: { skip, limit },
+        },
+      );
+      applyPage(res, skip);
+    });
+  }
+
+  return map;
+}
+
+const CLAN_TH_BY_DATE_CONCURRENCY = 4;
+
+// Day-by-day clan TH reconstruction for a past cycle, from actual round participants —
+// mirrors the live-cycle behavior (getClanPowerAnalytics-style day resolution) so a member
+// who joined/left mid-cycle doesn't apply their current TH to days they weren't present.
+export async function getClanThByDate(
+  headers: Record<string, string>,
+  completedRounds: Array<{ id: number; endedAt: string | null }>,
+  leagueId: number,
+  clanId: number,
+  calculatedAt: string,
+): Promise<Map<string, number>> {
+  const lastRoundByDate = new Map<string, { id: number; endedAt: string }>();
+  for (const round of completedRounds) {
+    if (!round.endedAt) continue;
+    const dateStr = toDateStr(round.endedAt);
+    const prev = lastRoundByDate.get(dateStr);
+    if (!prev || round.endedAt > prev.endedAt) {
+      lastRoundByDate.set(dateStr, { id: round.id, endedAt: round.endedAt });
+    }
+  }
+  if (lastRoundByDate.size === 0) return new Map();
+
+  const leagueThByUser = await getLeagueThByUser(headers, calculatedAt, leagueId).catch(
+    () => new Map<number, LeagueThEntry>(),
+  );
+
+  const map = new Map<string, number>();
+  await mapWithConcurrency(
+    [...lastRoundByDate.entries()],
+    CLAN_TH_BY_DATE_CONCURRENCY,
+    async ([dateStr, round]) => {
+      const participants = await getRoundClanParticipants(headers, round.id, clanId).catch(
+        () => new Map<number, number>(),
+      );
+      if (participants.size === 0) return;
+      let total = 0;
+      for (const userId of participants.keys()) total += leagueThByUser.get(userId)?.th ?? 0;
+      if (total > 0) map.set(dateStr, total);
+    },
+  );
+  return map;
 }
 
 export async function getUserPowerChart(

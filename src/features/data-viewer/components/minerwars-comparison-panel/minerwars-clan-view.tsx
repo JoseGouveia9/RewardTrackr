@@ -17,6 +17,7 @@ interface MinerWarsClanViewProps {
   extraFiatRate: number | null;
   btcPrice: number | null;
   gmtPrice: number | null;
+  isLiveCycle: boolean;
 }
 
 export function MinerWarsClanView({
@@ -33,6 +34,7 @@ export function MinerWarsClanView({
   extraFiatRate,
   btcPrice,
   gmtPrice,
+  isLiveCycle,
 }: MinerWarsClanViewProps) {
   const { t } = useTranslation();
 
@@ -50,6 +52,7 @@ export function MinerWarsClanView({
         extraFiatRate={extraFiatRate}
         btcPrice={btcPrice}
         gmtPrice={gmtPrice}
+        isLiveCycle={isLiveCycle}
       />
     );
   }

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { decodeJwt } from "@/lib/http";
 import { LS_KEY_SYNC_TOKEN } from "@/lib/storage-keys";
 import { resolveCycleStatus, persistCycles } from "@/lib/minerwars/cache";
+import { warmClanTrendHistory } from "@/lib/minerwars/clan-trend";
 import {
   fetchAvailableCycles,
   fetchMinerWarsComparison,
@@ -174,6 +175,11 @@ export function useMinerWarsComparison({
 
     setLoading(true);
     const list = await reloadCycles().catch(() => []);
+
+    if (list.length > 0) {
+      const liveCycleId = list.find((c) => c.status === "in-progress")?.cycleId ?? null;
+      await warmClanTrendHistory(getToken(), list, liveCycleId).catch(() => {});
+    }
 
     // If pending cycles exist, sync minerwars rewards sheet and recompute statuses if new entries arrived
     if (list.some((c) => c.status === "pending")) {

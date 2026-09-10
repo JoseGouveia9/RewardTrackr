@@ -20,5 +20,7 @@ export const LS_KEY_MW_HISTORICAL_PRICES = "rt_mw_price_cache_v1";
 export const LS_KEY_MW_CLAN_PERF = "rt_mw_clan_perf_v1";
 // Resolved round participants.
 export const LS_KEY_MW_ROUND_PARTICIPANTS = "rt_mw_round_participants_v1";
+// Per-cycle clan trend chart point (blocksMined/btcMined/targetBtc), or a permanent skip marker.
+export const LS_KEY_MW_CLAN_TREND = "rt_mw_clan_trend_v1";
 // Simulate-tool inputs for live cycles.
 export const LS_KEY_MW_SIM_INPUTS = "rt_mw_sim_inputs_v1";

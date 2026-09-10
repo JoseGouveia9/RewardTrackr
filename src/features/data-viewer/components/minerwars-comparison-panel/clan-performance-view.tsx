@@ -167,6 +167,7 @@ interface ClanPerformanceViewProps {
   extraFiatRate: number | null;
   btcPrice: number | null;
   gmtPrice: number | null;
+  isLiveCycle: boolean;
 }
 
 export function ClanPerformanceView({
@@ -181,6 +182,7 @@ export function ClanPerformanceView({
   extraFiatRate,
   btcPrice,
   gmtPrice,
+  isLiveCycle,
 }: ClanPerformanceViewProps) {
   const { t } = useTranslation();
   const showGmt = currency === "GMT" && (btcPrice ?? 0) > 0 && (gmtPrice ?? 0) > 0;
@@ -221,18 +223,25 @@ export function ClanPerformanceView({
     return { text: fmtGmt(signedGmt), icon: <GmtIcon /> };
   };
 
-  const activeMembers = useMemo(() => data.members.filter((m) => !m.hasLeftClan), [data.members]);
+  // Members who've since left the clan still participated in rounds this cycle, so they
+  // stay visible here (tagged LEFT) instead of being dropped from the list.
+  const activeMembers = data.members;
   const membersBlocksMined = activeMembers.reduce((s, m) => s + m.blocksMined, 0);
   const boardBlocksMined = data.header.boardBlocksMined ?? 0;
   const blocksMined = boardBlocksMined > 0 ? boardBlocksMined : membersBlocksMined;
   const derivedBtcFromBlocks =
     btcPerBlockSats != null && btcPerBlockSats > 0 ? (blocksMined * btcPerBlockSats) / 1e8 : 0;
-  const boardBtcMined =
-    (data.header.boardBtcMined ?? 0) > 0
+  // The raw board snapshot's btcMined field lags/reads 0 mid-cycle, so for a LIVE cycle the
+  // recomputed value (clanMinerWarsBtc / derivedBtcFromBlocks) is preferred as the primary
+  // source, with the raw field only as a last-resort fallback. For a COMPLETED cycle the raw
+  // field is presumed final/settled, so it's kept as the primary source there.
+  const recomputedBtc =
+    (clanMinerWarsBtc ?? 0) > 0 ? (clanMinerWarsBtc ?? 0) : derivedBtcFromBlocks;
+  const boardBtcMined = isLiveCycle
+    ? recomputedBtc || (data.header.boardBtcMined ?? 0)
+    : (data.header.boardBtcMined ?? 0) > 0
       ? (data.header.boardBtcMined ?? 0)
-      : (clanMinerWarsBtc ?? 0) > 0
-        ? (clanMinerWarsBtc ?? 0)
-        : derivedBtcFromBlocks;
+      : recomputedBtc;
   const clanProgressPct = clanTargetBtc > 0 ? (boardBtcMined / clanTargetBtc) * 100 : null;
   const isBreakEven = clanProgressPct != null && clanProgressPct >= 100;
   const clanTargetBlocksTotal =
@@ -429,6 +438,11 @@ export function ClanPerformanceView({
                       <span className="clan-view-member-meta">
                         {m.th != null ? fmtTh(m.th) : "\u2014"}
                       </span>
+                      {m.hasLeftClan ? (
+                        <span className="clan-view-member-left-tag">
+                          {t("cycleTracker.leftClan")}
+                        </span>
+                      ) : null}
                     </div>
                   </div>
                 </div>

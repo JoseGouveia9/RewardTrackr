@@ -286,7 +286,14 @@
     "maintenanceShare": "{{pct}}% da recompensa do MinerWars",
     "net": "Líquido",
     "maintenanceEst": "Manutenção (est.)",
-    "netEst": "Líquido (est.)"
+    "netEst": "Líquido (est.)",
+    "breakEvenReached": "Ponto de equilíbrio atingido",
+    "blocksNeededCount_one": "{{count}} bloco necessário",
+    "blocksNeededCount_other": "{{count}} blocos necessários",
+    "newRecord": "Novo recorde!",
+    "beReachedRecordBlocks_one": "Ponto de equilíbrio atingido — {{count}} bloco para novo recorde",
+    "beReachedRecordBlocks_other": "Ponto de equilíbrio atingido — {{count}} blocos para novo recorde",
+    "leftClan": "Saiu"
   },
   "footer": {
     "about": "Sobre",

@@ -8,6 +8,12 @@ import type {
 } from "./minerwars-share-types";
 import { BtcIcon, FiatIcon, GmtIcon, UsdIcon } from "../icons/currency-icons";
 import { CrossedSwordsIcon, TrendingUpIcon, UserAvatarIcon } from "../icons";
+import {
+  readClanTrendPoints,
+  computeClanRecordPct,
+  type ClanTrendPoint,
+} from "@/lib/minerwars/clan-trend";
+import { MinerWarsLineTrend } from "./minerwars-line-trend";
 import appLogo from "/logo.webp";
 import "./minerwars-share-card.css";
 
@@ -442,8 +448,13 @@ export const MinerWarsShareCard = forwardRef<HTMLDivElement, CardProps>(function
         : (clan.header.progressBtc ?? memberBtcSum);
     const clanTargetBtc =
       cmp?.clanTargetSoloSats != null ? cmp.clanTargetSoloSats / 1e8 : (clan.header.targetBtc ?? 0);
-    const boardBtcMined =
-      clan.header.boardBtcMined != null && clan.header.boardBtcMined > 0
+    // For a LIVE cycle the raw board snapshot's btcMined lags/reads 0 mid-cycle, so the
+    // round-based reconstruction (clanBtcMined) is preferred, with the raw field only as a
+    // last-resort fallback. For a COMPLETED cycle the raw field is presumed final/settled.
+    const isLiveCycle = snapshot.selectedCycleStatus === "in-progress";
+    const boardBtcMined = isLiveCycle
+      ? clanBtcMined || (clan.header.boardBtcMined ?? 0)
+      : clan.header.boardBtcMined != null && clan.header.boardBtcMined > 0
         ? clan.header.boardBtcMined
         : clanBtcMined;
     const clanProgressPct = clanTargetBtc > 0 ? (boardBtcMined / clanTargetBtc) * 100 : null;
@@ -470,8 +481,45 @@ export const MinerWarsShareCard = forwardRef<HTMLDivElement, CardProps>(function
     const neededBlocks =
       clanTargetBlocksTotal != null ? Math.max(0, clanTargetBlocksTotal - blocksMined) : null;
     const isBreakEven = clanProgressPct != null && clanProgressPct >= 100;
+
+    const clanTrendPoints: ClanTrendPoint[] =
+      cmp != null && snapshot.selectedCycleId != null && snapshot.selectedCycleStatus != null
+        ? readClanTrendPoints(
+            snapshot.cycles ?? [],
+            snapshot.selectedCycleId,
+            snapshot.selectedCycleStatus,
+            {
+              blocksMined,
+              btcMined: boardBtcMined,
+              targetBtc: clanTargetBtc,
+            },
+          )
+        : [];
+    const trendBlocks = clanTrendPoints.map((point) => point.blocksMined);
+    const trendLabels = clanTrendPoints.map((point) => `#${point.cycleId}`);
+    const trendTargetPct = clanTrendPoints.map((point) =>
+      point.targetBtc > 0 ? (point.btcMined / point.targetBtc) * 100 : 0,
+    );
+    const recordPct = cmp ? computeClanRecordPct(clanTrendPoints, cmp.cycleId) : null;
+    const recordBlocksTotal =
+      recordPct != null && btcPerBlockSats != null && btcPerBlockSats > 0
+        ? Math.max(0, Math.ceil((clanTargetSoloSats * (recordPct / 100)) / btcPerBlockSats))
+        : null;
+    const blocksToRecord =
+      recordBlocksTotal != null ? Math.max(0, recordBlocksTotal - blocksMined) : null;
     const blocksNeededText = isBreakEven
-      ? t("cycleTracker.breakEvenReached")
+      ? recordPct != null &&
+        clanProgressPct != null &&
+        clanProgressPct < recordPct &&
+        blocksToRecord != null &&
+        blocksToRecord > 0
+        ? t("cycleTracker.beReachedRecordBlocks", {
+            count: blocksToRecord,
+            defaultValue: `${blocksToRecord} blocks to beat record`,
+          })
+        : recordPct != null
+          ? t("cycleTracker.newRecord", { defaultValue: "New record!" })
+          : t("cycleTracker.breakEvenReached")
       : neededBlocks != null
         ? t("cycleTracker.blocksNeededCount", { count: neededBlocks })
         : "—";
@@ -588,6 +636,24 @@ export const MinerWarsShareCard = forwardRef<HTMLDivElement, CardProps>(function
               </div>
             </div>
           </div>
+        </div>
+
+        <div className="mwpc-line-trend-row">
+          <MinerWarsLineTrend
+            title="Clan cycle trend (Blocks)"
+            values={trendBlocks}
+            labels={trendLabels}
+            suffix=" blocks"
+            light={light}
+          />
+          <MinerWarsLineTrend
+            title="% target reached"
+            values={trendTargetPct}
+            labels={trendLabels}
+            suffix="%"
+            pointSuffix="%"
+            light={light}
+          />
         </div>
 
         {showPerformance && (

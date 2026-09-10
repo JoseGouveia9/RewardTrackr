@@ -334,7 +334,11 @@
     "boostCost": "Boost cost",
     "breakEvenReached": "Break-even reached 🎉",
     "blocksNeededCount_one": "{{count}} block needed",
-    "blocksNeededCount_other": "{{count}} blocks needed"
+    "blocksNeededCount_other": "{{count}} blocks needed",
+    "newRecord": "New record!",
+    "beReachedRecordBlocks_one": "Break-even reached — {{count}} block to new record",
+    "beReachedRecordBlocks_other": "Break-even reached — {{count}} blocks to new record",
+    "leftClan": "Left"
   },
   "footer": {
     "about": "About",
@@ -365,9 +369,9 @@
   },
   "privacy": {
     "title": "Privacy Policy",
-    "lastUpdated": "Last updated: June 2026",
+    "lastUpdated": "Last updated: August 2026",
     "noCollectionTitle": "No data collection",
-    "noCollectionP1": "RewardTrackr does not collect, store, or sell your reward data or personal account data for analytics or profiling purposes. There is no account system, no analytics, and no telemetry. Your reward records and preferences stay in your browser. Limited technical data is processed solely for operational purposes such as rate limiting and API functionality, as described below.",
+    "noCollectionP1": "RewardTrackr does not collect, store, or sell your reward data or personal account data for analytics or profiling purposes. There is no account system and no behavioural analytics. Your reward records and preferences stay in your browser (or on your device, on mobile). Limited technical data is processed solely for operational purposes such as rate limiting, an anonymous user counter, crash/performance diagnostics, and API functionality, as described below.",
     "browserStorageTitle": "What is stored in your browser",
     "browserStorageP1": "All data RewardTrackr uses is stored locally in your browser.",
     "sessionStorageLabel": "Session storage (temporary):",
@@ -387,6 +391,7 @@
     "externalItem2": "GoMining API: fetches your reward records using your access token. Subject to GoMining's own privacy policy.",
     "externalItem3": "CoinGecko API: retrieves historical BTC prices for fiat value enrichment. No personal data is sent; only date ranges are queried.",
     "externalItem4": "Exchange rate APIs: used to retrieve fiat exchange rates for currency conversion. No personal data is sent; only currency codes are queried.",
+    "externalItem5": "Sentry (crash & performance monitoring, web and mobile app): if the app crashes or has a performance issue, diagnostic data (such as crash logs, device/browser information, and performance metrics) is sent to Sentry. On the mobile app, these reports are tagged with your GoMining account ID so account-specific issues can be investigated; on the web app, no user identifier is attached. This data is used solely to fix bugs and is never used for advertising, profiling, or shared with data brokers.",
     "sharedRecordsTitle": "Shared records",
     "sharedRecordsP1": "If you choose to use the share feature, RewardTrackr will create a JSON snapshot containing only the data you explicitly select and publish it as a JSON file in a public GitHub repository. A unique shareable link is then generated, which can be used to view that snapshot inside the RewardTrackr app.",
     "sharedRecordsP2": "Anyone with the share link can access the shared snapshot. Because the underlying repository is public, shared snapshots may also be discoverable by others or indexed by third parties.",
