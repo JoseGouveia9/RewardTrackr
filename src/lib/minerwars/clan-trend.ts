@@ -1,4 +1,5 @@
 import { buildApiHeaders } from "@/lib/http";
+import { mapWithConcurrency } from "@/lib/concurrency";
 import { getCycleStartTuesdayUTC, toDateStr, type CycleInfo } from "./types";
 import {
   getAllRoundsInCycle,
@@ -55,15 +56,16 @@ export async function warmClanTrendHistory(
   const headers = buildApiHeaders(token);
   const epochs = await fetchDifficultyEpochs().catch(() => []);
 
-  for (let i = 0; i < uncached.length; i++) {
-    const cycle = uncached[i];
+  // Independent per-cycle network I/O, bounded so as not to hammer the API — matches
+  // testing/minerwars-clan-target.mjs's step [8] concurrency of 2.
+  await mapWithConcurrency(uncached, 2, async (cycle) => {
     try {
       const rounds = await getCycleRounds(headers, cycle.cycleId);
       const leagueId = rounds.rounds[0]?.leagueId ?? null;
       const clanId = rounds.rounds[0]?.clanId ?? null;
       if (leagueId == null || clanId == null) {
         persistClanTrendEntry(cycle.cycleId, { kind: "skip" });
-        continue;
+        return;
       }
 
       const calculatedAt = getCycleStartTuesdayUTC(cycle.cycleEnd).slice(0, 10);
@@ -75,7 +77,7 @@ export async function warmClanTrendHistory(
       );
       if (!snapshot) {
         persistClanTrendEntry(cycle.cycleId, { kind: "skip" });
-        continue;
+        return;
       }
 
       const blocksMined = snapshot.blocksMined ?? 0;
@@ -125,7 +127,7 @@ export async function warmClanTrendHistory(
       // Not persisted as "skip" so the next warm pass retries this transient failure
       // instead of remembering a bogus permanent exclusion.
     }
-  }
+  });
 }
 
 export function readClanTrendPoints(
