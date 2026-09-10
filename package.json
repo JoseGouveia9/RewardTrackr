@@ -18,6 +18,7 @@
     "@tailwindcss/vite": "^4.2.2",
     "exceljs": "^4.4.0",
     "framer-motion": "^12.38.0",
+    "html-to-image": "^1.11.13",
     "i18next": "^26.0.8",
     "i18next-browser-languagedetector": "^8.2.1",
     "i18next-http-backend": "^3.0.6",

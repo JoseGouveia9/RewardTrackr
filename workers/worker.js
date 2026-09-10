@@ -1,6 +1,7 @@
 import { handleAnnouncementRoute } from "./routes/announcement.js";
 import { handleOgRoute } from "./routes/og.js";
 import { handleDefaultProxy, handleSeProxy, handleBonusMinerProxy } from "./routes/proxy.js";
+import { fetchAndStoreDailyPrices, handlePricesRoute } from "./routes/prices.js";
 import { handleRateLimitRoutes } from "./routes/rate-limit.js";
 import { handleShareRoutes } from "./routes/share.js";
 import { handleStatsRoute } from "./routes/stats.js";
@@ -50,6 +51,9 @@ export default {
     const statsResponse = await handleStatsRoute({ url, request, jsonResponse, env });
     if (statsResponse) return statsResponse;
 
+    const pricesResponse = await handlePricesRoute({ url, jsonResponse, env });
+    if (pricesResponse) return pricesResponse;
+
     const rateLimitResponse = await handleRateLimitRoutes({
       url,
       request,
@@ -88,5 +92,14 @@ export default {
       request,
       corsHeaders: CORS_HEADERS,
     });
+  },
+
+  // Cron Trigger (see [triggers] in wrangler.toml) — runs daily at 00:00 UTC.
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(
+      fetchAndStoreDailyPrices(env).catch((err) => {
+        console.error("[scheduled] failed to fetch/store daily prices:", err);
+      }),
+    );
   },
 };

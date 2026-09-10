@@ -22,8 +22,25 @@ id = "be4396d2374d4fbb9ae1f782179f9fe5"
 binding = "STATS"
 id = "38cbf75598354271b35cecd1fba305cb"
 
-# Secret required for the /share endpoint: set via CLI, never commit it:
-# wrangler secret put GITHUB_TOKEN
+[[kv_namespaces]]
+binding = "PRICE_HISTORY"
+id = "deb1408fbb894b65b1d2ce02fbe2be0e"
+
+# Cron Trigger for the scheduled() handler in workers/worker.js — fetches and
+# stores daily BTC/GMT prices every day at 00:00 UTC.
+[triggers]
+crons = ["0 0 * * *"]
+
+[vars]
+# Public OAuth client_id (dynamically registered, no secret — see
+# workers/lib/gomining-mcp.js) used to refresh the GoMining MCP access token.
+# The refresh token itself lives in the PRICE_HISTORY KV under "gomining:oauth"
+# (rotates on every use, so it can't be a static `wrangler secret`).
+GOMINING_MCP_CLIENT_ID = "21fff519-9860-4c89-b0a9-12e55fb54e49"
+
+# Secrets required — set via CLI, never commit them:
+# wrangler secret put GITHUB_TOKEN   (for the /share endpoint)
+# wrangler secret put CMC_API_KEY     (CoinMarketCap fallback for daily BTC/GMT prices)
 
 [env.dev]
 # Inherit top-level settings and deploy with:

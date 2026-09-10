@@ -3,6 +3,7 @@ import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
 import { Routes, Route, Navigate, Link, useNavigate, useLocation } from "react-router";
 import { AppNotice } from "@/components/app-notice/app-notice";
 import { loadAllCacheEntries } from "@/lib/reward-cache";
+import { ALL_REWARD_KEYS } from "@/config/reward-configs";
 import { AuthPanel, HeaderUserMenu, useAuth } from "@/features/auth";
 import { SupportButton } from "@/components/support-button/support-button";
 import { SheetSelector, ExportOptions, useExport, useExportConfig } from "@/features/export";
@@ -11,6 +12,7 @@ import { AnnouncementBanner } from "@/components/announcement-banner/announcemen
 import { ReferralButton } from "@/components/referral-button/referral-button";
 import { DataViewerButton, DataViewer } from "@/features/data-viewer";
 import { ShareModal, CommunityPage } from "@/features/sharing";
+import { FetchFailedModal } from "@/components/fetch-failed-modal/fetch-failed-modal";
 import { ErrorBoundary } from "@/components/error-boundary/error-boundary";
 import { useTheme } from "./theme-context";
 import { useTranslation } from "react-i18next";
@@ -21,7 +23,7 @@ import { SharedView } from "./routes/shared-view";
 import { AboutPage } from "./routes/about-page";
 import { PrivacyPage } from "./routes/privacy-page";
 import { TermsPage } from "./routes/terms-page";
-import { LS_KEY_REWARD_PREFIX } from "@/lib/storage-keys";
+import { LS_KEY_MW_LIVE_ENABLED, LS_KEY_REWARD_PREFIX } from "@/lib/storage-keys";
 import { LanguagePicker } from "@/components/language-picker/language-picker";
 import logo from "/logo.webp";
 import "./app.css";
@@ -77,6 +79,14 @@ function App() {
   const [message, setMessage] = useState<string>("");
   const [cache, setCache] = useState<CacheState>(() => loadAllCacheEntries());
   const [cacheVersion, setCacheVersion] = useState(0);
+  const [liveMinerWarsEnabled, setLiveMinerWarsEnabled] = useState<boolean>(() => {
+    try {
+      const raw = localStorage.getItem(LS_KEY_MW_LIVE_ENABLED);
+      return raw == null ? true : raw === "1";
+    } catch {
+      return true;
+    }
+  });
   const [referralOpen, setReferralOpen] = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [languagePickerOpen, setLanguagePickerOpen] = useState(false);
@@ -87,7 +97,6 @@ function App() {
 
   const {
     selectedKeys,
-    selectedTxFromTypes,
     includeWalletFiat,
     includeExcelFiat,
     excelFiatCurrency,
@@ -95,7 +104,6 @@ function App() {
     walletSheetsSelected,
     toggleGroup,
     toggleAll,
-    toggleTxType,
     setIncludeWalletFiat,
     setIncludeExcelFiat,
     setFiatCurrency,
@@ -112,6 +120,14 @@ function App() {
 
   useAccountSwitch({ user, resetConfig, setCache, setCacheVersion, setMessage });
 
+  useEffect(() => {
+    try {
+      localStorage.setItem(LS_KEY_MW_LIVE_ENABLED, liveMinerWarsEnabled ? "1" : "0");
+    } catch {
+      // ignore storage failures
+    }
+  }, [liveMinerWarsEnabled]);
+
   const handleCacheUpdate = useCallback((nextCache: CacheState) => {
     setCache(nextCache);
     setCacheVersion((v) => v + 1);
@@ -122,6 +138,7 @@ function App() {
     fetchingKeys,
     minerWarsPrefetching,
     handleExport,
+    handleDownloadCachedExport,
     refreshKeys,
     handleClearCache,
   } = useExport({
@@ -131,7 +148,7 @@ function App() {
     includeWalletFiat,
     includeExcelFiat,
     excelFiatCurrency,
-    selectedTxFromTypes,
+    liveMinerWarsEnabled,
     onMessage: setMessage,
     onCacheUpdate: handleCacheUpdate,
     onStarted: useCallback(() => void navigate("/records"), [navigate]),
@@ -161,7 +178,10 @@ function App() {
     [selectedKeys, cache],
   );
 
-  const hasCachedSheets = useMemo(() => Object.values(cache).some(Boolean), [cache]);
+  const hasCachedSheets = useMemo(
+    () => ALL_REWARD_KEYS.some((key) => cache[key] !== null),
+    [cache],
+  );
 
   const hasNewRecords = useMemo(() => {
     const purchasesNew =
@@ -194,22 +214,164 @@ function App() {
     setCacheVersion((v) => v + 1);
   }, []);
 
+  const handleRecordsRefresh = useCallback(async (): Promise<void> => {
+    const keys = ALL_REWARD_KEYS.filter((key) => key !== "minerwars" && cache[key] !== null);
+    if (keys.length === 0) return;
+    await refreshKeys(keys);
+  }, [cache, refreshKeys]);
+
   const isRecords = location.pathname === "/records";
   const isSharedView = location.pathname.startsWith("/view/");
   const isCommunity = location.pathname === "/community" || isSharedView;
+  const primaryBuildCtaLabel = hasCachedSheets
+    ? t("app.saveSettings", { defaultValue: "Save Settings" })
+    : t("app.buildReport");
+  const defaultSignedInPath = hasCachedSheets ? "/records" : "/build";
 
   const handleHeroTitleClick = useCallback(() => {
-    void navigate("/");
-  }, [navigate]);
+    void navigate(user ? defaultSignedInPath : "/");
+  }, [defaultSignedInPath, navigate, user]);
 
   const handleHeroTitleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLDivElement>) => {
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
-        void navigate("/");
+        void navigate(user ? defaultSignedInPath : "/");
       }
     },
-    [navigate],
+    [defaultSignedInPath, navigate, user],
+  );
+
+  const buildScreen = (
+    <ErrorBoundary>
+      <motion.section className="panel-glass" layout transition={LAYOUT_SPRING}>
+        <div className="actions-header">
+          <h3>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+              className="section-icon"
+            >
+              <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18" />
+            </svg>
+            {t("app.selectSheets")}
+          </h3>
+          {hasCachedSheets && (
+            <button className="btn-danger btn-danger-small" onClick={handleClearCache}>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M3 6h18" />
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+              </svg>
+              {t("app.clearCache")}
+            </button>
+          )}
+        </div>
+        <SheetSelector
+          cache={cache}
+          onToggleGroup={toggleGroup}
+          onToggleAll={toggleAll}
+          isGroupSelected={isGroupSelected}
+        />
+      </motion.section>
+
+      <ExportOptions
+        selectedKeys={selectedKeys}
+        walletSheetsSelected={walletSheetsSelected}
+        liveMinerWarsEnabled={liveMinerWarsEnabled}
+        includeWalletFiat={includeWalletFiat}
+        onToggleLiveMinerWars={setLiveMinerWarsEnabled}
+        onToggleWalletFiat={setIncludeWalletFiat}
+        includeExcelFiat={includeExcelFiat}
+        onToggleExcelFiat={setIncludeExcelFiat}
+        excelFiatCurrency={excelFiatCurrency}
+        onChangeFiatCurrency={setFiatCurrency}
+      />
+
+      <motion.section className="export-section panel-glass" layout transition={LAYOUT_SPRING}>
+        <div className="export-meta-row">
+          {cachedCount > 0 && cachedCount < selectedKeys.length && (
+            <p className="subtle">
+              {t("app.sheetsToFetch", {
+                fetch: selectedKeys.length - cachedCount,
+                stored: cachedCount,
+              })}
+            </p>
+          )}
+          {cachedCount === selectedKeys.length && selectedKeys.length > 0 && (
+            <p className="subtle">{t("app.allSheetsStored")}</p>
+          )}
+          <p className="export-limit-notice">{t("app.maxExportsPerDay", { max: 3 })}</p>
+        </div>
+        <div className="export-button-wrapper">
+          <button
+            className="btn-primary btn-primary-large"
+            disabled={loading || selectedKeys.length === 0}
+            onClick={() => {
+              void handleExport();
+            }}
+          >
+            {loading ? (
+              t("app.processing")
+            ) : (
+              <>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                  className="btn-icon"
+                >
+                  <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+                  <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+                  <path d="M8 18v-2" />
+                  <path d="M12 18v-4" />
+                  <path d="M16 18v-6" />
+                </svg>
+                {primaryBuildCtaLabel}
+              </>
+            )}
+          </button>
+        </div>
+      </motion.section>
+
+      <AnimatePresence mode="popLayout">
+        {message ? (
+          <motion.div layout transition={LAYOUT_SPRING}>
+            <MessageBanner
+              key={`main-message-${message.replace(/\b\d+s\b/g, "").replace(/\d+\/\d+/g, "")}`}
+              message={message}
+              onClose={() => setMessage("")}
+            />
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+    </ErrorBoundary>
   );
 
   return (
@@ -301,7 +463,9 @@ function App() {
               <button
                 type="button"
                 className={`community-button${isCommunity ? " community-button--active" : ""}`}
-                onClick={() => void navigate(isCommunity ? "/" : "/community")}
+                onClick={() =>
+                  void navigate(isCommunity ? (user ? defaultSignedInPath : "/") : "/community")
+                }
                 aria-label={t("app.community")}
               >
                 <svg
@@ -334,7 +498,7 @@ function App() {
                   >
                     <DataViewerButton
                       active={isRecords}
-                      onClick={() => void navigate(isRecords ? "/" : "/records")}
+                      onClick={() => void navigate(isRecords ? "/build" : "/records")}
                       hasNew={hasNewRecords}
                     />
                   </motion.div>
@@ -412,7 +576,9 @@ function App() {
           <Routes>
             <Route
               path="/community"
-              element={<CommunityPage onClose={() => void navigate("/")} />}
+              element={
+                <CommunityPage onClose={() => void navigate(user ? defaultSignedInPath : "/")} />
+              }
             />
 
             <Route
@@ -433,18 +599,24 @@ function App() {
                     cacheVersion={cacheVersion}
                     minerWarsPrefetching={minerWarsPrefetching}
                     onRefreshKeys={refreshKeys}
+                    onRefreshRecords={handleRecordsRefresh}
+                    onDownloadRecords={handleDownloadCachedExport}
+                    onOpenBuildSettings={() => void navigate("/build")}
                     onTabSeen={handleTabSeen}
                     sharedData={null}
-                    title={t("app.records")}
+                    title={null}
                     banner={undefined}
                     onShare={user && hasCachedSheets ? () => setShareModalOpen(true) : undefined}
                     shareDisabled={loading}
+                    showBackButton={false}
                   />
                 </>
               }
             />
 
             <Route path="/view/:id" element={<SharedView />} />
+
+            <Route path="/build" element={!user ? <Navigate to="/" replace /> : buildScreen} />
 
             <Route
               path="/"
@@ -469,146 +641,10 @@ function App() {
                       ) : null}
                     </AnimatePresence>
                   </>
+                ) : hasCachedSheets ? (
+                  <Navigate to="/records" replace />
                 ) : (
-                  <ErrorBoundary>
-                    <motion.section className="panel-glass" layout transition={LAYOUT_SPRING}>
-                      <div className="actions-header">
-                        <h3>
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            aria-hidden="true"
-                            className="section-icon"
-                          >
-                            <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18" />
-                          </svg>
-                          {t("app.selectSheets")}
-                        </h3>
-                        {hasCachedSheets && (
-                          <button
-                            className="btn-danger btn-danger-small"
-                            onClick={handleClearCache}
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="13"
-                              height="13"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              aria-hidden="true"
-                            >
-                              <path d="M3 6h18" />
-                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
-                              <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                            </svg>
-                            {t("app.clearCache")}
-                          </button>
-                        )}
-                      </div>
-                      <SheetSelector
-                        cache={cache}
-                        onToggleGroup={toggleGroup}
-                        onToggleAll={toggleAll}
-                        isGroupSelected={isGroupSelected}
-                      />
-                    </motion.section>
-
-                    <ExportOptions
-                      selectedKeys={selectedKeys}
-                      walletSheetsSelected={walletSheetsSelected}
-                      selectedTxFromTypes={selectedTxFromTypes}
-                      onToggleTxType={toggleTxType}
-                      includeWalletFiat={includeWalletFiat}
-                      onToggleWalletFiat={setIncludeWalletFiat}
-                      includeExcelFiat={includeExcelFiat}
-                      onToggleExcelFiat={setIncludeExcelFiat}
-                      excelFiatCurrency={excelFiatCurrency}
-                      onChangeFiatCurrency={setFiatCurrency}
-                    />
-
-                    <motion.section
-                      className="export-section panel-glass"
-                      layout
-                      transition={LAYOUT_SPRING}
-                    >
-                      <div className="export-meta-row">
-                        {cachedCount > 0 && cachedCount < selectedKeys.length && (
-                          <p className="subtle">
-                            {t("app.sheetsToFetch", {
-                              fetch: selectedKeys.length - cachedCount,
-                              stored: cachedCount,
-                            })}
-                          </p>
-                        )}
-                        {cachedCount === selectedKeys.length && selectedKeys.length > 0 && (
-                          <p className="subtle">{t("app.allSheetsStored")}</p>
-                        )}
-                        <p className="export-limit-notice">
-                          {t("app.maxExportsPerDay", { max: 3 })}
-                        </p>
-                      </div>
-                      <div className="export-button-wrapper">
-                        <button
-                          className="btn-primary btn-primary-large"
-                          disabled={loading || selectedKeys.length === 0}
-                          onClick={() => {
-                            void handleExport();
-                          }}
-                        >
-                          {loading ? (
-                            t("app.processing")
-                          ) : (
-                            <>
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="16"
-                                height="16"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                aria-hidden="true"
-                                className="btn-icon"
-                              >
-                                <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
-                                <path d="M14 2v4a2 2 0 0 0 2 2h4" />
-                                <path d="M8 18v-2" />
-                                <path d="M12 18v-4" />
-                                <path d="M16 18v-6" />
-                              </svg>
-                              {t("app.buildReport")}
-                            </>
-                          )}
-                        </button>
-                      </div>
-                    </motion.section>
-
-                    <AnimatePresence mode="popLayout">
-                      {message ? (
-                        <motion.div layout transition={LAYOUT_SPRING}>
-                          {/* Key strips changing numbers (countdowns, "X of Y") to prevent remount on each tick */}
-                          <MessageBanner
-                            key={`main-message-${message.replace(/\b\d+s\b/g, "").replace(/\d+\/\d+/g, "")}`}
-                            message={message}
-                            onClose={() => setMessage("")}
-                          />
-                        </motion.div>
-                      ) : null}
-                    </AnimatePresence>
-                  </ErrorBoundary>
+                  <Navigate to="/build" replace />
                 )
               }
             />
@@ -658,6 +694,7 @@ function App() {
       </AnimatePresence>
 
       <LanguagePicker open={languagePickerOpen} onClose={() => setLanguagePickerOpen(false)} />
+      <FetchFailedModal />
     </div>
   );
 }

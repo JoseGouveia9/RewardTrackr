@@ -2,11 +2,18 @@
 import { useTranslation } from "react-i18next";
 import * as Sentry from "@sentry/react";
 import { decodeJwt } from "@/lib/http";
-import { ALL_REWARD_KEYS } from "@/config/reward-configs";
+import { ALL_REWARD_KEYS, REWARD_CONFIG_MAP } from "@/config/reward-configs";
 import { clearAllCacheEntries } from "@/lib/reward-cache";
 import { executeExportFlow, refreshCacheKeys } from "../utils/export-flow";
 import { invalidateMinerWarsCache } from "@/lib/minerwars/comparison";
-import type { CacheState, ExtraFiatCurrency, RewardKey } from "@/types/rewards";
+import { buildExcelFromSheets } from "../utils/excel-builder";
+import type {
+  CacheState,
+  ExtraFiatCurrency,
+  FetchRewardsOptions,
+  RewardKey,
+  RewardSheetPayload,
+} from "@/types/rewards";
 
 interface UseExportParams {
   storedToken: string;
@@ -15,7 +22,7 @@ interface UseExportParams {
   includeWalletFiat: boolean;
   includeExcelFiat: boolean;
   excelFiatCurrency: ExtraFiatCurrency;
-  selectedTxFromTypes: string[];
+  liveMinerWarsEnabled: boolean;
   onMessage: (msg: string) => void;
   onCacheUpdate: (cache: CacheState) => void;
   onStarted?: () => void;
@@ -26,8 +33,23 @@ interface UseExportReturn {
   fetchingKeys: Set<RewardKey>;
   minerWarsPrefetching: boolean;
   handleExport: () => Promise<void>;
+  handleDownloadCachedExport: () => Promise<void>;
   refreshKeys: (keys: RewardKey[]) => Promise<void>;
   handleClearCache: () => void;
+}
+
+function triggerFileDownload(buffer: ArrayBuffer, fileName: string): void {
+  const blob = new Blob([buffer], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
 }
 
 export function useExport({
@@ -37,7 +59,7 @@ export function useExport({
   includeWalletFiat,
   includeExcelFiat,
   excelFiatCurrency,
-  selectedTxFromTypes,
+  liveMinerWarsEnabled,
   onMessage,
   onCacheUpdate,
   onStarted,
@@ -81,7 +103,7 @@ export function useExport({
         includeWalletFiat,
         includeExcelFiat,
         excelFiatCurrency,
-        txFromTypeFilter: selectedKeys.includes("transactions") ? selectedTxFromTypes : undefined,
+        disableMinerWarsLiveFetch: !liveMinerWarsEnabled,
         onMessage,
         onStarted,
         onCacheUpdate: (newCache) => {
@@ -97,7 +119,13 @@ export function useExport({
         },
         onBeforeDownload: undefined,
         onMinerWarsPrefetchingChange: setMinerWarsPrefetching,
+        downloadExcel: false,
       });
+      // Ensure a final same-tab cache bump after MinerWars prefetch completes,
+      // so the cycle tracker re-reads local caches without a full page refresh.
+      const latestCache = { ...latestCacheRef.current };
+      latestCacheRef.current = latestCache;
+      onCacheUpdate(latestCache);
       Sentry.logger.info("Export completed", { sheets: selectedKeys.length });
       onMessage(successMessage);
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -129,6 +157,7 @@ export function useExport({
             : t("export.failed", { details: msg }),
       );
       if (isAuth) window.dispatchEvent(new CustomEvent("rt:session-expired"));
+      else window.dispatchEvent(new CustomEvent("rt:fetch-failed"));
     } finally {
       setLoading(false);
       setFetchingKeys(new Set());
@@ -140,7 +169,7 @@ export function useExport({
     includeWalletFiat,
     includeExcelFiat,
     excelFiatCurrency,
-    selectedTxFromTypes,
+    liveMinerWarsEnabled,
     onMessage,
     onCacheUpdate,
     onStarted,
@@ -190,11 +219,61 @@ export function useExport({
     [storedToken, cache, includeWalletFiat, excelFiatCurrency, onMessage, onCacheUpdate, t],
   );
 
+  const handleDownloadCachedExport = useCallback(async (): Promise<void> => {
+    const cachedKeys = selectedKeys.filter((key) => {
+      const entry = cache[key];
+      return Boolean(entry && entry.records.length > 0);
+    });
+
+    if (cachedKeys.length === 0) {
+      onMessage("No cached sheets available. Run a build once, then download from Records.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      onMessage(t("export.buildingExcel"));
+
+      const sheetsPayload: RewardSheetPayload[] = cachedKeys.map((key) => {
+        const entry = cache[key]!;
+        const config = REWARD_CONFIG_MAP[key];
+        return {
+          key,
+          sheetName: entry.sheetName,
+          sheetType: config?.sheetType ?? "standard",
+          records: entry.records as RewardSheetPayload["records"],
+          totalCount: entry.totalCount,
+        };
+      });
+
+      const options: FetchRewardsOptions = {
+        walletTx: { includeFiat: includeWalletFiat },
+        excel: { includeFiat: includeExcelFiat, fiatCurrency: excelFiatCurrency },
+      };
+
+      const buffer = await buildExcelFromSheets(sheetsPayload, options);
+      triggerFileDownload(buffer, `rewards-${new Date().toISOString().slice(0, 10)}.xlsx`);
+
+      onMessage(
+        t("export.downloaded", {
+          details: t("export.partFromCache", { count: cachedKeys.length }),
+        }),
+      );
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : t("export.failedGeneric");
+      onMessage(t("export.failed", { details: msg }));
+    } finally {
+      setLoading(false);
+    }
+  }, [cache, excelFiatCurrency, includeExcelFiat, includeWalletFiat, onMessage, selectedKeys, t]);
+
   return {
     loading,
     fetchingKeys,
     minerWarsPrefetching,
     handleExport,
+    handleDownloadCachedExport,
     refreshKeys,
     handleClearCache,
   };
