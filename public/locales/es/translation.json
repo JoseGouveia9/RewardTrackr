@@ -127,6 +127,9 @@
   "export": {
     "walletPricing": "Precios de billetera",
     "walletPricingDesc": "Solo aplica a Bounties, Depósitos, Retiros y Transacciones. La API de GoMining no devuelve precios en moneda fiat para estas hojas, por lo que los enriquecemos con CoinGecko durante la exportación.",
+    "liveMinerWars": "MinerWars en vivo",
+    "liveMinerWarsToggleLabel": "Obtener ciclo en vivo",
+    "liveMinerWarsDesc": "Cuando está activado, una compilación también obtiene el ciclo actual de MinerWars en curso. Cuando está desactivado, solo se rellenan los ciclos completados que ya están en la hoja de MinerWars.",
     "includeFiatPricing": "Incluir precios en moneda fiat (USD). La moneda fiat adicional se configura abajo.",
     "rateLimitWarning": "Esto puede tardar un poco. El plan gratuito de CoinGecko tiene límites de tasa, y cada límite alcanzado activa un enfriamiento de 60 segundos.",
     "extraFiatConversion": "Conversión de moneda fiat adicional",
@@ -239,7 +242,10 @@
     "upgradePower": "Mejora - Potencia"
   },
   "cycleTracker": {
-    "computing": "Calculando comparación del ciclo…",
+    "computing": "Sincronizando el MinerWars Cycle Tracker…",
+    "computingIndividual": "Sincronizando MinerWars individual…",
+    "computingClan": "Sincronizando rendimiento del clan…",
+    "computingHistory": "Sincronizando ciclos anteriores…",
     "cycle": "Ciclo {{id}}",
     "statusLive": "En curso",
     "statusPending": "Pend.",

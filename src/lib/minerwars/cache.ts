@@ -1,10 +1,38 @@
-import { LS_KEY_MW_COMPARISON, LS_KEY_MW_CYCLES, LS_KEY_REWARD_PREFIX } from "@/lib/storage-keys";
+import {
+  LS_KEY_MW_CLAN_PERF,
+  LS_KEY_MW_COMPARISON,
+  LS_KEY_MW_CYCLES,
+  LS_KEY_MW_HISTORICAL_PRICES,
+  LS_KEY_MW_ROUND_PARTICIPANTS,
+  LS_KEY_REWARD_PREFIX,
+} from "@/lib/storage-keys";
 import { type CycleInfo, type MinerWarsComparison } from "./types";
+import type { ClanPerformance } from "./clan-types";
 
-// Bump to force recomputation when the persisted comparison shape changes.
-export const MW_COMPARISON_SCHEMA_VERSION = 3;
+export const MW_COMPARISON_SCHEMA_VERSION = 4;
+export const MW_CLAN_PERF_SCHEMA_VERSION = 1;
 
 export type CyclesStoreEntry = { data: CycleInfo[]; ts: number };
+
+function parseObjectStore(raw: string | null): Record<string, unknown> {
+  if (!raw) return {};
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+      ? (parsed as Record<string, unknown>)
+      : {};
+  } catch {
+    return {};
+  }
+}
+
+function persistSingleEntryStore(key: string, entryKey: string, value: unknown): void {
+  try {
+    localStorage.setItem(key, JSON.stringify({ [entryKey]: value }));
+  } catch {
+    // ignore quota errors
+  }
+}
 
 export function loadPersistedCycles(): CyclesStoreEntry | null {
   try {
@@ -26,6 +54,40 @@ export function persistCycles(data: CycleInfo[]): void {
   }
 }
 
+export type HistoricalPriceEntry = { btcUsd: number; gmtUsd: number };
+
+export function loadHistoricalPrices(dates: string[]): Map<string, HistoricalPriceEntry> {
+  const result = new Map<string, HistoricalPriceEntry>();
+  try {
+    const raw = localStorage.getItem(LS_KEY_MW_HISTORICAL_PRICES);
+    if (!raw) return result;
+    const store = JSON.parse(raw) as Record<string, HistoricalPriceEntry>;
+    for (const date of dates) {
+      const entry = store[date];
+      if (entry && typeof entry.btcUsd === "number" && typeof entry.gmtUsd === "number") {
+        result.set(date, entry);
+      }
+    }
+  } catch {
+    /* ignore */
+  }
+  return result;
+}
+
+export function persistHistoricalPrices(prices: Map<string, HistoricalPriceEntry>): void {
+  if (prices.size === 0) return;
+  try {
+    const raw = localStorage.getItem(LS_KEY_MW_HISTORICAL_PRICES);
+    const store = raw ? (JSON.parse(raw) as Record<string, HistoricalPriceEntry>) : {};
+    for (const [date, price] of prices) {
+      store[date] = price;
+    }
+    localStorage.setItem(LS_KEY_MW_HISTORICAL_PRICES, JSON.stringify(store));
+  } catch {
+    /* ignore */
+  }
+}
+
 export function loadPersistedComparison(
   cycleId: number,
 ): { data: MinerWarsComparison; ts: number } | null {
@@ -39,9 +101,7 @@ export function loadPersistedComparison(
       | undefined;
     if (!entry || typeof entry !== "object") return null;
 
-    // New format: { data, ts }
     if ("data" in entry && "ts" in entry && typeof (entry as { ts?: unknown }).ts === "number") {
-      // Invalidate entries saved before schema version 2 (no historical price data)
       const v = (entry as { v?: unknown }).v;
       if ((v as number | undefined) !== MW_COMPARISON_SCHEMA_VERSION) return null;
       return {
@@ -50,7 +110,6 @@ export function loadPersistedComparison(
       };
     }
 
-    // Legacy format migration: entry was the comparison object itself.
     const legacy = entry as MinerWarsComparison;
     if (typeof legacy.cycleId === "number" && typeof legacy.cycleStart === "string") {
       const migrated = { data: legacy, ts: Date.now() };
@@ -66,38 +125,42 @@ export function loadPersistedComparison(
 }
 
 export function persistComparison(data: MinerWarsComparison): void {
+  const cycleKey = String(data.cycleId);
+  const entry = { data, ts: Date.now(), v: MW_COMPARISON_SCHEMA_VERSION };
   try {
-    const raw = localStorage.getItem(LS_KEY_MW_COMPARISON);
-    const store: Record<string, unknown> = raw ? (JSON.parse(raw) as Record<string, unknown>) : {};
-    store[String(data.cycleId)] = { data, ts: Date.now(), v: MW_COMPARISON_SCHEMA_VERSION };
+    const store = parseObjectStore(localStorage.getItem(LS_KEY_MW_COMPARISON));
+    store[cycleKey] = entry;
     localStorage.setItem(LS_KEY_MW_COMPARISON, JSON.stringify(store));
   } catch {
-    // ignore quota errors
+    persistSingleEntryStore(LS_KEY_MW_COMPARISON, cycleKey, entry);
   }
 }
 
-export function getActualIncomeFromBuildCache(paymentDayStr: string): number | null {
+function loadRewardCacheRecords(key: string): Array<Record<string, unknown>> | null {
   try {
-    const raw = localStorage.getItem(LS_KEY_REWARD_PREFIX + "minerwars");
+    const raw = localStorage.getItem(LS_KEY_REWARD_PREFIX + key);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as { records?: Array<Record<string, unknown>> };
-    if (!Array.isArray(parsed.records)) return null;
-    const matches = parsed.records.filter(
-      (r) =>
-        typeof r.createdAt === "string" && (r.createdAt as string).slice(0, 10) === paymentDayStr,
-    );
-    if (matches.length === 0) return null;
-    let total = 0;
-    for (const r of matches) total += Number(r.poolReward ?? 0);
-    return total;
+    return Array.isArray(parsed.records) ? parsed.records : null;
   } catch {
     return null;
   }
 }
 
-// Reads enriched payment data from the build cache for a completed cycle.
-// Uses stored BTC/GMT values to derive a historical price ratio (rule of three):
-// if poolReward BTC = poolRewardGMT GMT, then X BTC = X * (poolRewardGMT / poolReward) GMT.
+export function getActualIncomeFromBuildCache(paymentDayStr: string): number | null {
+  const records = loadRewardCacheRecords("minerwars");
+  if (!records) return null;
+  const matches = records.filter(
+    (record) =>
+      typeof record.createdAt === "string" &&
+      (record.createdAt as string).slice(0, 10) === paymentDayStr,
+  );
+  if (matches.length === 0) return null;
+  let total = 0;
+  for (const record of matches) total += Number(record.poolReward ?? 0);
+  return total;
+}
+
 export function getPaymentDataFromBuildCache(paymentDayStr: string): {
   actualBtc: number;
   btcPrice: number | null;
@@ -106,93 +169,98 @@ export function getPaymentDataFromBuildCache(paymentDayStr: string): {
   maintenanceGmt: number | null;
   netBtc: number;
   netGmt: number | null;
+  usdTotal: number | null;
+  maintenanceUsd: number | null;
+  netUsd: number | null;
 } | null {
-  try {
-    const raw = localStorage.getItem(LS_KEY_REWARD_PREFIX + "minerwars");
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as { records?: Array<Record<string, unknown>> };
-    if (!Array.isArray(parsed.records)) return null;
-    const matches = parsed.records.filter(
-      (r) =>
-        typeof r.createdAt === "string" && (r.createdAt as string).slice(0, 10) === paymentDayStr,
-    );
-    if (matches.length === 0) return null;
+  const records = loadRewardCacheRecords("minerwars");
+  if (!records) return null;
+  const matches = records.filter(
+    (record) =>
+      typeof record.createdAt === "string" &&
+      (record.createdAt as string).slice(0, 10) === paymentDayStr,
+  );
+  if (matches.length === 0) return null;
 
-    let totalBtc = 0;
-    let totalGmt = 0;
-    let hasGmt = false;
-    let btcPrice: number | null = null;
-    // Maintenance + net come straight from the enriched MinerWars table rows.
-    let maintenanceBtc = 0;
-    let maintenanceGmt = 0;
-    let netBtc = 0;
-    let netGmt = 0;
+  let totalBtc = 0;
+  let totalGmt = 0;
+  let hasGmt = false;
+  let btcPrice: number | null = null;
+  let maintenanceBtc = 0;
+  let maintenanceGmt = 0;
+  let netBtc = 0;
+  let netGmt = 0;
 
-    for (const r of matches) {
-      totalBtc += Number(r.poolReward ?? 0);
-      maintenanceBtc += Number(r.maintenance ?? 0);
-      netBtc += Number(r.reward ?? 0);
-      if (r.poolRewardGMT != null) {
-        totalGmt += Number(r.poolRewardGMT);
-        hasGmt = true;
-      }
-      if (r.maintenanceGMT != null) maintenanceGmt += Number(r.maintenanceGMT);
-      if (r.rewardGMT != null) netGmt += Number(r.rewardGMT);
-      if (btcPrice === null && r.btcPriceAtTime != null) {
-        btcPrice = Number(r.btcPriceAtTime);
-      }
+  let totalUsd = 0;
+  let maintenanceUsd = 0;
+  let netUsd = 0;
+  let hasUsd = false;
+
+  for (const record of matches) {
+    totalBtc += Number(record.poolReward ?? 0);
+    maintenanceBtc += Number(record.maintenance ?? 0);
+    netBtc += Number(record.reward ?? 0);
+    if (record.poolRewardGMT != null) {
+      totalGmt += Number(record.poolRewardGMT);
+      hasGmt = true;
     }
-
-    // Rule of three: store ratio directly as btcPrice=totalGmt / gmtPrice=totalBtc
-    // so toGmt(btc) = btc × totalGmt / totalBtc with a single division (no floating-point drift)
-    if (!hasGmt || totalBtc === 0) {
-      return {
-        actualBtc: totalBtc,
-        btcPrice: null,
-        gmtPrice: null,
-        maintenanceBtc,
-        maintenanceGmt: null,
-        netBtc,
-        netGmt: null,
-      };
+    if (record.maintenanceGMT != null) maintenanceGmt += Number(record.maintenanceGMT);
+    if (record.rewardGMT != null) netGmt += Number(record.rewardGMT);
+    if (btcPrice === null && record.btcPriceAtTime != null) {
+      btcPrice = Number(record.btcPriceAtTime);
     }
+    if (record.poolRewardUSD != null) {
+      totalUsd += Number(record.poolRewardUSD);
+      hasUsd = true;
+    }
+    if (record.maintenanceUSD != null) maintenanceUsd += Number(record.maintenanceUSD);
+    if (record.rewardInUSD != null) netUsd += Number(record.rewardInUSD);
+  }
+
+  if (!hasGmt || totalBtc === 0) {
     return {
       actualBtc: totalBtc,
-      btcPrice: totalGmt,
-      gmtPrice: totalBtc,
+      btcPrice: null,
+      gmtPrice: null,
       maintenanceBtc,
-      maintenanceGmt,
+      maintenanceGmt: null,
       netBtc,
-      netGmt,
+      netGmt: null,
+      usdTotal: hasUsd ? totalUsd : null,
+      maintenanceUsd: hasUsd ? maintenanceUsd : null,
+      netUsd: hasUsd ? netUsd : null,
     };
-  } catch {
-    return null;
   }
+
+  return {
+    actualBtc: totalBtc,
+    btcPrice: totalGmt,
+    gmtPrice: totalBtc,
+    maintenanceBtc,
+    maintenanceGmt,
+    netBtc,
+    netGmt,
+    usdTotal: hasUsd ? totalUsd : null,
+    maintenanceUsd: hasUsd ? maintenanceUsd : null,
+    netUsd: hasUsd ? netUsd : null,
+  };
 }
 
-// Derives solo-mining dates from the build-report localStorage cache, avoiding an extra API call.
-// Solo income records have createdAt ~00:10 UTC the day AFTER the mining date.
 export function getSoloDaysFromBuildCache(
   cycleStart: string,
   cycleEnd: string,
 ): Set<string> | null {
-  try {
-    const raw = localStorage.getItem(LS_KEY_REWARD_PREFIX + "solo-mining");
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as { records?: Array<Record<string, unknown>> };
-    if (!Array.isArray(parsed.records)) return null;
-    const dates = new Set<string>();
-    for (const r of parsed.records) {
-      if (typeof r.createdAt !== "string") continue;
-      const dayBefore = new Date(r.createdAt as string);
-      dayBefore.setUTCDate(dayBefore.getUTCDate() - 1);
-      const miningDate = dayBefore.toISOString().slice(0, 10);
-      if (miningDate >= cycleStart && miningDate <= cycleEnd) dates.add(miningDate);
-    }
-    return dates;
-  } catch {
-    return null;
+  const records = loadRewardCacheRecords("solo-mining");
+  if (!records) return null;
+  const dates = new Set<string>();
+  for (const record of records) {
+    if (typeof record.createdAt !== "string") continue;
+    const dayBefore = new Date(record.createdAt as string);
+    dayBefore.setUTCDate(dayBefore.getUTCDate() - 1);
+    const miningDate = dayBefore.toISOString().slice(0, 10);
+    if (miningDate >= cycleStart && miningDate <= cycleEnd) dates.add(miningDate);
   }
+  return dates;
 }
 
 export function resolveCycleStatus(cycleEnd: string, today: string): import("./types").CycleStatus {
@@ -207,10 +275,61 @@ export function deletePersistedComparison(cycleId: number): void {
   try {
     const raw = localStorage.getItem(LS_KEY_MW_COMPARISON);
     if (!raw) return;
-    const store = JSON.parse(raw) as Record<string, unknown>;
+    const store = parseObjectStore(raw);
     delete store[String(cycleId)];
     localStorage.setItem(LS_KEY_MW_COMPARISON, JSON.stringify(store));
   } catch {
     // ignore
+  }
+}
+
+export function loadPersistedClanPerformance(cycleId: number): ClanPerformance | null {
+  try {
+    const raw = localStorage.getItem(LS_KEY_MW_CLAN_PERF);
+    if (!raw) return null;
+    const store = JSON.parse(raw) as Record<string, { data?: ClanPerformance; v?: number }>;
+    const entry = store[String(cycleId)];
+    if (!entry || entry.v !== MW_CLAN_PERF_SCHEMA_VERSION || !entry.data) return null;
+    return entry.data;
+  } catch {
+    return null;
+  }
+}
+
+export function persistClanPerformance(cycleId: number, data: ClanPerformance): void {
+  const cycleKey = String(cycleId);
+  const entry = { data, v: MW_CLAN_PERF_SCHEMA_VERSION };
+  try {
+    const store = parseObjectStore(localStorage.getItem(LS_KEY_MW_CLAN_PERF));
+    store[cycleKey] = entry;
+    localStorage.setItem(LS_KEY_MW_CLAN_PERF, JSON.stringify(store));
+  } catch {
+    // Fall back to just the actively-viewed cycle when storage is tight.
+    persistSingleEntryStore(LS_KEY_MW_CLAN_PERF, cycleKey, entry);
+  }
+}
+
+// A resolved round (has a winner) never changes, so which clan members were present in it
+// is cached forever once fetched — a later refresh only needs to fetch rounds that weren't
+// resolved yet last time (still active, or new since).
+export function loadRoundParticipants(roundId: number): number[] | null {
+  try {
+    const raw = localStorage.getItem(LS_KEY_MW_ROUND_PARTICIPANTS);
+    if (!raw) return null;
+    const store = JSON.parse(raw) as Record<string, number[]>;
+    return store[String(roundId)] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export function persistRoundParticipants(roundId: number, userIds: number[]): void {
+  try {
+    const raw = localStorage.getItem(LS_KEY_MW_ROUND_PARTICIPANTS);
+    const store: Record<string, number[]> = raw ? JSON.parse(raw) : {};
+    store[String(roundId)] = userIds;
+    localStorage.setItem(LS_KEY_MW_ROUND_PARTICIPANTS, JSON.stringify(store));
+  } catch {
+    // ignore quota errors
   }
 }

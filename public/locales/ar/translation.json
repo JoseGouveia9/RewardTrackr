@@ -127,6 +127,9 @@
   "export": {
     "walletPricing": "تسعير المحفظة",
     "walletPricingDesc": "ينطبق فقط على Bounties والإيداعات والسحوبات والمعاملات. لا تُعيد واجهة برمجة تطبيقات GoMining أسعار العملات الورقية لهذه الأوراق، لذلك نُثريها باستخدام CoinGecko أثناء التصدير.",
+    "liveMinerWars": "مينر وورز المباشر",
+    "liveMinerWarsToggleLabel": "جلب الدورة المباشرة",
+    "liveMinerWarsDesc": "عند التفعيل، يقوم البناء أيضًا بجلب دورة MinerWars الجارية حاليًا مباشرةً. عند التعطيل، يتم فقط ملء الدورات المكتملة الموجودة بالفعل في ورقة MinerWars.",
     "includeFiatPricing": "تضمين أسعار العملات الورقية (USD). يتم تكوين العملة الورقية الإضافية أدناه.",
     "rateLimitWarning": "قد يستغرق هذا بعض الوقت. الخطة المجانية لـ CoinGecko لها حدود معدل، وكل ضربة حد تُشغّل تبريداً مدته 60 ثانية.",
     "extraFiatConversion": "تحويل عملة ورقية إضافي",
@@ -239,7 +242,10 @@
     "upgradePower": "ترقية - الطاقة"
   },
   "cycleTracker": {
-    "computing": "جارٍ حساب مقارنة الدورة…",
+    "computing": "جارٍ مزامنة MinerWars Cycle Tracker…",
+    "computingIndividual": "جارٍ مزامنة MinerWars الفردي…",
+    "computingClan": "جارٍ مزامنة أداء العشيرة…",
+    "computingHistory": "جارٍ مزامنة الدورات السابقة…",
     "cycle": "الدورة {{id}}",
     "statusLive": "جارية",
     "statusPending": "معل.",

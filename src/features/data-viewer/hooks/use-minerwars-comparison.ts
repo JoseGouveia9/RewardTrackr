@@ -154,6 +154,7 @@ export function useMinerWarsComparison({
         if ((err as { name?: string }).name === "AbortError") return;
         setData(null);
         setError(err instanceof Error ? err.message : "Unknown error");
+        window.dispatchEvent(new CustomEvent("rt:fetch-failed"));
       })
       .finally(() => setLoading(false));
   }, []);

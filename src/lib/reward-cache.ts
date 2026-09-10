@@ -6,6 +6,7 @@ import {
   LS_KEY_MIGRATED_PREFIX,
   LS_KEY_MW_COMPARISON,
   LS_KEY_MW_CYCLES,
+  LS_KEY_MW_SIM_INPUTS,
   LS_KEY_PRICE_CACHE,
   LS_KEY_REWARD_PREFIX,
 } from "@/lib/storage-keys";
@@ -95,6 +96,7 @@ export function clearAllCacheEntries(): void {
   // Also clear the persisted MinerWars comparison cache
   localStorage.removeItem(LS_KEY_MW_COMPARISON);
   localStorage.removeItem(LS_KEY_MW_CYCLES);
+  localStorage.removeItem(LS_KEY_MW_SIM_INPUTS);
 }
 
 export function persistPriceCache(key: RewardKey, records: RewardRecord[]): void {

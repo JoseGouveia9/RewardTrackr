@@ -127,6 +127,9 @@
   "export": {
     "walletPricing": "Precificação da Carteira",
     "walletPricingDesc": "Aplica-se apenas a Bounties, Depósitos, Saques e Transações. A API GoMining não retorna preços em moeda fiduciária para essas planilhas, então os enriquecemos usando CoinGecko durante a exportação.",
+    "liveMinerWars": "MinerWars ao vivo",
+    "liveMinerWarsToggleLabel": "Buscar ciclo ao vivo",
+    "liveMinerWarsDesc": "Quando ativado, uma build também busca o ciclo atual do MinerWars em andamento. Quando desativado, apenas os ciclos completos já presentes na planilha do MinerWars são preenchidos.",
     "includeFiatPricing": "Incluir preços em moeda fiduciária (USD). Moeda fiduciária extra é configurada abaixo.",
     "rateLimitWarning": "Isso pode levar algum tempo. O plano gratuito do CoinGecko tem limites de taxa, e cada limite atingido dispara um cooldown de 60 segundos.",
     "extraFiatConversion": "Conversão Fiduciária Extra",
@@ -239,7 +242,10 @@
     "upgradePower": "Melhoria - Potência"
   },
   "cycleTracker": {
-    "computing": "Calculando comparação do ciclo…",
+    "computing": "Sincronizando o MinerWars Cycle Tracker…",
+    "computingIndividual": "Sincronizando MinerWars individual…",
+    "computingClan": "Sincronizando desempenho do clã…",
+    "computingHistory": "Sincronizando ciclos anteriores…",
     "cycle": "Ciclo {{id}}",
     "statusLive": "Ao vivo",
     "statusPending": "Pend.",
