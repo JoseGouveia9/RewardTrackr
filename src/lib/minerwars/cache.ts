@@ -310,6 +310,25 @@ export function persistClanPerformance(cycleId: number, data: ClanPerformance): 
   }
 }
 
+// Drops persisted clan-performance entries cached for a clan other than currentClanId.
+export function clearStalePersistedClanPerformance(currentClanId: number): void {
+  try {
+    const raw = localStorage.getItem(LS_KEY_MW_CLAN_PERF);
+    if (!raw) return;
+    const store = JSON.parse(raw) as Record<string, { data?: ClanPerformance; v?: number }>;
+    let changed = false;
+    for (const key of Object.keys(store)) {
+      if (store[key]?.data?.header?.clanId !== currentClanId) {
+        delete store[key];
+        changed = true;
+      }
+    }
+    if (changed) localStorage.setItem(LS_KEY_MW_CLAN_PERF, JSON.stringify(store));
+  } catch {
+    // ignore
+  }
+}
+
 // A resolved round (has a winner) never changes, so which clan members were present in it
 // is cached forever once fetched — a later refresh only needs to fetch rounds that weren't
 // resolved yet last time (still active, or new since).

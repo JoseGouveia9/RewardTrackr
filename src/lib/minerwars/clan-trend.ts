@@ -5,6 +5,7 @@ import {
   getAllRoundsInCycle,
   getClanLeaderboardStats,
   getClanThByDate,
+  getCurrentClanId,
   getCycleRounds,
 } from "./api";
 import { fetchDifficultyEpochs, estimateTargetBtcFromPower } from "./difficulty-adjustments";
@@ -59,19 +60,30 @@ async function withRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
 }
 
 // Sole place clan-trend history is network-fetched. Warms the cache; a no-op once
-// everything's already warmed.
+// everything's already warmed. retrySkipped retries previously-skipped cycles (only on
+// explicit refresh); currentClanId causes cycles from an abandoned clan to be skipped.
 export async function warmClanTrendHistory(
   token: string,
   cycles: CycleInfo[],
   liveCycleId: number | null,
+  options: { retrySkipped?: boolean; currentClanId?: number | null } = {},
 ): Promise<void> {
   const uncached = cycles
-    .filter((cycle) => cycle.cycleId !== liveCycleId && loadClanTrendEntry(cycle.cycleId) === null)
+    .filter((cycle) => {
+      if (cycle.cycleId === liveCycleId) return false;
+      const entry = loadClanTrendEntry(cycle.cycleId);
+      if (entry === null) return true;
+      return Boolean(options.retrySkipped) && entry.kind === "skip";
+    })
     .sort((a, b) => b.cycleId - a.cycleId);
   if (uncached.length === 0) return;
 
   const headers = buildApiHeaders(token);
   const epochs = await fetchDifficultyEpochs().catch(() => []);
+  const currentClanId =
+    options.currentClanId !== undefined
+      ? options.currentClanId
+      : await getCurrentClanId(headers).catch(() => null);
 
   // Independent per-cycle network I/O, bounded so as not to hammer the API — matches
   // testing/minerwars-clan-target.mjs's step [8] concurrency of 2.
@@ -81,6 +93,11 @@ export async function warmClanTrendHistory(
       const leagueId = rounds.rounds[0]?.leagueId ?? null;
       const clanId = rounds.rounds[0]?.clanId ?? null;
       if (leagueId == null || clanId == null) {
+        persistClanTrendEntry(cycle.cycleId, { kind: "skip" });
+        return;
+      }
+      // Cycle belongs to a clan the user has since left — skip before the expensive fetch below.
+      if (currentClanId != null && clanId !== currentClanId) {
         persistClanTrendEntry(cycle.cycleId, { kind: "skip" });
         return;
       }

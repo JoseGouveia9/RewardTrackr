@@ -128,6 +128,26 @@ export async function getCycleRounds(
   return { cycleId: resolvedId, cycleStartDate, rounds: collected };
 }
 
+// The clan the user is in right now — used to invalidate/skip stale per-clan caches
+// (clan performance, clan trend) instead of mixing in data from a previous clan.
+export async function getCurrentClanId(headers: Record<string, string>): Promise<number | null> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15_000);
+  try {
+    const response = await fetch(`${API}/api/nft-game/clan/get-my`, {
+      headers,
+      signal: controller.signal,
+    });
+    if (!response.ok) return null;
+    const json = (await response.json()) as { data?: { id?: number } | null };
+    return json.data?.id ?? null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 export async function fetchAllCyclesFromApi(headers: Record<string, string>): Promise<CycleInfo[]> {
   const limit = 40;
   let skip = 0;
@@ -957,16 +977,17 @@ export async function getClanThByDate(
   clanId: number,
   calculatedAt: string,
 ): Promise<Map<string, number>> {
-  const lastRoundByDate = new Map<string, { id: number; endedAt: string }>();
+  // Sample the FIRST round of each day, not the last — matches real CSV settlement data.
+  const firstRoundByDate = new Map<string, { id: number; endedAt: string }>();
   for (const round of completedRounds) {
     if (!round.endedAt) continue;
     const dateStr = toDateStr(round.endedAt);
-    const prev = lastRoundByDate.get(dateStr);
-    if (!prev || round.endedAt > prev.endedAt) {
-      lastRoundByDate.set(dateStr, { id: round.id, endedAt: round.endedAt });
+    const prev = firstRoundByDate.get(dateStr);
+    if (!prev || round.endedAt < prev.endedAt) {
+      firstRoundByDate.set(dateStr, { id: round.id, endedAt: round.endedAt });
     }
   }
-  if (lastRoundByDate.size === 0) return new Map();
+  if (firstRoundByDate.size === 0) return new Map();
 
   const leagueThByUser = await getLeagueThByUser(headers, calculatedAt, leagueId).catch(
     () => new Map<number, LeagueThEntry>(),
@@ -974,7 +995,7 @@ export async function getClanThByDate(
 
   const map = new Map<string, number>();
   await mapWithConcurrency(
-    [...lastRoundByDate.entries()],
+    [...firstRoundByDate.entries()],
     CLAN_TH_BY_DATE_CONCURRENCY,
     async ([dateStr, round]) => {
       const participants = await getRoundClanParticipants(headers, round.id, clanId).catch(

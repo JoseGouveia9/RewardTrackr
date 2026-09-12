@@ -292,8 +292,7 @@
     "blocksNeededCount_other": "{{count}} blocos necessários",
     "newRecord": "Novo recorde!",
     "beReachedRecordBlocks_one": "Ponto de equilíbrio atingido — {{count}} bloco para novo recorde",
-    "beReachedRecordBlocks_other": "Ponto de equilíbrio atingido — {{count}} blocos para novo recorde",
-    "leftClan": "Saiu"
+    "beReachedRecordBlocks_other": "Ponto de equilíbrio atingido — {{count}} blocos para novo recorde"
   },
   "footer": {
     "about": "Sobre",

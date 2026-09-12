@@ -27,8 +27,6 @@ export interface ClanMemberPerformance {
   minerWarsRewardEstBtc: number | null;
   // Null means unavailable, not zero.
   boostCostGmt: number | null;
-
-  hasLeftClan: boolean;
 }
 
 export interface ClanPerformance {

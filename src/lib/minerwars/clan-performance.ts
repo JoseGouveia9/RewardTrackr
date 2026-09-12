@@ -14,6 +14,7 @@ import {
   getRoundClanParticipants,
 } from "./api";
 import {
+  clearStalePersistedClanPerformance,
   loadPersistedClanPerformance,
   loadRoundParticipants,
   persistClanPerformance,
@@ -50,6 +51,15 @@ export function getCachedClanPerformance(cycleId: number): ClanPerformance | nul
   const inMemory = cache.get(cycleId);
   if (inMemory) return inMemory.data;
   return loadPersistedClanPerformance(cycleId);
+}
+
+// Clears cached clan-performance entries (in-memory + persisted) for any clan other
+// than currentClanId, so the next read is forced to refetch.
+export function invalidateStaleClanPerformanceCache(currentClanId: number): void {
+  for (const [cycleId, entry] of cache) {
+    if (entry.data.header.clanId !== currentClanId) cache.delete(cycleId);
+  }
+  clearStalePersistedClanPerformance(currentClanId);
 }
 
 // Rounds whose participants aren't cached yet are fetched concurrently (bounded batch) —
@@ -187,11 +197,7 @@ export async function fetchClanPerformance(
       clanData.btcFund,
       thByUser,
     );
-    const userIds = new Set<number>([
-      ...rosterById.keys(),
-      ...earners.keys(),
-      ...rewardByUser.keys(),
-    ]);
+    const userIds = new Set<number>(rosterById.keys());
 
     const members: ClanMemberPerformance[] = [...userIds].map((userId) => {
       const rosterMember = rosterById.get(userId) ?? null;
@@ -232,7 +238,6 @@ export async function fetchClanPerformance(
         gmtRewards: earner?.gmtRewards ?? 0,
         minerWarsRewardEstBtc,
         boostCostGmt,
-        hasLeftClan: rosterMember === null,
       };
     });
 

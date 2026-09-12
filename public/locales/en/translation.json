@@ -337,8 +337,7 @@
     "blocksNeededCount_other": "{{count}} blocks needed",
     "newRecord": "New record!",
     "beReachedRecordBlocks_one": "Break-even reached — {{count}} block to new record",
-    "beReachedRecordBlocks_other": "Break-even reached — {{count}} blocks to new record",
-    "leftClan": "Left"
+    "beReachedRecordBlocks_other": "Break-even reached — {{count}} blocks to new record"
   },
   "footer": {
     "about": "About",

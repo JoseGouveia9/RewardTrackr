@@ -438,11 +438,6 @@ export function ClanPerformanceView({
                       <span className="clan-view-member-meta">
                         {m.th != null ? fmtTh(m.th) : "\u2014"}
                       </span>
-                      {m.hasLeftClan ? (
-                        <span className="clan-view-member-left-tag">
-                          {t("cycleTracker.leftClan")}
-                        </span>
-                      ) : null}
                     </div>
                   </div>
                 </div>

@@ -439,7 +439,7 @@ export const MinerWarsShareCard = forwardRef<HTMLDivElement, CardProps>(function
       return { value: fmtGmt(gmt), icon: <GmtIcon /> };
     };
 
-    const activeMembers = clan.members.filter((m) => !m.hasLeftClan);
+    const activeMembers = clan.members;
     const clanBlocksMined = clan.members.reduce((s, m) => s + (m.blocksMined ?? 0), 0);
     const memberBtcSum = clan.members.reduce((s, m) => s + (m.minerWarsRewardEstBtc ?? 0), 0);
     const clanBtcMined =

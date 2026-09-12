@@ -12,8 +12,12 @@ import {
   invalidateCycleCache,
   prefetchAllCompletedCycles,
 } from "@/lib/minerwars/comparison";
-import { fetchClanPerformance } from "@/lib/minerwars/clan-performance";
+import {
+  fetchClanPerformance,
+  invalidateStaleClanPerformanceCache,
+} from "@/lib/minerwars/clan-performance";
 import { warmClanTrendHistory } from "@/lib/minerwars/clan-trend";
+import { getCurrentClanId } from "@/lib/minerwars/api";
 import { buildExcelFromSheets } from "./excel-builder";
 import type {
   CacheState,
@@ -1008,10 +1012,17 @@ export async function executeExportFlow({
           }
         }
         onMessage(i18n.t("cycleTracker.computingHistory"));
+        const currentClanId = await getCurrentClanId(buildApiHeaders(accessToken)).catch(
+          () => null,
+        );
+        if (currentClanId != null) invalidateStaleClanPerformanceCache(currentClanId);
         await prefetchAllCompletedCycles(accessToken, cycles).catch(() => {});
         if (cycles.length > 0) {
           const liveCycleId = cycles.find((c) => c.status === "in-progress")?.cycleId ?? null;
-          await warmClanTrendHistory(accessToken, cycles, liveCycleId).catch(() => {});
+          await warmClanTrendHistory(accessToken, cycles, liveCycleId, {
+            retrySkipped: true,
+            currentClanId,
+          }).catch(() => {});
         }
         const today = new Date().toISOString().slice(0, 10);
         const uncached = cycles.filter(
