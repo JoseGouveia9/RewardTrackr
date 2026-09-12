@@ -134,10 +134,12 @@ export async function prefetchAllCompletedCycles(
 export function fetchMinerWarsComparison(
   token: string,
   targetCycleId: number | null = null,
+  options?: { forceRefresh?: boolean },
 ): Promise<MinerWarsComparison> {
   const TODAY = new Date().toISOString().slice(0, 10);
+  const forceRefresh = options?.forceRefresh === true;
 
-  if (targetCycleId !== null) {
+  if (targetCycleId !== null && !forceRefresh) {
     const persisted = loadPersistedComparison(targetCycleId);
     if (persisted) {
       const statusNow = resolveCycleStatus(persisted.data.cycleEnd, TODAY);
@@ -150,9 +152,13 @@ export function fetchMinerWarsComparison(
     }
   }
 
-  if (targetCycleId !== null) {
+  if (targetCycleId !== null && !forceRefresh) {
     const existing = inFlightRequests.get(targetCycleId);
     if (existing) return existing;
+  }
+
+  if (targetCycleId !== null && forceRefresh) {
+    comparisonCache.delete(targetCycleId);
   }
 
   const promise = _doFetchMinerWarsComparison(token, targetCycleId, TODAY);
@@ -345,9 +351,9 @@ async function _doFetchMinerWarsComparison(
   const elapsedComparisonDates = isCycleLive ? cycleDates.slice(1) : cycleDates;
 
   // Reconstructed per-day clan TH: for each day, who actually participated for our clan
-  // in that day's last completed round (see getClanThByDate()) — preferred over
+  // in that day's FIRST completed round (see getClanThByDate()) — preferred over
   // clanPowerByDate/currentClanPower/clanNftPower below since it correctly reflects
-  // members who've since left the clan.
+  // members who've since left the clan and matches real CSV settlement data.
   const clanThByDate = await getClanThByDate(
     headers,
     completedRounds,
@@ -504,11 +510,18 @@ async function _doFetchMinerWarsComparison(
   const lastClanPower = currentClanPower ?? clanNftPower ?? 0;
 
   for (const dateStr of fullCycleDates) {
+    // isPast (day-1-excluded while live) only counts "actual vs projected" reward days for
+    // display — it does NOT gate which power/difficulty data to use. Day 1's TH power and
+    // difficulty are already known even though its reward isn't settled yet, so use real
+    // per-date data whenever the date has actually occurred.
     const isPast = elapsedComparisonDates.includes(dateStr);
-    const satsPerTH = isPast ? (satsPerThByDate.get(dateStr) ?? latestSatsPerTH) : latestSatsPerTH;
+    const dateOccurred = dateStr <= TODAY;
+    const satsPerTH = dateOccurred
+      ? (satsPerThByDate.get(dateStr) ?? latestSatsPerTH)
+      : latestSatsPerTH;
 
     if (!solodays.has(dateStr)) {
-      const userPow = isPast
+      const userPow = dateOccurred
         ? userPowerByDate.has(dateStr)
           ? userPowerByDate.get(dateStr)!
           : (lastUserPower ?? 0)
@@ -526,7 +539,7 @@ async function _doFetchMinerWarsComparison(
       }
     }
 
-    const clanPow = isPast
+    const clanPow = dateOccurred
       ? clanThByDate.has(dateStr)
         ? clanThByDate.get(dateStr)!
         : clanPowerByDate.has(dateStr)

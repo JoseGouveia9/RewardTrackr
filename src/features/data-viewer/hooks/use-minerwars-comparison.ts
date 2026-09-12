@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { decodeJwt } from "@/lib/http";
+import { buildApiHeaders, decodeJwt } from "@/lib/http";
 import { LS_KEY_SYNC_TOKEN } from "@/lib/storage-keys";
 import { resolveCycleStatus, persistCycles } from "@/lib/minerwars/cache";
+import { getCurrentClanId } from "@/lib/minerwars/api";
 import { warmClanTrendHistory } from "@/lib/minerwars/clan-trend";
+import { invalidateStaleClanPerformanceCache } from "@/lib/minerwars/clan-performance";
 import {
   fetchAvailableCycles,
   fetchMinerWarsComparison,
@@ -146,7 +148,7 @@ export function useMinerWarsComparison({
     setLoading(true);
     setError(null);
 
-    return fetchMinerWarsComparison(token, cycleId)
+    return fetchMinerWarsComparison(token, cycleId, { forceRefresh: skipCache })
       .then((result) => {
         setData(result);
         setError(null);
@@ -176,9 +178,17 @@ export function useMinerWarsComparison({
     setLoading(true);
     const list = await reloadCycles().catch(() => []);
 
+    // Skip trend cycles from a since-abandoned clan, retry previously-skipped ones, and
+    // drop any clan-info cache that no longer matches the user's current clan.
+    const currentClanId = await getCurrentClanId(buildApiHeaders(getToken())).catch(() => null);
+    if (currentClanId != null) invalidateStaleClanPerformanceCache(currentClanId);
+
     if (list.length > 0) {
       const liveCycleId = list.find((c) => c.status === "in-progress")?.cycleId ?? null;
-      await warmClanTrendHistory(getToken(), list, liveCycleId).catch(() => {});
+      await warmClanTrendHistory(getToken(), list, liveCycleId, {
+        retrySkipped: true,
+        currentClanId,
+      }).catch(() => {});
     }
 
     // If pending cycles exist, sync minerwars rewards sheet and recompute statuses if new entries arrived
