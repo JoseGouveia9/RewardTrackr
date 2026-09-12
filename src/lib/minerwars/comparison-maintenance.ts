@@ -111,17 +111,31 @@ export function computeMaintenanceAndNet(
             ? (currentClanPower ?? clanNftPower ?? 1)
             : (clanNftPower ?? 1);
       const isLeagueEE = cumulativeMWSats >= soloEquivSats;
-      const ee = isLeagueEE ? leagueEE : userEE;
-      const roundElecUSD = (KWH * 24 * elapsedMWDays * roundPower * ee) / 1000;
+      const roundUserSats =
+        btcPerBlock * round.multiplier * (clanTH > 0 ? userTH / clanTH : 0) * 1e8;
+      // Blend rates within the round that crosses the solo-equivalent threshold: the
+      // portion before crossing uses the personal EE/discount, the rest uses the league's.
+      const crossesThreshold =
+        !isLeagueEE &&
+        soloEquivSats > 0 &&
+        roundUserSats > 0 &&
+        cumulativeMWSats + roundUserSats > soloEquivSats;
+      const ownFraction = crossesThreshold
+        ? (soloEquivSats - cumulativeMWSats) / roundUserSats
+        : isLeagueEE
+          ? 0
+          : 1;
+      const leagueFraction = 1 - ownFraction;
+      const elecUSDFull = (KWH * 24 * elapsedMWDays * roundPower) / 1000;
+      const roundElecUSD = elecUSDFull * (userEE * ownFraction + leagueEE * leagueFraction);
       const roundSvcUSD = SVC * elapsedMWDays * roundPower;
       const share =
         clanTH > 0 && sumAllMultipliers > 0
           ? (round.multiplier / sumAllMultipliers) * (userTH / clanTH)
           : 0;
-      const effectiveDiscountFactor = isLeagueEE ? leagueDiscountFactor : maintDiscountFactor;
+      const effectiveDiscountFactor =
+        maintDiscountFactor * ownFraction + leagueDiscountFactor * leagueFraction;
       const roundMaintUSD = (roundElecUSD + roundSvcUSD) * share * effectiveDiscountFactor;
-      const roundUserSats =
-        btcPerBlock * round.multiplier * (clanTH > 0 ? userTH / clanTH : 0) * 1e8;
       const historicalPrice = historicalPrices.get(addUtcDays(roundDate, 1));
       const roundBtcPrice = historicalPrice?.btcUsd ?? maintBtcPrice;
       const roundGmtPrice = historicalPrice?.gmtUsd ?? maintGmtPrice;
