@@ -56,6 +56,7 @@ export function computeMaintenanceAndNet(
     actualMinerWarsBtc,
     minerWarsSatsBase,
     btcPerBlock,
+    roundContextById,
     today,
   } = inputs;
 
@@ -103,16 +104,26 @@ export function computeMaintenanceAndNet(
         ? userPowerByDate.get(roundDate)!
         : (lastUserPower ?? 0);
       const isToday = roundDate >= today;
-      const clanTH = clanThByDate.has(roundDate)
-        ? clanThByDate.get(roundDate)!
-        : clanPowerByDate.has(roundDate)
-          ? clanPowerByDate.get(roundDate)!
-          : isToday
-            ? (currentClanPower ?? clanNftPower ?? 1)
-            : (clanNftPower ?? 1);
+      // Rounds won under a previous league/clan this cycle carry their OWN context here
+      // (clan TH, league EE/discount, btcPerBlock, sumAllMultipliers) instead of the
+      // current-league scalars below, which only apply to the common single-league case.
+      const roundCtx = roundContextById?.get(round.roundId);
+      const clanTH =
+        roundCtx?.clanTH ??
+        (clanThByDate.has(roundDate)
+          ? clanThByDate.get(roundDate)!
+          : clanPowerByDate.has(roundDate)
+            ? clanPowerByDate.get(roundDate)!
+            : isToday
+              ? (currentClanPower ?? clanNftPower ?? 1)
+              : (clanNftPower ?? 1));
+      const roundLeagueEE = roundCtx?.leagueEE ?? leagueEE;
+      const roundLeagueDiscountFactor = roundCtx?.leagueDiscountFactor ?? leagueDiscountFactor;
+      const roundBtcPerBlock = roundCtx?.btcPerBlock ?? btcPerBlock;
+      const roundSumAllMultipliers = roundCtx?.sumAllMultipliers ?? sumAllMultipliers;
       const isLeagueEE = cumulativeMWSats >= soloEquivSats;
       const roundUserSats =
-        btcPerBlock * round.multiplier * (clanTH > 0 ? userTH / clanTH : 0) * 1e8;
+        roundBtcPerBlock * round.multiplier * (clanTH > 0 ? userTH / clanTH : 0) * 1e8;
       // Blend rates within the round that crosses the solo-equivalent threshold: the
       // portion before crossing uses the personal EE/discount, the rest uses the league's.
       const crossesThreshold =
@@ -127,14 +138,14 @@ export function computeMaintenanceAndNet(
           : 1;
       const leagueFraction = 1 - ownFraction;
       const elecUSDFull = (KWH * 24 * elapsedMWDays * roundPower) / 1000;
-      const roundElecUSD = elecUSDFull * (userEE * ownFraction + leagueEE * leagueFraction);
+      const roundElecUSD = elecUSDFull * (userEE * ownFraction + roundLeagueEE * leagueFraction);
       const roundSvcUSD = SVC * elapsedMWDays * roundPower;
       const share =
-        clanTH > 0 && sumAllMultipliers > 0
-          ? (round.multiplier / sumAllMultipliers) * (userTH / clanTH)
+        clanTH > 0 && roundSumAllMultipliers > 0
+          ? (round.multiplier / roundSumAllMultipliers) * (userTH / clanTH)
           : 0;
       const effectiveDiscountFactor =
-        maintDiscountFactor * ownFraction + leagueDiscountFactor * leagueFraction;
+        maintDiscountFactor * ownFraction + roundLeagueDiscountFactor * leagueFraction;
       const roundMaintUSD = (roundElecUSD + roundSvcUSD) * share * effectiveDiscountFactor;
       const historicalPrice = historicalPrices.get(addUtcDays(roundDate, 1));
       const roundBtcPrice = historicalPrice?.btcUsd ?? maintBtcPrice;

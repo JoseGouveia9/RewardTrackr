@@ -1,4 +1,5 @@
 import { buildApiHeaders } from "@/lib/http";
+import { mapWithConcurrency } from "@/lib/concurrency";
 import { FORCE_FETCH_FAIL } from "@/lib/dev-flags";
 import { cycleEndFromStart, toDateStr } from "./types";
 import {
@@ -29,6 +30,7 @@ import {
   getMyNftAvgEE,
   getSoloMiningDates,
   getUserPowerChart,
+  type RoundRow,
 } from "./api";
 import { computeMaintenanceAndNet } from "./comparison-maintenance";
 import {
@@ -308,29 +310,113 @@ async function _doFetchMinerWarsComparison(
   const leagueId = refRound.leagueId;
   const clanId = refRound.clanId;
 
-  const allCycleRounds = await getAllRoundsInCycle(headers, cycleId, leagueId);
-  const completedRounds = allCycleRounds.filter((r) => !r.active && r.power > 0);
-  const sumAllMultipliers = completedRounds.reduce((s, r) => s + r.multiplier, 0);
-  const totalPowerSum = completedRounds.reduce((s, r) => s + r.power, 0);
-  const avgRoundNftPower = completedRounds.length > 0 ? totalPowerSum / completedRounds.length : 1;
-  const completedRoundsMap = new Map(completedRounds.map((r) => [r.id, r]));
+  // Group rounds by (leagueId, clanId): each already-won round carries its own accurate
+  // historical leagueId/clanId, so a user who switches leagues/clans mid-cycle still has
+  // every group's rounds fetched/valued using THAT group's own league/clan context —
+  // instead of only the most-recently-seen one (which used to silently drop every round
+  // won under a previous league/clan entirely).
+  type LeagueGroup = { leagueId: number; clanId: number; rounds: RoundRow[] };
+  const groupsByKey = new Map<string, LeagueGroup>();
+  for (const round of userRounds) {
+    const key = `${round.leagueId}:${round.clanId}`;
+    let group = groupsByKey.get(key);
+    if (!group) {
+      group = { leagueId: round.leagueId, clanId: round.clanId, rounds: [] };
+      groupsByKey.set(key, group);
+    }
+    group.rounds.push(round);
+  }
+  const groups = [...groupsByKey.values()];
 
-  const { btcFund, totalMinedBlocks, clanNftPower, leagueWeightedEE, leagueWeightedAvgDiscount } =
-    await getCycleClanData(headers, cycleStartDate, leagueId, clanId);
-  const btcPerBlock = totalMinedBlocks > 0 ? btcFund / totalMinedBlocks : 0;
-
-  const [userPowerByDate, clanPowerByDate, currentClanPower] = await Promise.all([
-    getUserPowerChart(headers, cycleStartDate),
-    getClanPowerAnalytics(headers, clanId),
-    getCurrentClanPower(headers, clanId),
-  ]);
-
+  const userPowerByDate = await getUserPowerChart(headers, cycleStartDate);
   const lastUserPower =
     userPowerByDate.size > 0 ? ([...userPowerByDate.values()].slice(-1)[0] ?? null) : null;
 
   const CYCLE_END = CYCLE_END_CHECK;
   const CYCLE_START = cycleStartDate.slice(0, 10);
   const isCycleLive = TODAY >= CYCLE_START && TODAY <= CYCLE_END;
+
+  type GroupData = {
+    leagueId: number;
+    clanId: number;
+    completedRoundsMap: Map<number, { power: number }>;
+    sumAllMultipliers: number;
+    avgRoundNftPower: number;
+    btcFund: number;
+    totalMinedBlocks: number;
+    btcPerBlock: number;
+    clanNftPower: number | null;
+    leagueWeightedEE: number | null;
+    leagueWeightedAvgDiscount: number | null;
+    clanPowerByDate: Map<string, number>;
+    currentClanPower: number | null;
+    clanThByDate: Map<string, number>;
+  };
+
+  const groupData = await mapWithConcurrency(groups, 2, async (group): Promise<GroupData> => {
+    const allCycleRounds = await getAllRoundsInCycle(headers, cycleId, group.leagueId);
+    const completedRounds = allCycleRounds.filter((r) => !r.active && r.power > 0);
+    const sumAllMultipliers = completedRounds.reduce((s, r) => s + r.multiplier, 0);
+    const totalPowerSum = completedRounds.reduce((s, r) => s + r.power, 0);
+    const avgRoundNftPower =
+      completedRounds.length > 0 ? totalPowerSum / completedRounds.length : 1;
+    const completedRoundsMap = new Map(completedRounds.map((r) => [r.id, r]));
+
+    const { btcFund, totalMinedBlocks, clanNftPower, leagueWeightedEE, leagueWeightedAvgDiscount } =
+      await getCycleClanData(headers, cycleStartDate, group.leagueId, group.clanId);
+    const btcPerBlock = totalMinedBlocks > 0 ? btcFund / totalMinedBlocks : 0;
+
+    const [clanPowerByDate, currentClanPower, clanThByDate] = await Promise.all([
+      getClanPowerAnalytics(headers, group.clanId),
+      getCurrentClanPower(headers, group.clanId),
+      getClanThByDate(headers, completedRounds, group.leagueId, group.clanId, cycleStartDate).catch(
+        () => new Map<string, number>(),
+      ),
+    ]);
+
+    return {
+      leagueId: group.leagueId,
+      clanId: group.clanId,
+      completedRoundsMap,
+      sumAllMultipliers,
+      avgRoundNftPower,
+      btcFund,
+      totalMinedBlocks,
+      btcPerBlock,
+      clanNftPower,
+      leagueWeightedEE,
+      leagueWeightedAvgDiscount,
+      clanPowerByDate,
+      currentClanPower,
+      clanThByDate,
+    };
+  });
+
+  const groupDataByKey = new Map(groupData.map((g) => [`${g.leagueId}:${g.clanId}`, g]));
+  const currentGroup = groupDataByKey.get(`${leagueId}:${clanId}`)!;
+
+  // Merged lookup across every league/clan group the user passed through this cycle
+  // (round ids are globally unique, so this is a safe flat merge).
+  const completedRoundsMap = new Map<number, { power: number }>();
+  for (const g of groupData) {
+    for (const [id, entry] of g.completedRoundsMap) completedRoundsMap.set(id, entry);
+  }
+
+  // "Current" league/clan values — kept for the handful of display/back-compat fields
+  // that only make sense for a single league (e.g. the top-level btcFundBtc shown to
+  // the user, which reflects their CURRENT clan's fund).
+  const {
+    btcFund,
+    totalMinedBlocks,
+    btcPerBlock,
+    clanNftPower,
+    leagueWeightedEE,
+    leagueWeightedAvgDiscount,
+    clanPowerByDate,
+    currentClanPower,
+    clanThByDate,
+    sumAllMultipliers,
+  } = currentGroup;
 
   const cycleCutoff = CYCLE_END < TODAY ? CYCLE_END : TODAY;
   const cycleDates: string[] = [];
@@ -350,21 +436,21 @@ async function _doFetchMinerWarsComparison(
   // that "confirmed" it was misleading.)
   const elapsedComparisonDates = isCycleLive ? cycleDates.slice(1) : cycleDates;
 
-  // Reconstructed per-day clan TH: for each day, who actually participated for our clan
-  // in that day's FIRST completed round (see getClanThByDate()) — preferred over
-  // clanPowerByDate/currentClanPower/clanNftPower below since it correctly reflects
-  // members who've since left the clan and matches real CSV settlement data.
-  const clanThByDate = await getClanThByDate(
-    headers,
-    completedRounds,
-    leagueId,
-    clanId,
-    cycleStartDate,
-  ).catch(() => new Map<string, number>());
-
   const roundRewards = new Map<number, { userBtc: number; clanBtc: number; date: string }>();
+  const roundContextById = new Map<
+    number,
+    {
+      clanTH: number;
+      leagueEE: number | null;
+      leagueDiscountFactor: number | null;
+      btcPerBlock: number;
+      sumAllMultipliers: number;
+    }
+  >();
   for (const round of userRounds) {
-    const entry = completedRoundsMap.get(round.roundId);
+    const g = groupDataByKey.get(`${round.leagueId}:${round.clanId}`);
+    if (!g) continue;
+    const entry = g.completedRoundsMap.get(round.roundId);
     if (!entry) continue;
 
     const roundDate = toDateStr(round.endedAt);
@@ -372,23 +458,31 @@ async function _doFetchMinerWarsComparison(
     const effectiveUserPower = userPowerByDate.has(roundDate)
       ? userPowerByDate.get(roundDate)!
       : (lastUserPower ?? 0);
-    const effectiveClanPower = clanThByDate.has(roundDate)
-      ? clanThByDate.get(roundDate)!
-      : clanPowerByDate.has(roundDate)
-        ? clanPowerByDate.get(roundDate)!
+    const effectiveClanPower = g.clanThByDate.has(roundDate)
+      ? g.clanThByDate.get(roundDate)!
+      : g.clanPowerByDate.has(roundDate)
+        ? g.clanPowerByDate.get(roundDate)!
         : isToday
-          ? (currentClanPower ?? clanNftPower ?? 1)
-          : (clanNftPower ?? 1);
+          ? (g.currentClanPower ?? g.clanNftPower ?? 1)
+          : (g.clanNftPower ?? 1);
 
-    const powerRatio = entry.power / avgRoundNftPower;
-    const clanReward = btcPerBlock * round.multiplier;
+    const powerRatio = entry.power / g.avgRoundNftPower;
+    const clanReward = g.btcPerBlock * round.multiplier;
     const userReward =
       effectiveClanPower > 0
-        ? ((round.multiplier / sumAllMultipliers) * btcFund * powerRatio * effectiveUserPower) /
+        ? ((round.multiplier / g.sumAllMultipliers) * g.btcFund * powerRatio * effectiveUserPower) /
           effectiveClanPower
         : 0;
 
     roundRewards.set(round.roundId, { userBtc: userReward, clanBtc: clanReward, date: roundDate });
+    roundContextById.set(round.roundId, {
+      clanTH: effectiveClanPower,
+      leagueEE: g.leagueWeightedEE,
+      leagueDiscountFactor:
+        g.leagueWeightedAvgDiscount != null ? 1 - g.leagueWeightedAvgDiscount : null,
+      btcPerBlock: g.btcPerBlock,
+      sumAllMultipliers: g.sumAllMultipliers,
+    });
   }
 
   const [
@@ -473,6 +567,7 @@ async function _doFetchMinerWarsComparison(
     actualMinerWarsBtc,
     minerWarsSatsBase,
     btcPerBlock,
+    roundContextById,
     today: TODAY,
   };
   cacheMaintInputs(cycleId, maintInputs);
@@ -605,8 +700,7 @@ async function _doFetchMinerWarsComparison(
 export async function syncMinerWarsSheet(token: string): Promise<{ newEntries: number }> {
   try {
     const { REWARD_CONFIG_MAP } = await import("@/config/reward-configs");
-    const { loadCacheEntry, saveCacheEntry, MINERWARS_SCHEMA_VERSION } =
-      await import("@/lib/reward-cache");
+    const { loadCacheEntry, saveCacheEntry } = await import("@/lib/reward-cache");
     const { postJson } = await import("@/lib/http");
 
     const config = REWARD_CONFIG_MAP["minerwars"];
@@ -651,7 +745,6 @@ export async function syncMinerWarsSheet(token: string): Promise<{ newEntries: n
         allRecords as unknown as RewardRecord[],
         allRecords.length,
         {
-          schemaVersion: MINERWARS_SCHEMA_VERSION,
           extraFiatCurrency: prev?.extraFiatCurrency,
           pricingMode: prev?.pricingMode ?? "fiat-off",
           newEntriesCount,

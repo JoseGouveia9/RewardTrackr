@@ -63,7 +63,6 @@ export async function getCycleRounds(
     const resolvedId = targetCycleId ?? (snapshotRows[0]?.cycleId as number | null) ?? null;
     if (resolvedId != null) {
       const rounds: RoundRow[] = [];
-      let cycleStartDate: string | null = null;
       for (const r of snapshotRows) {
         if ((r.cycleId as number) !== resolvedId) continue;
         rounds.push({
@@ -75,9 +74,9 @@ export async function getCycleRounds(
           endedAt: r.endedAt as string,
           cycleId: r.cycleId as number,
         });
-        if (!cycleStartDate) cycleStartDate = getCycleStartTuesdayUTC(r.endedAt as string);
       }
       if (rounds.length > 0) {
+        const cycleStartDate = await resolveCycleStartFromRounds(headers, resolvedId, rounds);
         return { cycleId: resolvedId, cycleStartDate, rounds };
       }
     }
@@ -85,7 +84,6 @@ export async function getCycleRounds(
 
   const limit = 40;
   let resolvedId: number | null = targetCycleId;
-  let cycleStartDate: string | null = null;
   const collected: RoundRow[] = [];
   let skip = 0;
 
@@ -101,7 +99,6 @@ export async function getCycleRounds(
     // Auto-detect: use the most recent cycle from the first page
     if (resolvedId === null) {
       resolvedId = array[0].cycleId as number;
-      cycleStartDate = getCycleStartTuesdayUTC(array[0].endedAt as string);
     }
 
     for (const r of array) {
@@ -115,7 +112,6 @@ export async function getCycleRounds(
           endedAt: r.endedAt as string,
           cycleId: r.cycleId as number,
         });
-        if (!cycleStartDate) cycleStartDate = getCycleStartTuesdayUTC(r.endedAt as string);
       }
     }
 
@@ -125,7 +121,30 @@ export async function getCycleRounds(
     skip += limit;
   }
 
+  const cycleStartDate =
+    resolvedId != null && collected.length > 0
+      ? await resolveCycleStartFromRounds(headers, resolvedId, collected)
+      : null;
   return { cycleId: resolvedId, cycleStartDate, rounds: collected };
+}
+
+// Derives a cycle's Tuesday start date from the actual round table (round/find-by-cycleId),
+// using the EARLIEST round's startedAt. This avoids relying on any single user reward round's
+// endedAt, since a late-settling round can have an endedAt that spills into the next calendar
+// week and gets misclassified as belonging to the following cycle.
+async function resolveCycleStartFromRounds(
+  headers: Record<string, string>,
+  cycleId: number,
+  userRounds: RoundRow[],
+): Promise<string | null> {
+  const leagueId = userRounds[0]?.leagueId;
+  if (leagueId == null) return null;
+  const allCycleRounds = await getAllRoundsInCycle(headers, cycleId, leagueId).catch(() => []);
+  const earliestStart = allCycleRounds
+    .map((r) => r.startedAt)
+    .filter((s): s is string => !!s)
+    .sort()[0];
+  return earliestStart ? `${earliestStart.slice(0, 10)}T00:00:00.000Z` : null;
 }
 
 // The clan the user is in right now — used to invalidate/skip stale per-clan caches
@@ -151,7 +170,10 @@ export async function getCurrentClanId(headers: Record<string, string>): Promise
 export async function fetchAllCyclesFromApi(headers: Record<string, string>): Promise<CycleInfo[]> {
   const limit = 40;
   let skip = 0;
-  const seen = new Map<number, CycleInfo>();
+  // Collect every round's endedAt per cycleId across ALL pages, then use the MEDIAN to
+  // derive the week — robust against outlier rounds whose endedAt spills into a
+  // neighboring calendar week (e.g. a late-settling round tagged with the old cycleId).
+  const endedAtByCycle = new Map<number, string[]>();
   const allRows: RewardsByUserApiRow[] = [];
   const TODAY = new Date().toISOString().slice(0, 10);
 
@@ -167,20 +189,27 @@ export async function fetchAllCyclesFromApi(headers: Record<string, string>): Pr
 
     for (const r of array) {
       const id = r.cycleId as number;
-      if (!seen.has(id)) {
-        const cycleStart = getCycleStartTuesdayUTC(r.endedAt as string).slice(0, 10);
-        const cycleEnd = cycleEndFromStart(cycleStart);
-        seen.set(id, {
-          cycleId: id,
-          cycleStart,
-          cycleEnd,
-          status: resolveCycleStatus(cycleEnd, TODAY),
-        });
-      }
+      const list = endedAtByCycle.get(id) ?? [];
+      list.push(r.endedAt as string);
+      endedAtByCycle.set(id, list);
     }
 
     if (array.length < limit) break;
     skip += limit;
+  }
+
+  const seen = new Map<number, CycleInfo>();
+  for (const [id, endedAtList] of endedAtByCycle) {
+    const sorted = [...endedAtList].sort();
+    const median = sorted[Math.floor(sorted.length / 2)];
+    const cycleStart = getCycleStartTuesdayUTC(median).slice(0, 10);
+    const cycleEnd = cycleEndFromStart(cycleStart);
+    seen.set(id, {
+      cycleId: id,
+      cycleStart,
+      cycleEnd,
+      status: resolveCycleStatus(cycleEnd, TODAY),
+    });
   }
 
   rewardsByUserSnapshot = {

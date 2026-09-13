@@ -4,8 +4,6 @@ import { loadHistoricalPrices, persistHistoricalPrices } from "./cache";
 import { addUtcDays } from "./date-range";
 import { getHistoricalPrices, type RoundRow } from "./api";
 
-const MW_SIM_INPUTS_SCHEMA_VERSION = 2;
-
 export type MaintenanceRecomputeInputs = {
   userRounds: RoundRow[];
   completedRoundsMap: Map<number, { power: number }>;
@@ -33,6 +31,20 @@ export type MaintenanceRecomputeInputs = {
   actualMinerWarsBtc: number | null;
   minerWarsSatsBase: number;
   btcPerBlock: number;
+  // Per-round override for the round's OWN league/clan context (clan TH, league
+  // EE/discount, btcPerBlock, sumAllMultipliers) — populated when the user won rounds
+  // under more than one league/clan this cycle. Rounds without an entry here fall back
+  // to the scalar current-league values above (the common single-league case).
+  roundContextById: Map<
+    number,
+    {
+      clanTH: number;
+      leagueEE: number | null;
+      leagueDiscountFactor: number | null;
+      btcPerBlock: number;
+      sumAllMultipliers: number;
+    }
+  >;
   today: string;
 };
 
@@ -62,6 +74,18 @@ type PersistedMaintenanceRecomputeInputs = {
   actualMinerWarsBtc: number | null;
   minerWarsSatsBase: number;
   btcPerBlock: number;
+  roundContextById: Array<
+    [
+      number,
+      {
+        clanTH: number;
+        leagueEE: number | null;
+        leagueDiscountFactor: number | null;
+        btcPerBlock: number;
+        sumAllMultipliers: number;
+      },
+    ]
+  >;
   today: string;
 };
 
@@ -120,6 +144,7 @@ function serializeMaintInputs(
     actualMinerWarsBtc: inputs.actualMinerWarsBtc,
     minerWarsSatsBase: inputs.minerWarsSatsBase,
     btcPerBlock: inputs.btcPerBlock,
+    roundContextById: Array.from(inputs.roundContextById.entries()),
     today: inputs.today,
   };
 }
@@ -152,6 +177,7 @@ function deserializeMaintInputs(raw: unknown): MaintenanceRecomputeInputs | null
     actualMinerWarsBtc: parsed.actualMinerWarsBtc ?? null,
     minerWarsSatsBase: parsed.minerWarsSatsBase ?? 0,
     btcPerBlock: parsed.btcPerBlock ?? 0,
+    roundContextById: new Map(parsed.roundContextById ?? []),
     today: parsed.today ?? new Date().toISOString().slice(0, 10),
   };
 }
@@ -160,10 +186,7 @@ function persistMaintInputs(cycleId: number, inputs: MaintenanceRecomputeInputs)
   try {
     const raw = localStorage.getItem(LS_KEY_MW_SIM_INPUTS);
     const store: Record<string, unknown> = raw ? JSON.parse(raw) : {};
-    store[String(cycleId)] = {
-      v: MW_SIM_INPUTS_SCHEMA_VERSION,
-      data: serializeMaintInputs(inputs),
-    };
+    store[String(cycleId)] = { data: serializeMaintInputs(inputs) };
     localStorage.setItem(LS_KEY_MW_SIM_INPUTS, JSON.stringify(store));
   } catch {
     // ignore quota errors
@@ -174,9 +197,9 @@ function loadPersistedMaintInputs(cycleId: number): MaintenanceRecomputeInputs |
   try {
     const raw = localStorage.getItem(LS_KEY_MW_SIM_INPUTS);
     if (!raw) return null;
-    const store = JSON.parse(raw) as Record<string, { v?: number; data?: unknown }>;
+    const store = JSON.parse(raw) as Record<string, { data?: unknown }>;
     const entry = store[String(cycleId)];
-    if (!entry || entry.v !== MW_SIM_INPUTS_SCHEMA_VERSION) return null;
+    if (!entry) return null;
     return deserializeMaintInputs(entry.data);
   } catch {
     return null;
