@@ -55,7 +55,6 @@ export function computeMaintenanceAndNet(
     maintGmtDiscount,
     actualMinerWarsBtc,
     minerWarsSatsBase,
-    btcPerBlock,
     roundContextById,
     today,
   } = inputs;
@@ -119,11 +118,12 @@ export function computeMaintenanceAndNet(
               : (clanNftPower ?? 1));
       const roundLeagueEE = roundCtx?.leagueEE ?? leagueEE;
       const roundLeagueDiscountFactor = roundCtx?.leagueDiscountFactor ?? leagueDiscountFactor;
-      const roundBtcPerBlock = roundCtx?.btcPerBlock ?? btcPerBlock;
       const roundSumAllMultipliers = roundCtx?.sumAllMultipliers ?? sumAllMultipliers;
       const isLeagueEE = cumulativeMWSats >= soloEquivSats;
-      const roundUserSats =
-        roundBtcPerBlock * round.multiplier * (clanTH > 0 ? userTH / clanTH : 0) * 1e8;
+      // Compare maintenance against the official already-computed reward, not the
+      // btcPerBlock approximation, which assumes every round's power ratio is 1 and so
+      // misprices any round that deviates from the cycle average.
+      const roundUserSats = (roundRewards.get(round.roundId)?.userBtc ?? 0) * 1e8;
       // Blend rates within the round that crosses the solo-equivalent threshold: the
       // portion before crossing uses the personal EE/discount, the rest uses the league's.
       const crossesThreshold =

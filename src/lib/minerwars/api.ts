@@ -1,4 +1,10 @@
-import { getJson, getJsonTolerant, postJson, resolveApiBase } from "@/lib/http";
+import {
+  getJson,
+  getJsonTolerant,
+  postJson,
+  resolveApiBase,
+  resolveBonusMinerApiBase,
+} from "@/lib/http";
 import { mapWithConcurrency } from "@/lib/concurrency";
 import { fetchDifficultyEpochs } from "./difficulty-adjustments";
 import { getCycleStartTuesdayUTC, cycleEndFromStart, toDateStr, type CycleInfo } from "./types";
@@ -368,7 +374,7 @@ export async function getBonusMinerStats(
   try {
     const res = await postJson<{
       data: { miner?: { power?: number; energy_efficiency?: number } };
-    }>(`${API}/bm/api/bonus-miner/client/find-one`, headers, {});
+    }>(`${resolveBonusMinerApiBase()}/api/bonus-miner/client/find-one`, headers, {});
     const miner = res.data?.miner;
     const power = miner?.power;
     if (typeof power !== "number" || power <= 0) return null;
