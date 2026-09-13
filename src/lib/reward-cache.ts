@@ -91,6 +91,10 @@ export function clearMinerWarsCacheEntries(): void {
   localStorage.removeItem(LS_KEY_MW_CYCLES);
   localStorage.removeItem(LS_KEY_MW_SIM_INPUTS);
   localStorage.removeItem(LS_KEY_MW_CLAN_PERF);
+  // Legacy pre-rename keys, now orphaned dead weight.
+  localStorage.removeItem("rt_mw_comparison_v1");
+  localStorage.removeItem("rt_mw_cycles_v1");
+  localStorage.removeItem("rt_mw_day_gate_v1");
 }
 
 export function clearAllCacheEntries(): void {
