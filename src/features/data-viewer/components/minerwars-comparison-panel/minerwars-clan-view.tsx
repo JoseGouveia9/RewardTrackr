@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import type { ClanPerformance } from "@/lib/minerwars/clan-performance";
 import type { Currency } from "../../types";
 import { ClanPerformanceView } from "./clan-performance-view";
+import { ClanSkeletonBody } from "./minerwars-panel-parts";
 
 interface MinerWarsClanViewProps {
   data: ClanPerformance | null;
@@ -38,6 +39,10 @@ export function MinerWarsClanView({
 }: MinerWarsClanViewProps) {
   const { t } = useTranslation();
 
+  // `loading` takes priority over stale `data` so a manual refresh keeps the skeleton
+  // up for its full duration instead of dropping as soon as clan's own fetch resolves.
+  if (loading) return <ClanSkeletonBody />;
+
   if (data) {
     return (
       <ClanPerformanceView
@@ -57,7 +62,6 @@ export function MinerWarsClanView({
     );
   }
 
-  if (loading) return <div className="clan-view-empty">{t("cycleTracker.computingClan")}</div>;
   if (error) return <div className="clan-view-empty">{error}</div>;
   return <div className="clan-view-empty">{t("cycleTracker.clanNoData")}</div>;
 }

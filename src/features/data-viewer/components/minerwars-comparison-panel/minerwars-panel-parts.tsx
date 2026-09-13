@@ -180,40 +180,129 @@ export function PercentInput({
   );
 }
 
-export function MinerWarsSkeleton() {
+// Skeleton bodies reuse the real individual/clan container classes so their layout
+// (grid, dividers, spacing) matches the loaded view exactly.
+export function IndividualSkeletonBody() {
   return (
-    <div className="minerwars-panel">
-      <div className="minerwars-panel-cycle-selector-row">
-        <div className="minerwars-panel-skeleton minerwars-panel-skeleton--dropdown" />
-        <div className="minerwars-panel-skeleton minerwars-panel-skeleton--window" />
-        <div className="minerwars-panel-skeleton minerwars-panel-skeleton--refresh" />
+    <div className="minerwars-panel-hero-card">
+      <div className="minerwars-panel-hero-grid">
+        <div className="minerwars-panel-hero-col-left">
+          <div className="minerwars-panel-hero-row">
+            <div className="minerwars-panel-skeleton minerwars-panel-skeleton--ring" />
+            <div className="minerwars-panel-hero-main">
+              <div className="minerwars-panel-skeleton minerwars-panel-skeleton--label" />
+              <div className="minerwars-panel-skeleton minerwars-panel-skeleton--hero-value" />
+            </div>
+          </div>
+
+          <div className="minerwars-panel-target-block">
+            <div className="minerwars-panel-row">
+              <div className="minerwars-panel-skeleton minerwars-panel-skeleton--label" />
+            </div>
+            <div className="minerwars-panel-skeleton minerwars-panel-skeleton--hero-value" />
+            <div className="minerwars-panel-skeleton minerwars-panel-skeleton--progress" />
+          </div>
+        </div>
+
+        <div className="minerwars-panel-hero-divider" />
+
+        <div className="minerwars-panel-hero-col-right">
+          <div className="minerwars-panel-breakdown">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i}>
+                {i > 0 && <div className="minerwars-panel-divider" />}
+                <div className="minerwars-panel-row">
+                  <div className="minerwars-panel-skeleton minerwars-panel-skeleton--label" />
+                  <div className="minerwars-panel-skeleton minerwars-panel-skeleton--value" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
-      <div className="minerwars-panel-grid minerwars-panel-grid--3col">
-        <div className="minerwars-panel-section">
-          {[0, 1, 2, 3, 4].map((i) => (
-            <div key={i} className="minerwars-panel-row">
-              <div className="minerwars-panel-skeleton minerwars-panel-skeleton--label" />
-              <div className="minerwars-panel-skeleton minerwars-panel-skeleton--value" />
+    </div>
+  );
+}
+
+export function ClanSkeletonBody() {
+  return (
+    <div className="clan-view">
+      <div className="clan-view-card">
+        <div className="clan-view-hero-grid">
+          <div className="clan-view-hero-col-left">
+            <div className="clan-view-hero-top">
+              <div className="minerwars-panel-skeleton minerwars-panel-skeleton--ring" />
+              <div className="clan-view-hero-content">
+                <div className="clan-view-hero-meta">
+                  <div className="minerwars-panel-skeleton minerwars-panel-skeleton--badge" />
+                  <div className="minerwars-panel-skeleton minerwars-panel-skeleton--label" />
+                </div>
+                <div className="minerwars-panel-skeleton minerwars-panel-skeleton--label" />
+                <div className="minerwars-panel-skeleton minerwars-panel-skeleton--mined-value" />
+              </div>
             </div>
-          ))}
+
+            <div className="clan-view-mini-row">
+              {[0, 1, 2].map((i) => (
+                <div
+                  key={i}
+                  className={`clan-view-mini-card${i < 2 ? " clan-view-mini-card--divided" : ""}`}
+                >
+                  <div className="minerwars-panel-skeleton minerwars-panel-skeleton--label" />
+                  <div className="minerwars-panel-skeleton minerwars-panel-skeleton--value" />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="clan-view-hero-divider" />
+
+          <div className="clan-view-hero-col-right">
+            <div className="clan-view-target-block">
+              <div className="minerwars-panel-row">
+                <div className="minerwars-panel-skeleton minerwars-panel-skeleton--label" />
+              </div>
+              <div className="minerwars-panel-skeleton minerwars-panel-skeleton--mined-value" />
+              <div className="minerwars-panel-skeleton minerwars-panel-skeleton--progress" />
+              <div className="clan-view-target-footer">
+                <div className="minerwars-panel-skeleton minerwars-panel-skeleton--label" />
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="minerwars-panel-section minerwars-panel-section--right">
-          {[0, 1].map((i) => (
-            <div key={i} className="minerwars-panel-row">
-              <div className="minerwars-panel-skeleton minerwars-panel-skeleton--label" />
-              <div className="minerwars-panel-skeleton minerwars-panel-skeleton--value" />
-            </div>
-          ))}
-          <div className="minerwars-panel-skeleton minerwars-panel-skeleton--progress" />
+      </div>
+
+      <div className="clan-view-perf">
+        <div className="clan-view-perf-header">
+          <div className="minerwars-panel-skeleton minerwars-panel-skeleton--value" />
         </div>
-        <div className="minerwars-panel-section minerwars-panel-section--right">
-          {[0, 1].map((i) => (
-            <div key={i} className="minerwars-panel-row">
-              <div className="minerwars-panel-skeleton minerwars-panel-skeleton--label" />
-              <div className="minerwars-panel-skeleton minerwars-panel-skeleton--value" />
+
+        <div className="clan-view-member-list">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="clan-view-member-card">
+              <div className="clan-view-member-cell clan-view-member-col-name">
+                <div className="clan-view-member-head">
+                  <div className="minerwars-panel-skeleton minerwars-panel-skeleton--ring-sm" />
+                  <div className="clan-view-member-identity">
+                    <div className="minerwars-panel-skeleton minerwars-panel-skeleton--label" />
+                    <div className="minerwars-panel-skeleton minerwars-panel-skeleton--value" />
+                  </div>
+                </div>
+              </div>
+              <div className="clan-view-member-cell clan-view-member-col-share">
+                <div className="minerwars-panel-skeleton minerwars-panel-skeleton--value" />
+              </div>
+              <div className="clan-view-member-cell clan-view-member-col-reward">
+                <div className="minerwars-panel-skeleton minerwars-panel-skeleton--value" />
+              </div>
+              <div className="clan-view-member-cell clan-view-member-col-personal">
+                <div className="minerwars-panel-skeleton minerwars-panel-skeleton--value" />
+              </div>
+              <div className="clan-view-member-cell clan-view-member-col-boost">
+                <div className="minerwars-panel-skeleton minerwars-panel-skeleton--value" />
+              </div>
             </div>
           ))}
-          <div className="minerwars-panel-skeleton minerwars-panel-skeleton--progress" />
         </div>
       </div>
     </div>

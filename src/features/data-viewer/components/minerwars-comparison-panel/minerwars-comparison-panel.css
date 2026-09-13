@@ -159,7 +159,6 @@
   cursor: not-allowed;
 }
 
-
 .minerwars-panel-cycle-dropdown-btn {
   display: flex;
   align-items: center;
@@ -709,25 +708,6 @@
   animation: minerwars-panel-shimmer 1.4s ease infinite;
 }
 
-.minerwars-panel-skeleton--dropdown {
-  width: 110px;
-  height: 28px;
-  border-radius: 8px;
-}
-
-.minerwars-panel-skeleton--window {
-  width: 150px;
-  height: 13px;
-}
-
-.minerwars-panel-skeleton--refresh {
-  width: 26px;
-  height: 26px;
-  border-radius: 6px;
-  margin-left: auto;
-  flex-shrink: 0;
-}
-
 .minerwars-panel-skeleton--label {
   width: 80px;
   height: 13px;
@@ -743,6 +723,37 @@
   height: 5px;
   border-radius: 3px;
   margin-top: 6px;
+}
+
+.minerwars-panel-skeleton--ring {
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.minerwars-panel-skeleton--ring-sm {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.minerwars-panel-skeleton--hero-value {
+  width: 150px;
+  height: 22px;
+  margin-top: 8px;
+}
+
+.minerwars-panel-skeleton--mined-value {
+  width: 120px;
+  height: 18px;
+}
+
+.minerwars-panel-skeleton--badge {
+  width: 40px;
+  height: 16px;
+  border-radius: 8px;
 }
 
 /* Spinner */

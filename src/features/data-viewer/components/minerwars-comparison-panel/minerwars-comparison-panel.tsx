@@ -12,7 +12,7 @@ import { useClanPerformance } from "../../hooks/use-clan-performance";
 import { useOutsideClick } from "../../hooks/use-outside-click";
 import type { Currency } from "../../types";
 import { MinerWarsClanView } from "./minerwars-clan-view";
-import { CycleDropdown, MinerWarsSkeleton } from "./minerwars-panel-parts";
+import { CycleDropdown, IndividualSkeletonBody } from "./minerwars-panel-parts";
 import { MinerWarsSimulateModal } from "./minerwars-simulate-modal";
 import { getMinerWarsPanelViewModel } from "./minerwars-panel-view-model";
 import { MinerWarsIndividualView } from "./minerwars-individual-view";
@@ -27,6 +27,7 @@ interface MinerWarsComparisonPanelProps {
   extraFiatCode?: string | null;
   isPrefetching?: boolean;
   onShareSnapshotChange?: (snapshot: MinerWarsShareSnapshot | null) => void;
+  onBusyChange?: (busy: boolean) => void;
 }
 
 export function MinerWarsComparisonPanel({
@@ -36,6 +37,7 @@ export function MinerWarsComparisonPanel({
   extraFiatCode = null,
   isPrefetching = false,
   onShareSnapshotChange,
+  onBusyChange,
 }: MinerWarsComparisonPanelProps) {
   const { t } = useTranslation();
   const {
@@ -166,11 +168,31 @@ export function MinerWarsComparisonPanel({
 
   const canRefreshSelectedCycle =
     isLoggedIn && (selectedCycle?.status === "in-progress" || selectedCycle?.status === "pending");
-  const refreshingSelectedView = loading || (tab === "clan" && clanPerf.loading);
-  const handleSelectedViewRefresh = useCallback(() => {
-    if (tab === "clan") return clanPerf.refresh();
+  // Clan's own fetch is usually faster than individual's multi-step refresh (reload
+  // cycles, sync sheet, refetch comparison) — this keeps the clan skeleton up for the
+  // whole combined operation instead of dropping as soon as clan's part resolves.
+  const [manualClanRefreshing, setManualClanRefreshing] = useState(false);
+  const refreshingSelectedView =
+    loading || manualClanRefreshing || (tab === "clan" && clanPerf.loading);
+  const handleSelectedViewRefresh = useCallback(async () => {
+    // Clan metrics derive from the individual comparison (target days, mined sats), so
+    // refreshing either tab must refetch both to keep them consistent.
+    if (tab === "clan") {
+      setManualClanRefreshing(true);
+      try {
+        await Promise.all([refresh(), clanPerf.refresh()]);
+      } finally {
+        setManualClanRefreshing(false);
+      }
+      return;
+    }
     return refresh();
   }, [clanPerf, refresh, tab]);
+
+  const isBusy = showSkeleton || refreshingSelectedView;
+  useEffect(() => {
+    onBusyChange?.(isBusy);
+  }, [isBusy, onBusyChange]);
 
   useEffect(() => {
     if (!onShareSnapshotChange) return;
@@ -183,7 +205,6 @@ export function MinerWarsComparisonPanel({
     onShareSnapshotChange({
       currentViewMode: tab,
       selectedCycleId,
-      selectedCycleStatus: selectedCycle?.status,
       cycles,
       comparison: data,
       clanPerformance: clanData,
@@ -197,7 +218,6 @@ export function MinerWarsComparisonPanel({
     clanPerf.data,
     tab,
     selectedCycleId,
-    selectedCycle?.status,
     cycles,
     currency,
     extraFiatCode,
@@ -303,9 +323,7 @@ export function MinerWarsComparisonPanel({
     setSimulateCurrency(simulateCurrencyOptions[nextIndex]!.key);
   }
 
-  if (showSkeleton) return <MinerWarsSkeleton />;
-
-  if (error && !data) return null;
+  if (error && !data && !showSkeleton) return null;
 
   const simulateModal = canSimulate ? (
     <MinerWarsSimulateModal
@@ -409,7 +427,7 @@ export function MinerWarsComparisonPanel({
       {tab === "clan" ? (
         <MinerWarsClanView
           data={clanPerf.data}
-          loading={clanPerf.loading}
+          loading={showSkeleton || clanPerf.loading || manualClanRefreshing}
           error={clanPerf.error}
           clanTargetBtc={clanTargetBtc}
           clanMinerWarsBtc={clanMinerWarsBtc}
@@ -423,6 +441,8 @@ export function MinerWarsComparisonPanel({
           gmtPrice={data?.gmtPrice ?? null}
           isLiveCycle={selectedCycle?.status === "in-progress"}
         />
+      ) : showSkeleton || !data ? (
+        <IndividualSkeletonBody />
       ) : (
         <>
           {simulateModal}

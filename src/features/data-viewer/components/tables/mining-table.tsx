@@ -268,6 +268,7 @@ export function MiningTable({
   const [minerWarsShareOpen, setMinerWarsShareOpen] = useState(false);
   const [minerWarsShareSnapshot, setMinerWarsShareSnapshot] =
     useState<MinerWarsShareSnapshot | null>(null);
+  const [minerWarsBusy, setMinerWarsBusy] = useState(false);
   const [cycleTrackerCurrency, setCycleTrackerCurrency] = useState<Currency>(currency);
   useEffect(() => {
     if (showCycleTracker) setCycleTrackerMounted(true);
@@ -593,15 +594,15 @@ export function MiningTable({
           {showCycleTracker && (
             <button
               type="button"
-              className={`dv-minerwars-share-btn${minerWarsShareDisabled || !minerWarsShareSnapshot ? " dv-minerwars-share-btn--disabled" : ""}`}
+              className={`dv-minerwars-share-btn${minerWarsShareDisabled || !minerWarsShareSnapshot || minerWarsBusy ? " dv-minerwars-share-btn--disabled" : ""}`}
               onClick={
-                minerWarsShareDisabled || !minerWarsShareSnapshot
+                minerWarsShareDisabled || !minerWarsShareSnapshot || minerWarsBusy
                   ? undefined
                   : () => setMinerWarsShareOpen(true)
               }
               aria-label={t("dataViewer.shareRecordsLabel")}
               title={t("common.share")}
-              aria-disabled={minerWarsShareDisabled || !minerWarsShareSnapshot}
+              aria-disabled={minerWarsShareDisabled || !minerWarsShareSnapshot || minerWarsBusy}
             >
               <ShareIcon />
             </button>
@@ -623,6 +624,7 @@ export function MiningTable({
                   extraFiatCode={cycleTrackerExtraFiatCode}
                   isPrefetching={minerWarsPrefetching}
                   onShareSnapshotChange={setMinerWarsShareSnapshot}
+                  onBusyChange={setMinerWarsBusy}
                 />
               )}
             </div>

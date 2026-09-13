@@ -43,6 +43,9 @@ export function useClanPerformance({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const abortedRef = useRef(false);
+  // Toggling the Clan tab off/on re-runs the mount effect (via `enabled`); this guards
+  // it from re-reading the (stale) cache over a manual refresh() still in flight.
+  const manualRefreshRef = useRef(false);
 
   // Clan performance isn't available for completed cycles (needs historical TH/EE data
   // that only the live clan roster/leaderboard endpoints can provide).
@@ -54,6 +57,7 @@ export function useClanPerformance({
       if (notAvailable) setData(null);
       return;
     }
+    if (manualRefreshRef.current) return;
 
     const cached = getCachedClanPerformance(cycleId);
     setData(cached);
@@ -117,6 +121,8 @@ export function useClanPerformance({
     if (cycleId == null || notAvailable || !cycleStart || !cycleEnd) return;
     const token = getToken();
     if (!token) return;
+    manualRefreshRef.current = true;
+    setData(null);
     setLoading(true);
     setError(null);
     try {
@@ -133,6 +139,7 @@ export function useClanPerformance({
       setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
       setLoading(false);
+      manualRefreshRef.current = false;
     }
   }, [cycleId, notAvailable, cycleStart, cycleEnd, clanMinerWarsSats]);
 
