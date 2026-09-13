@@ -127,6 +127,9 @@
   "export": {
     "walletPricing": "지갑 가격",
     "walletPricingDesc": "Bounties, 입금, 출금 및 거래에만 적용됩니다. GoMining API는 이러한 시트의 법정화폐 가격을 반환하지 않으므로 내보내기 시 CoinGecko를 사용하여 보강합니다.",
+    "liveMinerWars": "라이브 마이너워즈",
+    "liveMinerWarsToggleLabel": "실시간 사이클 가져오기",
+    "liveMinerWarsDesc": "활성화하면 빌드 시 현재 진행 중인 MinerWars 사이클도 실시간으로 가져옵니다. 비활성화하면 MinerWars 시트에 이미 있는 완료된 사이클만 채웁니다.",
     "includeFiatPricing": "법정화폐 가격 포함(USD). 추가 법정화폐는 아래에서 설정합니다.",
     "rateLimitWarning": "이 작업은 시간이 걸릴 수 있습니다. CoinGecko 무료 플랜에는 속도 제한이 있으며, 각 제한 도달 시 60초 쿨다운이 발생합니다.",
     "extraFiatConversion": "추가 법정화폐 변환",
@@ -239,7 +242,10 @@
     "upgradePower": "업그레이드 - 파워"
   },
   "cycleTracker": {
-    "computing": "사이클 비교 계산 중…",
+    "computing": "MinerWars Cycle Tracker 동기화 중…",
+    "computingIndividual": "개인 MinerWars 동기화 중…",
+    "computingClan": "클랜 성과 동기화 중…",
+    "computingHistory": "지난 사이클 동기화 중…",
     "cycle": "사이클 {{id}}",
     "statusLive": "진행 중",
     "statusPending": "대기",

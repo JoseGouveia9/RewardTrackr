@@ -5,6 +5,39 @@ import { FIAT_OPTIONS } from "@/config/currencies";
 import "./fiat-dropdown.css";
 import type { ExtraFiatCurrency } from "@/types/rewards";
 
+function CheckIcon() {
+  return (
+    <svg
+      width="13"
+      height="13"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  );
+}
+
+function ChevronDownIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      width="9"
+      height="6"
+      viewBox="0 0 10 6"
+      fill="currentColor"
+      aria-hidden="true"
+    >
+      <path d="M0 0l5 6 5-6z" />
+    </svg>
+  );
+}
+
 interface FiatDropdownProps {
   value: ExtraFiatCurrency;
   onChange: (currency: ExtraFiatCurrency) => void;
@@ -143,7 +176,11 @@ export const FiatDropdown = memo(function FiatDropdown({ value, onChange }: Fiat
               >
                 <span className="fiat-option-title">{currency}</span>
                 <span className="fiat-option-subtitle">{label}</span>
-                {value === currency && <span className="fiat-option-check">✓</span>}
+                {value === currency && (
+                  <span className="fiat-option-check">
+                    <CheckIcon />
+                  </span>
+                )}
               </div>
             ))}
           </div>,
@@ -170,7 +207,9 @@ export const FiatDropdown = memo(function FiatDropdown({ value, onChange }: Fiat
         aria-expanded={open}
       >
         <span>{value}</span>
-        <span className={`fiat-dropdown-caret${open ? " fiat-dropdown-caret--open" : ""}`}>⌃</span>
+        <ChevronDownIcon
+          className={`fiat-dropdown-caret${open ? " fiat-dropdown-caret--open" : ""}`}
+        />
       </button>
       {menu}
     </span>

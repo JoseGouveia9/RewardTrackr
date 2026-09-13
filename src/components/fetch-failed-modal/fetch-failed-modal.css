@@ -1,0 +1,113 @@
+.fetch-failed-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10001;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.fetch-failed-modal {
+  background: #fff;
+  border-radius: 20px;
+  padding: 26px 24px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+}
+
+.page.theme-dark .fetch-failed-modal {
+  background: #1c1c1e;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.page.theme-light .fetch-failed-modal {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(247, 249, 253, 0.97));
+  border: 1px solid rgba(52, 66, 97, 0.14);
+  box-shadow: 0 18px 48px rgba(40, 52, 84, 0.12);
+}
+
+.fetch-failed-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  color: #e0483d;
+  background: rgba(224, 72, 61, 0.12);
+}
+
+.fetch-failed-title {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0;
+  color: #22283a;
+}
+
+.page.theme-dark .fetch-failed-title {
+  color: #f0f4ff;
+}
+
+.fetch-failed-body {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0;
+  color: #5b6478;
+}
+
+.page.theme-dark .fetch-failed-body {
+  color: #9aa3b8;
+}
+
+.fetch-failed-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+  width: 100%;
+}
+
+.fetch-failed-btn {
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: 12px;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition:
+    background 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.fetch-failed-btn--primary {
+  background: #4a9eff;
+  color: #fff;
+}
+
+.fetch-failed-btn--primary:hover {
+  opacity: 0.9;
+}
+
+.fetch-failed-btn--ghost {
+  background: transparent;
+  border-color: rgba(120, 130, 150, 0.35);
+  color: #5b6478;
+}
+
+.page.theme-dark .fetch-failed-btn--ghost {
+  color: #c2c9d6;
+}
+
+.fetch-failed-btn--ghost:hover {
+  background: rgba(120, 130, 150, 0.12);
+}

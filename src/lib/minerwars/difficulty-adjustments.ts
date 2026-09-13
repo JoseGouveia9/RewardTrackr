@@ -106,3 +106,23 @@ export function fetchDifficultyEpochs(): Promise<DifficultyEpoch[]> {
     return epochs.sort((a, b) => a.date.localeCompare(b.date));
   });
 }
+
+export function estimateTargetBtcFromPower(
+  epochs: DifficultyEpoch[],
+  cycleStart: string,
+  cycleEnd: string,
+  power: number,
+): number {
+  if (!power || power <= 0) return 0;
+  let targetSats = 0;
+  for (let date = new Date(`${cycleStart}T00:00:00Z`); ; date.setUTCDate(date.getUTCDate() + 1)) {
+    const dateStr = date.toISOString().slice(0, 10);
+    let applicable: DifficultyEpoch | null = null;
+    for (const ep of epochs) {
+      if (ep.date < dateStr) applicable = ep;
+    }
+    if (applicable) targetSats += applicable.satsPerTH * power;
+    if (dateStr === cycleEnd) break;
+  }
+  return targetSats / 1e8;
+}

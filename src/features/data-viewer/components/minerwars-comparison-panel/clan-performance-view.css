@@ -1,0 +1,578 @@
+.clan-view {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.clan-view-card {
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 16px;
+}
+
+.clan-view-hero-grid {
+  display: flex;
+  align-items: stretch;
+  gap: 20px;
+}
+
+.clan-view-hero-col-left {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  justify-content: center;
+  flex: 1.05 1.05 0;
+  min-width: 0;
+}
+
+.clan-view-hero-divider {
+  width: 1px;
+  align-self: stretch;
+  background: rgba(148, 163, 184, 0.2);
+  flex-shrink: 0;
+}
+
+.clan-view-hero-col-right {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1.25 1.25 0;
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .clan-view-hero-grid {
+    flex-direction: column;
+  }
+
+  .clan-view-hero-divider {
+    width: auto;
+    height: 1px;
+  }
+
+  .clan-view-hero-col-left,
+  .clan-view-hero-col-right {
+    flex-basis: auto;
+  }
+}
+
+.clan-view-hero-top {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.clan-view-ring-wrap {
+  position: relative;
+  flex-shrink: 0;
+  width: 92px;
+  height: 92px;
+}
+
+.clan-view-ring-svg {
+  display: block;
+}
+
+.clan-view-ring-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.clan-view-ring-pct {
+  font-weight: 700;
+  font-size: 0.95rem;
+  line-height: 1.1;
+  color: #f0f0f0;
+}
+
+.clan-view-ring-label {
+  font-size: 0.62rem;
+  color: #9aa3af;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 2px;
+}
+
+.clan-view-hero-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
+
+.clan-view-hero-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.clan-view-rank-tag {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #fbbf72;
+  background: rgba(247, 147, 26, 0.16);
+  border: 1px solid rgba(247, 147, 26, 0.4);
+  border-radius: 999px;
+  padding: 3px 8px;
+}
+
+.clan-view-members-count {
+  font-size: 0.74rem;
+  color: #9aa3af;
+}
+
+.clan-view-mined-value {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #f0f0f0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.clan-view-mini-row {
+  display: flex;
+  border-top: 1px solid rgba(148, 163, 184, 0.2);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.clan-view-mini-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px;
+  min-width: 0;
+}
+
+.clan-view-mini-card--divided {
+  border-right: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.clan-view-mini-label {
+  font-size: 0.66rem;
+  font-weight: 600;
+  color: #9aa3af;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.clan-view-mini-value {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #f0f0f0;
+}
+
+.clan-view-target-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+}
+
+.clan-view-target-value-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.clan-view-target-value {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: #f0f0f0;
+}
+
+.clan-view-target-footer {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #f0f0f0;
+  text-align: right;
+}
+
+.clan-view-perf {
+  --clan-view-col-name: 260px;
+  --clan-view-col-metric: 140px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.clan-view-perf-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.clan-view-perf-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.clan-view-perf-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.clan-view-perf-title-icon {
+  color: #f7931a;
+  flex-shrink: 0;
+}
+
+.clan-view-perf-title {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: #f0f0f0;
+}
+
+.clan-view-sort {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.clan-view-sort-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 150px;
+  padding: 7px 12px;
+  color: #f0f0f0;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.clan-view-sort-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.clan-view-sort-btn-label {
+  font-size: 0.76rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.clan-view-sort-chevron {
+  opacity: 0.55;
+  flex-shrink: 0;
+}
+
+.clan-view-sort-list {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 30;
+  min-width: 170px;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  border-radius: 10px;
+  background: #222222;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+}
+
+.clan-view-sort-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #d8dce8;
+  font-size: 0.76rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.clan-view-sort-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.clan-view-sort-item--active {
+  background: rgba(247, 147, 26, 0.12);
+  color: #fbb060;
+}
+
+.clan-view-member-table-header {
+  display: grid;
+  grid-template-columns: var(--clan-view-col-name) minmax(0, 1fr) var(--clan-view-col-metric) var(--clan-view-col-metric) var(--clan-view-col-metric);
+  gap: 12px;
+  padding: 0 16px;
+}
+
+.clan-view-member-header-cell {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+
+.clan-view-member-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.clan-view-member-card {
+  display: grid;
+  grid-template-columns: var(--clan-view-col-name) minmax(0, 1fr) var(--clan-view-col-metric) var(--clan-view-col-metric) var(--clan-view-col-metric);
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.clan-view-member-cell {
+  min-width: 0;
+  display: flex;
+}
+
+.clan-view-member-col-name {
+  justify-content: flex-start;
+}
+
+.clan-view-member-col-share {
+  min-width: 0;
+  justify-content: flex-start;
+}
+
+.clan-view-member-col-reward,
+.clan-view-member-col-personal,
+.clan-view-member-col-boost {
+  justify-content: flex-end;
+}
+
+.clan-view-member-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.clan-view-member-identity {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 2px;
+}
+
+.clan-view-member-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  object-fit: cover;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.clan-view-member-avatar--fallback {
+  background: #f7931a;
+}
+
+.clan-view-member-alias {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #f0f0f0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.clan-view-member-meta {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.clan-view-share-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+.clan-view-share-value {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #f0f0f0;
+  text-align: left;
+}
+
+.clan-view-share-bar {
+  margin-top: 0;
+  height: 8px;
+  border-radius: 999px;
+}
+
+.clan-view-member-metric-value {
+  font-size: 0.94rem;
+  font-weight: 700;
+  color: #f0f0f0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  justify-content: flex-end;
+}
+
+.clan-view-member-metric-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.clan-view-member-metric-sub {
+  font-size: 0.72rem;
+  text-align: right;
+}
+
+.clan-view-empty {
+  font-size: 0.8rem;
+  color: #9aa3af;
+  padding: 12px 0;
+  text-align: center;
+}
+
+.page.theme-light .clan-view-card {
+  background: #eceff3;
+  border: 1px solid #dfe5ec;
+}
+
+.page.theme-light .clan-view-ring-pct,
+.page.theme-light .clan-view-mined-value,
+.page.theme-light .clan-view-mini-value,
+.page.theme-light .clan-view-target-value,
+.page.theme-light .clan-view-target-footer,
+.page.theme-light .clan-view-member-alias,
+.page.theme-light .clan-view-member-metric-value,
+.page.theme-light .clan-view-share-value,
+.page.theme-light .clan-view-sort-btn,
+.page.theme-light .clan-view-perf-title {
+  color: #14161c;
+}
+
+.page.theme-light .clan-view-members-count,
+.page.theme-light .clan-view-mini-label,
+.page.theme-light .clan-view-ring-label,
+.page.theme-light .clan-view-empty,
+.page.theme-light .clan-view-member-meta,
+.page.theme-light .clan-view-member-header-cell {
+  color: #6b7280;
+}
+
+.page.theme-light .clan-view-member-metric-sub {
+  color: #9aa1ab;
+}
+
+.page.theme-light .clan-view-rank-tag {
+  color: #b45309;
+  background: #fff3e0;
+  border-color: rgba(247, 147, 26, 0.3);
+}
+
+.page.theme-light .clan-view-mini-card--divided,
+.page.theme-light .clan-view-mini-row {
+  border-color: #e5e7eb;
+}
+
+.page.theme-light .clan-view-hero-divider {
+  background: #e5e7eb;
+}
+
+.page.theme-light .clan-view-member-card {
+  background: #e7ecf2;
+  border: 1px solid #d8e0e8;
+}
+
+.page.theme-light .clan-view-sort-btn {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+.page.theme-light .clan-view-sort-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.page.theme-light .clan-view-sort-list {
+  background: rgba(255, 255, 255, 0.97);
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+}
+
+.page.theme-light .clan-view-sort-item {
+  color: #22283a;
+}
+
+.page.theme-light .clan-view-sort-item:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.page.theme-light .clan-view-sort-item--active {
+  background: #f7931a;
+  color: #ffffff;
+}
+
+
+.page.theme-light .clan-view-perf {
+  border-top-color: rgba(0, 0, 0, 0.08);
+}
+
+@media (max-width: 860px) {
+  .clan-view-perf-heading {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .clan-view-member-table-header {
+    display: none;
+  }
+
+  .clan-view-member-card {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .clan-view-member-col-reward,
+  .clan-view-member-col-personal,
+  .clan-view-member-col-boost {
+    justify-content: flex-start;
+  }
+
+  .clan-view-member-metric-value,
+  .clan-view-member-metric-wrap {
+    justify-content: flex-start;
+    align-items: flex-start;
+  }
+
+  .clan-view-member-metric-sub {
+    text-align: left;
+  }
+}

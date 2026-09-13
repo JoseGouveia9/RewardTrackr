@@ -5,6 +5,7 @@ import { EMPTY_DATE_RANGE, DATE_PRESETS } from "../../utils/constants";
 import { isDateRangeActive } from "../../utils";
 import { MiniCalendar, getLocalizedMonths } from "../mini-calendar/mini-calendar";
 import { useOutsideClick } from "../../hooks/use-outside-click";
+import { ChevronDownIcon, FilterIcon } from "../icons";
 
 function CalSelect({
   value,
@@ -24,7 +25,11 @@ function CalSelect({
     <div ref={wrapRef} className="dv-cal-sel-wrap">
       <button type="button" className="dv-cal-sel-trigger" onClick={() => setOpen((p) => !p)}>
         <span>{selectedLabel}</span>
-        <span className={`dv-cal-sel-caret${open ? " dv-cal-sel-caret--open" : ""}`}>⌃</span>
+        <ChevronDownIcon
+          className={`dv-cal-sel-caret${open ? " dv-cal-sel-caret--open" : ""}`}
+          width={9}
+          height={6}
+        />
       </button>
       {open && (
         <div className="dv-cal-sel-menu">
@@ -198,19 +203,7 @@ export function DateRangeFilter({
         className={`dv-column-filter-button${isDateRangeActive(value) ? " dv-column-filter-button--active" : ""}`}
         onClick={openPicker}
       >
-        <svg
-          width="10"
-          height="10"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
-        </svg>
+        <FilterIcon />
         {t("dataViewer.date")}
       </button>
 

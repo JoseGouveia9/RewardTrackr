@@ -127,6 +127,9 @@
   "export": {
     "walletPricing": "钱包定价",
     "walletPricingDesc": "仅适用于Bounties、存款、提款和交易。GoMining API 不返回这些表格的法币定价，因此我们在导出时使用 CoinGecko 进行丰富。",
+    "liveMinerWars": "实时 MinerWars",
+    "liveMinerWarsToggleLabel": "获取实时周期",
+    "liveMinerWarsDesc": "启用后，构建时还会实时获取当前进行中的 MinerWars 周期。禁用后，仅填充 MinerWars 表中已存在的已完成周期。",
     "includeFiatPricing": "包含法币定价（USD）。额外法币在下方配置。",
     "rateLimitWarning": "这可能需要一些时间。CoinGecko 免费计划有速率限制，每次达到限制会触发60秒冷却。",
     "extraFiatConversion": "额外法币转换",
@@ -239,7 +242,10 @@
     "upgradePower": "升级 - 算力"
   },
   "cycleTracker": {
-    "computing": "正在计算周期比较…",
+    "computing": "正在同步 MinerWars Cycle Tracker…",
+    "computingIndividual": "正在同步个人 MinerWars…",
+    "computingClan": "正在同步公会表现…",
+    "computingHistory": "正在同步历史周期…",
     "cycle": "周期 {{id}}",
     "statusLive": "进行中",
     "statusPending": "待处",

@@ -2,6 +2,7 @@
 import { WALLET_TX_KEYS } from "@/config/wallet-types";
 import { REWARD_CONFIG_MAP, ALL_REWARD_KEYS } from "@/config/reward-configs";
 import { buildApiHeaders, postJson } from "@/lib/http";
+import { FORCE_FETCH_FAIL } from "@/lib/dev-flags";
 import { enrichRecords, reenrichFiatValues } from "./transformers";
 import { getSessionPriceCache, persistCoinGeckoPriceCache } from "../api/coingecko";
 import {
@@ -11,6 +12,11 @@ import {
   invalidateCycleCache,
   prefetchAllCompletedCycles,
 } from "@/lib/minerwars/comparison";
+import {
+  fetchClanPerformance,
+  invalidateStaleClanPerformanceCache,
+} from "@/lib/minerwars/clan-performance";
+import { getCurrentClanId } from "@/lib/minerwars/api";
 import { buildExcelFromSheets } from "./excel-builder";
 import type {
   CacheState,
@@ -26,8 +32,6 @@ import type {
   RewardSheetPayload,
 } from "@/types/rewards";
 import {
-  MINERWARS_SCHEMA_VERSION,
-  MINING_SCHEMA_VERSION,
   hasMissingPrices,
   filterCacheableRecords,
   persistPriceCache,
@@ -109,6 +113,12 @@ async function fetchWithRetry<T>(
 ): Promise<T> {
   for (let attempt = 1; attempt <= MAX_RETRIES + 1; attempt++) {
     try {
+      if (FORCE_FETCH_FAIL) {
+        // TEMP: mimic a timeout so the retry loop runs and then exhausts.
+        const forced = new Error("Forced fetch failure (test)");
+        forced.name = "AbortError";
+        throw forced;
+      }
       return await fn();
     } catch (err) {
       // Only retry on AbortError (request timeout) — API/network errors are not retried
@@ -281,10 +291,9 @@ function cacheExtras(key: RewardKey, includeWalletFiat: boolean, currency: Extra
   const pricingMode = WALLET_TX_KEYS.has(key)
     ? ((includeWalletFiat ? "fiat-on" : "fiat-off") as "fiat-on" | "fiat-off")
     : undefined;
-  const schemaVersion = key === "minerwars" ? MINERWARS_SCHEMA_VERSION : MINING_SCHEMA_VERSION;
   return pricingMode
-    ? { pricingMode, extraFiatCurrency: currency, schemaVersion }
-    : { extraFiatCurrency: currency, schemaVersion };
+    ? { pricingMode, extraFiatCurrency: currency }
+    : { extraFiatCurrency: currency };
 }
 
 function toEpoch(createdAt: string | undefined | null): number {
@@ -584,12 +593,13 @@ export interface ExportFlowParams {
   includeWalletFiat: boolean;
   includeExcelFiat: boolean;
   excelFiatCurrency: ExtraFiatCurrency;
-  txFromTypeFilter?: string[];
+  disableMinerWarsLiveFetch?: boolean;
   onMessage: (msg: string) => void;
   onCacheUpdate: (cache: CacheState) => void;
   onStarted?: () => void;
   onBeforeDownload?: () => Promise<void>;
   onMinerWarsPrefetchingChange?: (prefetching: boolean) => void;
+  downloadExcel?: boolean;
 }
 
 export interface RefreshCacheKeysParams {
@@ -701,12 +711,13 @@ export async function executeExportFlow({
   includeWalletFiat,
   includeExcelFiat,
   excelFiatCurrency,
-  txFromTypeFilter,
+  disableMinerWarsLiveFetch,
   onMessage,
   onCacheUpdate,
   onStarted,
   onBeforeDownload,
   onMinerWarsPrefetchingChange,
+  downloadExcel = true,
 }: ExportFlowParams): Promise<string> {
   await checkExportRateLimit(accessToken);
   onStarted?.();
@@ -941,7 +952,6 @@ export async function executeExportFlow({
       // Phase 1.5: Cache WITHOUT fiat values yet (will be enriched in phase 2)
       // Don't reference extraFiatCurrency until phase 2 enrichment completes
       const extras = {
-        schemaVersion: MINING_SCHEMA_VERSION,
         pricingMode: "fiat-off" as const,
         extraFiatCurrency: undefined,
       };
@@ -974,16 +984,34 @@ export async function executeExportFlow({
     if (selectedKeys.includes("minerwars")) {
       try {
         onMinerWarsPrefetchingChange?.(true);
-        onMessage(i18n.t("export.preparingCycleTracker")); // Skeleton loading indicator
+        onMessage(i18n.t("cycleTracker.computingIndividual"));
         const cycles = await fetchAvailableCycles(accessToken).catch(() => []);
-        const liveOrPending = cycles.find(
-          (c) => c.status === "in-progress" || c.status === "pending",
-        );
+        const liveOrPending = disableMinerWarsLiveFetch
+          ? undefined
+          : cycles.find((c) => c.status === "in-progress" || c.status === "pending");
         if (liveOrPending) {
           invalidateCycleCache(liveOrPending.cycleId);
-          await fetchMinerWarsComparison(accessToken, liveOrPending.cycleId).catch(() => {});
+          const comparison = await fetchMinerWarsComparison(
+            accessToken,
+            liveOrPending.cycleId,
+          ).catch(() => null);
+          if (comparison) {
+            onMessage(i18n.t("cycleTracker.computingClan"));
+            await fetchClanPerformance(
+              accessToken,
+              liveOrPending.cycleId,
+              comparison.cycleStart,
+              comparison.cycleEnd,
+              (comparison.clanMinerWarsSats ?? 0) / 1e8,
+            ).catch(() => {});
+          }
         }
-        await prefetchAllCompletedCycles(accessToken).catch(() => {});
+        onMessage(i18n.t("cycleTracker.computingHistory"));
+        const currentClanId = await getCurrentClanId(buildApiHeaders(accessToken)).catch(
+          () => null,
+        );
+        if (currentClanId != null) invalidateStaleClanPerformanceCache(currentClanId);
+        await prefetchAllCompletedCycles(accessToken, cycles).catch(() => {});
         const today = new Date().toISOString().slice(0, 10);
         const uncached = cycles.filter(
           (c) => c.cycleEnd < today && getCachedMinerWarsComparison(c.cycleId) === null,
@@ -997,7 +1025,7 @@ export async function executeExportFlow({
           try {
             const raw = localStorage.getItem("mw-comparison-cache");
             if (raw && raw.length > 0) {
-              onMessage(i18n.t("export.preparingCycleTracker"));
+              onMessage(i18n.t("cycleTracker.computing"));
             }
           } catch {
             // ignore
@@ -1071,37 +1099,6 @@ export async function executeExportFlow({
     // Persist the price cache session to localStorage for next reload
     persistCoinGeckoPriceCache(priceCache);
 
-    onMessage(i18n.t("export.buildingExcel"));
-    const sheetsPayload: RewardSheetPayload[] = selectedKeys.flatMap((key) => {
-      const cached = updatedCache[key];
-      if (!cached) return [];
-      const config = REWARD_CONFIG_MAP[key];
-      let records = cached.records as RewardSheetPayload["records"];
-      if (key === "transactions" && txFromTypeFilter && txFromTypeFilter.length > 0) {
-        records = records.filter((r) =>
-          txFromTypeFilter.includes((r as { fromType?: string }).fromType ?? ""),
-        );
-      }
-      return [
-        {
-          key,
-          sheetName: cached.sheetName,
-          sheetType: config?.sheetType ?? "standard",
-          records,
-          totalCount: cached.totalCount,
-        } as RewardSheetPayload,
-      ];
-    });
-
-    const options: FetchRewardsOptions = {
-      walletTx: { includeFiat: includeWalletFiat },
-      excel: { includeFiat: includeExcelFiat, fiatCurrency: excelFiatCurrency },
-    };
-
-    const buffer = await buildExcelFromSheets(sheetsPayload, options);
-    if (onBeforeDownload) await onBeforeDownload();
-    triggerFileDownload(buffer, `rewards-${new Date().toISOString().slice(0, 10)}.xlsx`);
-
     const freshCount = cachedKeys.length - staleKeys.length - currencyChangeKeys.size;
     const parts: string[] = [];
     if (uncachedKeys.length > 0)
@@ -1110,9 +1107,40 @@ export async function executeExportFlow({
     if (currencyChangeKeys.size > 0)
       parts.push(i18n.t("export.partReEnriched", { count: currencyChangeKeys.size }));
     if (freshCount > 0) parts.push(i18n.t("export.partFromCache", { count: freshCount }));
-    return i18n.t("export.downloaded", {
-      details: parts.join(", ") || i18n.t("export.allFromCache"),
-    });
+
+    if (downloadExcel) {
+      onMessage(i18n.t("export.buildingExcel"));
+      const sheetsPayload: RewardSheetPayload[] = selectedKeys.flatMap((key) => {
+        const cached = updatedCache[key];
+        if (!cached) return [];
+        const config = REWARD_CONFIG_MAP[key];
+        return [
+          {
+            key,
+            sheetName: cached.sheetName,
+            sheetType: config?.sheetType ?? "standard",
+            records: cached.records as RewardSheetPayload["records"],
+            totalCount: cached.totalCount,
+          } as RewardSheetPayload,
+        ];
+      });
+
+      const options: FetchRewardsOptions = {
+        walletTx: { includeFiat: includeWalletFiat },
+        excel: { includeFiat: includeExcelFiat, fiatCurrency: excelFiatCurrency },
+      };
+
+      const buffer = await buildExcelFromSheets(sheetsPayload, options);
+      if (onBeforeDownload) await onBeforeDownload();
+      triggerFileDownload(buffer, `rewards-${new Date().toISOString().slice(0, 10)}.xlsx`);
+
+      return i18n.t("export.downloaded", {
+        details: parts.join(", ") || i18n.t("export.allFromCache"),
+      });
+    }
+
+    const details = parts.join(", ") || i18n.t("export.allFromCache");
+    return `Build done. Cached data updated (${details}). Use Download Excel in Records.`;
   } catch (err) {
     await rollbackExportRateLimit(accessToken);
     throw err;

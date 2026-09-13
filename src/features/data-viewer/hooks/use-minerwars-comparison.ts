@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { decodeJwt } from "@/lib/http";
+import { buildApiHeaders, decodeJwt } from "@/lib/http";
 import { LS_KEY_SYNC_TOKEN } from "@/lib/storage-keys";
 import { resolveCycleStatus, persistCycles } from "@/lib/minerwars/cache";
+import { getCurrentClanId } from "@/lib/minerwars/api";
+import { invalidateStaleClanPerformanceCache } from "@/lib/minerwars/clan-performance";
 import {
   fetchAvailableCycles,
   fetchMinerWarsComparison,
@@ -145,7 +147,7 @@ export function useMinerWarsComparison({
     setLoading(true);
     setError(null);
 
-    return fetchMinerWarsComparison(token, cycleId)
+    return fetchMinerWarsComparison(token, cycleId, { forceRefresh: skipCache })
       .then((result) => {
         setData(result);
         setError(null);
@@ -154,6 +156,7 @@ export function useMinerWarsComparison({
         if ((err as { name?: string }).name === "AbortError") return;
         setData(null);
         setError(err instanceof Error ? err.message : "Unknown error");
+        window.dispatchEvent(new CustomEvent("rt:fetch-failed"));
       })
       .finally(() => setLoading(false));
   }, []);
@@ -173,6 +176,10 @@ export function useMinerWarsComparison({
 
     setLoading(true);
     const list = await reloadCycles().catch(() => []);
+
+    // Drop any clan-info cache that no longer matches the user's current clan.
+    const currentClanId = await getCurrentClanId(buildApiHeaders(getToken())).catch(() => null);
+    if (currentClanId != null) invalidateStaleClanPerformanceCache(currentClanId);
 
     // If pending cycles exist, sync minerwars rewards sheet and recompute statuses if new entries arrived
     if (list.some((c) => c.status === "pending")) {

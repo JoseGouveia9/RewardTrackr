@@ -316,7 +316,6 @@ export interface CacheEntry {
   records: RewardRecord[];
   totalCount: number;
   fetchedAt: number;
-  schemaVersion?: number;
   pricingMode?: PricingMode;
   extraFiatCurrency?: ExtraFiatCurrency;
   newEntriesCount?: number;

@@ -127,6 +127,9 @@
   "export": {
     "walletPricing": "ウォレット価格",
     "walletPricingDesc": "Bounties、入金、出金、取引にのみ適用されます。GoMining APIはこれらのシートの法定通貨価格を返さないため、エクスポート時にCoinGeckoで補完します。",
+    "liveMinerWars": "ライブ MinerWars",
+    "liveMinerWarsToggleLabel": "ライブサイクルを取得",
+    "liveMinerWarsDesc": "有効にすると、ビルド時に進行中のMinerWarsサイクルもライブで取得します。無効にすると、MinerWarsシートに既に存在する完了済みサイクルのみを反映します。",
     "includeFiatPricing": "法定通貨価格を含める（USD）。追加の法定通貨は以下で設定。",
     "rateLimitWarning": "これには時間がかかる場合があります。CoinGeckoの無料プランにはレート制限があり、制限に達するたびに60秒のクールダウンが発生します。",
     "extraFiatConversion": "追加法定通貨変換",
@@ -239,7 +242,10 @@
     "upgradePower": "アップグレード - パワー"
   },
   "cycleTracker": {
-    "computing": "サイクル比較を計算中…",
+    "computing": "MinerWars Cycle Trackerを同期中…",
+    "computingIndividual": "個人のMinerWarsを同期中…",
+    "computingClan": "クランの成績を同期中…",
+    "computingHistory": "過去のサイクルを同期中…",
     "cycle": "サイクル {{id}}",
     "statusLive": "進行中",
     "statusPending": "保留",

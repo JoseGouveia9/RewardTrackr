@@ -1,150 +1,43 @@
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { CycleInfo } from "@/lib/minerwars/comparison";
+import type { ClanPerformance } from "@/lib/minerwars/clan-performance";
+import {
+  getSimulationDefaults,
+  simulateMaintenanceAndNet,
+  type SimulationInputs,
+} from "@/lib/minerwars/comparison";
+import { fetchLatestRate } from "@/features/export/api/fx-rates";
 import { useMinerWarsComparison } from "../../hooks/use-minerwars-comparison";
+import { useClanPerformance } from "../../hooks/use-clan-performance";
 import { useOutsideClick } from "../../hooks/use-outside-click";
 import type { Currency } from "../../types";
-import { BtcIcon, GmtIcon } from "../icons/currency-icons";
+import { MinerWarsClanView } from "./minerwars-clan-view";
+import { CycleDropdown, IndividualSkeletonBody } from "./minerwars-panel-parts";
+import { MinerWarsSimulateModal } from "./minerwars-simulate-modal";
+import { getMinerWarsPanelViewModel } from "./minerwars-panel-view-model";
+import { MinerWarsIndividualView } from "./minerwars-individual-view";
+import type { MinerWarsShareSnapshot } from "./minerwars-share-types";
+import { RefreshIcon } from "../icons";
 import "./minerwars-comparison-panel.css";
-
-interface CycleDropdownProps {
-  cycles: CycleInfo[];
-  selectedCycleId: number | null;
-  onSelect: (id: number) => void;
-}
-
-function CycleDropdown({ cycles, selectedCycleId, onSelect }: CycleDropdownProps) {
-  const { t } = useTranslation();
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  const selectedCycle = cycles.find((c) => c.cycleId === selectedCycleId);
-
-  useOutsideClick(ref, () => setOpen(false), open);
-
-  function statusLabel(status: CycleInfo["status"]) {
-    if (status === "in-progress") return t("cycleTracker.statusLive");
-    if (status === "pending") return t("cycleTracker.statusPending");
-    return t("cycleTracker.statusDone");
-  }
-
-  return (
-    <div className="minerwars-panel-cycle-dropdown" ref={ref}>
-      <button
-        type="button"
-        className="minerwars-panel-cycle-dropdown-btn"
-        onClick={() => setOpen((o) => !o)}
-        aria-haspopup="listbox"
-        aria-expanded={open}
-      >
-        <span>{t("cycleTracker.cycle", { id: selectedCycle?.cycleId ?? "\u2014" })}</span>
-        {selectedCycle && (
-          <span
-            className={`minerwars-panel-cycle-badge minerwars-panel-cycle-badge--${selectedCycle.status}`}
-          >
-            {statusLabel(selectedCycle.status)}
-          </span>
-        )}
-        <svg
-          className="minerwars-panel-dropdown-chevron"
-          width="10"
-          height="6"
-          viewBox="0 0 10 6"
-          fill="currentColor"
-          aria-hidden="true"
-        >
-          <path d="M0 0l5 6 5-6z" />
-        </svg>
-      </button>
-      {open && (
-        <ul className="minerwars-panel-cycle-dropdown-list" role="listbox">
-          {cycles.map((c) => (
-            <li
-              key={c.cycleId}
-              role="option"
-              aria-selected={c.cycleId === selectedCycleId}
-              className={`minerwars-panel-cycle-dropdown-item${c.cycleId === selectedCycleId ? " minerwars-panel-cycle-dropdown-item--active" : ""}`}
-              onClick={() => {
-                onSelect(c.cycleId);
-                setOpen(false);
-              }}
-            >
-              <span>Cycle {c.cycleId}</span>
-              <span
-                className={`minerwars-panel-cycle-badge minerwars-panel-cycle-badge--${c.status}`}
-              >
-                {statusLabel(c.status)}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-}
-
-function MinerWarsSkeleton() {
-  return (
-    <div className="minerwars-panel">
-      <div className="minerwars-panel-cycle-selector-row">
-        <div className="minerwars-panel-skeleton minerwars-panel-skeleton--dropdown" />
-        <div className="minerwars-panel-skeleton minerwars-panel-skeleton--window" />
-        <div className="minerwars-panel-skeleton minerwars-panel-skeleton--refresh" />
-      </div>
-      <div className="minerwars-panel-grid minerwars-panel-grid--3col">
-        <div className="minerwars-panel-section">
-          {[0, 1, 2, 3, 4].map((i) => (
-            <div key={i} className="minerwars-panel-row">
-              <div className="minerwars-panel-skeleton minerwars-panel-skeleton--label" />
-              <div className="minerwars-panel-skeleton minerwars-panel-skeleton--value" />
-            </div>
-          ))}
-        </div>
-        <div className="minerwars-panel-section minerwars-panel-section--right">
-          {[0, 1].map((i) => (
-            <div key={i} className="minerwars-panel-row">
-              <div className="minerwars-panel-skeleton minerwars-panel-skeleton--label" />
-              <div className="minerwars-panel-skeleton minerwars-panel-skeleton--value" />
-            </div>
-          ))}
-          <div className="minerwars-panel-skeleton minerwars-panel-skeleton--progress" />
-        </div>
-        <div className="minerwars-panel-section minerwars-panel-section--right">
-          {[0, 1].map((i) => (
-            <div key={i} className="minerwars-panel-row">
-              <div className="minerwars-panel-skeleton minerwars-panel-skeleton--label" />
-              <div className="minerwars-panel-skeleton minerwars-panel-skeleton--value" />
-            </div>
-          ))}
-          <div className="minerwars-panel-skeleton minerwars-panel-skeleton--progress" />
-        </div>
-      </div>
-    </div>
-  );
-}
 
 interface MinerWarsComparisonPanelProps {
   cacheVersion?: number;
   currency?: Currency;
+  onCurrencyChange?: (currency: Currency) => void;
+  extraFiatCode?: string | null;
   isPrefetching?: boolean;
-}
-
-function fmtBtc(btc: number): string {
-  return btc.toLocaleString("en-US", { minimumFractionDigits: 8, maximumFractionDigits: 8 });
-}
-
-function fmtGmt(gmt: number): string {
-  const truncated = Math.trunc(gmt * 100) / 100;
-  return truncated.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
-function fmtPct(pct: number): string {
-  return (pct > 0 ? "+" : "") + pct.toFixed(1) + "%";
+  onShareSnapshotChange?: (snapshot: MinerWarsShareSnapshot | null) => void;
+  onBusyChange?: (busy: boolean) => void;
 }
 
 export function MinerWarsComparisonPanel({
   cacheVersion = 0,
   currency = "BTC",
+  onCurrencyChange,
+  extraFiatCode = null,
   isPrefetching = false,
+  onShareSnapshotChange,
+  onBusyChange,
 }: MinerWarsComparisonPanelProps) {
   const { t } = useTranslation();
   const {
@@ -159,426 +52,439 @@ export function MinerWarsComparisonPanel({
     isLoggedIn,
   } = useMinerWarsComparison({ cacheVersion });
 
+  const isCycleLive = data != null && data.actualMinerWarsBtc == null;
+  const simulationDefaults =
+    selectedCycleId != null ? getSimulationDefaults(selectedCycleId) : null;
+  const canSimulate = isCycleLive && simulationDefaults != null;
+  const [simulateOpen, setSimulateOpen] = useState(false);
+  const simulateRef = useRef<HTMLDivElement>(null);
+  useOutsideClick(simulateRef, () => setSimulateOpen(false), simulateOpen);
+
+  const [simTh, setSimTh] = useState("");
+  const [simUserEE, setSimUserEE] = useState("");
+  const [simLeagueEE, setSimLeagueEE] = useState("");
+  const [simPersonalDiscountPct, setSimPersonalDiscountPct] = useState("");
+  const [simLeagueDiscountPct, setSimLeagueDiscountPct] = useState("");
+  const [simulateCurrency, setSimulateCurrency] = useState<Currency>("BTC");
+  const [extraFiatRate, setExtraFiatRate] = useState<number | null>(null);
+  const [lastSimulatedResult, setLastSimulatedResult] = useState<ReturnType<
+    typeof simulateMaintenanceAndNet
+  > | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!extraFiatCode) {
+      setExtraFiatRate(null);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    void fetchLatestRate(extraFiatCode)
+      .then((rate) => {
+        if (!cancelled) setExtraFiatRate(rate);
+      })
+      .catch(() => {
+        if (!cancelled) setExtraFiatRate(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [extraFiatCode]);
+
+  function resetSimulateInputs() {
+    setSimTh(simulationDefaults?.th != null ? simulationDefaults.th.toFixed(2) : "");
+    setSimUserEE(simulationDefaults?.userEE != null ? simulationDefaults.userEE.toFixed(2) : "");
+    setSimLeagueEE(
+      simulationDefaults?.leagueEE != null ? simulationDefaults.leagueEE.toFixed(2) : "",
+    );
+    setSimPersonalDiscountPct(
+      simulationDefaults?.personalDiscountPct != null
+        ? (simulationDefaults.personalDiscountPct * 100).toFixed(2)
+        : "",
+    );
+    setSimLeagueDiscountPct(
+      data?.leagueDiscountPct != null ? (data.leagueDiscountPct * 100).toFixed(2) : "",
+    );
+  }
+
+  function toggleSimulate() {
+    if (!simulateOpen) {
+      resetSimulateInputs();
+      setSimulateCurrency(currency);
+    }
+    setSimulateOpen((o) => !o);
+  }
+
+  const computedSimulated = useMemo(() => {
+    if (!simulateOpen || !canSimulate || selectedCycleId == null) return null;
+    const overrides: SimulationInputs = {};
+    const thNum = parseFloat(simTh);
+    if (simTh !== "" && !Number.isNaN(thNum)) overrides.th = thNum;
+    const userEENum = parseFloat(simUserEE);
+    if (simUserEE !== "" && !Number.isNaN(userEENum)) overrides.userEE = userEENum;
+    const leagueEENum = parseFloat(simLeagueEE);
+    if (simLeagueEE !== "" && !Number.isNaN(leagueEENum)) overrides.leagueEE = leagueEENum;
+    const personalDiscNum = parseFloat(simPersonalDiscountPct);
+    if (simPersonalDiscountPct !== "" && !Number.isNaN(personalDiscNum))
+      overrides.personalDiscountPct = personalDiscNum / 100;
+    const leagueDiscNum = parseFloat(simLeagueDiscountPct);
+    if (simLeagueDiscountPct !== "" && !Number.isNaN(leagueDiscNum))
+      overrides.leagueDiscountPct = leagueDiscNum / 100;
+    return simulateMaintenanceAndNet(selectedCycleId, overrides);
+  }, [
+    simulateOpen,
+    canSimulate,
+    selectedCycleId,
+    simTh,
+    simUserEE,
+    simLeagueEE,
+    simPersonalDiscountPct,
+    simLeagueDiscountPct,
+  ]);
+  useEffect(() => {
+    if (computedSimulated) setLastSimulatedResult(computedSimulated);
+  }, [computedSimulated]);
+  const simulated = computedSimulated ?? lastSimulatedResult;
+
   const showSkeleton = loadingCycles || loading || isPrefetching;
 
-  if (showSkeleton) return <MinerWarsSkeleton />;
-
-  if (error && !data) return null;
-
-  const isActual = data?.actualMinerWarsBtc != null;
-  const soloEquivBtc = (data?.soloEquivSats ?? 0) / 1e8;
-  const effectiveMw = data != null ? (data.actualMinerWarsBtc ?? data.minerWarsSats / 1e8) : 0;
-  const effectiveDiff = effectiveMw - soloEquivBtc;
-  const effectiveDiffPct = soloEquivBtc > 0 ? (effectiveDiff / soloEquivBtc) * 100 : null;
-  const effectiveProgress =
-    data != null && data.targetSoloSats > 0
-      ? (effectiveMw / (data.targetSoloSats / 1e8)) * 100
-      : null;
-  const isPositive = effectiveDiff >= 0;
-  const projecting = (data?.targetProjectedDays ?? 0) > 0;
-  // Maintenance as a share of the MinerWars reward (est. or actual). Shown inline
-  // on the maintenance row for both live and completed cycles.
-  const maintenancePct =
-    data?.maintenanceBtc != null && effectiveMw > 0
-      ? (data.maintenanceBtc / effectiveMw) * 100
-      : null;
-  // Treat "pending" cycles (ended but no actual payment yet) the same as live
-  // so the panel shows the round-based estimation view rather than a zeroed-out
-  // completed view. Switches to false only when actual income is confirmed.
-  const isCycleLive = data != null && data.actualMinerWarsBtc == null;
-
-  const clanMinerWarsBtc = (data?.clanMinerWarsSats ?? 0) / 1e8;
-  const clanTargetBtc = (data?.clanTargetSoloSats ?? 0) / 1e8;
-  const clanProgress =
-    isCycleLive && clanTargetBtc > 0 ? (clanMinerWarsBtc / clanTargetBtc) * 100 : null;
-  const btcPerBlockSats = data?.btcPerBlockSats ?? null;
-  const clanBlocksNeeded =
-    isCycleLive && btcPerBlockSats != null && btcPerBlockSats > 0
-      ? Math.ceil(
-          ((data!.clanTargetSoloSats ?? 0) - (data?.clanMinerWarsSats ?? 0)) / btcPerBlockSats,
-        )
-      : null;
-  const showNoClanAnalyticsWarning =
-    data != null && !data.hasClanAnalytics && data.actualMinerWarsBtc == null;
-  const showBtcFundZeroWarning =
-    data != null && data.btcFundIsZero && data.actualMinerWarsBtc == null;
-  const zeroedRounds = data?.zeroedRounds ?? null;
-  const showZeroedRoundsWarning = zeroedRounds != null;
-  const zeroedRoundsHint = data?.zeroedRoundsHint ?? null;
-  const hintUserEE = zeroedRoundsHint?.userEE ?? null;
-  const hintLeagueEE = zeroedRoundsHint?.leagueEE ?? null;
-  const hintBtcPrice = data?.btcPrice != null ? Math.round(data.btcPrice).toLocaleString() : "?";
-
-  const showGmt = currency === "GMT" && (data?.btcPrice ?? 0) > 0 && (data?.gmtPrice ?? 0) > 0;
-  const toGmt = (btc: number) => (btc * data!.btcPrice!) / data!.gmtPrice!;
-  const fmtVal = (btc: number) => (showGmt ? fmtGmt(toGmt(btc)) : fmtBtc(btc));
-  const ValIcon = showGmt ? GmtIcon : BtcIcon;
-
   const selectedCycle = cycles.find((c) => c.cycleId === selectedCycleId);
+
+  const [tab, setTab] = useState<"individual" | "clan">("individual");
+  const clanNotAvailable = selectedCycle?.status === "completed";
+  useEffect(() => {
+    if (clanNotAvailable && tab === "clan") setTab("individual");
+  }, [clanNotAvailable, tab]);
+  const clanPerf = useClanPerformance({
+    cycleId: selectedCycleId,
+    cycleStatus: selectedCycle?.status,
+    cycleStart: data?.cycleStart,
+    cycleEnd: data?.cycleEnd,
+    clanMinerWarsSats: data?.clanMinerWarsSats,
+    enabled: tab === "clan",
+  });
+
+  const canRefreshSelectedCycle =
+    isLoggedIn && (selectedCycle?.status === "in-progress" || selectedCycle?.status === "pending");
+  // Clan's own fetch is usually faster than individual's multi-step refresh (reload
+  // cycles, sync sheet, refetch comparison) — this keeps the clan skeleton up for the
+  // whole combined operation instead of dropping as soon as clan's part resolves.
+  const [manualClanRefreshing, setManualClanRefreshing] = useState(false);
+  const refreshingSelectedView =
+    loading || manualClanRefreshing || (tab === "clan" && clanPerf.loading);
+  const handleSelectedViewRefresh = useCallback(async () => {
+    // Clan metrics derive from the individual comparison (target days, mined sats), so
+    // refreshing either tab must refetch both to keep them consistent.
+    if (tab === "clan") {
+      setManualClanRefreshing(true);
+      try {
+        await Promise.all([refresh(), clanPerf.refresh()]);
+      } finally {
+        setManualClanRefreshing(false);
+      }
+      return;
+    }
+    return refresh();
+  }, [clanPerf, refresh, tab]);
+
+  const isBusy = showSkeleton || refreshingSelectedView;
+  useEffect(() => {
+    onBusyChange?.(isBusy);
+  }, [isBusy, onBusyChange]);
+
+  useEffect(() => {
+    if (!onShareSnapshotChange) return;
+    if (!data) {
+      onShareSnapshotChange(null);
+      return;
+    }
+
+    const clanData: ClanPerformance | null = clanPerf.data ?? null;
+    onShareSnapshotChange({
+      currentViewMode: tab,
+      selectedCycleId,
+      cycles,
+      comparison: data,
+      clanPerformance: clanData,
+      currency,
+      extraFiatCode,
+      extraFiatRate,
+    });
+  }, [
+    onShareSnapshotChange,
+    data,
+    clanPerf.data,
+    tab,
+    selectedCycleId,
+    cycles,
+    currency,
+    extraFiatCode,
+    extraFiatRate,
+  ]);
+
+  const viewModel = getMinerWarsPanelViewModel({
+    data,
+    currency,
+    activeTab: tab,
+    extraFiatCode,
+    extraFiatRate,
+  });
+
+  const simulateViewModel = getMinerWarsPanelViewModel({
+    data,
+    currency: simulateCurrency,
+    activeTab: "individual",
+    extraFiatCode,
+    extraFiatRate,
+  });
+  const {
+    isActual,
+    soloEquivBtc,
+    effectiveMw,
+    effectiveDiff,
+    effectiveDiffPct,
+    effectiveProgress,
+    isPositive,
+    projecting,
+    maintenancePct,
+    clanMinerWarsBtc,
+    clanTargetBtc,
+    btcPerBlockSats,
+    showNoClanAnalyticsWarning,
+    showBtcFundZeroWarning,
+    zeroedRounds,
+    showZeroedRoundsWarning,
+    hintUserEE,
+    hintLeagueEE,
+    hintBtcPrice,
+    canShowGmt,
+    canShowUsd,
+    canShowFiat,
+    showGmt,
+    showUsd,
+    showFiat,
+    heroGmt,
+    soloGmt,
+    targetGmt,
+    diffGmt,
+    heroUsd,
+    soloUsd,
+    targetUsd,
+    diffUsd,
+    activeCurrencyOptions,
+    activeCurrencyOption,
+    renderValueIcon,
+    formatBtcValue,
+  } = viewModel;
+
+  const {
+    individualCurrencyOptions: simulateCurrencyOptions,
+    activeCurrencyOption: simulateCurrencyOption,
+    renderValueIcon: renderSimulateValueIcon,
+    formatBtcValue: formatSimulateBtcValue,
+    showGmt: showSimulateGmt,
+    showUsd: showSimulateUsd,
+    showFiat: showSimulateFiat,
+  } = simulateViewModel;
+
+  useEffect(() => {
+    if (!simulateOpen || simulateCurrencyOptions.length === 0) return;
+    const isValid = simulateCurrencyOptions.some((option) => option.key === simulateCurrency);
+    if (!isValid) setSimulateCurrency(simulateCurrencyOptions[0]!.key);
+  }, [simulateCurrency, simulateCurrencyOptions, simulateOpen]);
+
+  useEffect(() => {
+    if (currency === "GMT" && !canShowGmt) onCurrencyChange?.("BTC");
+    if (currency === "USD" && !canShowUsd) onCurrencyChange?.(canShowGmt ? "GMT" : "BTC");
+    if (currency === "FIAT" && !canShowFiat) {
+      onCurrencyChange?.(canShowUsd ? "USD" : canShowGmt ? "GMT" : "BTC");
+    }
+  }, [canShowFiat, canShowGmt, canShowUsd, currency, onCurrencyChange]);
+
+  useEffect(() => {
+    if (tab === "clan" && currency === "GMT") {
+      onCurrencyChange?.("BTC");
+    }
+  }, [currency, onCurrencyChange, tab]);
+
+  function handleCycleCurrency() {
+    if (!onCurrencyChange || activeCurrencyOptions.length === 0) return;
+    const index = activeCurrencyOptions.findIndex((option) => option.key === currency);
+    const nextIndex = index >= 0 ? (index + 1) % activeCurrencyOptions.length : 0;
+    onCurrencyChange(activeCurrencyOptions[nextIndex]!.key);
+  }
+
+  function handleSimulateCurrency() {
+    if (simulateCurrencyOptions.length === 0) return;
+    const index = simulateCurrencyOptions.findIndex((option) => option.key === simulateCurrency);
+    const nextIndex = index >= 0 ? (index + 1) % simulateCurrencyOptions.length : 0;
+    setSimulateCurrency(simulateCurrencyOptions[nextIndex]!.key);
+  }
+
+  if (error && !data && !showSkeleton) return null;
+
+  const simulateModal = canSimulate ? (
+    <MinerWarsSimulateModal
+      open={simulateOpen}
+      simulated={simulated}
+      activeCurrencyOptions={simulateCurrencyOptions}
+      activeCurrencyOption={simulateCurrencyOption}
+      handleCycleCurrency={handleSimulateCurrency}
+      renderValueIcon={renderSimulateValueIcon}
+      formatBtcValue={formatSimulateBtcValue}
+      showGmt={showSimulateGmt}
+      showUsd={showSimulateUsd}
+      showFiat={showSimulateFiat}
+      extraFiatRate={extraFiatRate}
+      extraFiatCode={extraFiatCode}
+      simTh={simTh}
+      setSimTh={setSimTh}
+      simUserEE={simUserEE}
+      setSimUserEE={setSimUserEE}
+      simLeagueEE={simLeagueEE}
+      setSimLeagueEE={setSimLeagueEE}
+      simPersonalDiscountPct={simPersonalDiscountPct}
+      setSimPersonalDiscountPct={setSimPersonalDiscountPct}
+      simLeagueDiscountPct={simLeagueDiscountPct}
+      setSimLeagueDiscountPct={setSimLeagueDiscountPct}
+      onClose={() => setSimulateOpen(false)}
+      containerRef={simulateRef}
+    />
+  ) : null;
 
   return (
     <div className="minerwars-panel">
       {cycles.length > 0 && (
         <div className="minerwars-panel-cycle-selector-row">
-          <CycleDropdown
-            cycles={cycles}
-            selectedCycleId={selectedCycleId}
-            onSelect={setSelectedCycleId}
-          />
-          {data && (
-            <span className="minerwars-panel-window minerwars-panel-window--inline">
-              {data.cycleStart} → {data.cycleEnd} UTC
-            </span>
-          )}
-          {isLoggedIn &&
-            (selectedCycle?.status === "in-progress" || selectedCycle?.status === "pending") && (
+          <div className="minerwars-panel-cycle-meta">
+            <CycleDropdown
+              cycles={cycles}
+              selectedCycleId={selectedCycleId}
+              dateRange={data ? `${data.cycleStart} → ${data.cycleEnd} UTC` : undefined}
+              onSelect={setSelectedCycleId}
+            />
+            {activeCurrencyOptions.length > 1 && activeCurrencyOption && (
+              <button
+                type="button"
+                className="minerwars-panel-mode-btn"
+                onClick={handleCycleCurrency}
+                title={activeCurrencyOption.title}
+                aria-label={activeCurrencyOption.title}
+              >
+                {activeCurrencyOption.icon}
+              </button>
+            )}
+            {canRefreshSelectedCycle && (
               <button
                 type="button"
                 className="minerwars-panel-refresh-btn"
-                onClick={() => void refresh()}
-                disabled={loading}
+                onClick={() => void handleSelectedViewRefresh()}
+                disabled={refreshingSelectedView}
                 title={
                   selectedCycle?.status === "pending"
                     ? t("cycleTracker.refreshPending")
                     : t("cycleTracker.refreshLive")
                 }
               >
-                <svg
-                  width="13"
-                  height="13"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className={loading ? "minerwars-panel-spin" : undefined}
-                  aria-hidden="true"
-                >
-                  <polyline points="23 4 23 10 17 10" />
-                  <polyline points="1 20 1 14 7 14" />
-                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
-                </svg>
+                <RefreshIcon
+                  width={13}
+                  height={13}
+                  className={refreshingSelectedView ? "minerwars-panel-spin" : undefined}
+                />
               </button>
             )}
+          </div>
         </div>
       )}
 
-      {data && (
-        <>
+      {cycles.length > 0 && selectedCycle?.status !== "completed" && (
+        <div className="minerwars-panel-tab-bar">
           <div
-            className={`minerwars-panel-grid${isCycleLive && clanTargetBtc > 0 ? " minerwars-panel-grid--3col" : ""}`}
+            aria-hidden="true"
+            className={`minerwars-panel-tab-slider minerwars-panel-tab-slider--${tab}`}
+          />
+          <button
+            type="button"
+            className={`minerwars-panel-tab-btn${tab === "individual" ? " minerwars-panel-tab-btn--active" : ""}`}
+            onClick={() => setTab("individual")}
           >
-            <div className="minerwars-panel-section">
-              <div className="minerwars-panel-row">
-                <span className="minerwars-panel-label">
-                  {isActual ? t("cycleTracker.minerWarsActual") : t("cycleTracker.minerWarsEst")}
-                </span>
-                <span className="minerwars-panel-value">
-                  {(showBtcFundZeroWarning || showZeroedRoundsWarning) && (
-                    <svg
-                      className="minerwars-panel-warn-icon"
-                      width="12"
-                      height="12"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      aria-hidden="true"
-                    >
-                      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-                      <line x1="12" y1="9" x2="12" y2="13" />
-                      <line x1="12" y1="17" x2="12.01" y2="17" />
-                    </svg>
-                  )}
-                  {fmtVal(effectiveMw)} <ValIcon />
-                </span>
-              </div>
-              <div className="minerwars-panel-row">
-                <span className="minerwars-panel-label">
-                  {t("cycleTracker.soloEquiv")}
-                  <span className="minerwars-panel-projection-badge">
-                    {t("cycleTracker.day", { count: data.targetActualDays })}
-                  </span>
-                </span>
-                <span className="minerwars-panel-value">
-                  {fmtVal(soloEquivBtc)} <ValIcon />
-                </span>
-              </div>
-              <div className="minerwars-panel-divider" />
-              <div className="minerwars-panel-row">
-                <span className="minerwars-panel-label">{t("cycleTracker.difference")}</span>
-                <span
-                  className={`minerwars-panel-value minerwars-panel-value--diff ${isPositive ? "minerwars-panel-value--pos" : "minerwars-panel-value--neg"}`}
-                >
-                  {(effectiveDiff > 0 ? "+" : "") + fmtVal(effectiveDiff)} <ValIcon />
-                  {effectiveDiffPct != null && (
-                    <span className="minerwars-panel-pct">{fmtPct(effectiveDiffPct)}</span>
-                  )}
-                </span>
-              </div>
-              {data.maintenanceBtc != null && (
-                <>
-                  <div className="minerwars-panel-divider" />
-                  <div className="minerwars-panel-row">
-                    <span className="minerwars-panel-label minerwars-panel-label--sub">
-                      {isActual ? t("cycleTracker.maintenance") : t("cycleTracker.maintenanceEst")}
-                    </span>
-                    <span className="minerwars-panel-value minerwars-panel-value--neg">
-                      {showGmt && data.maintenanceGmt != null ? (
-                        <>
-                          {`-${fmtGmt(data.maintenanceGmt)}`} <GmtIcon />
-                        </>
-                      ) : (
-                        <>
-                          {`-${fmtBtc(data.maintenanceBtc)}`} <BtcIcon />
-                        </>
-                      )}
-                      {maintenancePct != null && (
-                        <span className="minerwars-panel-caption">
-                          {t("cycleTracker.maintenanceShare", { pct: maintenancePct.toFixed(1) })}
-                        </span>
-                      )}
-                    </span>
-                  </div>
-                  {data.netBtc != null && (
-                    <div className="minerwars-panel-row">
-                      <span className="minerwars-panel-label minerwars-panel-label--sub">
-                        {isActual ? t("cycleTracker.net") : t("cycleTracker.netEst")}
-                      </span>
-                      <span
-                        className={`minerwars-panel-value ${(showGmt ? (data.netGmt ?? 0) : data.netBtc) >= 0 ? "minerwars-panel-value--pos" : "minerwars-panel-value--neg"}`}
-                      >
-                        {showGmt && data.netGmt != null ? (
-                          <>
-                            {fmtGmt(data.netGmt)} <GmtIcon />
-                          </>
-                        ) : (
-                          <>
-                            {fmtBtc(data.netBtc)} <BtcIcon />
-                          </>
-                        )}
-                      </span>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
+            {t("cycleTracker.tabIndividual")}
+          </button>
+          <button
+            type="button"
+            className={`minerwars-panel-tab-btn${tab === "clan" ? " minerwars-panel-tab-btn--active" : ""}`}
+            onClick={() => setTab("clan")}
+            disabled={clanNotAvailable}
+            title={clanNotAvailable ? t("cycleTracker.clanNotAvailableCompleted") : undefined}
+          >
+            {t("cycleTracker.tabClan")}
+          </button>
+        </div>
+      )}
 
-            <div className="minerwars-panel-section minerwars-panel-section--right">
-              <div className="minerwars-panel-row">
-                <span className="minerwars-panel-label">
-                  {t("cycleTracker.soloTarget")}
-                  {projecting && (
-                    <span className="minerwars-panel-projection-badge">
-                      {t("cycleTracker.day", { count: data.targetActualDays })} +{" "}
-                      {data.targetProjectedDays} {t("cycleTracker.projected")}
-                    </span>
-                  )}
-                </span>
-                <span className="minerwars-panel-value">
-                  {fmtVal(data.targetSoloSats / 1e8)} <ValIcon />
-                </span>
-              </div>
-              <div className="minerwars-panel-divider" />
-              <div className="minerwars-panel-row">
-                <span className="minerwars-panel-label">{t("cycleTracker.minerWarsProgress")}</span>
-                <span className="minerwars-panel-value minerwars-panel-value--progress">
-                  {showZeroedRoundsWarning && (
-                    <svg
-                      className="minerwars-panel-warn-icon"
-                      width="12"
-                      height="12"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      aria-hidden="true"
-                    >
-                      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-                      <line x1="12" y1="9" x2="12" y2="13" />
-                      <line x1="12" y1="17" x2="12.01" y2="17" />
-                    </svg>
-                  )}
-                  {fmtVal(effectiveMw)} <ValIcon />
-                  {effectiveProgress != null && (
-                    <span
-                      className={`minerwars-panel-pct ${effectiveProgress >= 100 ? "minerwars-panel-value--pos" : ""}`}
-                    >
-                      {effectiveProgress.toFixed(1)}
-                      {t("cycleTracker.ofTarget")}
-                    </span>
-                  )}
-                </span>
-              </div>
-              {effectiveProgress != null && (
-                <div className="minerwars-panel-progress-bar">
-                  <div
-                    className={`minerwars-panel-progress-fill${effectiveProgress >= 100 ? " minerwars-panel-progress-fill--over" : ""}`}
-                    style={{ width: `${Math.min(effectiveProgress, 100).toFixed(1)}%` }}
-                  />
-                </div>
-              )}
-            </div>
-
-            {isCycleLive && clanTargetBtc > 0 && (
-              <div className="minerwars-panel-section minerwars-panel-section--right">
-                <div className="minerwars-panel-row">
-                  <span className="minerwars-panel-label">
-                    {t("cycleTracker.clanTarget")}
-                    {projecting && (
-                      <span className="minerwars-panel-projection-badge">
-                        {t("cycleTracker.day", { count: data.targetActualDays })} +{" "}
-                        {data.targetProjectedDays} {t("cycleTracker.projected")}
-                      </span>
-                    )}
-                  </span>
-                  <span className="minerwars-panel-value">
-                    {fmtVal(clanTargetBtc)} <ValIcon />
-                  </span>
-                </div>
-                <div className="minerwars-panel-divider" />
-                <div className="minerwars-panel-row">
-                  <span className="minerwars-panel-label">{t("cycleTracker.clanProgress")}</span>
-                  <span className="minerwars-panel-value minerwars-panel-value--progress">
-                    {fmtVal(clanMinerWarsBtc)} <ValIcon />
-                    {clanProgress != null && (
-                      <span
-                        className={`minerwars-panel-pct ${clanProgress >= 100 ? "minerwars-panel-value--pos" : ""}`}
-                      >
-                        {clanProgress.toFixed(1)}
-                        {t("cycleTracker.ofTarget")}
-                      </span>
-                    )}
-                  </span>
-                </div>
-                {clanProgress != null && (
-                  <div className="minerwars-panel-progress-bar">
-                    <div
-                      className={`minerwars-panel-progress-fill${clanProgress >= 100 ? " minerwars-panel-progress-fill--over" : ""}`}
-                      style={{ width: `${Math.min(clanProgress, 100).toFixed(1)}%` }}
-                    />
-                  </div>
-                )}
-                {clanBlocksNeeded != null && clanBlocksNeeded > 0 && (
-                  <div className="minerwars-panel-row minerwars-panel-row--blocks-needed">
-                    <span className="minerwars-panel-label">{t("cycleTracker.blocksNeeded")}</span>
-                    <span className="minerwars-panel-value minerwars-panel-value--blocks">
-                      {t("cycleTracker.block", { count: clanBlocksNeeded })}
-                      {btcPerBlockSats != null && (
-                        <span className="minerwars-panel-pct">
-                          {t("cycleTracker.satsPerBlock", { sats: btcPerBlockSats.toFixed(0) })}
-                        </span>
-                      )}
-                    </span>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {showBtcFundZeroWarning && (
-            <div className="minerwars-panel-notice minerwars-panel-notice--warn minerwars-panel-notice--flex">
-              <span>⚠</span>
-              <span className="minerwars-panel-notice-preline">
-                {t("cycleTracker.warnBtcFundZero")}
-              </span>
-            </div>
-          )}
-          {showZeroedRoundsWarning && (
-            <div className="minerwars-panel-notice minerwars-panel-notice--warn minerwars-panel-notice--flex">
-              <span>⚠</span>
-              <span>
-                {t("cycleTracker.warnZeroedRounds")}
-                {zeroedRounds!.userEE.length > 0 && (
-                  <details className="minerwars-panel-zeroed-group">
-                    <summary className="minerwars-panel-zeroed-group-summary">
-                      {t("cycleTracker.warnZeroedRoundsGroupUserEE", {
-                        count: zeroedRounds!.userEE.length,
-                      })}
-                    </summary>
-                    <ul className="minerwars-panel-zeroed-list">
-                      {zeroedRounds!.userEE.map((r) => (
-                        <li key={r.blockNumber}>
-                          {t("cycleTracker.warnZeroedRoundsItem", {
-                            blockNumber: r.blockNumber,
-                            multiplier: r.multiplier,
-                          })}
-                        </li>
-                      ))}
-                    </ul>
-                  </details>
-                )}
-                {zeroedRounds!.leagueEE.length > 0 && (
-                  <details className="minerwars-panel-zeroed-group">
-                    <summary className="minerwars-panel-zeroed-group-summary">
-                      {t("cycleTracker.warnZeroedRoundsGroupLeagueEE", {
-                        count: zeroedRounds!.leagueEE.length,
-                      })}
-                    </summary>
-                    <ul className="minerwars-panel-zeroed-list">
-                      {zeroedRounds!.leagueEE.map((r) => (
-                        <li key={r.blockNumber}>
-                          {t("cycleTracker.warnZeroedRoundsItem", {
-                            blockNumber: r.blockNumber,
-                            multiplier: r.multiplier,
-                          })}
-                        </li>
-                      ))}
-                    </ul>
-                  </details>
-                )}
-                {hintUserEE && (
-                  <p className="minerwars-panel-zeroed-hint">
-                    <strong className="minerwars-panel-zeroed-hint-label">
-                      {t("cycleTracker.warnZeroedRoundsHintLabelUserEE")}
-                    </strong>{" "}
-                    {hintUserEE.kind === "increaseGmtDiscount"
-                      ? t("cycleTracker.warnZeroedRoundsHintGmt", {
-                          recommendedGmtPct: hintUserEE.recommendedGmtPct.toString(),
-                          btcPrice: hintBtcPrice,
-                        })
-                      : hintUserEE.kind === "improveEE"
-                        ? t("cycleTracker.warnZeroedRoundsHintEE", {
-                            recommendedEE: hintUserEE.recommendedEE.toString(),
-                            recommendedEEAtMaxGmt: hintUserEE.recommendedEEAtMaxGmt.toString(),
-                            currentEE: hintUserEE.currentEE.toString(),
-                          })
-                        : t("cycleTracker.warnZeroedRoundsHintBtcPrice", {
-                            currentGmtPct: hintUserEE.currentGmtPct.toString(),
-                            btcPrice: hintBtcPrice,
-                          })}
-                  </p>
-                )}
-                {hintLeagueEE && (
-                  <p className="minerwars-panel-zeroed-hint">
-                    <strong className="minerwars-panel-zeroed-hint-label">
-                      {t("cycleTracker.warnZeroedRoundsHintLabelLeagueEE")}
-                    </strong>{" "}
-                    {hintLeagueEE.kind === "increaseGmtDiscount"
-                      ? t("cycleTracker.warnZeroedRoundsLeagueHintGmt", {
-                          recommendedGmtPct: hintLeagueEE.recommendedGmtPct.toString(),
-                          btcPrice: hintBtcPrice,
-                        })
-                      : t("cycleTracker.warnZeroedRoundsLeagueHintBtcPrice", {
-                          btcPrice: hintBtcPrice,
-                        })}
-                  </p>
-                )}
-              </span>
-            </div>
-          )}
-          {showNoClanAnalyticsWarning && (
-            <div className="minerwars-panel-notice minerwars-panel-notice--warn">
-              ⚠{" "}
-              {isCycleLive
-                ? t("cycleTracker.warnNoClanAnalyticsLive")
-                : t("cycleTracker.warnNoClanAnalyticsDone")}
-            </div>
+      {tab === "clan" ? (
+        <MinerWarsClanView
+          data={clanPerf.data}
+          loading={showSkeleton || clanPerf.loading || manualClanRefreshing}
+          error={clanPerf.error}
+          clanTargetBtc={clanTargetBtc}
+          clanMinerWarsBtc={clanMinerWarsBtc}
+          btcPerBlockSats={btcPerBlockSats}
+          targetActualDays={data?.targetActualDays ?? 0}
+          targetProjectedDays={data?.targetProjectedDays ?? 0}
+          currency={currency}
+          fiatCode={extraFiatCode}
+          extraFiatRate={extraFiatRate}
+          btcPrice={data?.btcPrice ?? null}
+          gmtPrice={data?.gmtPrice ?? null}
+          isLiveCycle={selectedCycle?.status === "in-progress"}
+        />
+      ) : showSkeleton || !data ? (
+        <IndividualSkeletonBody />
+      ) : (
+        <>
+          {simulateModal}
+          {data && (
+            <MinerWarsIndividualView
+              data={data}
+              canSimulate={canSimulate}
+              simulateOpen={simulateOpen}
+              onToggleSimulate={toggleSimulate}
+              effectiveProgress={effectiveProgress}
+              renderValueIcon={renderValueIcon}
+              formatBtcValue={formatBtcValue}
+              effectiveMw={effectiveMw}
+              heroGmt={heroGmt}
+              heroUsd={heroUsd}
+              isActual={isActual}
+              projecting={projecting}
+              targetGmt={targetGmt}
+              targetUsd={targetUsd}
+              soloEquivBtc={soloEquivBtc}
+              soloGmt={soloGmt}
+              soloUsd={soloUsd}
+              isPositive={isPositive}
+              effectiveDiff={effectiveDiff}
+              diffGmt={diffGmt}
+              diffUsd={diffUsd}
+              effectiveDiffPct={effectiveDiffPct}
+              showGmt={showGmt}
+              showUsd={showUsd}
+              showFiat={showFiat}
+              extraFiatRate={extraFiatRate}
+              extraFiatCode={extraFiatCode}
+              maintenancePct={maintenancePct}
+              showBtcFundZeroWarning={showBtcFundZeroWarning}
+              showZeroedRoundsWarning={showZeroedRoundsWarning}
+              zeroedRounds={zeroedRounds}
+              hintUserEE={hintUserEE}
+              hintLeagueEE={hintLeagueEE}
+              hintBtcPrice={hintBtcPrice}
+              isCycleLive={isCycleLive}
+              showNoClanAnalyticsWarning={showNoClanAnalyticsWarning}
+            />
           )}
         </>
       )}

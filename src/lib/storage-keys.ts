@@ -11,9 +11,16 @@ export const LS_KEY_NOTICE_OPENSOURCE = "notice_opensource_dismissed";
 export const LS_KEY_NOTICE_ANNOUNCEMENT_PREFIX = "notice_announcement_";
 export const LS_KEY_MIGRATED_PREFIX = "rt_migrated_";
 export const LS_KEY_SHARE_EXCLUSIONS = "rt_share_exclusions";
-// Persistent cache for completed MinerWars cycle comparisons (schema v1).
-export const LS_KEY_MW_COMPARISON = "rt_mw_comparison_v1";
-// Persistent cache for MinerWars cycle list (schema v1).
-export const LS_KEY_MW_CYCLES = "rt_mw_cycles_v1";
-// Persistent per-cycle state used to prevent midnight day-rollover spikes.
-export const LS_KEY_MW_DAY_GATE = "rt_mw_day_gate_v1";
+export const LS_KEY_MW_COMPARISON = "rt_mw_comparison";
+export const LS_KEY_MW_CYCLES = "rt_mw_cycles";
+export const LS_KEY_MW_LIVE_ENABLED = "rt_mw_live_enabled";
+// Historical BTC/GMT prices by UTC day.
+export const LS_KEY_MW_HISTORICAL_PRICES = "rt_mw_price_cache";
+// Per-cycle clan performance snapshot.
+export const LS_KEY_MW_CLAN_PERF = "rt_mw_clan_perf";
+// Resolved round participants.
+export const LS_KEY_MW_ROUND_PARTICIPANTS = "rt_mw_round_participants";
+// Simulate-tool inputs for live cycles.
+export const LS_KEY_MW_SIM_INPUTS = "rt_mw_sim_inputs";
+export const LS_KEY_RECORDS_VERSION = "rt_records_version";
+export const LS_KEY_MINERWARS_VERSION = "rt_minerwars_version";

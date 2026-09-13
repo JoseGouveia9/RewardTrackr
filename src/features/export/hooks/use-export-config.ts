@@ -6,7 +6,6 @@ import type { ExtraFiatCurrency, RewardGroup, RewardKey } from "@/types/rewards"
 
 interface ExportConfigState {
   selectedKeys: RewardKey[];
-  selectedTxFromTypes: string[];
   includeWalletFiat: boolean;
   includeExcelFiat: boolean;
   excelFiatCurrency: ExtraFiatCurrency;
@@ -15,7 +14,6 @@ interface ExportConfigState {
 type ExportConfigAction =
   | { type: "TOGGLE_GROUP"; group: RewardGroup }
   | { type: "TOGGLE_ALL" }
-  | { type: "TOGGLE_TX_TYPE"; fromTypes: string[]; checked: boolean }
   | { type: "SET_INCLUDE_WALLET_FIAT"; checked: boolean }
   | { type: "SET_INCLUDE_EXCEL_FIAT"; checked: boolean }
   | { type: "SET_FIAT_CURRENCY"; currency: ExtraFiatCurrency }
@@ -23,7 +21,6 @@ type ExportConfigAction =
 
 const initialState: ExportConfigState = {
   selectedKeys: [],
-  selectedTxFromTypes: [],
   includeWalletFiat: false,
   includeExcelFiat: false,
   excelFiatCurrency: "EUR",
@@ -36,9 +33,6 @@ function loadSavedConfig(): ExportConfigState {
     const parsed = JSON.parse(raw) as Partial<ExportConfigState>;
     return {
       selectedKeys: Array.isArray(parsed.selectedKeys) ? (parsed.selectedKeys as RewardKey[]) : [],
-      selectedTxFromTypes: Array.isArray(parsed.selectedTxFromTypes)
-        ? parsed.selectedTxFromTypes
-        : [],
       includeWalletFiat:
         typeof parsed.includeWalletFiat === "boolean" ? parsed.includeWalletFiat : false,
       includeExcelFiat:
@@ -72,13 +66,6 @@ function exportConfigReducer(
         ...state,
         selectedKeys:
           state.selectedKeys.length === ALL_REWARD_KEYS.length ? [] : [...ALL_REWARD_KEYS],
-      };
-    case "TOGGLE_TX_TYPE":
-      return {
-        ...state,
-        selectedTxFromTypes: action.checked
-          ? [...new Set([...state.selectedTxFromTypes, ...action.fromTypes])]
-          : state.selectedTxFromTypes.filter((ft) => !action.fromTypes.includes(ft)),
       };
     case "SET_INCLUDE_WALLET_FIAT":
       return { ...state, includeWalletFiat: action.checked };
@@ -119,10 +106,6 @@ export function useExportConfig() {
     dispatch({ type: "TOGGLE_ALL" });
   }, []);
 
-  const toggleTxType = useCallback((fromTypes: string[], checked: boolean): void => {
-    dispatch({ type: "TOGGLE_TX_TYPE", fromTypes, checked });
-  }, []);
-
   const setIncludeWalletFiat = useCallback((checked: boolean): void => {
     dispatch({ type: "SET_INCLUDE_WALLET_FIAT", checked });
   }, []);
@@ -145,7 +128,6 @@ export function useExportConfig() {
     walletSheetsSelected,
     toggleGroup,
     toggleAll,
-    toggleTxType,
     setIncludeWalletFiat,
     setIncludeExcelFiat,
     setFiatCurrency,

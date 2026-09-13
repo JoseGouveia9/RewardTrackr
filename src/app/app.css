@@ -780,6 +780,11 @@ button:disabled {
     padding-bottom: 9px;
   }
 
+  .hero-actions .build-settings-button {
+    order: 3;
+    flex: 0 0 auto;
+  }
+
   .hero-actions .language-button {
     flex: 0 0 auto;
     order: 3;

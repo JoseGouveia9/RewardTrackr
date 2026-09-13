@@ -149,6 +149,56 @@
   color: rgba(255, 255, 255, 0.85);
 }
 
+.dv-refresh-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  padding: 0;
+  color: #6d7589;
+  cursor: pointer;
+  transition:
+    background 0.14s ease,
+    color 0.14s ease;
+}
+
+.dv-refresh-button:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #22283a;
+}
+
+.dv-refresh-button--disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.dv-refresh-button-icon-spin {
+  animation: dv-refresh-spin 0.7s linear infinite;
+}
+
+.page.theme-dark .dv-refresh-button {
+  border-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.page.theme-dark .dv-refresh-button:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+@keyframes dv-refresh-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .dv-share-button {
   display: flex;
   align-items: center;
@@ -496,6 +546,127 @@
 
 .dv-content {
   flex: 1;
+}
+
+/* MinerWars Cycle Tracker toggle + slide layout */
+
+.dv-minerwars-toolbar {
+  display: flex;
+  justify-content: stretch;
+  margin-bottom: 10px;
+}
+
+.dv-minerwars-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(246, 247, 250, 0.88));
+  color: #44506a;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    background 0.16s ease,
+    color 0.16s ease,
+    border-color 0.16s ease,
+    transform 0.16s ease;
+}
+
+.dv-minerwars-toggle-btn:hover {
+  background: linear-gradient(180deg, #ffffff, #f4f6fa);
+  color: #22283a;
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+.dv-minerwars-toggle-btn--active {
+  background: linear-gradient(180deg, rgba(247, 147, 26, 0.2), rgba(247, 147, 26, 0.12));
+  border-color: rgba(247, 147, 26, 0.6);
+  color: #cb7010;
+}
+
+.dv-minerwars-toggle-btn svg {
+  flex-shrink: 0;
+}
+
+.dv-minerwars-toggle-icon-wrap {
+  width: 26px;
+  height: 26px;
+  border-radius: 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: rgba(255, 255, 255, 0.65);
+  color: inherit;
+  flex-shrink: 0;
+}
+
+.dv-minerwars-toggle-text {
+  flex: 0 1 auto;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.page.theme-dark .dv-minerwars-toggle-btn {
+  color: rgba(255, 255, 255, 0.74);
+  border-color: rgba(255, 255, 255, 0.1);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.045));
+}
+
+.page.theme-dark .dv-minerwars-toggle-btn:hover {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.07));
+  color: rgba(255, 255, 255, 0.95);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.page.theme-dark .dv-minerwars-toggle-btn--active {
+  background: linear-gradient(180deg, rgba(247, 147, 26, 0.26), rgba(247, 147, 26, 0.14));
+  border-color: rgba(247, 147, 26, 0.58);
+  color: #ffd6a3;
+}
+
+.page.theme-dark .dv-minerwars-toggle-icon-wrap {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.page.theme-dark .dv-minerwars-toggle-btn--active .dv-minerwars-toggle-icon-wrap {
+  border-color: rgba(255, 211, 150, 0.4);
+  background: rgba(255, 225, 187, 0.12);
+}
+
+.dv-minerwars-slider-viewport {
+  overflow: hidden;
+}
+
+.dv-minerwars-slider-track {
+  display: flex;
+  width: 200%;
+  align-items: flex-start;
+  transition: transform 0.4s ease;
+}
+
+.dv-minerwars-slider-track--open {
+  transform: translateX(-50%);
+}
+
+.dv-minerwars-slider-pane {
+  flex: 0 0 50%;
+  min-width: 0;
+  max-width: 50%;
+}
+
+@media (max-width: 900px) {
+  .dv-minerwars-slider-track {
+    align-items: stretch;
+  }
 }
 
 .dv-tables-wrap {
