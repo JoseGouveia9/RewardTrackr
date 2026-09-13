@@ -42,6 +42,24 @@ export async function handleBonusMinerProxy({ url, request, corsHeaders }) {
   });
 }
 
+// CryptoCompare's min-api doesn't send Access-Control-Allow-Origin, so browser
+// requests are blocked by CORS — proxy it server-side instead.
+export async function handleCryptoCompareProxy({ url, request, corsHeaders }) {
+  if (!url.pathname.startsWith("/cc/")) return null;
+
+  const target = new URL("https://min-api.cryptocompare.com" + url.pathname.slice(3) + url.search);
+
+  const response = await fetch(target, { method: "GET" });
+
+  const newHeaders = new Headers(response.headers);
+  newHeaders.set("Access-Control-Allow-Origin", corsHeaders["Access-Control-Allow-Origin"]);
+
+  return new Response(response.body, {
+    status: response.status,
+    headers: newHeaders,
+  });
+}
+
 export async function handleDefaultProxy({ url, request, corsHeaders }) {
   const target = new URL("https://api.gomining.com" + url.pathname + url.search);
 

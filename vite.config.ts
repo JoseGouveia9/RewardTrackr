@@ -48,6 +48,11 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (p) => p.replace(/^\/gomining-api/, ""),
       },
+      "/cc": {
+        target: "https://min-api.cryptocompare.com",
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/cc/, ""),
+      },
     },
   },
 });

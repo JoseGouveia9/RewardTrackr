@@ -1,4 +1,5 @@
 ﻿import { LS_KEY_PRICE_CACHE } from "@/lib/storage-keys";
+import { resolveCryptoCompareApiBase } from "@/lib/http";
 import type {
   CoinGeckoMarketRangeResponse,
   CoinGeckoPriceCacheValue,
@@ -33,7 +34,7 @@ async function fetchCryptoComparePrice(
   }
   const toTs = Math.floor(new Date(createdAtIso).getTime() / 1000);
   const apiKey = import.meta.env.VITE_CRYPTOCOMPARE_API_KEY ?? "";
-  const url = `https://min-api.cryptocompare.com/data/v2/histohour?fsym=${symbol}&tsym=USD&limit=2&toTs=${toTs}${apiKey ? `&api_key=${apiKey}` : ""}`;
+  const url = `${resolveCryptoCompareApiBase()}/data/v2/histohour?fsym=${symbol}&tsym=USD&limit=2&toTs=${toTs}${apiKey ? `&api_key=${apiKey}` : ""}`;
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), COINGECKO_FETCH_TIMEOUT_MS);

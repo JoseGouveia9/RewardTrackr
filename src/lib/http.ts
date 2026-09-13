@@ -13,7 +13,10 @@ export function resolveApiBase(): string {
 }
 
 export function resolveBonusMinerApiBase(): string {
-  const envBase = (import.meta.env.VITE_BONUS_MINER_API_BASE as string | undefined)?.replace(/\/$/, "");
+  const envBase = (import.meta.env.VITE_BONUS_MINER_API_BASE as string | undefined)?.replace(
+    /\/$/,
+    "",
+  );
   if (envBase) return envBase;
 
   if (typeof window !== "undefined" && /(^|\.)rewardtrackr\.com$/i.test(window.location.hostname)) {
@@ -21,6 +24,22 @@ export function resolveBonusMinerApiBase(): string {
   }
 
   return "https://api.bonus-miner.gomining.com";
+}
+
+// CryptoCompare's min-api doesn't send CORS headers for browser requests, so on
+// rewardtrackr.com this is routed through the Worker's /cc/ proxy instead.
+export function resolveCryptoCompareApiBase(): string {
+  const envBase = (import.meta.env.VITE_CRYPTOCOMPARE_API_BASE as string | undefined)?.replace(
+    /\/$/,
+    "",
+  );
+  if (envBase) return envBase;
+
+  if (typeof window !== "undefined" && /(^|\.)rewardtrackr\.com$/i.test(window.location.hostname)) {
+    return `${window.location.origin}/cc`;
+  }
+
+  return "https://min-api.cryptocompare.com";
 }
 
 interface JwtPayload {
