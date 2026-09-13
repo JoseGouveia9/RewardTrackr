@@ -4,17 +4,16 @@ import { WALLET_TX_KEYS } from "@/config/wallet-types";
 import { ALL_REWARD_KEYS } from "@/config/reward-configs";
 import {
   LS_KEY_MIGRATED_PREFIX,
+  LS_KEY_MW_CLAN_PERF,
   LS_KEY_MW_COMPARISON,
   LS_KEY_MW_CYCLES,
+  LS_KEY_MW_ROUND_PARTICIPANTS,
   LS_KEY_MW_SIM_INPUTS,
   LS_KEY_PRICE_CACHE,
   LS_KEY_REWARD_PREFIX,
 } from "@/lib/storage-keys";
 import { parseJsonSafe } from "@/lib/parse-json-safe";
 import type { CacheEntry, CacheState, RewardKey, RewardRecord } from "@/types/rewards";
-
-export const MINING_SCHEMA_VERSION = 2;
-export const MINERWARS_SCHEMA_VERSION = 5;
 
 type PriceCacheValue = {
   price: number;
@@ -35,22 +34,11 @@ export function loadCacheEntry(key: RewardKey): CacheEntry | null {
     const parsed = JSON.parse(raw) as Partial<CacheEntry>;
     if (!parsed || typeof parsed !== "object") return null;
     if (!Array.isArray(parsed.records) || typeof parsed.sheetName !== "string") return null;
-    if (key === "solo-mining" && (parsed.schemaVersion ?? 0) < MINING_SCHEMA_VERSION) {
-      localStorage.removeItem(LS_KEY_REWARD_PREFIX + key);
-      localStorage.setItem(LS_KEY_MIGRATED_PREFIX + key, "1");
-      return null;
-    }
-    if (key === "minerwars" && (parsed.schemaVersion ?? 0) < MINERWARS_SCHEMA_VERSION) {
-      localStorage.removeItem(LS_KEY_REWARD_PREFIX + key);
-      localStorage.setItem(LS_KEY_MIGRATED_PREFIX + key, "1");
-      return null;
-    }
     return {
       sheetName: parsed.sheetName,
       records: parsed.records,
       totalCount: asNumber(parsed.totalCount),
       fetchedAt: asNumber(parsed.fetchedAt),
-      ...(parsed.schemaVersion != null ? { schemaVersion: parsed.schemaVersion } : {}),
       ...(parsed.pricingMode ? { pricingMode: parsed.pricingMode } : {}),
       ...(parsed.extraFiatCurrency ? { extraFiatCurrency: parsed.extraFiatCurrency } : {}),
       ...(parsed.newEntriesCount != null
@@ -91,12 +79,24 @@ export function loadAllCacheEntries(): CacheState {
   return state;
 }
 
-export function clearAllCacheEntries(): void {
-  ALL_REWARD_KEYS.forEach((key) => localStorage.removeItem(LS_KEY_REWARD_PREFIX + key));
-  // Also clear the persisted MinerWars comparison cache
+export function clearRecordsCacheEntries(): void {
+  ALL_REWARD_KEYS.filter((key) => key !== "minerwars").forEach((key) =>
+    localStorage.removeItem(LS_KEY_REWARD_PREFIX + key),
+  );
+}
+
+export function clearMinerWarsCacheEntries(): void {
+  localStorage.removeItem(LS_KEY_REWARD_PREFIX + "minerwars");
   localStorage.removeItem(LS_KEY_MW_COMPARISON);
   localStorage.removeItem(LS_KEY_MW_CYCLES);
   localStorage.removeItem(LS_KEY_MW_SIM_INPUTS);
+  localStorage.removeItem(LS_KEY_MW_CLAN_PERF);
+}
+
+export function clearAllCacheEntries(): void {
+  clearRecordsCacheEntries();
+  clearMinerWarsCacheEntries();
+  localStorage.removeItem(LS_KEY_MW_ROUND_PARTICIPANTS);
 }
 
 export function persistPriceCache(key: RewardKey, records: RewardRecord[]): void {

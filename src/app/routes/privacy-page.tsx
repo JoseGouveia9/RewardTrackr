@@ -73,6 +73,7 @@ export function PrivacyPage() {
             <li>{t("privacy.externalItem2")}</li>
             <li>{t("privacy.externalItem3")}</li>
             <li>{t("privacy.externalItem4")}</li>
+            <li>{t("privacy.externalItem5")}</li>
           </ul>
         </div>
 

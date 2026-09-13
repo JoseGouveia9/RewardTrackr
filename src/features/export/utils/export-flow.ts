@@ -16,7 +16,6 @@ import {
   fetchClanPerformance,
   invalidateStaleClanPerformanceCache,
 } from "@/lib/minerwars/clan-performance";
-import { warmClanTrendHistory } from "@/lib/minerwars/clan-trend";
 import { getCurrentClanId } from "@/lib/minerwars/api";
 import { buildExcelFromSheets } from "./excel-builder";
 import type {
@@ -33,8 +32,6 @@ import type {
   RewardSheetPayload,
 } from "@/types/rewards";
 import {
-  MINERWARS_SCHEMA_VERSION,
-  MINING_SCHEMA_VERSION,
   hasMissingPrices,
   filterCacheableRecords,
   persistPriceCache,
@@ -294,10 +291,9 @@ function cacheExtras(key: RewardKey, includeWalletFiat: boolean, currency: Extra
   const pricingMode = WALLET_TX_KEYS.has(key)
     ? ((includeWalletFiat ? "fiat-on" : "fiat-off") as "fiat-on" | "fiat-off")
     : undefined;
-  const schemaVersion = key === "minerwars" ? MINERWARS_SCHEMA_VERSION : MINING_SCHEMA_VERSION;
   return pricingMode
-    ? { pricingMode, extraFiatCurrency: currency, schemaVersion }
-    : { extraFiatCurrency: currency, schemaVersion };
+    ? { pricingMode, extraFiatCurrency: currency }
+    : { extraFiatCurrency: currency };
 }
 
 function toEpoch(createdAt: string | undefined | null): number {
@@ -956,7 +952,6 @@ export async function executeExportFlow({
       // Phase 1.5: Cache WITHOUT fiat values yet (will be enriched in phase 2)
       // Don't reference extraFiatCurrency until phase 2 enrichment completes
       const extras = {
-        schemaVersion: MINING_SCHEMA_VERSION,
         pricingMode: "fiat-off" as const,
         extraFiatCurrency: undefined,
       };
@@ -1017,13 +1012,6 @@ export async function executeExportFlow({
         );
         if (currentClanId != null) invalidateStaleClanPerformanceCache(currentClanId);
         await prefetchAllCompletedCycles(accessToken, cycles).catch(() => {});
-        if (cycles.length > 0) {
-          const liveCycleId = cycles.find((c) => c.status === "in-progress")?.cycleId ?? null;
-          await warmClanTrendHistory(accessToken, cycles, liveCycleId, {
-            retrySkipped: true,
-            currentClanId,
-          }).catch(() => {});
-        }
         const today = new Date().toISOString().slice(0, 10);
         const uncached = cycles.filter(
           (c) => c.cycleEnd < today && getCachedMinerWarsComparison(c.cycleId) === null,

@@ -3,6 +3,7 @@ import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
 import { Routes, Route, Navigate, Link, useNavigate, useLocation } from "react-router";
 import { AppNotice } from "@/components/app-notice/app-notice";
 import { loadAllCacheEntries } from "@/lib/reward-cache";
+import { reconcileCacheVersions } from "@/lib/cache-versions";
 import { ALL_REWARD_KEYS } from "@/config/reward-configs";
 import { AuthPanel, HeaderUserMenu, useAuth } from "@/features/auth";
 import { SupportButton } from "@/components/support-button/support-button";
@@ -155,6 +156,28 @@ function App() {
   });
 
   const displayAlias = syncedAlias || user?.alias?.trim() || "User";
+
+  const [dataVersionWiped, setDataVersionWiped] = useState(false);
+  useEffect(() => {
+    if (reconcileCacheVersions()) {
+      setCache(loadAllCacheEntries());
+      setCacheVersion((v) => v + 1);
+      setDataVersionWiped(true);
+    }
+  }, []);
+
+  const autoResyncStartedRef = useRef(false);
+  useEffect(() => {
+    if (!dataVersionWiped || autoResyncStartedRef.current) return;
+    if (!storedToken || selectedKeys.length === 0) return;
+    autoResyncStartedRef.current = true;
+    setMessage(
+      t("app.dataUpdatedResync", {
+        defaultValue: "We updated how records/MinerWars are calculated — resyncing your data…",
+      }),
+    );
+    void handleExport();
+  }, [dataVersionWiped, storedToken, selectedKeys, handleExport, t]);
 
   const prevUserRef = useRef(user);
   useEffect(() => {
