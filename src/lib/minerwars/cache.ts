@@ -1,6 +1,5 @@
 import {
   LS_KEY_MW_CLAN_PERF,
-  LS_KEY_MW_CLAN_TREND,
   LS_KEY_MW_COMPARISON,
   LS_KEY_MW_CYCLES,
   LS_KEY_MW_HISTORICAL_PRICES,
@@ -9,9 +8,6 @@ import {
 } from "@/lib/storage-keys";
 import { type CycleInfo, type MinerWarsComparison } from "./types";
 import type { ClanPerformance } from "./clan-types";
-
-export const MW_COMPARISON_SCHEMA_VERSION = 4;
-export const MW_CLAN_PERF_SCHEMA_VERSION = 1;
 
 export type CyclesStoreEntry = { data: CycleInfo[]; ts: number };
 
@@ -103,8 +99,6 @@ export function loadPersistedComparison(
     if (!entry || typeof entry !== "object") return null;
 
     if ("data" in entry && "ts" in entry && typeof (entry as { ts?: unknown }).ts === "number") {
-      const v = (entry as { v?: unknown }).v;
-      if ((v as number | undefined) !== MW_COMPARISON_SCHEMA_VERSION) return null;
       return {
         data: (entry as { data: MinerWarsComparison }).data,
         ts: (entry as { ts: number }).ts,
@@ -127,7 +121,7 @@ export function loadPersistedComparison(
 
 export function persistComparison(data: MinerWarsComparison): void {
   const cycleKey = String(data.cycleId);
-  const entry = { data, ts: Date.now(), v: MW_COMPARISON_SCHEMA_VERSION };
+  const entry = { data, ts: Date.now() };
   try {
     const store = parseObjectStore(localStorage.getItem(LS_KEY_MW_COMPARISON));
     store[cycleKey] = entry;
@@ -288,9 +282,9 @@ export function loadPersistedClanPerformance(cycleId: number): ClanPerformance |
   try {
     const raw = localStorage.getItem(LS_KEY_MW_CLAN_PERF);
     if (!raw) return null;
-    const store = JSON.parse(raw) as Record<string, { data?: ClanPerformance; v?: number }>;
+    const store = JSON.parse(raw) as Record<string, { data?: ClanPerformance }>;
     const entry = store[String(cycleId)];
-    if (!entry || entry.v !== MW_CLAN_PERF_SCHEMA_VERSION || !entry.data) return null;
+    if (!entry || !entry.data) return null;
     return entry.data;
   } catch {
     return null;
@@ -299,7 +293,7 @@ export function loadPersistedClanPerformance(cycleId: number): ClanPerformance |
 
 export function persistClanPerformance(cycleId: number, data: ClanPerformance): void {
   const cycleKey = String(cycleId);
-  const entry = { data, v: MW_CLAN_PERF_SCHEMA_VERSION };
+  const entry = { data };
   try {
     const store = parseObjectStore(localStorage.getItem(LS_KEY_MW_CLAN_PERF));
     store[cycleKey] = entry;
@@ -315,7 +309,7 @@ export function clearStalePersistedClanPerformance(currentClanId: number): void 
   try {
     const raw = localStorage.getItem(LS_KEY_MW_CLAN_PERF);
     if (!raw) return;
-    const store = JSON.parse(raw) as Record<string, { data?: ClanPerformance; v?: number }>;
+    const store = JSON.parse(raw) as Record<string, { data?: ClanPerformance }>;
     let changed = false;
     for (const key of Object.keys(store)) {
       if (store[key]?.data?.header?.clanId !== currentClanId) {
@@ -349,32 +343,6 @@ export function persistRoundParticipants(roundId: number, userIds: number[]): vo
     const store: Record<string, number[]> = raw ? JSON.parse(raw) : {};
     store[String(roundId)] = userIds;
     localStorage.setItem(LS_KEY_MW_ROUND_PARTICIPANTS, JSON.stringify(store));
-  } catch {
-    // ignore quota errors
-  }
-}
-
-export type ClanTrendEntry =
-  | { kind: "point"; blocksMined: number; btcMined: number; targetBtc: number }
-  | { kind: "skip" };
-
-export function loadClanTrendEntry(cycleId: number): ClanTrendEntry | null {
-  try {
-    const raw = localStorage.getItem(LS_KEY_MW_CLAN_TREND);
-    if (!raw) return null;
-    const store = JSON.parse(raw) as Record<string, ClanTrendEntry>;
-    return store[String(cycleId)] ?? null;
-  } catch {
-    return null;
-  }
-}
-
-export function persistClanTrendEntry(cycleId: number, entry: ClanTrendEntry): void {
-  try {
-    const raw = localStorage.getItem(LS_KEY_MW_CLAN_TREND);
-    const store: Record<string, ClanTrendEntry> = raw ? JSON.parse(raw) : {};
-    store[String(cycleId)] = entry;
-    localStorage.setItem(LS_KEY_MW_CLAN_TREND, JSON.stringify(store));
   } catch {
     // ignore quota errors
   }

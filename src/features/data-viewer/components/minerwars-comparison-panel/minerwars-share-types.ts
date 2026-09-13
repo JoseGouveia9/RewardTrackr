@@ -9,7 +9,6 @@ export type MinerWarsClanCurrencyMode = "native" | "usd" | "extra";
 export interface MinerWarsShareSnapshot {
   currentViewMode: "individual" | "clan";
   selectedCycleId: number | null;
-  selectedCycleStatus?: CycleInfo["status"];
   cycles: CycleInfo[];
   comparison: MinerWarsComparison | null;
   clanPerformance: ClanPerformance | null;

@@ -145,7 +145,7 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  margin-bottom: 8px;
+  margin-bottom: 18px;
 }
 .mwpc-section-title-wrap {
   display: flex;
@@ -520,7 +520,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin-top: 12px;
+  margin-top: 2px;
 }
 .mwpc-line-card {
   flex: 1;
@@ -622,9 +622,9 @@
   min-width: 0;
 }
 .mwpc-member-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 20px;
+  width: 34px;
+  height: 34px;
+  border-radius: 17px;
   object-fit: cover;
   flex-shrink: 0;
   background: rgba(148, 163, 184, 0.2);
@@ -642,16 +642,17 @@
 }
 .mwpc-member-alias {
   font-weight: 600;
-  font-size: 16px;
+  font-size: 17px;
   color: var(--mwpc-primary);
+  margin-bottom: 2px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .mwpc-member-meta {
   font-weight: 500;
-  font-size: 12px;
-  color: var(--mwpc-muted);
+  font-size: 13px;
+  color: var(--mwpc-faint);
 }
 .mwpc-member-reward-row {
   display: flex;
@@ -687,13 +688,13 @@
 
 /* ─── Footer ───────────────────────────────────────────────────────────────── */
 .mwpc-footer {
-  margin-top: 24px;
+  margin-top: 22px;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 .mwpc-footer-text {
-  font-weight: 600;
-  font-size: 13px;
+  font-weight: 500;
+  font-size: 14px;
   color: var(--mwpc-muted);
 }

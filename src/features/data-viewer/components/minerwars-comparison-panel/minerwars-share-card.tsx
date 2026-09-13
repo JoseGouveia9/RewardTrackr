@@ -1,4 +1,4 @@
-import { forwardRef } from "react";
+import { forwardRef, Fragment } from "react";
 import { useTranslation } from "react-i18next";
 import type {
   MinerWarsClanCurrencyMode,
@@ -8,11 +8,7 @@ import type {
 } from "./minerwars-share-types";
 import { BtcIcon, FiatIcon, GmtIcon, UsdIcon } from "../icons/currency-icons";
 import { CrossedSwordsIcon, TrendingUpIcon, UserAvatarIcon } from "../icons";
-import {
-  readClanTrendPoints,
-  computeClanRecordPct,
-  type ClanTrendPoint,
-} from "@/lib/minerwars/clan-trend";
+import { readIndividualTrendPoints } from "@/lib/minerwars/individual-trend";
 import { MinerWarsLineTrend } from "./minerwars-line-trend";
 import appLogo from "/logo.webp";
 import "./minerwars-share-card.css";
@@ -219,6 +215,18 @@ export const MinerWarsShareCard = forwardRef<HTMLDivElement, CardProps>(function
         ? (cmp.maintenanceBtc / effectiveMw) * 100
         : null;
 
+    const individualTrendPoints = (() => {
+      const allCycles = snapshot.cycles ?? [];
+      const newestCycleId = allCycles.reduce(
+        (max, c) => Math.max(max, c.cycleId),
+        snapshot.selectedCycleId ?? 0,
+      );
+      return newestCycleId > 0 ? readIndividualTrendPoints(allCycles, newestCycleId, cmp) : [];
+    })();
+    const chartIndividualPoints = individualTrendPoints.slice(-15);
+    const trendLabels = chartIndividualPoints.map((point) => `#${point.cycleId}`);
+    const trendProgressPct = chartIndividualPoints.map((point) => point.progressPct ?? 0);
+
     interface Metric {
       label: string;
       value: string;
@@ -359,7 +367,7 @@ export const MinerWarsShareCard = forwardRef<HTMLDivElement, CardProps>(function
             <div className="mwpc-ind-right">
               <div className="mwpc-metric-list">
                 {metrics.map((m, i) => (
-                  <div key={`${m.label}-${i}`}>
+                  <Fragment key={`${m.label}-${i}`}>
                     {m.dividerBefore ? <div className="mwpc-metric-divider" /> : null}
                     <div className="mwpc-metric-row">
                       <div className="mwpc-metric-label-col">
@@ -394,11 +402,22 @@ export const MinerWarsShareCard = forwardRef<HTMLDivElement, CardProps>(function
                         ) : null}
                       </div>
                     </div>
-                  </div>
+                  </Fragment>
                 ))}
               </div>
             </div>
           </div>
+        </div>
+
+        <div className="mwpc-line-trend-row">
+          <MinerWarsLineTrend
+            title="vs Target trend"
+            values={trendProgressPct}
+            labels={trendLabels}
+            suffix="%"
+            pointSuffix="%"
+            light={light}
+          />
         </div>
       </div>
     );
@@ -451,7 +470,9 @@ export const MinerWarsShareCard = forwardRef<HTMLDivElement, CardProps>(function
     // For a LIVE cycle the raw board snapshot's btcMined lags/reads 0 mid-cycle, so the
     // round-based reconstruction (clanBtcMined) is preferred, with the raw field only as a
     // last-resort fallback. For a COMPLETED cycle the raw field is presumed final/settled.
-    const isLiveCycle = snapshot.selectedCycleStatus === "in-progress";
+    const isLiveCycle =
+      (snapshot.cycles ?? []).find((c) => c.cycleId === snapshot.selectedCycleId)?.status ===
+      "in-progress";
     const boardBtcMined = isLiveCycle
       ? clanBtcMined || (clan.header.boardBtcMined ?? 0)
       : clan.header.boardBtcMined != null && clan.header.boardBtcMined > 0
@@ -482,45 +503,8 @@ export const MinerWarsShareCard = forwardRef<HTMLDivElement, CardProps>(function
       clanTargetBlocksTotal != null ? Math.max(0, clanTargetBlocksTotal - blocksMined) : null;
     const isBreakEven = clanProgressPct != null && clanProgressPct >= 100;
 
-    const clanTrendPoints: ClanTrendPoint[] =
-      cmp != null && snapshot.selectedCycleId != null && snapshot.selectedCycleStatus != null
-        ? readClanTrendPoints(
-            snapshot.cycles ?? [],
-            snapshot.selectedCycleId,
-            snapshot.selectedCycleStatus,
-            {
-              blocksMined,
-              btcMined: boardBtcMined,
-              targetBtc: clanTargetBtc,
-            },
-          )
-        : [];
-    const chartTrendPoints = clanTrendPoints.slice(-15);
-    const trendBlocks = chartTrendPoints.map((point) => point.blocksMined);
-    const trendLabels = chartTrendPoints.map((point) => `#${point.cycleId}`);
-    const trendTargetPct = chartTrendPoints.map((point) =>
-      point.targetBtc > 0 ? (point.btcMined / point.targetBtc) * 100 : 0,
-    );
-    const recordPct = cmp ? computeClanRecordPct(clanTrendPoints, cmp.cycleId) : null;
-    const recordBlocksTotal =
-      recordPct != null && btcPerBlockSats != null && btcPerBlockSats > 0
-        ? Math.max(0, Math.ceil((clanTargetSoloSats * (recordPct / 100)) / btcPerBlockSats))
-        : null;
-    const blocksToRecord =
-      recordBlocksTotal != null ? Math.max(0, recordBlocksTotal - blocksMined) : null;
     const blocksNeededText = isBreakEven
-      ? recordPct != null &&
-        clanProgressPct != null &&
-        clanProgressPct < recordPct &&
-        blocksToRecord != null &&
-        blocksToRecord > 0
-        ? t("cycleTracker.beReachedRecordBlocks", {
-            count: blocksToRecord,
-            defaultValue: `${blocksToRecord} blocks to beat record`,
-          })
-        : recordPct != null
-          ? t("cycleTracker.newRecord", { defaultValue: "New record!" })
-          : t("cycleTracker.breakEvenReached")
+      ? t("cycleTracker.breakEvenReached")
       : neededBlocks != null
         ? t("cycleTracker.blocksNeededCount", { count: neededBlocks })
         : "—";
@@ -570,7 +554,6 @@ export const MinerWarsShareCard = forwardRef<HTMLDivElement, CardProps>(function
                       {position != null ? `RANK #${position}` : "RANK —"}
                     </span>
                     <span className="mwpc-clan-members">
-                      {activeMembers.length}{" "}
                       {t("cycleTracker.member", {
                         count: activeMembers.length,
                         defaultValue: "members",
@@ -579,10 +562,9 @@ export const MinerWarsShareCard = forwardRef<HTMLDivElement, CardProps>(function
                   </div>
                   <span className="mwpc-clan-mined-kicker">{t("cycleTracker.minedThisCycle")}</span>
                   <div className="mwpc-clan-mined-row">
-                    <span className="mwpc-cicon mwpc-cicon--lg">{clanMinedDisplay.icon}</span>
+                    <span className="mwpc-cicon">{clanMinedDisplay.icon}</span>
                     <span className="mwpc-clan-mined-value">{clanMinedDisplay.value}</span>
                     <span className="mwpc-tag">
-                      {fmtCompact(blocksMined)}{" "}
                       {t("cycleTracker.block", { count: blocksMined, defaultValue: "blocks" })}
                     </span>
                   </div>
@@ -624,7 +606,7 @@ export const MinerWarsShareCard = forwardRef<HTMLDivElement, CardProps>(function
                   <span className="mwpc-tag">{projLabel}</span>
                 </div>
                 <div className="mwpc-target-value-row">
-                  <span className="mwpc-cicon mwpc-cicon--lg">{clanTargetDisplay.icon}</span>
+                  <span className="mwpc-cicon">{clanTargetDisplay.icon}</span>
                   <span className="mwpc-target-value">{clanTargetDisplay.value}</span>
                 </div>
                 <div className="mwpc-target-bar">
@@ -637,24 +619,6 @@ export const MinerWarsShareCard = forwardRef<HTMLDivElement, CardProps>(function
               </div>
             </div>
           </div>
-        </div>
-
-        <div className="mwpc-line-trend-row">
-          <MinerWarsLineTrend
-            title="Clan cycle trend (Blocks)"
-            values={trendBlocks}
-            labels={trendLabels}
-            suffix=" blocks"
-            light={light}
-          />
-          <MinerWarsLineTrend
-            title="% target reached"
-            values={trendTargetPct}
-            labels={trendLabels}
-            suffix="%"
-            pointSuffix="%"
-            light={light}
-          />
         </div>
 
         {showPerformance && (
@@ -745,7 +709,6 @@ export const MinerWarsShareCard = forwardRef<HTMLDivElement, CardProps>(function
                         <span className="mwpc-member-reward-text">{personal.value}</span>
                       </span>
                       <span className="mwpc-member-meta">
-                        {fmtCompact(m.blocksMined)}{" "}
                         {t("cycleTracker.block", { count: m.blocksMined, defaultValue: "blocks" })}
                       </span>
                     </div>
