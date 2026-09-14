@@ -602,61 +602,96 @@ export interface ExportFlowParams {
   downloadExcel?: boolean;
 }
 
-export interface RefreshCacheKeysParams {
+interface RefreshSelectedSheetsParams {
   accessToken: string;
-  keys: RewardKey[];
+  selectedKeys: RewardKey[];
   cache: CacheState;
   includeWalletFiat: boolean;
   excelFiatCurrency: ExtraFiatCurrency;
-  onMessage?: (msg: string) => void;
-  onCacheUpdate?: (cache: CacheState) => void;
+  onMessage: (msg: string) => void;
+  onCacheUpdate: (cache: CacheState) => void;
 }
 
-// Refreshes selected reward sheets in local cache without building/downloading Excel.
-// Intended for in-app "refresh data" actions.
-export async function refreshCacheKeys({
+interface RefreshSelectedSheetsResult {
+  updatedCache: CacheState;
+  uncachedCount: number;
+  staleCount: number;
+  currencyChangeCount: number;
+}
+
+// Core stale-detection + incremental-fetch-and-cache pipeline shared by the full
+// export/build flow and the lightweight in-app "refresh" action (minus MinerWars
+// cycle-tracker prefetching and Excel building, which are build-flow-only concerns).
+async function refreshSelectedSheets({
   accessToken,
-  keys,
+  selectedKeys,
   cache,
   includeWalletFiat,
   excelFiatCurrency,
   onMessage,
   onCacheUpdate,
-}: RefreshCacheKeysParams): Promise<CacheState> {
-  if (keys.length === 0) return cache;
+}: RefreshSelectedSheetsParams): Promise<RefreshSelectedSheetsResult> {
+  const cachedKeys = selectedKeys.filter((k) => cache[k]);
+  const uncachedKeys = selectedKeys.filter((k) => !cache[k]);
+
+  let updatedCache: CacheState = { ...cache };
+  let staleKeys: RewardKey[] = [];
+  const incrementalKeys = new Set<RewardKey>();
+  const currencyChangeKeys = new Set<RewardKey>();
+
+  if (cachedKeys.length > 0) {
+    onMessage(i18n.t("export.checkingCached", { count: cachedKeys.length }));
+    const counts = await fetchLiveCounts(accessToken, cachedKeys);
+
+    staleKeys = cachedKeys.filter((k) => {
+      const entry = updatedCache[k];
+      const config = REWARD_CONFIG_MAP[k];
+      if (!config) return true;
+      const decision = evaluateCacheFreshness(
+        k,
+        entry,
+        config,
+        counts[k],
+        includeWalletFiat,
+        excelFiatCurrency,
+      );
+
+      if (decision.useIncremental) incrementalKeys.add(k);
+      if (decision.currencyChanged) currencyChangeKeys.add(k);
+      return decision.isStale;
+    });
+  }
+
+  const order = Object.fromEntries(ALL_REWARD_KEYS.map((k, i) => [k, i]));
+  const keysToFetch = [...uncachedKeys, ...staleKeys].sort(
+    (a, b) => (order[a] ?? 999) - (order[b] ?? 999),
+  );
 
   const priceCache = getSessionPriceCache();
-  let updatedCache: CacheState = { ...cache };
 
-  const cachedKeys = keys.filter((k) => updatedCache[k]);
-  const counts: Record<string, LiveProbe> =
-    cachedKeys.length > 0 ? await fetchLiveCounts(accessToken, cachedKeys) : {};
+  type RawFetch = {
+    config: RewardConfig;
+    rawRecords: unknown[];
+    totalCount: number | null;
+    useIncremental: boolean;
+  };
+  const fetched: RawFetch[] = [];
 
-  for (let i = 0; i < keys.length; i++) {
-    const key = keys[i];
+  for (let i = 0; i < keysToFetch.length; i++) {
+    const key = keysToFetch[i];
     const config = REWARD_CONFIG_MAP[key];
     if (!config) continue;
 
-    onMessage?.(
+    onMessage(
       i18n.t("export.fetchingSheet", {
         name: tSheetName(key, config.sheetName),
         current: i + 1,
-        total: keys.length,
+        total: keysToFetch.length,
       }),
     );
 
     const currentEntry = updatedCache[key];
-    const decision = currentEntry
-      ? evaluateCacheFreshness(
-          key,
-          currentEntry,
-          config,
-          counts[key],
-          includeWalletFiat,
-          excelFiatCurrency,
-        )
-      : null;
-    const useIncremental = Boolean(currentEntry && decision?.useIncremental);
+    const useIncremental = Boolean(currentEntry && incrementalKeys.has(key));
     const incrementalOptions: IncrementalFetchOptions | undefined =
       useIncremental && currentEntry
         ? {
@@ -678,15 +713,60 @@ export async function refreshCacheKeys({
             translatedName,
           )
         : await fetchAllPages(config, accessToken, incrementalOptions, onMessage, translatedName);
+    fetched.push({ config, rawRecords, totalCount, useIncremental });
+  }
 
-    onMessage?.(
+  for (const key of currencyChangeKeys) {
+    const currentEntry = updatedCache[key];
+    if (!currentEntry) continue;
+    const config = REWARD_CONFIG_MAP[key];
+    if (!config) continue;
+
+    onMessage(
+      i18n.t("export.applyingRates", {
+        currency: excelFiatCurrency,
+        name: tSheetName(key, config.sheetName),
+      }),
+    );
+    const reEnriched = await reenrichFiatValues(config, currentEntry.records, excelFiatCurrency);
+    const extras = {
+      ...cacheExtras(key, includeWalletFiat, excelFiatCurrency),
+      newEntriesCount: 0,
+    };
+
+    saveCacheEntry(key, currentEntry.sheetName, reEnriched, currentEntry.totalCount, extras);
+    persistPriceCache(key, reEnriched);
+
+    updatedCache = {
+      ...updatedCache,
+      [key]: { ...currentEntry, records: reEnriched, fetchedAt: Date.now(), ...extras },
+    };
+    onCacheUpdate(updatedCache);
+  }
+
+  // PHASE 1: Enrich non-wallet-tx sheets + wallet-tx WITHOUT fiat (cache immediately)
+  type RawForCoinGecko = {
+    config: RewardConfig;
+    records: unknown[];
+    totalCount: number | null;
+    useIncremental: boolean;
+  };
+  const rawForCoinGecko: RawForCoinGecko[] = [];
+
+  const fetchedNonWalletTx = fetched.filter((f) => f.config.enrichType !== "wallet-tx-coingecko");
+  const fetchedWalletTx = fetched.filter((f) => f.config.enrichType === "wallet-tx-coingecko");
+
+  for (let i = 0; i < fetchedNonWalletTx.length; i++) {
+    const { config, rawRecords, totalCount, useIncremental } = fetchedNonWalletTx[i];
+    const key = config.key;
+
+    onMessage(
       i18n.t("export.enrichingSheet", {
         name: tSheetName(key, config.sheetName),
         current: i + 1,
-        total: keys.length,
+        total: fetchedNonWalletTx.length + fetchedWalletTx.length,
       }),
     );
-
     const enriched = await enrichRecords(
       config,
       rawRecords,
@@ -699,6 +779,16 @@ export async function refreshCacheKeys({
       typeof totalCount === "number" ? totalCount : (enriched as RewardRecord[]).length;
     const prepared = filterCacheableRecords(key, enriched as RewardRecord[], fallbackTotalCount);
 
+    if (prepared.removedCreated > 0) {
+      onMessage(
+        i18n.t("export.skippedPending", {
+          name: tSheetName(key, config.sheetName),
+          count: prepared.removedCreated,
+        }),
+      );
+    }
+
+    const currentEntry = updatedCache[key];
     const recordsForCache =
       useIncremental && currentEntry
         ? mergeRecords(currentEntry.records, prepared.records)
@@ -728,9 +818,186 @@ export async function refreshCacheKeys({
         ...extras,
       },
     };
-
-    onCacheUpdate?.(updatedCache);
+    onCacheUpdate(updatedCache);
   }
+
+  // PHASE 1.5: Enrich wallet-tx WITHOUT fiat, cache immediately, queue for phase 2
+  for (let i = 0; i < fetchedWalletTx.length; i++) {
+    const { config, rawRecords, totalCount, useIncremental } = fetchedWalletTx[i];
+    const key = config.key;
+
+    onMessage(
+      i18n.t("export.enrichingSheet", {
+        name: tSheetName(key, config.sheetName),
+        current: fetchedNonWalletTx.length + i + 1,
+        total: fetchedNonWalletTx.length + fetchedWalletTx.length,
+      }),
+    );
+
+    // Enrich WITHOUT fiat for immediate cache
+    const enriched = await enrichRecords(
+      config,
+      rawRecords,
+      priceCache,
+      false, // NO fiat yet
+      excelFiatCurrency,
+      onMessage,
+    );
+    const fallbackTotalCount =
+      typeof totalCount === "number" ? totalCount : (enriched as RewardRecord[]).length;
+    const prepared = filterCacheableRecords(key, enriched as RewardRecord[], fallbackTotalCount);
+
+    const currentEntry = updatedCache[key];
+    const recordsForCache =
+      useIncremental && currentEntry
+        ? mergeRecords(currentEntry.records, prepared.records)
+        : prepared.records;
+
+    const hasApiTotalCount =
+      typeof totalCount === "number" && (totalCount > 0 || prepared.records.length === 0);
+    const totalCountForCache = hasApiTotalCount ? totalCount : recordsForCache.length;
+
+    // Phase 1.5: Cache WITHOUT fiat values yet (will be enriched in phase 2)
+    // Don't reference extraFiatCurrency until phase 2 enrichment completes
+    const extras = {
+      pricingMode: "fiat-off" as const,
+      extraFiatCurrency: undefined,
+    };
+
+    saveCacheEntry(key, config.sheetName, recordsForCache, totalCountForCache, extras);
+    persistPriceCache(key, recordsForCache);
+
+    updatedCache = {
+      ...updatedCache,
+      [key]: {
+        sheetName: config.sheetName,
+        records: recordsForCache,
+        totalCount: totalCountForCache,
+        fetchedAt: Date.now(),
+        ...extras,
+      },
+    };
+    onCacheUpdate(updatedCache);
+
+    // Queue for phase 2 CoinGecko pricing
+    rawForCoinGecko.push({
+      config,
+      records: rawRecords,
+      totalCount,
+      useIncremental,
+    });
+  }
+
+  // PHASE 2: Enrich wallet-tx WITH fiat (CoinGecko - slow, rate-limited)
+  if (rawForCoinGecko.length > 0) {
+    onMessage(i18n.t("export.enrichingSheet", { name: "Pricing", current: 1, total: 1 }));
+  }
+
+  for (let i = 0; i < rawForCoinGecko.length; i++) {
+    const { config, records, totalCount, useIncremental } = rawForCoinGecko[i];
+    const key = config.key;
+
+    onMessage(
+      i18n.t("export.enrichingSheet", {
+        name: tSheetName(key, config.sheetName),
+        current: i + 1,
+        total: rawForCoinGecko.length,
+      }),
+    );
+
+    // Enrich WITH fiat for phase 2
+    const enriched = await enrichRecords(
+      config,
+      records,
+      priceCache,
+      includeWalletFiat,
+      excelFiatCurrency,
+      onMessage,
+    );
+    const fallbackTotalCount =
+      typeof totalCount === "number" ? totalCount : (enriched as RewardRecord[]).length;
+    const prepared = filterCacheableRecords(key, enriched as RewardRecord[], fallbackTotalCount);
+
+    const currentEntry = updatedCache[key];
+    const recordsForCache =
+      useIncremental && currentEntry
+        ? mergeRecords(currentEntry.records, prepared.records)
+        : prepared.records;
+
+    const extras = {
+      ...cacheExtras(key, includeWalletFiat, excelFiatCurrency),
+      newEntriesCount: 0,
+    };
+    const hasApiTotalCount =
+      typeof totalCount === "number" && (totalCount > 0 || prepared.records.length === 0);
+    const totalCountForCache = hasApiTotalCount ? totalCount : recordsForCache.length;
+
+    saveCacheEntry(key, config.sheetName, recordsForCache, totalCountForCache, extras);
+    persistPriceCache(key, recordsForCache);
+
+    updatedCache = {
+      ...updatedCache,
+      [key]: {
+        sheetName: config.sheetName,
+        records: recordsForCache,
+        totalCount: totalCountForCache,
+        fetchedAt: Date.now(),
+        ...extras,
+      },
+    };
+    onCacheUpdate(updatedCache);
+  }
+
+  // Persist the price cache session to localStorage for next reload
+  persistCoinGeckoPriceCache(priceCache);
+
+  return {
+    updatedCache,
+    uncachedCount: uncachedKeys.length,
+    staleCount: staleKeys.length,
+    currencyChangeCount: currencyChangeKeys.size,
+  };
+}
+
+export interface RefreshCacheKeysParams {
+  accessToken: string;
+  keys: RewardKey[];
+  cache: CacheState;
+  includeWalletFiat: boolean;
+  excelFiatCurrency: ExtraFiatCurrency;
+  onMessage?: (msg: string) => void;
+  onCacheUpdate?: (cache: CacheState) => void;
+}
+
+// Refreshes selected reward sheets in local cache without building/downloading Excel.
+// Intended for in-app "refresh data" actions. Reuses the exact same stale-detection
+// and incremental-fetch pipeline as the build/export flow.
+export async function refreshCacheKeys({
+  accessToken,
+  keys,
+  cache,
+  includeWalletFiat,
+  excelFiatCurrency,
+  onMessage,
+  onCacheUpdate,
+}: RefreshCacheKeysParams): Promise<CacheState> {
+  if (keys.length === 0) return cache;
+
+  const { updatedCache, uncachedCount, staleCount } = await refreshSelectedSheets({
+    accessToken,
+    selectedKeys: keys,
+    cache,
+    includeWalletFiat,
+    excelFiatCurrency,
+    onMessage: onMessage ?? (() => {}),
+    onCacheUpdate: onCacheUpdate ?? (() => {}),
+  });
+
+  onMessage?.(
+    uncachedCount + staleCount > 0
+      ? i18n.t("export.refreshComplete")
+      : i18n.t("export.refreshUpToDate"),
+  );
 
   return updatedCache;
 }
@@ -754,262 +1021,16 @@ export async function executeExportFlow({
   onStarted?.();
 
   try {
-    const cachedKeys = selectedKeys.filter((k) => cache[k]);
-    const uncachedKeys = selectedKeys.filter((k) => !cache[k]);
-
-    let updatedCache: CacheState = { ...cache };
-    let staleKeys: RewardKey[] = [];
-    const incrementalKeys = new Set<RewardKey>();
-    const currencyChangeKeys = new Set<RewardKey>();
-
-    if (cachedKeys.length > 0) {
-      onMessage(i18n.t("export.checkingCached", { count: cachedKeys.length }));
-      const counts = await fetchLiveCounts(accessToken, cachedKeys);
-
-      staleKeys = cachedKeys.filter((k) => {
-        const entry = updatedCache[k];
-        const config = REWARD_CONFIG_MAP[k];
-        if (!config) return true;
-        const decision = evaluateCacheFreshness(
-          k,
-          entry,
-          config,
-          counts[k],
-          includeWalletFiat,
-          excelFiatCurrency,
-        );
-
-        if (decision.useIncremental) incrementalKeys.add(k);
-        if (decision.currencyChanged) currencyChangeKeys.add(k);
-        return decision.isStale;
-      });
-    }
-
-    const order = Object.fromEntries(ALL_REWARD_KEYS.map((k, i) => [k, i]));
-    const keysToFetch = [...uncachedKeys, ...staleKeys].sort(
-      (a, b) => (order[a] ?? 999) - (order[b] ?? 999),
-    );
-
-    const priceCache = getSessionPriceCache();
-
-    type RawFetch = {
-      config: RewardConfig;
-      rawRecords: unknown[];
-      totalCount: number | null;
-      useIncremental: boolean;
-    };
-    const fetched: RawFetch[] = [];
-
-    for (let i = 0; i < keysToFetch.length; i++) {
-      const key = keysToFetch[i];
-      const config = REWARD_CONFIG_MAP[key];
-      if (!config) continue;
-
-      onMessage(
-        i18n.t("export.fetchingSheet", {
-          name: tSheetName(key, config.sheetName),
-          current: i + 1,
-          total: keysToFetch.length,
-        }),
-      );
-
-      const currentEntry = updatedCache[key];
-      const useIncremental = Boolean(currentEntry && incrementalKeys.has(key));
-      const incrementalOptions: IncrementalFetchOptions | undefined =
-        useIncremental && currentEntry
-          ? {
-              knownCreatedAt: currentEntry.records
-                .map((r) => (typeof r?.createdAt === "string" ? r.createdAt : ""))
-                .filter(Boolean),
-              knownTotalCount: currentEntry.totalCount,
-            }
-          : undefined;
-
-      const translatedName = tSheetName(key, config.sheetName);
-      const { records: rawRecords, totalCount } =
-        key === "simple-earn" && useIncremental && currentEntry
-          ? await fetchSimpleEarnIncremental(
-              config,
-              accessToken,
-              currentEntry.records,
-              onMessage,
-              translatedName,
-            )
-          : await fetchAllPages(config, accessToken, incrementalOptions, onMessage, translatedName);
-      fetched.push({ config, rawRecords, totalCount, useIncremental });
-    }
-
-    for (const key of currencyChangeKeys) {
-      const currentEntry = updatedCache[key];
-      if (!currentEntry) continue;
-      const config = REWARD_CONFIG_MAP[key];
-      if (!config) continue;
-
-      onMessage(
-        i18n.t("export.applyingRates", {
-          currency: excelFiatCurrency,
-          name: tSheetName(key, config.sheetName),
-        }),
-      );
-      const reEnriched = await reenrichFiatValues(config, currentEntry.records, excelFiatCurrency);
-      const extras = {
-        ...cacheExtras(key, includeWalletFiat, excelFiatCurrency),
-        newEntriesCount: 0,
-      };
-
-      saveCacheEntry(key, currentEntry.sheetName, reEnriched, currentEntry.totalCount, extras);
-      persistPriceCache(key, reEnriched);
-
-      updatedCache = {
-        ...updatedCache,
-        [key]: { ...currentEntry, records: reEnriched, fetchedAt: Date.now(), ...extras },
-      };
-      onCacheUpdate(updatedCache);
-    }
-
-    // PHASE 1: Enrich non-wallet-tx sheets + wallet-tx WITHOUT fiat (cache immediately)
-    type RawForCoinGecko = {
-      config: RewardConfig;
-      records: unknown[];
-      totalCount: number | null;
-      useIncremental: boolean;
-    };
-    const rawForCoinGecko: RawForCoinGecko[] = [];
-
-    const fetchedNonWalletTx = fetched.filter((f) => f.config.enrichType !== "wallet-tx-coingecko");
-    const fetchedWalletTx = fetched.filter((f) => f.config.enrichType === "wallet-tx-coingecko");
-
-    for (let i = 0; i < fetchedNonWalletTx.length; i++) {
-      const { config, rawRecords, totalCount, useIncremental } = fetchedNonWalletTx[i];
-      const key = config.key;
-
-      onMessage(
-        i18n.t("export.enrichingSheet", {
-          name: tSheetName(key, config.sheetName),
-          current: i + 1,
-          total: fetchedNonWalletTx.length + fetchedWalletTx.length,
-        }),
-      );
-      const enriched = await enrichRecords(
-        config,
-        rawRecords,
-        priceCache,
+    const { updatedCache, uncachedCount, staleCount, currencyChangeCount } =
+      await refreshSelectedSheets({
+        accessToken,
+        selectedKeys,
+        cache,
         includeWalletFiat,
         excelFiatCurrency,
         onMessage,
-      );
-      const fallbackTotalCount =
-        typeof totalCount === "number" ? totalCount : (enriched as RewardRecord[]).length;
-      const prepared = filterCacheableRecords(key, enriched as RewardRecord[], fallbackTotalCount);
-
-      if (prepared.removedCreated > 0) {
-        onMessage(
-          i18n.t("export.skippedPending", {
-            name: tSheetName(key, config.sheetName),
-            count: prepared.removedCreated,
-          }),
-        );
-      }
-
-      const currentEntry = updatedCache[key];
-      const recordsForCache =
-        useIncremental && currentEntry
-          ? mergeRecords(currentEntry.records, prepared.records)
-          : prepared.records;
-      const previousCount = currentEntry?.records.length ?? 0;
-      const newEntriesCount = !currentEntry
-        ? recordsForCache.length
-        : Math.max(0, recordsForCache.length - previousCount);
-      const extras = {
-        ...cacheExtras(key, includeWalletFiat, excelFiatCurrency),
-        newEntriesCount,
-      };
-      const hasApiTotalCount =
-        typeof totalCount === "number" && (totalCount > 0 || prepared.records.length === 0);
-      const totalCountForCache = hasApiTotalCount ? totalCount : recordsForCache.length;
-
-      saveCacheEntry(key, config.sheetName, recordsForCache, totalCountForCache, extras);
-      persistPriceCache(key, recordsForCache);
-
-      updatedCache = {
-        ...updatedCache,
-        [key]: {
-          sheetName: config.sheetName,
-          records: recordsForCache,
-          totalCount: totalCountForCache,
-          fetchedAt: Date.now(),
-          ...extras,
-        },
-      };
-      onCacheUpdate(updatedCache);
-    }
-
-    // PHASE 1.5: Enrich wallet-tx WITHOUT fiat, cache immediately, queue for phase 2
-    for (let i = 0; i < fetchedWalletTx.length; i++) {
-      const { config, rawRecords, totalCount, useIncremental } = fetchedWalletTx[i];
-      const key = config.key;
-
-      onMessage(
-        i18n.t("export.enrichingSheet", {
-          name: tSheetName(key, config.sheetName),
-          current: fetchedNonWalletTx.length + i + 1,
-          total: fetchedNonWalletTx.length + fetchedWalletTx.length,
-        }),
-      );
-
-      // Enrich WITHOUT fiat for immediate cache
-      const enriched = await enrichRecords(
-        config,
-        rawRecords,
-        priceCache,
-        false, // NO fiat yet
-        excelFiatCurrency,
-        onMessage,
-      );
-      const fallbackTotalCount =
-        typeof totalCount === "number" ? totalCount : (enriched as RewardRecord[]).length;
-      const prepared = filterCacheableRecords(key, enriched as RewardRecord[], fallbackTotalCount);
-
-      const currentEntry = updatedCache[key];
-      const recordsForCache =
-        useIncremental && currentEntry
-          ? mergeRecords(currentEntry.records, prepared.records)
-          : prepared.records;
-
-      const hasApiTotalCount =
-        typeof totalCount === "number" && (totalCount > 0 || prepared.records.length === 0);
-      const totalCountForCache = hasApiTotalCount ? totalCount : recordsForCache.length;
-
-      // Phase 1.5: Cache WITHOUT fiat values yet (will be enriched in phase 2)
-      // Don't reference extraFiatCurrency until phase 2 enrichment completes
-      const extras = {
-        pricingMode: "fiat-off" as const,
-        extraFiatCurrency: undefined,
-      };
-
-      saveCacheEntry(key, config.sheetName, recordsForCache, totalCountForCache, extras);
-      persistPriceCache(key, recordsForCache);
-
-      updatedCache = {
-        ...updatedCache,
-        [key]: {
-          sheetName: config.sheetName,
-          records: recordsForCache,
-          totalCount: totalCountForCache,
-          fetchedAt: Date.now(),
-          ...extras,
-        },
-      };
-      onCacheUpdate(updatedCache);
-
-      // Queue for phase 2 CoinGecko pricing
-      rawForCoinGecko.push({
-        config,
-        records: rawRecords,
-        totalCount,
-        useIncremental,
+        onCacheUpdate,
       });
-    }
 
     // MinerWars cycle tracker: fetch after all sheets to ensure build report has fresh data
     if (selectedKeys.includes("minerwars")) {
@@ -1067,76 +1088,13 @@ export async function executeExportFlow({
       }
     }
 
-    // PHASE 2: Enrich wallet-tx WITH fiat (CoinGecko - slow, rate-limited)
-    if (rawForCoinGecko.length > 0) {
-      onMessage(i18n.t("export.enrichingSheet", { name: "Pricing", current: 1, total: 1 }));
-    }
-
-    for (let i = 0; i < rawForCoinGecko.length; i++) {
-      const { config, records, totalCount, useIncremental } = rawForCoinGecko[i];
-      const key = config.key;
-
-      onMessage(
-        i18n.t("export.enrichingSheet", {
-          name: tSheetName(key, config.sheetName),
-          current: i + 1,
-          total: rawForCoinGecko.length,
-        }),
-      );
-
-      // Enrich WITH fiat for phase 2
-      const enriched = await enrichRecords(
-        config,
-        records,
-        priceCache,
-        includeWalletFiat,
-        excelFiatCurrency,
-        onMessage,
-      );
-      const fallbackTotalCount =
-        typeof totalCount === "number" ? totalCount : (enriched as RewardRecord[]).length;
-      const prepared = filterCacheableRecords(key, enriched as RewardRecord[], fallbackTotalCount);
-
-      const currentEntry = updatedCache[key];
-      const recordsForCache =
-        useIncremental && currentEntry
-          ? mergeRecords(currentEntry.records, prepared.records)
-          : prepared.records;
-
-      const extras = {
-        ...cacheExtras(key, includeWalletFiat, excelFiatCurrency),
-        newEntriesCount: 0,
-      };
-      const hasApiTotalCount =
-        typeof totalCount === "number" && (totalCount > 0 || prepared.records.length === 0);
-      const totalCountForCache = hasApiTotalCount ? totalCount : recordsForCache.length;
-
-      saveCacheEntry(key, config.sheetName, recordsForCache, totalCountForCache, extras);
-      persistPriceCache(key, recordsForCache);
-
-      updatedCache = {
-        ...updatedCache,
-        [key]: {
-          sheetName: config.sheetName,
-          records: recordsForCache,
-          totalCount: totalCountForCache,
-          fetchedAt: Date.now(),
-          ...extras,
-        },
-      };
-      onCacheUpdate(updatedCache);
-    }
-
-    // Persist the price cache session to localStorage for next reload
-    persistCoinGeckoPriceCache(priceCache);
-
-    const freshCount = cachedKeys.length - staleKeys.length - currencyChangeKeys.size;
+    const cachedCount = selectedKeys.length - uncachedCount;
+    const freshCount = cachedCount - staleCount - currencyChangeCount;
     const parts: string[] = [];
-    if (uncachedKeys.length > 0)
-      parts.push(i18n.t("export.partFetched", { count: uncachedKeys.length }));
-    if (staleKeys.length > 0) parts.push(i18n.t("export.partUpdated", { count: staleKeys.length }));
-    if (currencyChangeKeys.size > 0)
-      parts.push(i18n.t("export.partReEnriched", { count: currencyChangeKeys.size }));
+    if (uncachedCount > 0) parts.push(i18n.t("export.partFetched", { count: uncachedCount }));
+    if (staleCount > 0) parts.push(i18n.t("export.partUpdated", { count: staleCount }));
+    if (currencyChangeCount > 0)
+      parts.push(i18n.t("export.partReEnriched", { count: currencyChangeCount }));
     if (freshCount > 0) parts.push(i18n.t("export.partFromCache", { count: freshCount }));
 
     if (downloadExcel) {
