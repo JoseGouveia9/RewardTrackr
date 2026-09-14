@@ -2,10 +2,20 @@ name = "rewardtrackr"
 main = "workers/worker.js"
 compatibility_date = "2025-03-21"
 
-[assets]
-directory = "./dist"
-binding = "ASSETS"
-not_found_handling = "single-page-application"
+# rewardtrackr.com's DNS origin is GitHub Pages (see .github/workflows/deploy.yml) —
+# these routes only carve out the Worker's own API/proxy paths; every other path keeps
+# going straight to GitHub Pages, untouched.
+routes = [
+	{ pattern = "rewardtrackr.com/se/*", zone_name = "rewardtrackr.com" },
+	{ pattern = "rewardtrackr.com/bm/*", zone_name = "rewardtrackr.com" },
+	{ pattern = "rewardtrackr.com/cc/*", zone_name = "rewardtrackr.com" },
+	{ pattern = "rewardtrackr.com/api/*", zone_name = "rewardtrackr.com" },
+	{ pattern = "rewardtrackr.com/view/*", zone_name = "rewardtrackr.com" },
+	{ pattern = "rewardtrackr.com/announcement", zone_name = "rewardtrackr.com" },
+	{ pattern = "rewardtrackr.com/rl-check", zone_name = "rewardtrackr.com" },
+	{ pattern = "rewardtrackr.com/rl-rollback", zone_name = "rewardtrackr.com" },
+	{ pattern = "rewardtrackr.com/share*", zone_name = "rewardtrackr.com" }
+]
 
 [observability]
 enabled = true
