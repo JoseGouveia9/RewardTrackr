@@ -628,6 +628,10 @@ export async function refreshCacheKeys({
   const priceCache = getSessionPriceCache();
   let updatedCache: CacheState = { ...cache };
 
+  const cachedKeys = keys.filter((k) => updatedCache[k]);
+  const counts: Record<string, LiveProbe> =
+    cachedKeys.length > 0 ? await fetchLiveCounts(accessToken, cachedKeys) : {};
+
   for (let i = 0; i < keys.length; i++) {
     const key = keys[i];
     const config = REWARD_CONFIG_MAP[key];
@@ -641,14 +645,39 @@ export async function refreshCacheKeys({
       }),
     );
 
+    const currentEntry = updatedCache[key];
+    const decision = currentEntry
+      ? evaluateCacheFreshness(
+          key,
+          currentEntry,
+          config,
+          counts[key],
+          includeWalletFiat,
+          excelFiatCurrency,
+        )
+      : null;
+    const useIncremental = Boolean(currentEntry && decision?.useIncremental);
+    const incrementalOptions: IncrementalFetchOptions | undefined =
+      useIncremental && currentEntry
+        ? {
+            knownCreatedAt: currentEntry.records
+              .map((r) => (typeof r?.createdAt === "string" ? r.createdAt : ""))
+              .filter(Boolean),
+            knownTotalCount: currentEntry.totalCount,
+          }
+        : undefined;
+
     const translatedName = tSheetName(key, config.sheetName);
-    const { records: rawRecords, totalCount } = await fetchAllPages(
-      config,
-      accessToken,
-      undefined,
-      onMessage,
-      translatedName,
-    );
+    const { records: rawRecords, totalCount } =
+      key === "simple-earn" && useIncremental && currentEntry
+        ? await fetchSimpleEarnIncremental(
+            config,
+            accessToken,
+            currentEntry.records,
+            onMessage,
+            translatedName,
+          )
+        : await fetchAllPages(config, accessToken, incrementalOptions, onMessage, translatedName);
 
     onMessage?.(
       i18n.t("export.enrichingSheet", {
@@ -670,8 +699,10 @@ export async function refreshCacheKeys({
       typeof totalCount === "number" ? totalCount : (enriched as RewardRecord[]).length;
     const prepared = filterCacheableRecords(key, enriched as RewardRecord[], fallbackTotalCount);
 
-    const currentEntry = updatedCache[key];
-    const recordsForCache = prepared.records;
+    const recordsForCache =
+      useIncremental && currentEntry
+        ? mergeRecords(currentEntry.records, prepared.records)
+        : prepared.records;
     const previousCount = currentEntry?.records.length ?? 0;
     const newEntriesCount = !currentEntry
       ? recordsForCache.length
