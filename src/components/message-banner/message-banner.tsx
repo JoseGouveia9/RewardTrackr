@@ -30,7 +30,9 @@ function getMessageType(msg: string): "success" | "error" | "loading" {
     lower.includes("cleared") ||
     lower.includes("downloaded") ||
     lower.includes("done") ||
-    lower.includes("welcome")
+    lower.includes("welcome") ||
+    lower.includes("complete") ||
+    lower.includes("up to date")
   ) {
     return "success";
   }

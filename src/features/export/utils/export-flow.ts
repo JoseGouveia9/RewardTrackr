@@ -983,19 +983,28 @@ export async function refreshCacheKeys({
 }: RefreshCacheKeysParams): Promise<CacheState> {
   if (keys.length === 0) return cache;
 
-  const { updatedCache, uncachedCount, staleCount } = await refreshSelectedSheets({
-    accessToken,
-    selectedKeys: keys,
-    cache,
-    includeWalletFiat,
-    excelFiatCurrency,
-    onMessage: onMessage ?? (() => {}),
-    onCacheUpdate: onCacheUpdate ?? (() => {}),
-  });
+  const { updatedCache, uncachedCount, staleCount, currencyChangeCount } =
+    await refreshSelectedSheets({
+      accessToken,
+      selectedKeys: keys,
+      cache,
+      includeWalletFiat,
+      excelFiatCurrency,
+      onMessage: onMessage ?? (() => {}),
+      onCacheUpdate: onCacheUpdate ?? (() => {}),
+    });
+
+  const freshCount = keys.length - uncachedCount - staleCount - currencyChangeCount;
+  const parts: string[] = [];
+  if (uncachedCount > 0) parts.push(i18n.t("export.partFetched", { count: uncachedCount }));
+  if (staleCount > 0) parts.push(i18n.t("export.partUpdated", { count: staleCount }));
+  if (currencyChangeCount > 0)
+    parts.push(i18n.t("export.partReEnriched", { count: currencyChangeCount }));
+  if (freshCount > 0) parts.push(i18n.t("export.partFromCache", { count: freshCount }));
 
   onMessage?.(
-    uncachedCount + staleCount > 0
-      ? i18n.t("export.refreshComplete")
+    parts.length > 0
+      ? i18n.t("export.refreshComplete", { details: parts.join(", ") })
       : i18n.t("export.refreshUpToDate"),
   );
 

@@ -146,7 +146,7 @@
     "cacheCleared": "Cache geleert. Der nächste Export ruft neue Daten ab.",
     "sessionExpired": "Sitzung abgelaufen. Bitte erneut über die RewardTrackr-Erweiterung synchronisieren.",
     "checkingCached": "{{count}} zwischengespeicherte Tabelle(n) auf Updates prüfen...",
-    "refreshComplete": "Aktualisierung abgeschlossen.",
+    "refreshComplete": "Aktualisierung abgeschlossen ({{details}}).",
     "refreshUpToDate": "Bereits aktuell.",
     "fetchingSheet": "{{name}} abrufen ({{current}} von {{total}})...",
     "applyingRates": "{{currency}}-Kurse auf {{name}} anwenden...",
