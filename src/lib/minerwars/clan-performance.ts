@@ -1,6 +1,6 @@
 import { buildApiHeaders } from "@/lib/http";
 import { mapWithConcurrency } from "@/lib/concurrency";
-import { getCycleStartTuesdayUTC } from "./types";
+import { getCycleStartTuesdayUTC, toDateStr } from "./types";
 import {
   getAbilityCosts,
   getAllRoundsInCycle,
@@ -8,7 +8,10 @@ import {
   getClanEarnersForCycle,
   getClanHeaderInfo,
   getClanLeaderboardStats,
+  getClanPowerAnalytics,
   getClanRoster,
+  getClanThByUserByDate,
+  getCurrentClanPower,
   getCycleClanData,
   getCycleRounds,
   getRoundClanParticipants,
@@ -67,8 +70,11 @@ export function invalidateStaleClanPerformanceCache(currentClanId: number): void
 // sequential round-trips just for this step, which would dominate the whole fetch cost.
 const PARTICIPANTS_FETCH_CONCURRENCY = 6;
 
-// Same per-round formula the individual comparison view uses, substituting each member's TH;
-// a round's reward only splits among members who actually participated (round leaderboard).
+// Same per-round formula the Individual tab uses: each round's clan-level BTC share is
+// split across members by their day-level TH share of the WHOLE clan (getClanThByUserByDate),
+// not the round's own live-current TH, so a member's reward matches what they'd see for that
+// round on the Individual tab. A round's reward still only reaches members who actually
+// appeared in that round's own leaderboard.
 async function getRoundRewards(
   headers: Record<string, string>,
   clanId: number,
@@ -78,11 +84,17 @@ async function getRoundRewards(
     multiplier: number;
     active: boolean;
     winnerClanId: number | null;
+    endedAt: string | null;
   }>,
   btcFund: number,
   thByUser: Map<number, number>,
+  clanThByUserByDate: Map<string, Map<number, number>>,
+  clanPowerByDate: Map<string, number>,
+  currentClanPower: number | null,
+  clanNftPower: number | null,
 ): Promise<Map<number, number>> {
   const rewardByUser = new Map<number, number>();
+  const today = new Date().toISOString().slice(0, 10);
 
   const completedRounds = allRounds.filter((r) => !r.active && r.power > 0);
   const sumAllMultipliers = completedRounds.reduce((sum, r) => sum + r.multiplier, 0);
@@ -105,25 +117,30 @@ async function getRoundRewards(
   });
 
   for (const round of wonRounds) {
+    if (!round.endedAt) continue;
     const powerRatio = round.power / avgRoundNftPower;
-    const roundBtc = (round.multiplier / sumAllMultipliers) * btcFund * powerRatio;
-    if (roundBtc <= 0) continue;
+    const roundClanBtc = (round.multiplier / sumAllMultipliers) * btcFund * powerRatio;
+    if (roundClanBtc <= 0) continue;
+
+    const date = toDateStr(round.endedAt);
+    const isToday = date >= today;
+    const byUserTh = clanThByUserByDate.get(date);
+    const effectiveClanPower = byUserTh
+      ? [...byUserTh.values()].reduce((sum, v) => sum + v, 0)
+      : (clanPowerByDate.get(date) ??
+        (isToday ? (currentClanPower ?? clanNftPower ?? 0) : (clanNftPower ?? 0)));
+    if (effectiveClanPower <= 0) continue;
 
     const presentUserIds = participantsByRoundId.get(round.id);
     if (!presentUserIds) continue;
 
-    let eligibleTotalTh = 0;
-    const eligible: Array<{ userId: number; th: number }> = [];
     for (const userId of presentUserIds) {
-      const th = thByUser.get(userId);
-      if (th == null) continue;
-      eligible.push({ userId, th });
-      eligibleTotalTh += th;
-    }
-    if (eligibleTotalTh <= 0) continue;
-
-    for (const { userId, th } of eligible) {
-      rewardByUser.set(userId, (rewardByUser.get(userId) ?? 0) + roundBtc * (th / eligibleTotalTh));
+      const memberTh = byUserTh?.get(userId) ?? thByUser.get(userId) ?? 0;
+      if (memberTh <= 0) continue;
+      rewardByUser.set(
+        userId,
+        (rewardByUser.get(userId) ?? 0) + roundClanBtc * (memberTh / effectiveClanPower),
+      );
     }
   }
 
@@ -190,12 +207,25 @@ export async function fetchClanPerformance(
       0,
     );
 
+    const completedRoundsForTh = allRounds.filter((r) => !r.active && r.power > 0);
+    const [clanThByUserByDate, clanPowerByDate, currentClanPower] = await Promise.all([
+      getClanThByUserByDate(headers, completedRoundsForTh, leagueId, clanId, cycleStart).catch(
+        () => new Map<string, Map<number, number>>(),
+      ),
+      getClanPowerAnalytics(headers, clanId).catch(() => new Map<string, number>()),
+      getCurrentClanPower(headers, clanId).catch(() => null),
+    ]);
+
     const rewardByUser = await getRoundRewards(
       headers,
       clanId,
       allRounds,
       clanData.btcFund,
       thByUser,
+      clanThByUserByDate,
+      clanPowerByDate,
+      currentClanPower,
+      clanData.clanNftPower,
     );
     const userIds = new Set<number>(rosterById.keys());
 

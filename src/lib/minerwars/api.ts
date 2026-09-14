@@ -1005,13 +1005,16 @@ const CLAN_TH_BY_DATE_CONCURRENCY = 4;
 // Day-by-day clan TH reconstruction for a past cycle, from actual round participants —
 // mirrors the live-cycle behavior (getClanPowerAnalytics-style day resolution) so a member
 // who joined/left mid-cycle doesn't apply their current TH to days they weren't present.
-export async function getClanThByDate(
+// Returns the per-user breakdown (not just the clan-wide sum) so callers that need each
+// individual member's historical TH (e.g. clan-performance's per-member reward split) can
+// reuse the exact same day-level snapshot the personal comparison view is built from.
+export async function getClanThByUserByDate(
   headers: Record<string, string>,
   completedRounds: Array<{ id: number; endedAt: string | null }>,
   leagueId: number,
   clanId: number,
   calculatedAt: string,
-): Promise<Map<string, number>> {
+): Promise<Map<string, Map<number, number>>> {
   // Sample the FIRST round of each day, not the last — matches real CSV settlement data.
   const firstRoundByDate = new Map<string, { id: number; endedAt: string }>();
   for (const round of completedRounds) {
@@ -1028,7 +1031,7 @@ export async function getClanThByDate(
     () => new Map<number, LeagueThEntry>(),
   );
 
-  const map = new Map<string, number>();
+  const map = new Map<string, Map<number, number>>();
   await mapWithConcurrency(
     [...firstRoundByDate.entries()],
     CLAN_TH_BY_DATE_CONCURRENCY,
@@ -1037,11 +1040,39 @@ export async function getClanThByDate(
         () => new Map<number, number>(),
       );
       if (participants.size === 0) return;
-      let total = 0;
-      for (const userId of participants.keys()) total += leagueThByUser.get(userId)?.th ?? 0;
-      if (total > 0) map.set(dateStr, total);
+      const byUser = new Map<number, number>();
+      for (const userId of participants.keys()) {
+        const th = leagueThByUser.get(userId)?.th ?? 0;
+        if (th > 0) byUser.set(userId, th);
+      }
+      if (byUser.size > 0) map.set(dateStr, byUser);
     },
   );
+  return map;
+}
+
+// mirrors the live-cycle behavior (getClanPowerAnalytics-style day resolution) so a member
+// who joined/left mid-cycle doesn't apply their current TH to days they weren't present.
+export async function getClanThByDate(
+  headers: Record<string, string>,
+  completedRounds: Array<{ id: number; endedAt: string | null }>,
+  leagueId: number,
+  clanId: number,
+  calculatedAt: string,
+): Promise<Map<string, number>> {
+  const byUserByDate = await getClanThByUserByDate(
+    headers,
+    completedRounds,
+    leagueId,
+    clanId,
+    calculatedAt,
+  );
+  const map = new Map<string, number>();
+  for (const [dateStr, byUser] of byUserByDate) {
+    let total = 0;
+    for (const th of byUser.values()) total += th;
+    if (total > 0) map.set(dateStr, total);
+  }
   return map;
 }
 
