@@ -146,6 +146,8 @@
     "cacheCleared": "キャッシュをクリアしました。次のエクスポートでは新しいデータを取得します。",
     "sessionExpired": "セッションが期限切れです。RewardTrackr拡張機能で再度同期してください。",
     "checkingCached": "{{count}} 件のキャッシュシートを更新確認中...",
+    "refreshComplete": "更新が完了しました。",
+    "refreshUpToDate": "すでに最新です。",
     "fetchingSheet": "{{name}} を取得中 ({{current}}/{{total}})...",
     "applyingRates": "{{name}} に {{currency}} レートを適用中...",
     "enrichingSheet": "{{name}} を処理中 ({{current}}/{{total}})...",

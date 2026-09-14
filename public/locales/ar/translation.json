@@ -146,6 +146,8 @@
     "cacheCleared": "تم مسح ذاكرة التخزين المؤقت. سيجلب التصدير التالي بيانات جديدة.",
     "sessionExpired": "انتهت صلاحية الجلسة. يرجى إعادة المزامنة عبر إضافة RewardTrackr.",
     "checkingCached": "جارٍ التحقق من {{count}} ورقة مخزنة للتحديثات...",
+    "refreshComplete": "اكتمل التحديث.",
+    "refreshUpToDate": "محدث بالفعل.",
     "fetchingSheet": "جارٍ جلب {{name}} ({{current}} من {{total}})...",
     "applyingRates": "تطبيق أسعار {{currency}} على {{name}}...",
     "enrichingSheet": "جارٍ إثراء {{name}} ({{current}} من {{total}})...",

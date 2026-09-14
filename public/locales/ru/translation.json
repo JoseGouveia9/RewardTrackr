@@ -146,6 +146,8 @@
     "cacheCleared": "Кэш очищен. Следующий экспорт загрузит новые данные.",
     "sessionExpired": "Сессия истекла. Пожалуйста, повторно синхронизируйтесь через расширение RewardTrackr.",
     "checkingCached": "Проверка {{count}} кэшированных листов на обновления...",
+    "refreshComplete": "Обновление завершено.",
+    "refreshUpToDate": "Уже актуально.",
     "fetchingSheet": "Загрузка {{name}} ({{current}} из {{total}})...",
     "applyingRates": "Применение курсов {{currency}} к {{name}}...",
     "enrichingSheet": "Обработка {{name}} ({{current}} из {{total}})...",

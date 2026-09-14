@@ -146,6 +146,8 @@
     "cacheCleared": "캐시가 지워졌습니다. 다음 내보내기는 새 데이터를 가져옵니다.",
     "sessionExpired": "세션이 만료되었습니다. RewardTrackr 확장 프로그램을 통해 다시 동기화해 주세요.",
     "checkingCached": "{{count}}개의 캐시된 시트를 업데이트 확인 중...",
+    "refreshComplete": "새로고침 완료.",
+    "refreshUpToDate": "이미 최신 상태입니다.",
     "fetchingSheet": "{{name}} 가져오는 중 ({{current}}/{{total}})...",
     "applyingRates": "{{name}}에 {{currency}} 환율 적용 중...",
     "enrichingSheet": "{{name}} 처리 중 ({{current}}/{{total}})...",

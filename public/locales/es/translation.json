@@ -146,6 +146,8 @@
     "cacheCleared": "Caché limpiada. La próxima exportación obtendrá datos nuevos.",
     "sessionExpired": "Sesión expirada. Por favor, vuelve a sincronizar a través de la extensión RewardTrackr.",
     "checkingCached": "Verificando {{count}} hoja(s) almacenadas para actualizaciones...",
+    "refreshComplete": "Actualización completa.",
+    "refreshUpToDate": "Ya está actualizado.",
     "fetchingSheet": "Obteniendo {{name}} ({{current}} de {{total}})...",
     "applyingRates": "Aplicando tasas {{currency}} a {{name}}...",
     "enrichingSheet": "Enriqueciendo {{name}} ({{current}} de {{total}})...",
