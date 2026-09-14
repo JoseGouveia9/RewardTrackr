@@ -617,11 +617,25 @@ interface RefreshSelectedSheetsResult {
   uncachedCount: number;
   staleCount: number;
   currencyChangeCount: number;
+  pendingWalletTxPricing: RawForCoinGecko[];
+  priceCache: ReturnType<typeof getSessionPriceCache>;
 }
+
+type RawForCoinGecko = {
+  config: RewardConfig;
+  records: unknown[];
+  totalCount: number | null;
+  useIncremental: boolean;
+};
 
 // Core stale-detection + incremental-fetch-and-cache pipeline shared by the full
 // export/build flow and the lightweight in-app "refresh" action (minus MinerWars
 // cycle-tracker prefetching and Excel building, which are build-flow-only concerns).
+//
+// Note: this stops short of the slow, rate-limited CoinGecko wallet-tx pricing pass —
+// callers must follow up with enrichPendingWalletTxPricing() for that. This lets the
+// build flow run the MinerWars cycle tracker in between, matching the mobile app's
+// ordering (cycle tracker before CoinGecko pricing).
 async function refreshSelectedSheets({
   accessToken,
   selectedKeys,
@@ -745,12 +759,6 @@ async function refreshSelectedSheets({
   }
 
   // PHASE 1: Enrich non-wallet-tx sheets + wallet-tx WITHOUT fiat (cache immediately)
-  type RawForCoinGecko = {
-    config: RewardConfig;
-    records: unknown[];
-    totalCount: number | null;
-    useIncremental: boolean;
-  };
   const rawForCoinGecko: RawForCoinGecko[] = [];
 
   const fetchedNonWalletTx = fetched.filter((f) => f.config.enrichType !== "wallet-tx-coingecko");
@@ -888,20 +896,51 @@ async function refreshSelectedSheets({
     });
   }
 
-  // PHASE 2: Enrich wallet-tx WITH fiat (CoinGecko - slow, rate-limited)
-  if (rawForCoinGecko.length > 0) {
+  return {
+    updatedCache,
+    uncachedCount: uncachedKeys.length,
+    staleCount: staleKeys.length,
+    currencyChangeCount: currencyChangeKeys.size,
+    pendingWalletTxPricing: rawForCoinGecko,
+    priceCache,
+  };
+}
+
+interface EnrichPendingWalletTxPricingParams {
+  updatedCache: CacheState;
+  pendingWalletTxPricing: RawForCoinGecko[];
+  priceCache: ReturnType<typeof getSessionPriceCache>;
+  includeWalletFiat: boolean;
+  excelFiatCurrency: ExtraFiatCurrency;
+  onMessage: (msg: string) => void;
+  onCacheUpdate: (cache: CacheState) => void;
+}
+
+// Slow, rate-limited CoinGecko pricing pass for wallet-tx sheets fetched during
+// refreshSelectedSheets(). Kept separate so build flows can run the MinerWars cycle
+// tracker in between (matching mobile's ordering: cycle tracker before CoinGecko).
+async function enrichPendingWalletTxPricing({
+  updatedCache,
+  pendingWalletTxPricing,
+  priceCache,
+  includeWalletFiat,
+  excelFiatCurrency,
+  onMessage,
+  onCacheUpdate,
+}: EnrichPendingWalletTxPricingParams): Promise<CacheState> {
+  if (pendingWalletTxPricing.length > 0) {
     onMessage(i18n.t("export.enrichingSheet", { name: "Pricing", current: 1, total: 1 }));
   }
 
-  for (let i = 0; i < rawForCoinGecko.length; i++) {
-    const { config, records, totalCount, useIncremental } = rawForCoinGecko[i];
+  for (let i = 0; i < pendingWalletTxPricing.length; i++) {
+    const { config, records, totalCount, useIncremental } = pendingWalletTxPricing[i];
     const key = config.key;
 
     onMessage(
       i18n.t("export.enrichingSheet", {
         name: tSheetName(key, config.sheetName),
         current: i + 1,
-        total: rawForCoinGecko.length,
+        total: pendingWalletTxPricing.length,
       }),
     );
 
@@ -951,12 +990,7 @@ async function refreshSelectedSheets({
   // Persist the price cache session to localStorage for next reload
   persistCoinGeckoPriceCache(priceCache);
 
-  return {
-    updatedCache,
-    uncachedCount: uncachedKeys.length,
-    staleCount: staleKeys.length,
-    currencyChangeCount: currencyChangeKeys.size,
-  };
+  return updatedCache;
 }
 
 export interface RefreshCacheKeysParams {
@@ -983,16 +1017,35 @@ export async function refreshCacheKeys({
 }: RefreshCacheKeysParams): Promise<CacheState> {
   if (keys.length === 0) return cache;
 
-  const { updatedCache, uncachedCount, staleCount, currencyChangeCount } =
-    await refreshSelectedSheets({
-      accessToken,
-      selectedKeys: keys,
-      cache,
-      includeWalletFiat,
-      excelFiatCurrency,
-      onMessage: onMessage ?? (() => {}),
-      onCacheUpdate: onCacheUpdate ?? (() => {}),
-    });
+  const msgHandler = onMessage ?? (() => {});
+  const cacheHandler = onCacheUpdate ?? (() => {});
+
+  const {
+    updatedCache: fetchedCache,
+    uncachedCount,
+    staleCount,
+    currencyChangeCount,
+    pendingWalletTxPricing,
+    priceCache,
+  } = await refreshSelectedSheets({
+    accessToken,
+    selectedKeys: keys,
+    cache,
+    includeWalletFiat,
+    excelFiatCurrency,
+    onMessage: msgHandler,
+    onCacheUpdate: cacheHandler,
+  });
+
+  const updatedCache = await enrichPendingWalletTxPricing({
+    updatedCache: fetchedCache,
+    pendingWalletTxPricing,
+    priceCache,
+    includeWalletFiat,
+    excelFiatCurrency,
+    onMessage: msgHandler,
+    onCacheUpdate: cacheHandler,
+  });
 
   const freshCount = keys.length - uncachedCount - staleCount - currencyChangeCount;
   const parts: string[] = [];
@@ -1002,7 +1055,7 @@ export async function refreshCacheKeys({
     parts.push(i18n.t("export.partReEnriched", { count: currencyChangeCount }));
   if (freshCount > 0) parts.push(i18n.t("export.partFromCache", { count: freshCount }));
 
-  onMessage?.(
+  msgHandler(
     parts.length > 0
       ? i18n.t("export.refreshComplete", { details: parts.join(", ") })
       : i18n.t("export.refreshUpToDate"),
@@ -1030,18 +1083,25 @@ export async function executeExportFlow({
   onStarted?.();
 
   try {
-    const { updatedCache, uncachedCount, staleCount, currencyChangeCount } =
-      await refreshSelectedSheets({
-        accessToken,
-        selectedKeys,
-        cache,
-        includeWalletFiat,
-        excelFiatCurrency,
-        onMessage,
-        onCacheUpdate,
-      });
+    const {
+      updatedCache: fetchedCache,
+      uncachedCount,
+      staleCount,
+      currencyChangeCount,
+      pendingWalletTxPricing,
+      priceCache,
+    } = await refreshSelectedSheets({
+      accessToken,
+      selectedKeys,
+      cache,
+      includeWalletFiat,
+      excelFiatCurrency,
+      onMessage,
+      onCacheUpdate,
+    });
 
-    // MinerWars cycle tracker: fetch after all sheets to ensure build report has fresh data
+    // MinerWars cycle tracker: fetch after all sheets but before the slow, rate-limited
+    // CoinGecko pricing pass (matching mobile's ordering), so cycle data lands fast.
     if (selectedKeys.includes("minerwars")) {
       try {
         onMinerWarsPrefetchingChange?.(true);
@@ -1096,6 +1156,16 @@ export async function executeExportFlow({
         onMinerWarsPrefetchingChange?.(false);
       }
     }
+
+    const updatedCache = await enrichPendingWalletTxPricing({
+      updatedCache: fetchedCache,
+      pendingWalletTxPricing,
+      priceCache,
+      includeWalletFiat,
+      excelFiatCurrency,
+      onMessage,
+      onCacheUpdate,
+    });
 
     const cachedCount = selectedKeys.length - uncachedCount;
     const freshCount = cachedCount - staleCount - currencyChangeCount;
