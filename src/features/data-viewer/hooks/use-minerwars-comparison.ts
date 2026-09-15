@@ -10,6 +10,7 @@ import {
   getCachedCycles,
   getCachedMinerWarsComparison,
   invalidateCycleCache,
+  prefetchAllCompletedCycles,
   syncMinerWarsSheet,
   type CycleInfo,
   type MinerWarsComparison,
@@ -185,6 +186,8 @@ export function useMinerWarsComparison({
     if (list.some((c) => c.status === "pending")) {
       const { newEntries } = await syncMinerWarsSheet(getToken()).catch(() => ({ newEntries: 0 }));
       if (newEntries > 0) {
+        await prefetchAllCompletedCycles(getToken(), list).catch(() => {});
+
         // Recompute cycle statuses with new rewards data
         const today = new Date().toISOString().slice(0, 10);
         const updatedList = list.map((c) => ({

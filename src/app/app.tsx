@@ -238,7 +238,7 @@ function App() {
   }, []);
 
   const handleRecordsRefresh = useCallback(async (): Promise<void> => {
-    const keys = ALL_REWARD_KEYS.filter((key) => key !== "minerwars" && cache[key] !== null);
+    const keys = ALL_REWARD_KEYS.filter((key) => cache[key] !== null);
     if (keys.length === 0) return;
     await refreshKeys(keys);
   }, [cache, refreshKeys]);
