@@ -1127,8 +1127,11 @@ export async function getClanPowerAnalytics(headers: Record<string, string>, cla
   return map;
 }
 
-export async function getCurrentClanPower(headers: Record<string, string>, clanId: number) {
-  const res = await postJson<{ data: { power: number } }>(
+export async function getCurrentClanPower(
+  headers: Record<string, string>,
+  clanId: number,
+): Promise<{ power: number | null; myJoinDate: string | null }> {
+  const res = await postJson<{ data: { power: number; myProfile: { joinDate: string } | null } }>(
     `${API}/api/nft-game/clan/get-by-id`,
     headers,
     {
@@ -1138,7 +1141,10 @@ export async function getCurrentClanPower(headers: Record<string, string>, clanI
       sort: { sortType: "none" },
     },
   );
-  return res.data?.power ?? null;
+  return {
+    power: res.data?.power ?? null,
+    myJoinDate: res.data?.myProfile?.joinDate ?? null,
+  };
 }
 
 export async function getSoloMiningDates(

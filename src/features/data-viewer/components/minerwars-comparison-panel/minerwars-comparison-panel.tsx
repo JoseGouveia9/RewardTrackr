@@ -432,8 +432,8 @@ export function MinerWarsComparisonPanel({
           clanTargetBtc={clanTargetBtc}
           clanMinerWarsBtc={clanMinerWarsBtc}
           btcPerBlockSats={btcPerBlockSats}
-          targetActualDays={data?.targetActualDays ?? 0}
-          targetProjectedDays={data?.targetProjectedDays ?? 0}
+          targetActualDays={data?.clanTargetActualDays ?? 0}
+          targetProjectedDays={data?.clanTargetProjectedDays ?? 0}
           currency={currency}
           fiatCode={extraFiatCode}
           extraFiatRate={extraFiatRate}

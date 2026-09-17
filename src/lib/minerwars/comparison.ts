@@ -278,6 +278,8 @@ async function _doFetchMinerWarsComparison(
         btcFundIsZero: false,
         actualMinerWarsBtc,
         clanTargetSoloSats: null,
+        clanTargetActualDays: 0,
+        clanTargetProjectedDays: 0,
         btcPerBlockSats: null,
         cycleLength: cycleDates.length,
         maintenanceBtc: payData?.maintenanceBtc ?? null,
@@ -353,6 +355,7 @@ async function _doFetchMinerWarsComparison(
     leagueWeightedAvgDiscount: number | null;
     clanPowerByDate: Map<string, number>;
     currentClanPower: number | null;
+    myClanJoinDate: string | null;
     clanThByDate: Map<string, number>;
   };
 
@@ -369,7 +372,7 @@ async function _doFetchMinerWarsComparison(
       await getCycleClanData(headers, cycleStartDate, group.leagueId, group.clanId);
     const btcPerBlock = totalMinedBlocks > 0 ? btcFund / totalMinedBlocks : 0;
 
-    const [clanPowerByDate, currentClanPower, clanThByDate] = await Promise.all([
+    const [clanPowerByDate, currentClanPowerInfo, clanThByDate] = await Promise.all([
       getClanPowerAnalytics(headers, group.clanId),
       getCurrentClanPower(headers, group.clanId),
       getClanThByDate(headers, completedRounds, group.leagueId, group.clanId, cycleStartDate).catch(
@@ -391,7 +394,8 @@ async function _doFetchMinerWarsComparison(
       leagueWeightedEE,
       leagueWeightedAvgDiscount,
       clanPowerByDate,
-      currentClanPower,
+      currentClanPower: currentClanPowerInfo.power,
+      myClanJoinDate: currentClanPowerInfo.myJoinDate,
       clanThByDate,
     };
   });
@@ -419,9 +423,17 @@ async function _doFetchMinerWarsComparison(
     leagueWeightedAvgDiscount,
     clanPowerByDate,
     currentClanPower,
+    myClanJoinDate,
     clanThByDate,
     sumAllMultipliers,
   } = currentGroup;
+
+  // First day the user has actually been a member of the CURRENT clan this cycle — a
+  // mid-cycle clan switch means this can be later than CYCLE_START, so the clan's own
+  // 7-day target must be scoped to this range, not the whole cycle.
+  const clanTenureStart = myClanJoinDate != null ? toDateStr(myClanJoinDate) : null;
+  const clanTenureStartDate =
+    clanTenureStart != null && clanTenureStart > CYCLE_START ? clanTenureStart : CYCLE_START;
 
   const cycleCutoff = CYCLE_END < TODAY ? CYCLE_END : TODAY;
   const cycleDates: string[] = [];
@@ -609,9 +621,17 @@ async function _doFetchMinerWarsComparison(
   let targetActualDays = 0;
   let targetProjectedDays = 0;
   let clanTargetSoloSats = 0;
+  let clanTargetActualDays = 0;
+  let clanTargetProjectedDays = 0;
   let targetSoloGmtHist = 0;
   let hasTargetSoloGmt = false;
   const lastClanPower = currentClanPower ?? clanNftPower ?? 0;
+  // Dates the user has actually been a member of the CURRENT clan and that have already
+  // occurred, mirroring elapsedComparisonDates but re-scoped to clan tenure: its first day
+  // is excluded while the cycle is live (that day's clan-power data isn't settled yet
+  // either), same as the whole-cycle day-1 exclusion above.
+  const clanTenureDatesSoFar = cycleDates.filter((d) => d >= clanTenureStartDate);
+  const clanElapsedDates = isCycleLive ? clanTenureDatesSoFar.slice(1) : clanTenureDatesSoFar;
 
   for (const dateStr of fullCycleDates) {
     // isPast (day-1-excluded while live) only counts "actual vs projected" reward days for
@@ -643,6 +663,10 @@ async function _doFetchMinerWarsComparison(
       }
     }
 
+    // Days before the user joined the CURRENT clan don't count towards its target at all
+    // (a mid-cycle switch must not inflate the clan's target with days spent elsewhere).
+    if (dateStr < clanTenureStartDate) continue;
+
     const clanPow = dateOccurred
       ? clanThByDate.has(dateStr)
         ? clanThByDate.get(dateStr)!
@@ -651,6 +675,8 @@ async function _doFetchMinerWarsComparison(
           : lastClanPower
       : lastClanPower;
     if (satsPerTH != null && clanPow) clanTargetSoloSats += satsPerTH * clanPow;
+    if (clanElapsedDates.includes(dateStr)) clanTargetActualDays++;
+    else clanTargetProjectedDays++;
   }
 
   const progressPct = targetSoloSats > 0 ? (minerWarsSats / targetSoloSats) * 100 : null;
@@ -680,6 +706,8 @@ async function _doFetchMinerWarsComparison(
     btcFundIsZero: btcFund === 0,
     actualMinerWarsBtc,
     clanTargetSoloSats: lastClanPower > 0 ? clanTargetSoloSats : null,
+    clanTargetActualDays,
+    clanTargetProjectedDays,
     btcPerBlockSats: totalMinedBlocks > 0 ? (btcFund / totalMinedBlocks) * 1e8 : null,
     cycleLength: cycleDates.length,
     maintenanceBtc,

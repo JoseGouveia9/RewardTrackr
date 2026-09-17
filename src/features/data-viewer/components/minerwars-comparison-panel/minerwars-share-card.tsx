@@ -482,8 +482,8 @@ export const MinerWarsShareCard = forwardRef<HTMLDivElement, CardProps>(function
     const position = clan.header.position;
     const clanTh = clan.header.boardClanTh ?? clan.totalClanTh ?? 0;
     const blocksMined = clan.header.boardBlocksMined ?? clanBlocksMined;
-    const targetDays = cmp?.targetActualDays ?? cmp?.cycleLength ?? 7;
-    const projectedDays = cmp?.targetProjectedDays ?? 0;
+    const targetDays = cmp?.clanTargetActualDays ?? cmp?.cycleLength ?? 7;
+    const projectedDays = cmp?.clanTargetProjectedDays ?? 0;
     const projecting = projectedDays > 0;
     const projLabel = projecting
       ? `${t("cycleTracker.day", { count: targetDays })} + ${projectedDays} ${t("cycleTracker.projected")}`

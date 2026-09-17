@@ -208,13 +208,14 @@ export async function fetchClanPerformance(
     );
 
     const completedRoundsForTh = allRounds.filter((r) => !r.active && r.power > 0);
-    const [clanThByUserByDate, clanPowerByDate, currentClanPower] = await Promise.all([
+    const [clanThByUserByDate, clanPowerByDate, currentClanPowerInfo] = await Promise.all([
       getClanThByUserByDate(headers, completedRoundsForTh, leagueId, clanId, cycleStart).catch(
         () => new Map<string, Map<number, number>>(),
       ),
       getClanPowerAnalytics(headers, clanId).catch(() => new Map<string, number>()),
-      getCurrentClanPower(headers, clanId).catch(() => null),
+      getCurrentClanPower(headers, clanId).catch(() => ({ power: null, myJoinDate: null })),
     ]);
+    const currentClanPower = currentClanPowerInfo.power;
 
     const rewardByUser = await getRoundRewards(
       headers,

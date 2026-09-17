@@ -132,6 +132,8 @@ export async function prefetchCompletedCycleComparisons({
         btcFundIsZero: false,
         actualMinerWarsBtc: payData.actualBtc,
         clanTargetSoloSats: null,
+        clanTargetActualDays: 0,
+        clanTargetProjectedDays: 0,
         btcPerBlockSats: null,
         cycleLength: cycleDates.length,
         maintenanceBtc: payData.maintenanceBtc,

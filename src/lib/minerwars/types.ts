@@ -33,6 +33,10 @@ export interface MinerWarsComparison {
   // Settled payout for completed cycles.
   actualMinerWarsBtc: number | null;
   clanTargetSoloSats: number | null;
+  // Days actually spent in the CURRENT clan this cycle (a mid-cycle clan switch means
+  // this differs from targetActualDays/targetProjectedDays, which track the whole cycle).
+  clanTargetActualDays: number;
+  clanTargetProjectedDays: number;
   btcPerBlockSats: number | null;
   cycleLength: number;
   maintenanceBtc: number | null;
