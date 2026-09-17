@@ -336,9 +336,12 @@ async function _doFetchMinerWarsComparison(
   const CYCLE_START = cycleStartDate.slice(0, 10);
   const isCycleLive = TODAY >= CYCLE_START && TODAY <= CYCLE_END;
 
+  type CycleRound = Awaited<ReturnType<typeof getAllRoundsInCycle>>[number];
+
   type GroupData = {
     leagueId: number;
     clanId: number;
+    completedRounds: CycleRound[];
     completedRoundsMap: Map<number, { power: number }>;
     sumAllMultipliers: number;
     avgRoundNftPower: number;
@@ -377,6 +380,7 @@ async function _doFetchMinerWarsComparison(
     return {
       leagueId: group.leagueId,
       clanId: group.clanId,
+      completedRounds,
       completedRoundsMap,
       sumAllMultipliers,
       avgRoundNftPower,
@@ -406,6 +410,7 @@ async function _doFetchMinerWarsComparison(
   // that only make sense for a single league (e.g. the top-level btcFundBtc shown to
   // the user, which reflects their CURRENT clan's fund).
   const {
+    completedRounds,
     btcFund,
     totalMinedBlocks,
     btcPerBlock,
@@ -509,12 +514,16 @@ async function _doFetchMinerWarsComparison(
   const leagueDiscountPct = leagueWeightedAvgDiscount;
 
   let minerWarsSatsBase = 0;
+  for (const { userBtc, date } of roundRewards.values()) {
+    if (!solodays.has(date)) minerWarsSatsBase += userBtc * 1e8;
+  }
+
+  // Only the CURRENT clan's own won rounds — not every clan the user passed through
+  // this cycle (a mid-cycle clan switch must not combine old + new clan block rewards).
+  const clanWonRounds = completedRounds.filter((r) => r.winnerClanId === clanId);
   let clanMinerWarsSats = 0;
-  for (const { userBtc, clanBtc, date } of roundRewards.values()) {
-    if (!solodays.has(date)) {
-      minerWarsSatsBase += userBtc * 1e8;
-      clanMinerWarsSats += clanBtc * 1e8;
-    }
+  for (const round of clanWonRounds) {
+    clanMinerWarsSats += btcPerBlock * round.multiplier * 1e8;
   }
 
   const { btcPrice: maintBtcPrice, gmtPrice: maintGmtPrice } = maintPrices;
