@@ -395,7 +395,7 @@ async function _doFetchMinerWarsComparison(
       leagueWeightedAvgDiscount,
       clanPowerByDate,
       currentClanPower: currentClanPowerInfo.power,
-      myClanJoinDate: currentClanPowerInfo.myJoinDate,
+      myClanJoinDate: currentClanPowerInfo.myJoinDate ?? currentClanPowerInfo.createdAt,
       clanThByDate,
     };
   });

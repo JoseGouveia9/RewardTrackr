@@ -213,7 +213,11 @@ export async function fetchClanPerformance(
         () => new Map<string, Map<number, number>>(),
       ),
       getClanPowerAnalytics(headers, clanId).catch(() => new Map<string, number>()),
-      getCurrentClanPower(headers, clanId).catch(() => ({ power: null, myJoinDate: null })),
+      getCurrentClanPower(headers, clanId).catch(() => ({
+        power: null,
+        myJoinDate: null,
+        createdAt: null,
+      })),
     ]);
     const currentClanPower = currentClanPowerInfo.power;
 

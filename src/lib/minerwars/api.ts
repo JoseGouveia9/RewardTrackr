@@ -1130,20 +1130,20 @@ export async function getClanPowerAnalytics(headers: Record<string, string>, cla
 export async function getCurrentClanPower(
   headers: Record<string, string>,
   clanId: number,
-): Promise<{ power: number | null; myJoinDate: string | null }> {
-  const res = await postJson<{ data: { power: number; myProfile: { joinDate: string } | null } }>(
-    `${API}/api/nft-game/clan/get-by-id`,
-    headers,
-    {
-      clanId,
-      pagination: { limit: 10, skip: 0, count: 0 },
-      filters: { filterType: "none" },
-      sort: { sortType: "none" },
-    },
-  );
+): Promise<{ power: number | null; myJoinDate: string | null; createdAt: string | null }> {
+  const res = await postJson<{
+    data: { power: number; createdAt?: string; myProfile: { joinDate: string | null } | null };
+  }>(`${API}/api/nft-game/clan/get-by-id`, headers, {
+    clanId,
+    pagination: { limit: 10, skip: 0, count: 0 },
+    filters: { filterType: "none" },
+    sort: { sortType: "none" },
+  });
   return {
     power: res.data?.power ?? null,
+    // null for the clan's owner/creator (they never "joined" — use the clan's createdAt instead).
     myJoinDate: res.data?.myProfile?.joinDate ?? null,
+    createdAt: res.data?.createdAt ?? null,
   };
 }
 
