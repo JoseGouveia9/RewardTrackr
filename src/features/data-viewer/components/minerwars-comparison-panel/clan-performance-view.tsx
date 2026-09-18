@@ -1,14 +1,9 @@
-import { useMemo, useRef, useState } from "react";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Pagination } from "../pagination/pagination";
-import type { ClanPerformance, ClanMemberPerformance } from "@/lib/minerwars/clan-performance";
-import { useOutsideClick } from "../../hooks/use-outside-click";
+import type { ClanPerformance } from "@/lib/minerwars/clan-performance";
 import type { Currency } from "../../types";
 import { BtcIcon, FiatIcon, GmtIcon, UsdIcon } from "../icons/currency-icons";
-import { ChevronDownIcon, PerformanceIcon } from "../icons";
 import "./clan-performance-view.css";
-
-type ClanSortKey = "gmt" | "boost" | "share";
 
 function fmtBtc(btc: number): string {
   const truncated = Math.trunc(btc * 1e8) / 1e8;
@@ -33,65 +28,8 @@ function fmtFiat(value: number, currency: string): string {
   }
 }
 
-function fmtPctPlain(pct: number): string {
-  return pct.toFixed(1) + "%";
-}
-
 function fmtTh(th: number): string {
   return new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(th) + " TH";
-}
-
-interface SortDropdownProps {
-  value: ClanSortKey;
-  onChange: (value: ClanSortKey) => void;
-}
-
-function SortDropdown({ value, onChange }: SortDropdownProps) {
-  const { t } = useTranslation();
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useOutsideClick(ref, () => setOpen(false), open);
-
-  const options: Array<{ value: ClanSortKey; label: string }> = [
-    { value: "gmt", label: t("cycleTracker.sortGmt") },
-    { value: "boost", label: t("cycleTracker.sortBoost") },
-    { value: "share", label: t("cycleTracker.sortShare") },
-  ];
-  const current = options.find((option) => option.value === value) ?? options[0];
-
-  return (
-    <div className="clan-view-sort" ref={ref}>
-      <button
-        type="button"
-        className="clan-view-sort-btn"
-        onClick={() => setOpen((prev) => !prev)}
-        aria-haspopup="listbox"
-        aria-expanded={open}
-      >
-        <span className="clan-view-sort-btn-label">{current.label}</span>
-        <ChevronDownIcon className="clan-view-sort-chevron" />
-      </button>
-      {open && (
-        <ul className="clan-view-sort-list" role="listbox">
-          {options.map((option) => (
-            <li key={option.value} role="option" aria-selected={option.value === value}>
-              <button
-                type="button"
-                className={`clan-view-sort-item${option.value === value ? " clan-view-sort-item--active" : ""}`}
-                onClick={() => {
-                  onChange(option.value);
-                  setOpen(false);
-                }}
-              >
-                {option.label}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
 }
 
 function ClanTargetRing({ pct }: { pct: number | null }) {
@@ -206,29 +144,16 @@ export function ClanPerformanceView({
     return { text: fmtBtc(btc), icon: <BtcIcon /> };
   };
 
-  const renderGmtValue = (
-    gmt: number,
-    negative = false,
-  ): { text: string; icon: React.ReactNode } => {
-    const signedGmt = negative ? -Math.abs(gmt) : gmt;
-    if (showUsd && gmtPrice != null) {
-      return { text: fmtFiat(signedGmt * gmtPrice, "USD"), icon: <UsdIcon /> };
-    }
-    if (showFiat && gmtPrice != null && extraFiatRate != null && fiatCode) {
-      return {
-        text: fmtFiat(signedGmt * gmtPrice * extraFiatRate, fiatCode),
-        icon: <FiatIcon code={fiatCode} />,
-      };
-    }
-    return { text: fmtGmt(signedGmt), icon: <GmtIcon /> };
-  };
-
   // Members who've since left the clan still participated in rounds this cycle, so they
   // stay visible here (tagged LEFT) instead of being dropped from the list.
   const activeMembers = data.members;
   const membersBlocksMined = activeMembers.reduce((s, m) => s + m.blocksMined, 0);
   const boardBlocksMined = data.header.boardBlocksMined ?? 0;
-  const blocksMined = boardBlocksMined > 0 ? boardBlocksMined : membersBlocksMined;
+  const blocksMined = isLiveCycle
+    ? membersBlocksMined || boardBlocksMined
+    : boardBlocksMined > 0
+      ? boardBlocksMined
+      : membersBlocksMined;
   const derivedBtcFromBlocks =
     btcPerBlockSats != null && btcPerBlockSats > 0 ? (blocksMined * btcPerBlockSats) / 1e8 : 0;
   // The raw board snapshot's btcMined field lags/reads 0 mid-cycle, so for a LIVE cycle the
@@ -268,47 +193,6 @@ export function ClanPerformanceView({
     return values.reduce((s, v) => s + v, 0) / values.length;
   }, [activeMembers]);
 
-  const [sortKey, setSortKey] = useState<ClanSortKey>("gmt");
-  const sortedMembers = useMemo(() => {
-    const list = [...activeMembers];
-    if (sortKey === "boost")
-      return list.sort((a, b) => (b.boostCostGmt ?? -Infinity) - (a.boostCostGmt ?? -Infinity));
-    if (sortKey === "share")
-      return list.sort((a, b) => (b.powerSharePct ?? -1) - (a.powerSharePct ?? -1));
-    return list.sort((a, b) => b.gmtRewards - a.gmtRewards);
-  }, [activeMembers, sortKey]);
-
-  const pageSize = 10;
-  const [page, setPage] = useState(0);
-  const pagedMembers = sortedMembers.slice(page * pageSize, (page + 1) * pageSize);
-
-  function renderMemberValue(m: ClanMemberPerformance, kind: "reward" | "personal" | "boost") {
-    if (kind === "reward") {
-      const btc = m.minerWarsRewardEstBtc ?? 0;
-      const value = renderBtcValue(btc);
-      return (
-        <>
-          {value.icon} {value.text}
-        </>
-      );
-    }
-    if (kind === "personal") {
-      const value = renderGmtValue(m.gmtRewards);
-      return (
-        <>
-          {value.icon} {value.text}
-        </>
-      );
-    }
-    if (m.boostCostGmt == null) return t("cycleTracker.unknown");
-    const value = renderGmtValue(m.boostCostGmt, true);
-    return (
-      <>
-        {value.icon} {value.text}
-      </>
-    );
-  }
-
   const minedValue = renderBtcValue(boardBtcMined);
   const targetValue = renderBtcValue(clanTargetBtc);
 
@@ -327,7 +211,7 @@ export function ClanPerformanceView({
                       : t("cycleTracker.rankUnknown")}
                   </span>
                   <span className="clan-view-members-count">
-                    {t("cycleTracker.member", { count: sortedMembers.length })}
+                    {t("cycleTracker.member", { count: activeMembers.length })}
                   </span>
                 </div>
                 <div className="clan-view-mini-label">{t("cycleTracker.minedThisCycle")}</div>
@@ -386,109 +270,6 @@ export function ClanPerformanceView({
             </div>
           </div>
         </div>
-      </div>
-
-      <div className="clan-view-perf">
-        <div className="clan-view-perf-header">
-          <div className="clan-view-perf-heading">
-            <div className="clan-view-perf-title-wrap">
-              <PerformanceIcon className="clan-view-perf-title-icon" />
-              <span className="clan-view-perf-title">{t("cycleTracker.performance")}</span>
-            </div>
-          </div>
-          <SortDropdown
-            value={sortKey}
-            onChange={(value) => {
-              setSortKey(value);
-              setPage(0);
-            }}
-          />
-        </div>
-
-        <div className="clan-view-member-table-header" aria-hidden="true">
-          <div className="clan-view-member-header-cell clan-view-member-col-name">Member</div>
-          <div className="clan-view-member-header-cell clan-view-member-col-share">
-            {t("cycleTracker.sharePct")}
-          </div>
-          <div className="clan-view-member-header-cell clan-view-member-col-reward">
-            {t("cycleTracker.reward")}
-          </div>
-          <div className="clan-view-member-header-cell clan-view-member-col-personal">
-            {t("cycleTracker.personalGmt")}
-          </div>
-          <div className="clan-view-member-header-cell clan-view-member-col-boost">
-            {t("cycleTracker.boostCost")}
-          </div>
-        </div>
-
-        <div className="clan-view-member-list">
-          {pagedMembers.map((m) => {
-            const sharePct = m.powerSharePct ?? 0;
-            return (
-              <div key={m.userId} className="clan-view-member-card">
-                <div className="clan-view-member-cell clan-view-member-col-name">
-                  <div className="clan-view-member-head">
-                    {m.avatarUrl ? (
-                      <img className="clan-view-member-avatar" src={m.avatarUrl} alt="" />
-                    ) : (
-                      <div className="clan-view-member-avatar clan-view-member-avatar--fallback" />
-                    )}
-                    <div className="clan-view-member-identity">
-                      <span className="clan-view-member-alias">{m.alias}</span>
-                      <span className="clan-view-member-meta">
-                        {m.th != null ? fmtTh(m.th) : "\u2014"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="clan-view-member-cell clan-view-member-col-share">
-                  <div className="clan-view-share-block">
-                    <div className="clan-view-share-value">{fmtPctPlain(sharePct)}</div>
-                    <div className="minerwars-panel-progress-bar clan-view-share-bar">
-                      <div
-                        className="minerwars-panel-progress-fill"
-                        style={{ width: `${Math.max(0, Math.min(100, sharePct)).toFixed(1)}%` }}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="clan-view-member-cell clan-view-member-col-reward">
-                  <span className="clan-view-member-metric-value">
-                    {renderMemberValue(m, "reward")}
-                  </span>
-                </div>
-
-                <div className="clan-view-member-cell clan-view-member-col-personal">
-                  <div className="clan-view-member-metric-wrap">
-                    <span className="clan-view-member-metric-value">
-                      {renderMemberValue(m, "personal")}
-                    </span>
-                    <span className="clan-view-member-metric-sub clan-view-member-meta">
-                      {t("cycleTracker.block", { count: m.blocksMined })}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="clan-view-member-cell clan-view-member-col-boost">
-                  <div className="clan-view-member-metric-wrap">
-                    <span className="clan-view-member-metric-value minerwars-panel-value--neg">
-                      {renderMemberValue(m, "boost")}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        <Pagination
-          page={page}
-          total={sortedMembers.length}
-          onChange={setPage}
-          pageSize={pageSize}
-        />
       </div>
     </div>
   );

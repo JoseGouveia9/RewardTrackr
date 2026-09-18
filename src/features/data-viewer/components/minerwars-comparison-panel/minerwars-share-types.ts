@@ -4,7 +4,7 @@ import type { ClanPerformance } from "@/lib/minerwars/clan-performance";
 
 export type MinerWarsShareScope = "individual" | "clan" | "both";
 export type MinerWarsIndividualCurrencyMode = "btc" | "gmt" | "usd" | "extra";
-export type MinerWarsClanCurrencyMode = "native" | "usd" | "extra";
+export type MinerWarsClanCurrencyMode = "native" | "gmt" | "usd" | "extra";
 
 export interface MinerWarsShareSnapshot {
   currentViewMode: "individual" | "clan";

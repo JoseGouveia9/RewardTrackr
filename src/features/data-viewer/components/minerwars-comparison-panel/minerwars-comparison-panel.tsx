@@ -5,6 +5,7 @@ import {
   getSimulationDefaults,
   simulateMaintenanceAndNet,
   type SimulationInputs,
+  type LeagueGroupOverride,
 } from "@/lib/minerwars/comparison";
 import { fetchLatestRate } from "@/features/export/api/fx-rates";
 import { useMinerWarsComparison } from "../../hooks/use-minerwars-comparison";
@@ -62,9 +63,10 @@ export function MinerWarsComparisonPanel({
 
   const [simTh, setSimTh] = useState("");
   const [simUserEE, setSimUserEE] = useState("");
-  const [simLeagueEE, setSimLeagueEE] = useState("");
   const [simPersonalDiscountPct, setSimPersonalDiscountPct] = useState("");
-  const [simLeagueDiscountPct, setSimLeagueDiscountPct] = useState("");
+  const [simLeagueGroupValues, setSimLeagueGroupValues] = useState<
+    Record<string, { leagueEE: string; leagueDiscountPct: string }>
+  >({});
   const [simulateCurrency, setSimulateCurrency] = useState<Currency>("BTC");
   const [extraFiatRate, setExtraFiatRate] = useState<number | null>(null);
   const [lastSimulatedResult, setLastSimulatedResult] = useState<ReturnType<
@@ -96,17 +98,30 @@ export function MinerWarsComparisonPanel({
   function resetSimulateInputs() {
     setSimTh(simulationDefaults?.th != null ? simulationDefaults.th.toFixed(2) : "");
     setSimUserEE(simulationDefaults?.userEE != null ? simulationDefaults.userEE.toFixed(2) : "");
-    setSimLeagueEE(
-      simulationDefaults?.leagueEE != null ? simulationDefaults.leagueEE.toFixed(2) : "",
-    );
     setSimPersonalDiscountPct(
       simulationDefaults?.personalDiscountPct != null
         ? (simulationDefaults.personalDiscountPct * 100).toFixed(2)
         : "",
     );
-    setSimLeagueDiscountPct(
-      data?.leagueDiscountPct != null ? (data.leagueDiscountPct * 100).toFixed(2) : "",
-    );
+    const groupValues: Record<string, { leagueEE: string; leagueDiscountPct: string }> = {};
+    for (const group of simulationDefaults?.leagueGroups ?? []) {
+      groupValues[`${group.leagueId}:${group.clanId}`] = {
+        leagueEE: group.leagueEE.toFixed(2),
+        leagueDiscountPct: (group.leagueDiscountPct * 100).toFixed(2),
+      };
+    }
+    setSimLeagueGroupValues(groupValues);
+  }
+
+  function setSimLeagueGroupValue(
+    key: string,
+    field: "leagueEE" | "leagueDiscountPct",
+    value: string,
+  ) {
+    setSimLeagueGroupValues((prev) => ({
+      ...prev,
+      [key]: { ...prev[key], [field]: value } as { leagueEE: string; leagueDiscountPct: string },
+    }));
   }
 
   function toggleSimulate() {
@@ -124,14 +139,25 @@ export function MinerWarsComparisonPanel({
     if (simTh !== "" && !Number.isNaN(thNum)) overrides.th = thNum;
     const userEENum = parseFloat(simUserEE);
     if (simUserEE !== "" && !Number.isNaN(userEENum)) overrides.userEE = userEENum;
-    const leagueEENum = parseFloat(simLeagueEE);
-    if (simLeagueEE !== "" && !Number.isNaN(leagueEENum)) overrides.leagueEE = leagueEENum;
     const personalDiscNum = parseFloat(simPersonalDiscountPct);
     if (simPersonalDiscountPct !== "" && !Number.isNaN(personalDiscNum))
       overrides.personalDiscountPct = personalDiscNum / 100;
-    const leagueDiscNum = parseFloat(simLeagueDiscountPct);
-    if (simLeagueDiscountPct !== "" && !Number.isNaN(leagueDiscNum))
-      overrides.leagueDiscountPct = leagueDiscNum / 100;
+    const leagueGroupOverrides: LeagueGroupOverride[] = [];
+    for (const group of simulationDefaults?.leagueGroups ?? []) {
+      const key = `${group.leagueId}:${group.clanId}`;
+      const values = simLeagueGroupValues[key];
+      if (!values) continue;
+      const groupOverride: LeagueGroupOverride = { leagueId: group.leagueId, clanId: group.clanId };
+      const leagueEENum = parseFloat(values.leagueEE);
+      if (values.leagueEE !== "" && !Number.isNaN(leagueEENum))
+        groupOverride.leagueEE = leagueEENum;
+      const leagueDiscNum = parseFloat(values.leagueDiscountPct);
+      if (values.leagueDiscountPct !== "" && !Number.isNaN(leagueDiscNum))
+        groupOverride.leagueDiscountPct = leagueDiscNum / 100;
+      if (groupOverride.leagueEE != null || groupOverride.leagueDiscountPct != null)
+        leagueGroupOverrides.push(groupOverride);
+    }
+    if (leagueGroupOverrides.length > 0) overrides.leagueGroupOverrides = leagueGroupOverrides;
     return simulateMaintenanceAndNet(selectedCycleId, overrides);
   }, [
     simulateOpen,
@@ -139,9 +165,9 @@ export function MinerWarsComparisonPanel({
     selectedCycleId,
     simTh,
     simUserEE,
-    simLeagueEE,
     simPersonalDiscountPct,
-    simLeagueDiscountPct,
+    simLeagueGroupValues,
+    simulationDefaults?.leagueGroups,
   ]);
   useEffect(() => {
     if (computedSimulated) setLastSimulatedResult(computedSimulated);
@@ -303,12 +329,6 @@ export function MinerWarsComparisonPanel({
     }
   }, [canShowFiat, canShowGmt, canShowUsd, currency, onCurrencyChange]);
 
-  useEffect(() => {
-    if (tab === "clan" && currency === "GMT") {
-      onCurrencyChange?.("BTC");
-    }
-  }, [currency, onCurrencyChange, tab]);
-
   function handleCycleCurrency() {
     if (!onCurrencyChange || activeCurrencyOptions.length === 0) return;
     const index = activeCurrencyOptions.findIndex((option) => option.key === currency);
@@ -343,12 +363,11 @@ export function MinerWarsComparisonPanel({
       setSimTh={setSimTh}
       simUserEE={simUserEE}
       setSimUserEE={setSimUserEE}
-      simLeagueEE={simLeagueEE}
-      setSimLeagueEE={setSimLeagueEE}
       simPersonalDiscountPct={simPersonalDiscountPct}
       setSimPersonalDiscountPct={setSimPersonalDiscountPct}
-      simLeagueDiscountPct={simLeagueDiscountPct}
-      setSimLeagueDiscountPct={setSimLeagueDiscountPct}
+      leagueGroups={simulationDefaults?.leagueGroups ?? []}
+      simLeagueGroupValues={simLeagueGroupValues}
+      setSimLeagueGroupValue={setSimLeagueGroupValue}
       onClose={() => setSimulateOpen(false)}
       containerRef={simulateRef}
     />

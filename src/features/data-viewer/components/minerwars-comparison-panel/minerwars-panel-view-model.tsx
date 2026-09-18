@@ -163,7 +163,7 @@ export function getMinerWarsPanelViewModel({
   const diffUsd = usdPerBtc != null ? effectiveDiff * usdPerBtc : null;
 
   const individualCurrencyOptions: Array<{ key: Currency; icon: ReactNode; title: string }> = [
-    { key: "BTC", icon: <BtcIcon />, title: "BTC" },
+    { key: "BTC", icon: <DualCurrencyIcon />, title: "BTC + GMT" },
     ...(canShowGmt ? [{ key: "GMT" as Currency, icon: <GmtIcon />, title: "GMT" }] : []),
     ...(canShowUsd ? [{ key: "USD" as Currency, icon: <UsdIcon />, title: "USD" }] : []),
     ...(extraFiatCode && canShowFiat
@@ -178,7 +178,8 @@ export function getMinerWarsPanelViewModel({
   ];
 
   const clanCurrencyOptions: Array<{ key: Currency; icon: ReactNode; title: string }> = [
-    { key: "BTC", icon: <DualCurrencyIcon />, title: "BTC + GMT" },
+    { key: "BTC", icon: <BtcIcon />, title: "BTC" },
+    ...(canShowGmt ? [{ key: "GMT" as Currency, icon: <GmtIcon />, title: "GMT" }] : []),
     ...(canShowUsd ? [{ key: "USD" as Currency, icon: <UsdIcon />, title: "USD" }] : []),
     ...(extraFiatCode && canShowFiat
       ? [

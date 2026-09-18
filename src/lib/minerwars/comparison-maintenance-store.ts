@@ -46,6 +46,9 @@ export type MaintenanceRecomputeInputs = {
     }
   >;
   today: string;
+  currentLeagueId: number;
+  currentClanId: number;
+  clanNamesByGroup: Map<string, string | null>;
 };
 
 const maintInputsCache = new Map<number, MaintenanceRecomputeInputs>();
@@ -87,6 +90,9 @@ type PersistedMaintenanceRecomputeInputs = {
     ]
   >;
   today: string;
+  currentLeagueId: number;
+  currentClanId: number;
+  clanNamesByGroup: Array<[string, string | null]>;
 };
 
 export async function getHistoricalPricesCached(
@@ -146,6 +152,9 @@ function serializeMaintInputs(
     btcPerBlock: inputs.btcPerBlock,
     roundContextById: Array.from(inputs.roundContextById.entries()),
     today: inputs.today,
+    currentLeagueId: inputs.currentLeagueId,
+    currentClanId: inputs.currentClanId,
+    clanNamesByGroup: Array.from(inputs.clanNamesByGroup.entries()),
   };
 }
 
@@ -179,6 +188,9 @@ function deserializeMaintInputs(raw: unknown): MaintenanceRecomputeInputs | null
     btcPerBlock: parsed.btcPerBlock ?? 0,
     roundContextById: new Map(parsed.roundContextById ?? []),
     today: parsed.today ?? new Date().toISOString().slice(0, 10),
+    currentLeagueId: parsed.currentLeagueId ?? parsed.userRounds[0]?.leagueId ?? 0,
+    currentClanId: parsed.currentClanId ?? parsed.userRounds[0]?.clanId ?? 0,
+    clanNamesByGroup: new Map(parsed.clanNamesByGroup ?? []),
   };
 }
 

@@ -7,7 +7,7 @@ import type {
   MinerWarsShareSnapshot,
 } from "./minerwars-share-types";
 import { BtcIcon, FiatIcon, GmtIcon, UsdIcon } from "../icons/currency-icons";
-import { CrossedSwordsIcon, TrendingUpIcon, UserAvatarIcon } from "../icons";
+import { CrossedSwordsIcon, UserAvatarIcon } from "../icons";
 import { readIndividualTrendPoints } from "@/lib/minerwars/individual-trend";
 import { MinerWarsLineTrend } from "./minerwars-line-trend";
 import appLogo from "/logo.webp";
@@ -124,7 +124,9 @@ interface CardProps {
   individualMode: MinerWarsIndividualCurrencyMode;
   clanMode: MinerWarsClanCurrencyMode;
   showLeague: boolean;
-  showPerformance: boolean;
+  showClanName: boolean;
+  showTrendChart: boolean;
+  showPersonalRow: boolean;
   light: boolean;
   generatedFooter: string;
 }
@@ -136,7 +138,9 @@ export const MinerWarsShareCard = forwardRef<HTMLDivElement, CardProps>(function
     individualMode,
     clanMode,
     showLeague,
-    showPerformance,
+    showClanName,
+    showTrendChart,
+    showPersonalRow,
     light,
     generatedFooter,
   },
@@ -234,6 +238,7 @@ export const MinerWarsShareCard = forwardRef<HTMLDivElement, CardProps>(function
       tone?: "pos" | "neg";
       labelTag?: string;
       showIcon?: boolean;
+      icon?: React.ReactNode;
       dividerBefore?: boolean;
       tags?: Array<{ label: string; value: string }>;
     }
@@ -302,6 +307,31 @@ export const MinerWarsShareCard = forwardRef<HTMLDivElement, CardProps>(function
       },
     ];
 
+    const personalNetGmt =
+      cmp.personalGmtRewards != null || cmp.personalBoostCostGmt != null
+        ? (cmp.personalGmtRewards ?? 0) - (cmp.personalBoostCostGmt ?? 0)
+        : null;
+
+    const renderPersonalGmt = (gmt: number): { icon: React.ReactNode; text: string } => {
+      if (individualMode === "usd" && cmp.gmtPrice != null) {
+        return { icon: <UsdIcon />, text: fmtFiat(gmt * cmp.gmtPrice) };
+      }
+      if (individualMode === "extra" && cmp.gmtPrice != null && extraRate != null) {
+        return {
+          icon: <FiatIcon code={extraCode ?? "USD"} />,
+          text: fmtFiat(gmt * cmp.gmtPrice * extraRate),
+        };
+      }
+      return { icon: <GmtIcon />, text: fmtGmt(gmt) };
+    };
+    const personalGmtDisplay =
+      cmp.personalGmtRewards != null ? renderPersonalGmt(cmp.personalGmtRewards) : null;
+    const personalBoostDisplay =
+      cmp.personalBoostCostGmt != null
+        ? renderPersonalGmt(-Math.abs(cmp.personalBoostCostGmt))
+        : null;
+    const personalNetDisplay = personalNetGmt != null ? renderPersonalGmt(personalNetGmt) : null;
+
     individualBlock = (
       <div className="mwpc-section">
         <div className="mwpc-section-header">
@@ -360,6 +390,61 @@ export const MinerWarsShareCard = forwardRef<HTMLDivElement, CardProps>(function
                   />
                 </div>
               </div>
+
+              {showPersonalRow &&
+                (cmp.personalGmtRewards != null || cmp.personalBoostCostGmt != null) && (
+                  <div className="mwpc-personal-row">
+                    <div className="mwpc-personal-col mwpc-personal-col--divided">
+                      <div className="mwpc-personal-head">
+                        <span className="mwpc-personal-label">{t("cycleTracker.personalGmt")}</span>
+                      </div>
+                      <span className="mwpc-personal-value">
+                        {personalGmtDisplay ? (
+                          <>
+                            {personalGmtDisplay.icon} {personalGmtDisplay.text}
+                          </>
+                        ) : (
+                          "—"
+                        )}
+                        {cmp.personalBlocksMined != null && (
+                          <span className="mwpc-tag mwpc-personal-tag">
+                            {t("cycleTracker.blockShort", { count: cmp.personalBlocksMined })}
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                    <div className="mwpc-personal-col mwpc-personal-col--divided">
+                      <div className="mwpc-personal-head">
+                        <span className="mwpc-personal-label">{t("cycleTracker.boostCost")}</span>
+                      </div>
+                      <span className="mwpc-personal-value mwpc-neg">
+                        {personalBoostDisplay ? (
+                          <>
+                            {personalBoostDisplay.icon} {personalBoostDisplay.text}
+                          </>
+                        ) : (
+                          "—"
+                        )}
+                      </span>
+                    </div>
+                    <div className="mwpc-personal-col">
+                      <div className="mwpc-personal-head">
+                        <span className="mwpc-personal-label">{t("cycleTracker.net")}</span>
+                      </div>
+                      <span
+                        className={`mwpc-personal-value ${personalNetGmt != null && personalNetGmt >= 0 ? "mwpc-pos" : "mwpc-neg"}`}
+                      >
+                        {personalNetDisplay ? (
+                          <>
+                            {personalNetDisplay.icon} {personalNetDisplay.text}
+                          </>
+                        ) : (
+                          "—"
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                )}
             </div>
 
             <div className="mwpc-ind-vdivider" />
@@ -389,7 +474,7 @@ export const MinerWarsShareCard = forwardRef<HTMLDivElement, CardProps>(function
                       <div className="mwpc-metric-value-wrap">
                         <div className="mwpc-metric-value-row">
                           {m.showIcon ? (
-                            <span className="mwpc-cicon mwpc-cicon--sm">{valIcon}</span>
+                            <span className="mwpc-cicon mwpc-cicon--sm">{m.icon ?? valIcon}</span>
                           ) : null}
                           <span
                             className={`mwpc-metric-value${m.tone === "pos" ? " mwpc-pos" : m.tone === "neg" ? " mwpc-neg" : ""}`}
@@ -409,16 +494,18 @@ export const MinerWarsShareCard = forwardRef<HTMLDivElement, CardProps>(function
           </div>
         </div>
 
-        <div className="mwpc-line-trend-row">
-          <MinerWarsLineTrend
-            title="vs Target trend"
-            values={trendProgressPct}
-            labels={trendLabels}
-            suffix="%"
-            pointSuffix="%"
-            light={light}
-          />
-        </div>
+        {showTrendChart && (
+          <div className="mwpc-line-trend-row">
+            <MinerWarsLineTrend
+              title="vs Target trend"
+              values={trendProgressPct}
+              labels={trendLabels}
+              suffix="%"
+              pointSuffix="%"
+              light={light}
+            />
+          </div>
+        )}
       </div>
     );
   }
@@ -434,7 +521,13 @@ export const MinerWarsShareCard = forwardRef<HTMLDivElement, CardProps>(function
       const usd = asUsd(btc, gmt);
       return usd != null && extraRate != null ? usd * extraRate : null;
     };
+    const toGmt = (btc: number, gmt = 0): number | null =>
+      btcPrice > 0 && gmtPrice > 0 ? (btc * btcPrice) / gmtPrice + gmt : gmt !== 0 ? gmt : null;
     const renderClanValue = (btc: number, gmt = 0): { value: string; icon: React.ReactNode } => {
+      if (clanMode === "gmt") {
+        const g = toGmt(btc, gmt);
+        if (g != null) return { value: fmtGmt(g), icon: <GmtIcon /> };
+      }
       if (clanMode === "usd") {
         const usd = asUsd(btc, gmt);
         if (usd != null) return { value: fmtFiat(usd), icon: <UsdIcon /> };
@@ -446,18 +539,6 @@ export const MinerWarsShareCard = forwardRef<HTMLDivElement, CardProps>(function
       if (gmt !== 0 && btc === 0) return { value: fmtGmt(gmt), icon: <GmtIcon /> };
       return { value: fmtBtc(btc), icon: <BtcIcon /> };
     };
-    const renderClanGmt = (gmt: number): { value: string; icon: React.ReactNode } => {
-      if (clanMode === "usd") {
-        const usd = asUsd(0, gmt);
-        if (usd != null) return { value: fmtFiat(usd), icon: <UsdIcon /> };
-      }
-      if (clanMode === "extra" && extraCode) {
-        const fiat = asExtra(0, gmt);
-        if (fiat != null) return { value: fmtFiat(fiat), icon: <FiatIcon code={extraCode} /> };
-      }
-      return { value: fmtGmt(gmt), icon: <GmtIcon /> };
-    };
-
     const activeMembers = clan.members;
     const clanBlocksMined = clan.members.reduce((s, m) => s + (m.blocksMined ?? 0), 0);
     const memberBtcSum = clan.members.reduce((s, m) => s + (m.minerWarsRewardEstBtc ?? 0), 0);
@@ -481,7 +562,12 @@ export const MinerWarsShareCard = forwardRef<HTMLDivElement, CardProps>(function
     const clanProgressPct = clanTargetBtc > 0 ? (boardBtcMined / clanTargetBtc) * 100 : null;
     const position = clan.header.position;
     const clanTh = clan.header.boardClanTh ?? clan.totalClanTh ?? 0;
-    const blocksMined = clan.header.boardBlocksMined ?? clanBlocksMined;
+    const boardBlocksMined = clan.header.boardBlocksMined ?? 0;
+    const blocksMined = isLiveCycle
+      ? clanBlocksMined || boardBlocksMined
+      : boardBlocksMined > 0
+        ? boardBlocksMined
+        : clanBlocksMined;
     const targetDays = cmp?.clanTargetActualDays ?? cmp?.cycleLength ?? 7;
     const projectedDays = cmp?.clanTargetProjectedDays ?? 0;
     const projecting = projectedDays > 0;
@@ -511,20 +597,8 @@ export const MinerWarsShareCard = forwardRef<HTMLDivElement, CardProps>(function
 
     const clanMinedDisplay = renderClanValue(boardBtcMined, 0);
     const clanTargetDisplay = renderClanValue(clanTargetBtc, 0);
-    const rewardHeader =
-      clanMode === "native" ? "BTC Reward" : t("cycleTracker.reward", { defaultValue: "Reward" });
     const targetProgressPct =
       clanProgressPct != null ? Math.max(0, Math.min(100, clanProgressPct)) : 0;
-
-    const topMembers = [...activeMembers]
-      .sort((a, b) => {
-        if (b.blocksMined !== a.blocksMined) return b.blocksMined - a.blocksMined;
-        const ar = a.minerWarsRewardEstBtc ?? -1;
-        const br = b.minerWarsRewardEstBtc ?? -1;
-        if (br !== ar) return br - ar;
-        return b.gmtRewards - a.gmtRewards;
-      })
-      .slice(0, 10);
 
     clanBlock = (
       <div className="mwpc-section">
@@ -620,121 +694,14 @@ export const MinerWarsShareCard = forwardRef<HTMLDivElement, CardProps>(function
             </div>
           </div>
         </div>
-
-        {showPerformance && (
-          <div className="mwpc-perf-card">
-            <div className="mwpc-perf-header">
-              <div className="mwpc-section-title-wrap">
-                <TrendingUpIcon size={18} color="#f7931a" />
-                <span className="mwpc-section-title">{t("cycleTracker.performance")}</span>
-              </div>
-            </div>
-
-            <div className="mwpc-member-table-header">
-              <div className="mwpc-member-col-name">
-                {t("cycleTracker.member", { count: 2, defaultValue: "Member" })}
-              </div>
-              <div className="mwpc-member-col-share">{t("cycleTracker.sharePct")}</div>
-              <div className="mwpc-member-col-reward">{rewardHeader}</div>
-              <div className="mwpc-member-col-personal">
-                {t("cycleTracker.personalGmt", { defaultValue: "Personal Reward" })}
-              </div>
-              <div className="mwpc-member-col-boost">
-                {t("cycleTracker.boostCost", { defaultValue: "Boosts Cost" })}
-              </div>
-            </div>
-
-            <div className="mwpc-member-list">
-              {topMembers.map((m, i) => {
-                const reward = renderClanValue(m.minerWarsRewardEstBtc ?? 0, 0);
-                const personal = renderClanGmt(m.gmtRewards);
-                const boost =
-                  m.boostCostGmt != null ? renderClanGmt(Math.abs(m.boostCostGmt)) : null;
-                const sharePct = m.powerSharePct ?? 0;
-                return (
-                  <div key={`${m.userId}-${i}`} className="mwpc-member-row">
-                    <div className="mwpc-member-col-name">
-                      <div className="mwpc-member-left">
-                        {m.avatarUrl ? (
-                          <img
-                            className="mwpc-member-avatar"
-                            src={m.avatarUrl}
-                            alt=""
-                            crossOrigin="anonymous"
-                          />
-                        ) : (
-                          <div className="mwpc-member-avatar mwpc-member-avatar--fallback">
-                            <UserAvatarIcon size={16} color="#fff" />
-                          </div>
-                        )}
-                        <div className="mwpc-member-identity">
-                          <span className="mwpc-member-alias">{m.alias || `User ${m.userId}`}</span>
-                          <span className="mwpc-member-meta">
-                            {m.th != null ? fmtTh(m.th) : "—"}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="mwpc-member-col-share">
-                      {m.powerSharePct != null ? (
-                        <div className="mwpc-share-block">
-                          <span className="mwpc-share-value">{sharePct.toFixed(1)}%</span>
-                          <div className="mwpc-share-track">
-                            <div
-                              className="mwpc-share-fill"
-                              style={{
-                                width: `${Math.max(0, Math.min(100, sharePct)).toFixed(1)}%`,
-                              }}
-                            />
-                          </div>
-                        </div>
-                      ) : (
-                        <span className="mwpc-member-meta">
-                          {t("cycleTracker.noShareData", { defaultValue: "No share data" })}
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="mwpc-member-col-reward">
-                      <span className="mwpc-member-reward-row">
-                        <span className="mwpc-cicon mwpc-cicon--sm">{reward.icon}</span>
-                        <span className="mwpc-member-reward-text">{reward.value}</span>
-                      </span>
-                    </div>
-
-                    <div className="mwpc-member-col-personal">
-                      <span className="mwpc-member-reward-row">
-                        <span className="mwpc-cicon mwpc-cicon--sm">{personal.icon}</span>
-                        <span className="mwpc-member-reward-text">{personal.value}</span>
-                      </span>
-                      <span className="mwpc-member-meta">
-                        {t("cycleTracker.block", { count: m.blocksMined, defaultValue: "blocks" })}
-                      </span>
-                    </div>
-
-                    <div className="mwpc-member-col-boost">
-                      <span className="mwpc-member-reward-row">
-                        {boost ? (
-                          <span className="mwpc-cicon mwpc-cicon--sm">{boost.icon}</span>
-                        ) : null}
-                        <span className="mwpc-member-reward-text mwpc-neg">
-                          {boost ? `-${boost.value}` : "—"}
-                        </span>
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
       </div>
     );
   }
 
   const clanHeader = clan?.header;
-  const brandName = clanHeader?.name ?? "REWARDTRACKR";
+  const useClanBrand = showClanName && clanHeader?.name != null;
+  const brandName = useClanBrand ? clanHeader!.name : "REWARDTRACKR";
+  const brandLogoUrl = showClanName ? (clanHeader?.logoUrl ?? appLogo) : appLogo;
 
   return (
     <div ref={ref} className={`mwpc-root${light ? " mwpc-root--light" : " mwpc-root--dark"}`}>
@@ -743,12 +710,21 @@ export const MinerWarsShareCard = forwardRef<HTMLDivElement, CardProps>(function
           <div className="mwpc-brand-left">
             <img
               className="mwpc-logo"
-              src={clanHeader?.logoUrl ?? appLogo}
+              src={brandLogoUrl}
               alt=""
-              crossOrigin={clanHeader?.logoUrl ? "anonymous" : undefined}
+              crossOrigin={showClanName && clanHeader?.logoUrl ? "anonymous" : undefined}
             />
             <div>
-              <div className="mwpc-brand-text">{brandName}</div>
+              <div className="mwpc-brand-text">
+                {useClanBrand ? (
+                  brandName
+                ) : (
+                  <>
+                    REWARD
+                    <span className="mwpc-brand-text-accent">TRACKR</span>
+                  </>
+                )}
+              </div>
               <div className="mwpc-brand-sub">MINERWARS PERFORMANCE SNAPSHOT</div>
             </div>
           </div>

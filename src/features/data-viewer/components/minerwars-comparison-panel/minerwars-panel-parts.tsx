@@ -202,6 +202,18 @@ export function IndividualSkeletonBody() {
             <div className="minerwars-panel-skeleton minerwars-panel-skeleton--hero-value" />
             <div className="minerwars-panel-skeleton minerwars-panel-skeleton--progress" />
           </div>
+
+          <div className="minerwars-panel-personal-row">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className={`minerwars-panel-personal-col${i < 2 ? " minerwars-panel-personal-col--divided" : ""}`}
+              >
+                <div className="minerwars-panel-skeleton minerwars-panel-skeleton--label" />
+                <div className="minerwars-panel-skeleton minerwars-panel-skeleton--value" />
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="minerwars-panel-hero-divider" />
@@ -269,40 +281,6 @@ export function ClanSkeletonBody() {
               </div>
             </div>
           </div>
-        </div>
-      </div>
-
-      <div className="clan-view-perf">
-        <div className="clan-view-perf-header">
-          <div className="minerwars-panel-skeleton minerwars-panel-skeleton--value" />
-        </div>
-
-        <div className="clan-view-member-list">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className="clan-view-member-card">
-              <div className="clan-view-member-cell clan-view-member-col-name">
-                <div className="clan-view-member-head">
-                  <div className="minerwars-panel-skeleton minerwars-panel-skeleton--ring-sm" />
-                  <div className="clan-view-member-identity">
-                    <div className="minerwars-panel-skeleton minerwars-panel-skeleton--label" />
-                    <div className="minerwars-panel-skeleton minerwars-panel-skeleton--value" />
-                  </div>
-                </div>
-              </div>
-              <div className="clan-view-member-cell clan-view-member-col-share">
-                <div className="minerwars-panel-skeleton minerwars-panel-skeleton--value" />
-              </div>
-              <div className="clan-view-member-cell clan-view-member-col-reward">
-                <div className="minerwars-panel-skeleton minerwars-panel-skeleton--value" />
-              </div>
-              <div className="clan-view-member-cell clan-view-member-col-personal">
-                <div className="minerwars-panel-skeleton minerwars-panel-skeleton--value" />
-              </div>
-              <div className="clan-view-member-cell clan-view-member-col-boost">
-                <div className="minerwars-panel-skeleton minerwars-panel-skeleton--value" />
-              </div>
-            </div>
-          ))}
         </div>
       </div>
     </div>

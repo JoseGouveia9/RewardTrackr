@@ -298,29 +298,90 @@ export function computeMaintenanceAndNet(
   };
 }
 
+export type LeagueGroupOverride = {
+  leagueId: number;
+  clanId: number;
+  leagueEE?: number;
+  leagueDiscountPct?: number;
+};
+
 export type SimulationInputs = {
   th?: number;
   userEE?: number;
-  leagueEE?: number;
   personalDiscountPct?: number;
-  leagueDiscountPct?: number;
+  leagueGroupOverrides?: LeagueGroupOverride[];
+};
+
+export type LeagueGroupDefault = {
+  leagueId: number;
+  clanId: number;
+  leagueEE: number;
+  leagueDiscountPct: number;
+  isCurrent: boolean;
+  clanName: string | null;
 };
 
 export type SimulationDefaults = {
   th: number | null;
   userEE: number;
-  leagueEE: number;
   personalDiscountPct: number;
+  leagueGroups: LeagueGroupDefault[];
 };
+
+function groupsWithLeagueEEImpact(inputs: MaintenanceRecomputeInputs): Set<string> {
+  const groups = new Set<string>();
+  let cumulativeMWSats = 0;
+  const sorted = [...inputs.userRounds].sort((a, b) => a.roundId - b.roundId);
+  for (const round of sorted) {
+    const roundDate = toDateStr(round.endedAt);
+    if (inputs.solodays.has(roundDate)) continue;
+    const roundUserSats = (inputs.roundRewards.get(round.roundId)?.userBtc ?? 0) * 1e8;
+    const isLeagueEE = cumulativeMWSats >= inputs.soloEquivSats;
+    const crossesThreshold =
+      !isLeagueEE &&
+      inputs.soloEquivSats > 0 &&
+      roundUserSats > 0 &&
+      cumulativeMWSats + roundUserSats > inputs.soloEquivSats;
+    if (isLeagueEE || crossesThreshold) {
+      groups.add(`${round.leagueId}:${round.clanId}`);
+    }
+    cumulativeMWSats += roundUserSats;
+  }
+  return groups;
+}
 
 export function getSimulationDefaults(cycleId: number): SimulationDefaults | null {
   const inputs = getMaintInputs(cycleId);
   if (!inputs) return null;
+
+  const groupsPastSoloThreshold = groupsWithLeagueEEImpact(inputs);
+
+  const seenGroups = new Set<string>();
+  const leagueGroups: LeagueGroupDefault[] = [];
+  for (const round of inputs.userRounds) {
+    const key = `${round.leagueId}:${round.clanId}`;
+    if (seenGroups.has(key)) continue;
+    seenGroups.add(key);
+    if (!groupsPastSoloThreshold.has(key)) continue;
+    const ctx = inputs.roundContextById.get(round.roundId);
+    leagueGroups.push({
+      leagueId: round.leagueId,
+      clanId: round.clanId,
+      leagueEE: ctx?.leagueEE ?? inputs.leagueEE,
+      leagueDiscountPct:
+        ctx?.leagueDiscountFactor != null
+          ? 1 - ctx.leagueDiscountFactor
+          : 1 - inputs.maintDiscountFactor,
+      isCurrent: round.leagueId === inputs.currentLeagueId && round.clanId === inputs.currentClanId,
+      clanName: inputs.clanNamesByGroup.get(key) ?? null,
+    });
+  }
+
   return {
     th: inputs.lastUserPower,
     userEE: inputs.userEE,
-    leagueEE: inputs.leagueEE,
     personalDiscountPct: 1 - inputs.maintDiscountFactor,
+    leagueGroups,
   };
 }
 
@@ -377,11 +438,42 @@ export function simulateMaintenanceAndNet(
     };
   }
   if (overrides.userEE != null) simulatedInputs.userEE = overrides.userEE;
-  if (overrides.leagueEE != null) simulatedInputs.leagueEE = overrides.leagueEE;
+
+  const groupOverrides = overrides.leagueGroupOverrides ?? [];
+  let currentLeagueDiscountPct: number | null = null;
+  if (groupOverrides.length > 0) {
+    const overrideByGroup = new Map(groupOverrides.map((o) => [`${o.leagueId}:${o.clanId}`, o]));
+    const roundGroupById = new Map(
+      inputs.userRounds.map((r) => [r.roundId, `${r.leagueId}:${r.clanId}`]),
+    );
+    simulatedInputs.roundContextById = new Map(
+      Array.from(inputs.roundContextById.entries()).map(([id, ctx]) => {
+        const group = roundGroupById.get(id);
+        const override = group ? overrideByGroup.get(group) : undefined;
+        if (!override) return [id, ctx];
+        return [
+          id,
+          {
+            ...ctx,
+            leagueEE: override.leagueEE ?? ctx.leagueEE,
+            leagueDiscountFactor:
+              override.leagueDiscountPct != null
+                ? 1 - override.leagueDiscountPct
+                : ctx.leagueDiscountFactor,
+          },
+        ];
+      }),
+    );
+    const currentOverride = overrideByGroup.get(
+      `${inputs.currentLeagueId}:${inputs.currentClanId}`,
+    );
+    if (currentOverride?.leagueEE != null) simulatedInputs.leagueEE = currentOverride.leagueEE;
+    currentLeagueDiscountPct = currentOverride?.leagueDiscountPct ?? null;
+  }
   if (overrides.personalDiscountPct != null) {
     simulatedInputs.maintDiscountFactor = 1 - overrides.personalDiscountPct;
   }
 
-  const recomputed = computeMaintenanceAndNet(simulatedInputs, overrides.leagueDiscountPct ?? null);
+  const recomputed = computeMaintenanceAndNet(simulatedInputs, currentLeagueDiscountPct);
   return { ...recomputed, soloEquivSats: simulatedInputs.soloEquivSats };
 }

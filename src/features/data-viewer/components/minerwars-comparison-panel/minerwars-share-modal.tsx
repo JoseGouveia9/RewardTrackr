@@ -10,6 +10,7 @@ import type {
 } from "./minerwars-share-types";
 import { BtcIcon, FiatIcon, GmtIcon, UsdIcon } from "../icons/currency-icons";
 import { CloseIcon } from "../icons";
+import { DualCurrencyIcon } from "./minerwars-panel-parts";
 import { MinerWarsShareCard } from "./minerwars-share-card";
 import "./minerwars-share-modal.css";
 
@@ -37,7 +38,9 @@ export function MinerWarsShareModal({
   const [individualMode, setIndividualMode] = useState<MinerWarsIndividualCurrencyMode>("btc");
   const [clanMode, setClanMode] = useState<MinerWarsClanCurrencyMode>("native");
   const [showLeague, setShowLeague] = useState(true);
-  const [showPerformance, setShowPerformance] = useState(true);
+  const [showClanName, setShowClanName] = useState(true);
+  const [showTrendChart, setShowTrendChart] = useState(true);
+  const [showPersonalRow, setShowPersonalRow] = useState(true);
   const [light, setLight] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [scale, setScale] = useState(0.4);
@@ -65,7 +68,9 @@ export function MinerWarsShareModal({
     setIndividualMode("btc");
     setClanMode("native");
     setShowLeague(true);
-    setShowPerformance(true);
+    setShowClanName(true);
+    setShowTrendChart(true);
+    setShowPersonalRow(true);
     const themeDark = document.querySelector(".page")?.classList.contains("theme-dark");
     setLight(!themeDark);
   }, [open, snapshot]);
@@ -103,7 +108,18 @@ export function MinerWarsShareModal({
     const ro = new ResizeObserver(update);
     ro.observe(node);
     return () => ro.disconnect();
-  }, [open, scope, individualMode, clanMode, showLeague, showPerformance, light, snapshot]);
+  }, [
+    open,
+    scope,
+    individualMode,
+    clanMode,
+    showLeague,
+    showClanName,
+    showTrendChart,
+    showPersonalRow,
+    light,
+    snapshot,
+  ]);
 
   const canShowGmt = Boolean(
     snapshot?.comparison &&
@@ -141,9 +157,12 @@ export function MinerWarsShareModal({
   }, [canShowGmt, canShowUsd, canShowExtra]);
 
   const cycleClanMode = useCallback(() => {
-    const order: MinerWarsClanCurrencyMode[] = ["native", "usd", "extra"];
+    const order: MinerWarsClanCurrencyMode[] = ["native", "gmt", "usd", "extra"];
     const enabled = (m: MinerWarsClanCurrencyMode) =>
-      m === "native" || (m === "usd" && canShowUsd) || (m === "extra" && canShowExtra);
+      m === "native" ||
+      (m === "gmt" && canShowGmt) ||
+      (m === "usd" && canShowUsd) ||
+      (m === "extra" && canShowExtra);
     setClanMode((mode) => {
       let idx = order.indexOf(mode);
       for (let step = 0; step < order.length; step += 1) {
@@ -152,7 +171,7 @@ export function MinerWarsShareModal({
       }
       return "native";
     });
-  }, [canShowUsd, canShowExtra]);
+  }, [canShowGmt, canShowUsd, canShowExtra]);
 
   const individualIcon =
     individualMode === "gmt" ? (
@@ -162,10 +181,12 @@ export function MinerWarsShareModal({
     ) : individualMode === "extra" ? (
       <FiatIcon code={snapshot?.extraFiatCode ?? "USD"} />
     ) : (
-      <BtcIcon />
+      <DualCurrencyIcon />
     );
   const clanIcon =
-    clanMode === "usd" ? (
+    clanMode === "gmt" ? (
+      <GmtIcon />
+    ) : clanMode === "usd" ? (
       <UsdIcon />
     ) : clanMode === "extra" ? (
       <FiatIcon code={snapshot?.extraFiatCode ?? "USD"} />
@@ -286,32 +307,61 @@ export function MinerWarsShareModal({
             </div>
 
             {hasClan && (scope === "clan" || scope === "both") && (
-              <>
-                <label className="mwsm-switch-row">
-                  <span className="mwsm-control-label">
-                    {t("minerwarsShare.leagueTag", { defaultValue: "League tag" })}
-                  </span>
-                  <input
-                    type="checkbox"
-                    className="mwsm-switch"
-                    checked={showLeague}
-                    onChange={(e) => setShowLeague(e.target.checked)}
-                  />
-                </label>
-                <label className="mwsm-switch-row">
-                  <span className="mwsm-control-label">
-                    {t("minerwarsShare.performanceSection", {
-                      defaultValue: "Performance section",
-                    })}
-                  </span>
-                  <input
-                    type="checkbox"
-                    className="mwsm-switch"
-                    checked={showPerformance}
-                    onChange={(e) => setShowPerformance(e.target.checked)}
-                  />
-                </label>
-              </>
+              <label className="mwsm-switch-row">
+                <span className="mwsm-control-label">
+                  {t("minerwarsShare.leagueTag", { defaultValue: "League tag" })}
+                </span>
+                <input
+                  type="checkbox"
+                  className="mwsm-switch"
+                  checked={showLeague}
+                  onChange={(e) => setShowLeague(e.target.checked)}
+                />
+              </label>
+            )}
+
+            {hasClan && (scope === "clan" || scope === "both") && (
+              <label className="mwsm-switch-row">
+                <span className="mwsm-control-label">
+                  {t("minerwarsShare.clanName", { defaultValue: "Clan name" })}
+                </span>
+                <input
+                  type="checkbox"
+                  className="mwsm-switch"
+                  checked={showClanName}
+                  onChange={(e) => setShowClanName(e.target.checked)}
+                />
+              </label>
+            )}
+
+            {hasIndividual && (scope === "individual" || scope === "both") && (
+              <label className="mwsm-switch-row">
+                <span className="mwsm-control-label">
+                  {t("minerwarsShare.trendChart", { defaultValue: "Trend chart" })}
+                </span>
+                <input
+                  type="checkbox"
+                  className="mwsm-switch"
+                  checked={showTrendChart}
+                  onChange={(e) => setShowTrendChart(e.target.checked)}
+                />
+              </label>
+            )}
+
+            {hasIndividual && (scope === "individual" || scope === "both") && (
+              <label className="mwsm-switch-row">
+                <span className="mwsm-control-label">
+                  {t("minerwarsShare.personalRewardRow", {
+                    defaultValue: "Personal GMT/Boost/Net",
+                  })}
+                </span>
+                <input
+                  type="checkbox"
+                  className="mwsm-switch"
+                  checked={showPersonalRow}
+                  onChange={(e) => setShowPersonalRow(e.target.checked)}
+                />
+              </label>
             )}
 
             <label className="mwsm-switch-row">
@@ -347,7 +397,9 @@ export function MinerWarsShareModal({
                     individualMode={individualMode}
                     clanMode={clanMode}
                     showLeague={showLeague}
-                    showPerformance={showPerformance}
+                    showClanName={showClanName}
+                    showTrendChart={showTrendChart}
+                    showPersonalRow={showPersonalRow}
                     light={light}
                     generatedFooter={generatedFooter}
                   />

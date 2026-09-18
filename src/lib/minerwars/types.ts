@@ -59,6 +59,9 @@ export interface MinerWarsComparison {
   leagueDiscountPct: number | null;
   // User-level maintenance discount.
   personalDiscountPct: number | null;
+  personalGmtRewards: number | null;
+  personalBlocksMined: number | null;
+  personalBoostCostGmt: number | null;
   zeroedRounds: {
     userEE: Array<{ blockNumber: number; multiplier: number }>;
     leagueEE: Array<{ blockNumber: number; multiplier: number }>;

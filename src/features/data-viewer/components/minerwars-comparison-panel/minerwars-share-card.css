@@ -109,6 +109,9 @@
   letter-spacing: 1px;
   color: var(--mwpc-primary);
 }
+.mwpc-brand-text-accent {
+  color: #f7931a;
+}
 .mwpc-brand-sub {
   margin-top: 4px;
   font-weight: 600;
@@ -253,7 +256,6 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  justify-content: center;
 }
 .mwpc-ind-vdivider {
   width: 1px;
@@ -305,10 +307,62 @@
   gap: 6px;
 }
 
-.mwpc-metric-list {
+.mwpc-personal-row {
+  display: grid;
+  grid-template-columns: max-content 1fr 1fr;
+  margin-top: 12px;
+  border-top: 1px solid rgba(148, 163, 184, 0.2);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+}
+.mwpc-personal-col {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 4px;
+  padding: 8px 16px;
+  min-width: 0;
+}
+.mwpc-personal-col--divided {
+  border-right: 1px solid rgba(148, 163, 184, 0.2);
+}
+.mwpc-personal-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-height: 20px;
+  justify-content: center;
+}
+.mwpc-personal-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--mwpc-muted, #9aa3af);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.mwpc-personal-value {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 6px;
+  font-size: 15px;
+  font-weight: 700;
+}
+.mwpc-personal-tag {
+  font-size: 10px;
+  padding: 1px 5px;
+  color: var(--mwpc-muted, #9aa3af);
+}
+
+.mwpc-metric-list {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: space-between;
   gap: 14px;
+  padding: 12px 0 8px;
 }
 .mwpc-metric-divider {
   height: 1px;
@@ -396,6 +450,7 @@
   background: var(--mwpc-inner);
   border: 1px solid var(--mwpc-divider);
   overflow: hidden;
+  padding-bottom: 14px;
 }
 .mwpc-clan-split {
   display: flex;
@@ -520,13 +575,13 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin-top: 2px;
+  margin-top: 16px;
 }
 .mwpc-line-card {
   flex: 1;
   border-radius: 14px;
   background: var(--mwpc-inner);
-  padding: 8px 12px;
+  padding: 14px 16px;
   display: flex;
   flex-direction: column;
   gap: 4px;

@@ -62,12 +62,20 @@ interface MinerWarsSimulateModalProps {
   setSimTh: (value: string) => void;
   simUserEE: string;
   setSimUserEE: (value: string) => void;
-  simLeagueEE: string;
-  setSimLeagueEE: (value: string) => void;
   simPersonalDiscountPct: string;
   setSimPersonalDiscountPct: (value: string) => void;
-  simLeagueDiscountPct: string;
-  setSimLeagueDiscountPct: (value: string) => void;
+  leagueGroups: Array<{
+    leagueId: number;
+    clanId: number;
+    isCurrent: boolean;
+    clanName: string | null;
+  }>;
+  simLeagueGroupValues: Record<string, { leagueEE: string; leagueDiscountPct: string }>;
+  setSimLeagueGroupValue: (
+    key: string,
+    field: "leagueEE" | "leagueDiscountPct",
+    value: string,
+  ) => void;
   onClose: () => void;
   containerRef: React.RefObject<HTMLDivElement | null>;
 }
@@ -89,12 +97,11 @@ export function MinerWarsSimulateModal({
   setSimTh,
   simUserEE,
   setSimUserEE,
-  simLeagueEE,
-  setSimLeagueEE,
   simPersonalDiscountPct,
   setSimPersonalDiscountPct,
-  simLeagueDiscountPct,
-  setSimLeagueDiscountPct,
+  leagueGroups,
+  simLeagueGroupValues,
+  setSimLeagueGroupValue,
   onClose,
   containerRef,
 }: MinerWarsSimulateModalProps) {
@@ -170,25 +177,50 @@ export function MinerWarsSimulateModal({
             </label>
           </div>
 
-          <div className="minerwars-panel-simulate-stat-row minerwars-panel-simulate-stat-row--second">
-            <label className="minerwars-panel-simulate-stat-card minerwars-panel-simulate-stat-card--divider">
-              <span className="minerwars-panel-simulate-stat-label">
-                {t("cycleTracker.simulateLeagueEELabel", { defaultValue: "League EE (W/TH)" })}
-              </span>
-              <input
-                type="number"
-                inputMode="decimal"
-                value={simLeagueEE}
-                onChange={(e) => setSimLeagueEE(e.target.value)}
-              />
-            </label>
-            <label className="minerwars-panel-simulate-stat-card">
-              <span className="minerwars-panel-simulate-stat-label">
-                {t("cycleTracker.leagueDiscountSectionLabel")}
-              </span>
-              <PercentInput value={simLeagueDiscountPct} onChange={setSimLeagueDiscountPct} />
-            </label>
-          </div>
+          {leagueGroups.length > 0 && (
+            <div className="minerwars-panel-simulate-league-groups">
+              {leagueGroups.map((group) => {
+                const key = `${group.leagueId}:${group.clanId}`;
+                const values = simLeagueGroupValues[key] ?? { leagueEE: "", leagueDiscountPct: "" };
+                const clanSuffix = group.isCurrent
+                  ? ""
+                  : ` (${group.clanName ?? t("cycleTracker.simulatePreviousClan", { defaultValue: "previous clan" })})`;
+                return (
+                  <div
+                    key={key}
+                    className="minerwars-panel-simulate-stat-row minerwars-panel-simulate-stat-row--second"
+                  >
+                    <label className="minerwars-panel-simulate-stat-card minerwars-panel-simulate-stat-card--divider">
+                      <span className="minerwars-panel-simulate-stat-label">
+                        {t("cycleTracker.simulateLeagueEELabel", {
+                          defaultValue: "League EE (W/TH)",
+                        })}
+                        {clanSuffix}
+                      </span>
+                      <input
+                        type="number"
+                        inputMode="decimal"
+                        value={values.leagueEE}
+                        onChange={(e) => setSimLeagueGroupValue(key, "leagueEE", e.target.value)}
+                      />
+                    </label>
+                    <label className="minerwars-panel-simulate-stat-card">
+                      <span className="minerwars-panel-simulate-stat-label">
+                        {t("cycleTracker.leagueDiscountSectionLabel")}
+                        {clanSuffix}
+                      </span>
+                      <PercentInput
+                        value={values.leagueDiscountPct}
+                        onChange={(value) =>
+                          setSimLeagueGroupValue(key, "leagueDiscountPct", value)
+                        }
+                      />
+                    </label>
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
           {simulated ? (
             <div className="minerwars-panel-simulate-results minerwars-panel-simulate-results--sheet">

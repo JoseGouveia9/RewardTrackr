@@ -84,6 +84,34 @@ export function MinerWarsIndividualView({
 }: MinerWarsIndividualViewProps) {
   const { t } = useTranslation();
 
+  const personalNetGmt =
+    data.personalGmtRewards != null || data.personalBoostCostGmt != null
+      ? (data.personalGmtRewards ?? 0) - (data.personalBoostCostGmt ?? 0)
+      : null;
+
+  const renderPersonalGmt = (
+    gmt: number,
+    negative = false,
+  ): { icon: React.ReactNode; text: string } => {
+    const signed = negative ? -Math.abs(gmt) : gmt;
+    if (showUsd && data.gmtPrice != null) {
+      return { icon: <UsdIcon />, text: fmtFiat(signed * data.gmtPrice, "USD") };
+    }
+    if (showFiat && data.gmtPrice != null && extraFiatRate != null && extraFiatCode) {
+      return {
+        icon: <FiatIcon code={extraFiatCode} />,
+        text: fmtFiat(signed * data.gmtPrice * extraFiatRate, extraFiatCode),
+      };
+    }
+    return { icon: <GmtIcon />, text: fmtGmt(signed) };
+  };
+
+  const personalGmtDisplay =
+    data.personalGmtRewards != null ? renderPersonalGmt(data.personalGmtRewards) : null;
+  const personalBoostDisplay =
+    data.personalBoostCostGmt != null ? renderPersonalGmt(data.personalBoostCostGmt, true) : null;
+  const personalNetDisplay = personalNetGmt != null ? renderPersonalGmt(personalNetGmt) : null;
+
   return (
     <>
       <div className="minerwars-panel-hero-card">
@@ -144,6 +172,64 @@ export function MinerWarsIndividualView({
                 />
               </div>
             </div>
+
+            {(data.personalGmtRewards != null || data.personalBoostCostGmt != null) && (
+              <div className="minerwars-panel-personal-row">
+                <div className="minerwars-panel-personal-col minerwars-panel-personal-col--divided">
+                  <div className="minerwars-panel-personal-head">
+                    <span className="minerwars-panel-personal-label">
+                      {t("cycleTracker.personalGmt")}
+                    </span>
+                  </div>
+                  <span className="minerwars-panel-personal-value">
+                    {personalGmtDisplay ? (
+                      <>
+                        {personalGmtDisplay.icon} {personalGmtDisplay.text}
+                      </>
+                    ) : (
+                      "—"
+                    )}
+                    {data.personalBlocksMined != null && (
+                      <span className="minerwars-panel-tag minerwars-panel-personal-tag">
+                        {t("cycleTracker.blockShort", { count: data.personalBlocksMined })}
+                      </span>
+                    )}
+                  </span>
+                </div>
+                <div className="minerwars-panel-personal-col minerwars-panel-personal-col--divided">
+                  <div className="minerwars-panel-personal-head">
+                    <span className="minerwars-panel-personal-label">
+                      {t("cycleTracker.boostCost")}
+                    </span>
+                  </div>
+                  <span className="minerwars-panel-personal-value minerwars-panel-value--neg">
+                    {personalBoostDisplay ? (
+                      <>
+                        {personalBoostDisplay.icon} {personalBoostDisplay.text}
+                      </>
+                    ) : (
+                      "—"
+                    )}
+                  </span>
+                </div>
+                <div className="minerwars-panel-personal-col">
+                  <div className="minerwars-panel-personal-head">
+                    <span className="minerwars-panel-personal-label">{t("cycleTracker.net")}</span>
+                  </div>
+                  <span
+                    className={`minerwars-panel-personal-value ${personalNetGmt != null && personalNetGmt >= 0 ? "minerwars-panel-value--pos" : "minerwars-panel-value--neg"}`}
+                  >
+                    {personalNetDisplay ? (
+                      <>
+                        {personalNetDisplay.icon} {personalNetDisplay.text}
+                      </>
+                    ) : (
+                      "—"
+                    )}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="minerwars-panel-hero-divider" />

@@ -19,6 +19,8 @@ import {
   clearPowerChartCache,
   fetchAllCyclesFromApi,
   getAllRoundsInCycle,
+  getBoostCostGmtForCycle,
+  getClanHeaderInfo,
   getClanPowerAnalytics,
   getClanThByDate,
   getCurrentClanPower,
@@ -28,6 +30,7 @@ import {
   getLivePrices,
   getMempoolEpochs,
   getMyNftAvgEE,
+  getPersonalLeagueReward,
   getSoloMiningDates,
   getUserPowerChart,
   type RoundRow,
@@ -45,7 +48,12 @@ import { prefetchCompletedCycleComparisons } from "./comparison-completed-prefet
 
 export type { CycleStatus, CycleInfo, MinerWarsComparison } from "./types";
 export { getSimulationDefaults, simulateMaintenanceAndNet } from "./comparison-maintenance";
-export type { SimulationDefaults, SimulationInputs } from "./comparison-maintenance";
+export type {
+  SimulationDefaults,
+  SimulationInputs,
+  LeagueGroupDefault,
+  LeagueGroupOverride,
+} from "./comparison-maintenance";
 
 import type { CycleInfo, MinerWarsComparison } from "./types";
 import type { RewardRecord } from "@/types/rewards";
@@ -299,6 +307,9 @@ async function _doFetchMinerWarsComparison(
         zeroedRoundsHint: null,
         leagueDiscountPct: null,
         personalDiscountPct: null,
+        personalGmtRewards: null,
+        personalBlocksMined: null,
+        personalBoostCostGmt: null,
       };
 
       comparisonCache.set(cycleId, { data: completedResult, ts: Date.now() });
@@ -337,6 +348,7 @@ async function _doFetchMinerWarsComparison(
   const CYCLE_END = CYCLE_END_CHECK;
   const CYCLE_START = cycleStartDate.slice(0, 10);
   const isCycleLive = TODAY >= CYCLE_START && TODAY <= CYCLE_END;
+  const personalRewardCalculatedAt = CYCLE_END < TODAY ? CYCLE_END : TODAY;
 
   type CycleRound = Awaited<ReturnType<typeof getAllRoundsInCycle>>[number];
 
@@ -355,50 +367,84 @@ async function _doFetchMinerWarsComparison(
     leagueWeightedAvgDiscount: number | null;
     clanPowerByDate: Map<string, number>;
     currentClanPower: number | null;
-    myClanJoinDate: string | null;
+    clanCreatedAt: string | null;
     clanThByDate: Map<string, number>;
+    personalBlocksMined: number;
+    personalGmtRewards: number;
+    clanName: string | null;
   };
 
-  const groupData = await mapWithConcurrency(groups, 2, async (group): Promise<GroupData> => {
-    const allCycleRounds = await getAllRoundsInCycle(headers, cycleId, group.leagueId);
-    const completedRounds = allCycleRounds.filter((r) => !r.active && r.power > 0);
-    const sumAllMultipliers = completedRounds.reduce((s, r) => s + r.multiplier, 0);
-    const totalPowerSum = completedRounds.reduce((s, r) => s + r.power, 0);
-    const avgRoundNftPower =
-      completedRounds.length > 0 ? totalPowerSum / completedRounds.length : 1;
-    const completedRoundsMap = new Map(completedRounds.map((r) => [r.id, r]));
+  const [groupData, personalBoostCostGmt] = await Promise.all([
+    mapWithConcurrency(groups, 2, async (group): Promise<GroupData> => {
+      const allCycleRounds = await getAllRoundsInCycle(headers, cycleId, group.leagueId);
+      const completedRounds = allCycleRounds.filter((r) => !r.active && r.power > 0);
+      const sumAllMultipliers = completedRounds.reduce((s, r) => s + r.multiplier, 0);
+      const totalPowerSum = completedRounds.reduce((s, r) => s + r.power, 0);
+      const avgRoundNftPower =
+        completedRounds.length > 0 ? totalPowerSum / completedRounds.length : 1;
+      const completedRoundsMap = new Map(completedRounds.map((r) => [r.id, r]));
 
-    const { btcFund, totalMinedBlocks, clanNftPower, leagueWeightedEE, leagueWeightedAvgDiscount } =
-      await getCycleClanData(headers, cycleStartDate, group.leagueId, group.clanId);
-    const btcPerBlock = totalMinedBlocks > 0 ? btcFund / totalMinedBlocks : 0;
+      const {
+        btcFund,
+        totalMinedBlocks,
+        clanNftPower,
+        leagueWeightedEE,
+        leagueWeightedAvgDiscount,
+      } = await getCycleClanData(headers, cycleStartDate, group.leagueId, group.clanId);
+      const btcPerBlock = totalMinedBlocks > 0 ? btcFund / totalMinedBlocks : 0;
 
-    const [clanPowerByDate, currentClanPowerInfo, clanThByDate] = await Promise.all([
-      getClanPowerAnalytics(headers, group.clanId),
-      getCurrentClanPower(headers, group.clanId),
-      getClanThByDate(headers, completedRounds, group.leagueId, group.clanId, cycleStartDate).catch(
-        () => new Map<string, number>(),
-      ),
-    ]);
+      const [
+        clanPowerByDate,
+        currentClanPowerInfo,
+        clanThByDate,
+        personalLeagueReward,
+        clanHeaderInfo,
+      ] = await Promise.all([
+        getClanPowerAnalytics(headers, group.clanId),
+        getCurrentClanPower(headers, group.clanId),
+        getClanThByDate(
+          headers,
+          completedRounds,
+          group.leagueId,
+          group.clanId,
+          cycleStartDate,
+        ).catch(() => new Map<string, number>()),
+        getPersonalLeagueReward(headers, personalRewardCalculatedAt, group.leagueId).catch(() => ({
+          blocksMined: 0,
+          gmtRewards: 0,
+        })),
+        getClanHeaderInfo(headers, personalRewardCalculatedAt, group.leagueId, group.clanId).catch(
+          () => null,
+        ),
+      ]);
 
-    return {
-      leagueId: group.leagueId,
-      clanId: group.clanId,
-      completedRounds,
-      completedRoundsMap,
-      sumAllMultipliers,
-      avgRoundNftPower,
-      btcFund,
-      totalMinedBlocks,
-      btcPerBlock,
-      clanNftPower,
-      leagueWeightedEE,
-      leagueWeightedAvgDiscount,
-      clanPowerByDate,
-      currentClanPower: currentClanPowerInfo.power,
-      myClanJoinDate: currentClanPowerInfo.myJoinDate ?? currentClanPowerInfo.createdAt,
-      clanThByDate,
-    };
-  });
+      return {
+        leagueId: group.leagueId,
+        clanId: group.clanId,
+        completedRounds,
+        completedRoundsMap,
+        sumAllMultipliers,
+        avgRoundNftPower,
+        btcFund,
+        totalMinedBlocks,
+        btcPerBlock,
+        clanNftPower,
+        leagueWeightedEE,
+        leagueWeightedAvgDiscount,
+        clanPowerByDate,
+        currentClanPower: currentClanPowerInfo.power,
+        clanCreatedAt: currentClanPowerInfo.createdAt,
+        clanThByDate,
+        personalBlocksMined: personalLeagueReward.blocksMined,
+        personalGmtRewards: personalLeagueReward.gmtRewards,
+        clanName: clanHeaderInfo?.name ?? null,
+      };
+    }),
+    getBoostCostGmtForCycle(headers, cycleId).catch(() => null),
+  ]);
+
+  const personalBlocksMined = groupData.reduce((s, g) => s + g.personalBlocksMined, 0);
+  const personalGmtRewards = groupData.reduce((s, g) => s + g.personalGmtRewards, 0);
 
   const groupDataByKey = new Map(groupData.map((g) => [`${g.leagueId}:${g.clanId}`, g]));
   const currentGroup = groupDataByKey.get(`${leagueId}:${clanId}`)!;
@@ -423,15 +469,12 @@ async function _doFetchMinerWarsComparison(
     leagueWeightedAvgDiscount,
     clanPowerByDate,
     currentClanPower,
-    myClanJoinDate,
+    clanCreatedAt,
     clanThByDate,
     sumAllMultipliers,
   } = currentGroup;
 
-  // First day the user has actually been a member of the CURRENT clan this cycle — a
-  // mid-cycle clan switch means this can be later than CYCLE_START, so the clan's own
-  // 7-day target must be scoped to this range, not the whole cycle.
-  const clanTenureStart = myClanJoinDate != null ? toDateStr(myClanJoinDate) : null;
+  const clanTenureStart = clanCreatedAt != null ? toDateStr(clanCreatedAt) : null;
   const clanTenureStartDate =
     clanTenureStart != null && clanTenureStart > CYCLE_START ? clanTenureStart : CYCLE_START;
 
@@ -564,6 +607,10 @@ async function _doFetchMinerWarsComparison(
   const leagueEE = leagueWeightedEE ?? userEE;
   const elapsedMWDays = elapsedComparisonDates.filter((d) => !solodays.has(d)).length;
 
+  const clanNamesByGroup = new Map<string, string | null>(
+    groupData.map((g) => [`${g.leagueId}:${g.clanId}`, g.clanName]),
+  );
+
   const maintInputs: MaintenanceRecomputeInputs = {
     userRounds,
     completedRoundsMap,
@@ -590,6 +637,9 @@ async function _doFetchMinerWarsComparison(
     btcPerBlock,
     roundContextById,
     today: TODAY,
+    currentLeagueId: leagueId,
+    currentClanId: clanId,
+    clanNamesByGroup,
   };
   cacheMaintInputs(cycleId, maintInputs);
 
@@ -727,6 +777,9 @@ async function _doFetchMinerWarsComparison(
     zeroedRoundsHint,
     leagueDiscountPct,
     personalDiscountPct: 1 - maintDiscountFactor,
+    personalGmtRewards,
+    personalBlocksMined,
+    personalBoostCostGmt,
   };
 
   comparisonCache.set(cycleId, { data: result, ts: Date.now() });

@@ -173,6 +173,54 @@ export async function getCurrentClanId(headers: Record<string, string>): Promise
   }
 }
 
+export async function getPersonalLeagueReward(
+  headers: Record<string, string>,
+  calculatedAt: string,
+  leagueId: number,
+): Promise<{ blocksMined: number; gmtRewards: number }> {
+  const res = await postJson<{
+    data: {
+      gmtFund: number;
+      totalMinedBlocks: number;
+      me: { blocksMined: number } | null;
+    };
+  }>(`${API}/api/nft-game/user-leaderboard/index`, headers, {
+    calculatedAt,
+    leagueId,
+    pagination: { skip: 0, limit: 1 },
+  });
+  const blocksMined = res.data.me?.blocksMined ?? 0;
+  const gmtFund = res.data.gmtFund ?? 0;
+  const totalMinedBlocks = res.data.totalMinedBlocks ?? 0;
+  const gmtPerBlock = totalMinedBlocks > 0 ? gmtFund / totalMinedBlocks : 0;
+  return { blocksMined, gmtRewards: blocksMined * gmtPerBlock };
+}
+
+export async function getBoostCostGmtForCycle(
+  headers: Record<string, string>,
+  cycleId: number,
+): Promise<number> {
+  const limit = 40;
+  let skip = 0;
+  let total = 0;
+  while (true) {
+    const res = await postJson<{
+      data: { count: number; array: Array<{ cycleId: number; valueInGmt: number }> };
+    }>(`${API}/api/nft-game/nft-game-ability-payment/index`, headers, {
+      pagination: { skip, limit },
+    });
+    const array = res.data.array ?? [];
+    if (array.length === 0) break;
+    for (const row of array) {
+      if (row.cycleId === cycleId) total += row.valueInGmt ?? 0;
+    }
+    const count = res.data.count ?? 0;
+    if (array.every((r) => r.cycleId < cycleId) || skip + limit >= count) break;
+    skip += limit;
+  }
+  return total;
+}
+
 export async function fetchAllCyclesFromApi(headers: Record<string, string>): Promise<CycleInfo[]> {
   const limit = 40;
   let skip = 0;

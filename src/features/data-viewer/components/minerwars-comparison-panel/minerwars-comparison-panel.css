@@ -408,7 +408,6 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  justify-content: center;
 }
 
 @media (max-width: 640px) {
@@ -422,6 +421,75 @@
   .minerwars-panel-hero-col-left,
   .minerwars-panel-hero-col-right {
     flex-basis: auto;
+  }
+}
+
+.minerwars-panel-personal-row {
+  display: grid;
+  grid-template-columns: max-content 1fr 1fr;
+  margin-top: 12px;
+  border-top: 1px solid rgba(148, 163, 184, 0.2);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.minerwars-panel-personal-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 4px;
+  padding: 8px 16px;
+  min-width: 0;
+}
+
+.minerwars-panel-personal-col--divided {
+  border-right: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.minerwars-panel-personal-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-height: 26px;
+  justify-content: center;
+}
+
+.minerwars-panel-personal-label {
+  font-size: 0.66rem;
+  font-weight: 600;
+  color: #9aa3af;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.minerwars-panel-personal-value {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #f0f0f0;
+  min-width: 0;
+}
+
+.minerwars-panel-personal-tag {
+  font-size: 0.6rem;
+  padding: 1px 5px;
+  color: #9aa3af;
+}
+
+.minerwars-panel-personal-caption {
+  font-size: 0.6rem;
+  font-weight: 500;
+  line-height: 1.1;
+  color: #6b7280;
+}
+
+@media (max-width: 560px) {
+  .minerwars-panel-personal-row {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -485,8 +553,11 @@
 
 .minerwars-panel-breakdown {
   display: flex;
+  flex: 1;
   flex-direction: column;
+  justify-content: space-between;
   gap: 14px;
+  padding: 12px 0 8px;
 }
 
 /* Solo/Clan target block within the hero card — plain (no card bg), matching
@@ -1042,6 +1113,12 @@
   height: 20px;
 }
 
+.minerwars-panel-simulate-currency-btn .minerwars-panel-dual-currency-icon-front .dv-currency-icon-svg,
+.minerwars-panel-simulate-currency-btn .minerwars-panel-dual-currency-icon-back .dv-currency-icon-svg {
+  width: 15px;
+  height: 15px;
+}
+
 .minerwars-panel-simulate-stat-row {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1049,10 +1126,13 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+.minerwars-panel-simulate-league-groups {
+  margin-bottom: 18px;
+}
+
 .minerwars-panel-simulate-stat-row--second {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   border-top: 0;
-  margin-bottom: 18px;
 }
 
 .minerwars-panel-simulate-stat-card {
@@ -1281,6 +1361,32 @@
 
 .page.theme-light .minerwars-panel-divider {
   background: #e5e7eb;
+}
+
+.page.theme-light .minerwars-panel-personal-row {
+  border-top-color: #e5e7eb;
+  border-bottom-color: #e5e7eb;
+}
+
+.page.theme-light .minerwars-panel-personal-col--divided {
+  border-right-color: #e5e7eb;
+}
+
+.page.theme-light .minerwars-panel-personal-label {
+  color: #6b7280;
+}
+
+.page.theme-light .minerwars-panel-personal-value {
+  color: #22283a;
+}
+
+.page.theme-light .minerwars-panel-personal-caption {
+  color: #9ca3af;
+}
+
+.page.theme-light .minerwars-panel-personal-tag {
+  background: rgba(0, 0, 0, 0.05);
+  color: #6b7280;
 }
 
 .page.theme-light .minerwars-panel-projection-badge {

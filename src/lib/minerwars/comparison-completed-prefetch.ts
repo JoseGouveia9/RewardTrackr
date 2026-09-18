@@ -153,6 +153,9 @@ export async function prefetchCompletedCycleComparisons({
         zeroedRoundsHint: null,
         leagueDiscountPct: null,
         personalDiscountPct: null,
+        personalGmtRewards: null,
+        personalBlocksMined: null,
+        personalBoostCostGmt: null,
       };
 
       persistComparison(result);
