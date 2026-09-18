@@ -279,6 +279,8 @@
     "blocksNeeded": "Blocks needed",
     "block_one": "{{count}} block",
     "block_other": "{{count}} blocks",
+    "blockShort_one": "{{count}} blk",
+    "blockShort_other": "{{count}} blks",
     "satsPerBlock": "@ {{sats}} sats/block",
     "warnBtcFundZero": "Your league BTC fund is currently 0. MinerWars estimate will show 0 until the fund starts being filled.\nTry refreshing tomorrow once the first day of the cycle has been funded.",
     "warnNoClanAnalyticsLive": "No clan analytics (clan may be <30 days old) — using current clan power for all rounds. Estimation may be over/under-inflated.",
