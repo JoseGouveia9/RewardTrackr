@@ -55,10 +55,26 @@ export interface MinerWarsComparison {
   targetSoloGmt: number | null;
   btcPrice: number | null;
   gmtPrice: number | null;
+
+  // Solo-side maintenance/net — only computed for the live/in-progress cycle (needs
+  // userEE, personalDiscountPct and a live BTC/GMT price, none of which are available
+  // in the completed-cycle fast paths, which source their values from a cached
+  // build-report sheet instead). Always null for completed cycles.
+  soloMaintenanceBtc: number | null;
+  soloMaintenanceGmt: number | null;
+  soloMaintenanceUsd: number | null;
+  soloNetBtc: number | null;
+  soloNetGmt: number | null;
+  soloNetUsd: number | null;
+
   // Weighted league discount used after the solo threshold is crossed.
   leagueDiscountPct: number | null;
   // User-level maintenance discount.
   personalDiscountPct: number | null;
+  // Extra NFT discount (from get-my-nft-discount) only granted while not participating in
+  // MinerWars; added on top of personalDiscountPct for the solo-maintenance calc only. Only
+  // computed for the live/in-progress cycle, same restriction as the solo fields above.
+  rewardDistributionDiscountPct: number | null;
   personalGmtRewards: number | null;
   personalBlocksMined: number | null;
   personalBoostCostGmt: number | null;

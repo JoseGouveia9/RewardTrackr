@@ -7,11 +7,17 @@ import {
   LS_KEY_SYNC_ALIAS,
 } from "./storage-keys";
 
-export const RECORDS_VERSION = 1;
-// Bumped: the v1->unsuffixed MinerWars key rename orphaned existing users' data
-// without ever routing them through the wipe+auto-resync flow below, since a
-// missing version key was (wrongly) treated as "nothing to reconcile".
-export const MINERWARS_VERSION = 2;
+export const RECORDS_VERSION = 2;
+// v2: solo-mining maintenance is now additive across BTC+GMT (mixed weeks no longer drop
+// one currency's portion); EE is now power-weighted and includes the bonus miner.
+
+// v2: the v1->unsuffixed MinerWars key rename orphaned existing users' data without ever
+// routing them through the wipe+auto-resync flow below (a missing version key was
+// wrongly treated as "nothing to reconcile").
+// v3: MinerWars maintenance is now additive across BTC+GMT; personal GMT/boost for
+// completed cycles is now backfilled from actual transaction history instead of being
+// left null; EE is now power-weighted and includes the bonus miner.
+export const MINERWARS_VERSION = 3;
 
 // A version key that has never been set only means "nothing to reconcile" for
 // users who have never synced before; an already-synced user can still be missing

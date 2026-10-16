@@ -173,6 +173,96 @@ export async function getCurrentClanId(headers: Record<string, string>): Promise
   }
 }
 
+// Sums actual personal MinerWars GMT rewards paid out in [fromDateStr, toDateStr) by
+// scanning the wallet transaction history (newest-first), instead of estimating from
+// league/round data. Returns null when no matching transactions are found yet (e.g. the
+// payout hasn't posted), so callers can fall back to the league-based estimate.
+export async function getPersonalMinerWarsRewardTxSum(
+  headers: Record<string, string>,
+  fromDateStr: string,
+  toDateStr: string,
+): Promise<number | null> {
+  const fromMs = new Date(`${fromDateStr}T00:00:00.000Z`).getTime();
+  const toMs = new Date(`${toDateStr}T00:00:00.000Z`).getTime();
+  const limit = 100;
+  let cursor = Date.now();
+  let sum = 0;
+  let found = false;
+  while (true) {
+    const res = await postJson<{
+      data: { array: Array<{ createdAt: string; valueNumeric?: string }> };
+    }>(`${API}/api/wallet/transaction-history`, headers, {
+      filter: { walletType: ["VIRTUAL_GMT"], fromType: ["gmt-fund"], range: null },
+      pagination: { cursor, limit },
+    });
+    const array = res.data.array ?? [];
+    if (array.length === 0) break;
+    let pastWindow = false;
+    for (const row of array) {
+      const ts = new Date(row.createdAt).getTime();
+      if (ts >= fromMs && ts < toMs) {
+        sum += parseFloat(row.valueNumeric || "0") / 1e18;
+        found = true;
+      }
+      if (ts < fromMs) pastWindow = true;
+    }
+    if (pastWindow) break;
+    cursor = new Date(array[array.length - 1].createdAt).getTime();
+  }
+  return found ? sum : null;
+}
+
+// Batched variant of getPersonalMinerWarsRewardTxSum: walks the wallet tx history ONCE and
+// buckets rows into whichever window(s) they fall into, instead of one independent walk-back
+// from "now" per window — avoids O(windows × history-depth) duplicated paging when reprocessing
+// many completed cycles at once (e.g. after a MinerWars cache-version wipe).
+export async function getPersonalMinerWarsRewardTxSumsForWindows(
+  headers: Record<string, string>,
+  windows: Array<{ key: number; fromDateStr: string; toDateStr: string }>,
+): Promise<Map<number, number | null>> {
+  const result = new Map<number, number | null>();
+  if (windows.length === 0) return result;
+  const parsed = windows.map((w) => ({
+    key: w.key,
+    fromMs: new Date(`${w.fromDateStr}T00:00:00.000Z`).getTime(),
+    toMs: new Date(`${w.toDateStr}T00:00:00.000Z`).getTime(),
+  }));
+  const earliestFromMs = Math.min(...parsed.map((w) => w.fromMs));
+  const sums = new Map<number, number>();
+  const found = new Map<number, boolean>();
+
+  const limit = 100;
+  let cursor = Date.now();
+  while (true) {
+    const res = await postJson<{
+      data: { array: Array<{ createdAt: string; valueNumeric?: string }> };
+    }>(`${API}/api/wallet/transaction-history`, headers, {
+      filter: { walletType: ["VIRTUAL_GMT"], fromType: ["gmt-fund"], range: null },
+      pagination: { cursor, limit },
+    });
+    const array = res.data.array ?? [];
+    if (array.length === 0) break;
+    let pastEarliest = false;
+    for (const row of array) {
+      const ts = new Date(row.createdAt).getTime();
+      for (const w of parsed) {
+        if (ts >= w.fromMs && ts < w.toMs) {
+          sums.set(w.key, (sums.get(w.key) ?? 0) + parseFloat(row.valueNumeric || "0") / 1e18);
+          found.set(w.key, true);
+        }
+      }
+      if (ts < earliestFromMs) pastEarliest = true;
+    }
+    if (pastEarliest) break;
+    cursor = new Date(array[array.length - 1].createdAt).getTime();
+  }
+
+  for (const w of parsed) {
+    result.set(w.key, found.get(w.key) ? (sums.get(w.key) ?? 0) : null);
+  }
+  return result;
+}
+
 export async function getPersonalLeagueReward(
   headers: Record<string, string>,
   calculatedAt: string,
@@ -219,6 +309,40 @@ export async function getBoostCostGmtForCycle(
     skip += limit;
   }
   return total;
+}
+
+// Batched variant of getBoostCostGmtForCycle: walks the ability-payment history ONCE and sums
+// per cycleId, instead of one independent walk-from-start per cycle — same rationale as
+// getPersonalMinerWarsRewardTxSumsForWindows above.
+export async function getBoostCostGmtForCycles(
+  headers: Record<string, string>,
+  cycleIds: number[],
+): Promise<Map<number, number>> {
+  const result = new Map<number, number>();
+  if (cycleIds.length === 0) return result;
+  const idSet = new Set(cycleIds);
+  for (const id of cycleIds) result.set(id, 0);
+  const minCycleId = Math.min(...cycleIds);
+
+  const limit = 40;
+  let skip = 0;
+  while (true) {
+    const res = await postJson<{
+      data: { count: number; array: Array<{ cycleId: number; valueInGmt: number }> };
+    }>(`${API}/api/nft-game/nft-game-ability-payment/index`, headers, {
+      pagination: { skip, limit },
+    });
+    const array = res.data.array ?? [];
+    if (array.length === 0) break;
+    for (const row of array) {
+      if (idSet.has(row.cycleId))
+        result.set(row.cycleId, (result.get(row.cycleId) ?? 0) + (row.valueInGmt ?? 0));
+    }
+    const count = res.data.count ?? 0;
+    if (array.every((row) => row.cycleId < minCycleId) || skip + limit >= count) break;
+    skip += limit;
+  }
+  return result;
 }
 
 export async function fetchAllCyclesFromApi(headers: Record<string, string>): Promise<CycleInfo[]> {
@@ -361,32 +485,42 @@ export async function getHistoricalPrices(
 
 export async function getDiscountFactor(
   headers: Record<string, string>,
-): Promise<{ factor: number; gmtDiscount: number }> {
+): Promise<{ factor: number; gmtDiscount: number; rewardDistributionDiscount: number }> {
   const res = await postJson<{
     data: {
       dailyMaintenanceDiscount?: number;
       levelDiscount?: number;
       discountByMaintenanceInGmt?: number;
+      rewardDistributionDiscount?: number;
     };
   }>(`${API}/api/user/get-my-nft-discount`, headers, {});
   const d = res.data ?? {};
   const gmtDiscount = d.discountByMaintenanceInGmt ?? 0;
+  const rewardDistributionDiscount = d.rewardDistributionDiscount ?? 0;
   return {
     factor: 1 - ((d.dailyMaintenanceDiscount ?? 0) + (d.levelDiscount ?? 0) + gmtDiscount),
     gmtDiscount,
+    rewardDistributionDiscount,
   };
 }
 
+// Power-weighted average EE across owned NFTs, including the bonus miner (if any) — matches
+// the real-world blended efficiency used for maintenance/discount math elsewhere.
 export async function getMyNftAvgEE(headers: Record<string, string>): Promise<number | null> {
-  const res = await postJson<{ data: { array: Array<{ energyEfficiency?: number }> } }>(
-    `${API}/api/nft/get-my`,
-    headers,
-    {},
-  );
-  const vals = (res.data?.array ?? [])
-    .map((n) => n.energyEfficiency)
-    .filter((v): v is number => v != null && v > 0);
-  return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+  const [nftStats, bonusStats] = await Promise.all([
+    getMyNftStats(headers),
+    getBonusMinerStats(headers),
+  ]);
+  const nftPower = nftStats.totalPower;
+  const nftEE = nftStats.avgEE;
+  const bonusPower = bonusStats?.power ?? 0;
+  const bonusEE = bonusStats?.energyEfficiency ?? null;
+  const totalPower = nftPower + bonusPower;
+  if (totalPower <= 0) return null;
+  const nftWeighted = nftEE != null ? nftEE * nftPower : 0;
+  const bonusWeighted = bonusEE != null ? bonusEE * bonusPower : 0;
+  if (nftEE == null && bonusEE == null) return null;
+  return (nftWeighted + bonusWeighted) / totalPower;
 }
 
 /** Returns count, total TH power, and power-weighted avg energy efficiency for all owned NFTs. */

@@ -6,7 +6,12 @@ import {
   loadPersistedComparison,
   persistComparison,
 } from "./cache";
-import { getSoloMiningDates, getUserPowerChart } from "./api";
+import {
+  getBoostCostGmtForCycles,
+  getPersonalMinerWarsRewardTxSumsForWindows,
+  getSoloMiningDates,
+  getUserPowerChart,
+} from "./api";
 import type { CycleInfo, MinerWarsComparison } from "./types";
 
 interface PrefetchCompletedCyclesArgs {
@@ -14,6 +19,7 @@ interface PrefetchCompletedCyclesArgs {
   cycles: CycleInfo[];
   today: string;
   onCyclePrepared?: (cycleId: number, result: MinerWarsComparison) => void;
+  onProgress?: (done: number, total: number) => void;
 }
 
 export async function prefetchCompletedCycleComparisons({
@@ -21,6 +27,7 @@ export async function prefetchCompletedCycleComparisons({
   cycles,
   today,
   onCyclePrepared,
+  onProgress,
 }: PrefetchCompletedCyclesArgs): Promise<void> {
   const headers = buildApiHeaders(token);
   const todo = cycles.filter((cycle) => {
@@ -50,6 +57,41 @@ export async function prefetchCompletedCycleComparisons({
     userPowerByDate.size > 0 ? ([...userPowerByDate.values()].slice(-1)[0] ?? null) : null;
   const epochs = await fetchDifficultyEpochs();
 
+  // Batch the personal-GMT-reward-tx and boost-cost lookups across ALL cycles being reprocessed
+  // into a single history walk each, instead of one independent walk per cycle — avoids
+  // O(cycles × history-depth) duplicated paging when reprocessing many completed cycles at once
+  // (e.g. right after a MinerWars cache-version wipe forces a full history rebuild).
+  const txWindows = todo.map((cycle) => {
+    const payDay = new Date(cycle.cycleEnd + "T00:00:00Z");
+    payDay.setUTCDate(payDay.getUTCDate() + 1);
+    const cycleDates: string[] = [];
+    for (
+      let day = new Date(cycle.cycleStart + "T00:00:00Z");
+      ;
+      day.setUTCDate(day.getUTCDate() + 1)
+    ) {
+      const value = day.toISOString().slice(0, 10);
+      cycleDates.push(value);
+      if (value === cycle.cycleEnd) break;
+    }
+    const txWindowEnd = new Date(payDay);
+    txWindowEnd.setUTCDate(txWindowEnd.getUTCDate() + cycleDates.length);
+    return {
+      key: cycle.cycleId,
+      fromDateStr: payDay.toISOString().slice(0, 10),
+      toDateStr: txWindowEnd.toISOString().slice(0, 10),
+    };
+  });
+  const personalGmtRewardsByCycle = await getPersonalMinerWarsRewardTxSumsForWindows(
+    headers,
+    txWindows,
+  ).catch(() => new Map<number, number | null>());
+  const boostCostByCycle = await getBoostCostGmtForCycles(
+    headers,
+    todo.map((c) => c.cycleId),
+  ).catch(() => new Map<number, number>());
+
+  let cyclesDone = 0;
   for (const cycle of todo) {
     try {
       const { cycleId, cycleStart: cycleStartDate, cycleEnd: cycleEndDate } = cycle;
@@ -110,6 +152,9 @@ export async function prefetchCompletedCycleComparisons({
           ? "full cycle"
           : `excl. solo day(s): ${soloDaysSorted.join(", ")}`;
 
+      const personalGmtRewardsFromTx = personalGmtRewardsByCycle.get(cycleId) ?? null;
+      const personalBoostCostGmt = boostCostByCycle.get(cycleId) ?? null;
+
       const result: MinerWarsComparison = {
         cycleId,
         cycleStart: cycleStartDate,
@@ -147,21 +192,31 @@ export async function prefetchCompletedCycleComparisons({
         minerWarsUsd: payData.usdTotal,
         soloEquivGmt: null,
         targetSoloGmt: null,
+        soloMaintenanceBtc: null,
+        soloMaintenanceGmt: null,
+        soloMaintenanceUsd: null,
+        soloNetBtc: null,
+        soloNetGmt: null,
+        soloNetUsd: null,
         btcPrice: payData.btcPrice,
         gmtPrice: payData.gmtPrice,
         zeroedRounds: null,
         zeroedRoundsHint: null,
         leagueDiscountPct: null,
         personalDiscountPct: null,
-        personalGmtRewards: null,
+        rewardDistributionDiscountPct: null,
+        personalGmtRewards: personalGmtRewardsFromTx,
         personalBlocksMined: null,
-        personalBoostCostGmt: null,
+        personalBoostCostGmt,
       };
 
       persistComparison(result);
       onCyclePrepared?.(cycleId, result);
     } catch {
       // ignore per-cycle prefetch errors
+    } finally {
+      cyclesDone++;
+      onProgress?.(cyclesDone, todo.length);
     }
   }
 }

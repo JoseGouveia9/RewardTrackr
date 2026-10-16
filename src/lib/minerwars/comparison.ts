@@ -31,6 +31,7 @@ import {
   getMempoolEpochs,
   getMyNftAvgEE,
   getPersonalLeagueReward,
+  getPersonalMinerWarsRewardTxSum,
   getSoloMiningDates,
   getUserPowerChart,
   type RoundRow,
@@ -125,6 +126,7 @@ export async function fetchAvailableCycles(token: string): Promise<CycleInfo[]> 
 export async function prefetchAllCompletedCycles(
   token: string,
   prefetchedCycles?: CycleInfo[],
+  onProgress?: (done: number, total: number) => void,
 ): Promise<void> {
   const TODAY = new Date().toISOString().slice(0, 10);
   const cycles = prefetchedCycles ?? (await fetchAvailableCycles(token).catch(() => null));
@@ -138,6 +140,7 @@ export async function prefetchAllCompletedCycles(
       comparisonCache.delete(cycleId);
       comparisonCache.set(cycleId, { data: result, ts: Date.now() });
     },
+    onProgress,
   });
 }
 
@@ -264,6 +267,20 @@ async function _doFetchMinerWarsComparison(
       payDay.setUTCDate(payDay.getUTCDate() + 1);
       const payData = getPaymentDataFromBuildCache(payDay.toISOString().slice(0, 10));
 
+      // The league-estimate path below is only reached for live cycles; completed cycles
+      // short-circuit here, so personal GMT/boost must be backfilled from the actual
+      // transaction history instead of being left permanently null.
+      const txWindowEnd = new Date(payDay);
+      txWindowEnd.setUTCDate(txWindowEnd.getUTCDate() + cycleDates.length);
+      const [personalGmtRewardsFromTx, personalBoostCostGmt] = await Promise.all([
+        getPersonalMinerWarsRewardTxSum(
+          headers,
+          payDay.toISOString().slice(0, 10),
+          txWindowEnd.toISOString().slice(0, 10),
+        ).catch(() => null),
+        getBoostCostGmtForCycle(headers, cycleId).catch(() => null),
+      ]);
+
       const completedResult: MinerWarsComparison = {
         cycleId,
         cycleStart: CYCLE_START,
@@ -301,15 +318,22 @@ async function _doFetchMinerWarsComparison(
         minerWarsUsd: payData?.usdTotal ?? null,
         soloEquivGmt: null,
         targetSoloGmt: null,
+        soloMaintenanceBtc: null,
+        soloMaintenanceGmt: null,
+        soloMaintenanceUsd: null,
+        soloNetBtc: null,
+        soloNetGmt: null,
+        soloNetUsd: null,
         btcPrice: payData?.btcPrice ?? null,
         gmtPrice: payData?.gmtPrice ?? null,
         zeroedRounds: null,
         zeroedRoundsHint: null,
         leagueDiscountPct: null,
         personalDiscountPct: null,
-        personalGmtRewards: null,
+        rewardDistributionDiscountPct: null,
+        personalGmtRewards: personalGmtRewardsFromTx,
         personalBlocksMined: null,
-        personalBoostCostGmt: null,
+        personalBoostCostGmt,
       };
 
       comparisonCache.set(cycleId, { data: completedResult, ts: Date.now() });
@@ -557,7 +581,11 @@ async function _doFetchMinerWarsComparison(
     getMempoolEpochs(cycleDates),
     getSoloMiningDates(headers, CYCLE_START, CYCLE_END),
     Promise.resolve(null),
-    getDiscountFactor(headers).catch(() => ({ factor: 1, gmtDiscount: 0 })),
+    getDiscountFactor(headers).catch(() => ({
+      factor: 1,
+      gmtDiscount: 0,
+      rewardDistributionDiscount: 0,
+    })),
     getLivePrices().catch(() => ({ btcPrice: 0, gmtPrice: 0 })),
     getMyNftAvgEE(headers).catch(() => null),
     getHistoricalPricesCached(
@@ -566,6 +594,7 @@ async function _doFetchMinerWarsComparison(
   ]);
   const maintDiscountFactor = maintDiscountData.factor;
   const maintGmtDiscount = maintDiscountData.gmtDiscount;
+  const rewardDistributionDiscount = maintDiscountData.rewardDistributionDiscount;
   const leagueDiscountPct = leagueWeightedAvgDiscount;
 
   let minerWarsSatsBase = 0;
@@ -582,10 +611,21 @@ async function _doFetchMinerWarsComparison(
   }
 
   const { btcPrice: maintBtcPrice, gmtPrice: maintGmtPrice } = maintPrices;
+  const userEE = maintUserEE ?? 15;
+
+  // Flat-rate solo-side maintenance — uses the user's own EE and personal discount only
+  // (no per-round league blending, unlike computeMaintenanceAndNet), applied against the
+  // same daily TH used for soloEquivSats. Also folds in rewardDistributionDiscount (an
+  // extra NFT discount only granted while NOT participating in MinerWars) since it only
+  // ever applies to the solo-mining side, never to the MinerWars-side blend above.
+  const SOLO_ELECTRICITY_COST_PER_KWH_USD = 0.05;
+  const SOLO_SERVICE_COST_PER_TH_USD = 0.0089;
+  const soloMaintDiscountFactor = maintDiscountFactor - rewardDistributionDiscount;
 
   let soloEquivSats = 0;
   let soloEquivGmtHist = 0;
   let hasSoloEquivGmt = false;
+  let soloMaintenanceUsdAcc = 0;
   for (const dateStr of elapsedComparisonDates) {
     if (solodays.has(dateStr)) continue;
     const userPow = userPowerByDate.has(dateStr)
@@ -600,10 +640,21 @@ async function _doFetchMinerWarsComparison(
         soloEquivGmtHist += (daySats / 1e8) * rate;
         hasSoloEquivGmt = true;
       }
+      const elecUsd = (SOLO_ELECTRICITY_COST_PER_KWH_USD * 24 * userEE * userPow) / 1000;
+      const svcUsd = SOLO_SERVICE_COST_PER_TH_USD * userPow;
+      soloMaintenanceUsdAcc += (elecUsd + svcUsd) * soloMaintDiscountFactor;
     }
   }
 
-  const userEE = maintUserEE ?? 15;
+  const soloMaintenanceUsd = maintBtcPrice > 0 ? soloMaintenanceUsdAcc : null;
+  const soloMaintenanceBtc = maintBtcPrice > 0 ? soloMaintenanceUsdAcc / maintBtcPrice : null;
+  const soloMaintenanceGmt = maintGmtPrice > 0 ? soloMaintenanceUsdAcc / maintGmtPrice : null;
+  const soloNetBtc = soloMaintenanceBtc != null ? soloEquivSats / 1e8 - soloMaintenanceBtc : null;
+  const soloNetGmt =
+    hasSoloEquivGmt && soloMaintenanceGmt != null ? soloEquivGmtHist - soloMaintenanceGmt : null;
+  const soloNetUsd =
+    soloMaintenanceUsd != null ? (soloEquivSats / 1e8) * maintBtcPrice - soloMaintenanceUsd : null;
+
   const leagueEE = leagueWeightedEE ?? userEE;
   const elapsedMWDays = elapsedComparisonDates.filter((d) => !solodays.has(d)).length;
 
@@ -771,12 +822,19 @@ async function _doFetchMinerWarsComparison(
     minerWarsUsd: null,
     soloEquivGmt: hasSoloEquivGmt ? soloEquivGmtHist : null,
     targetSoloGmt: hasTargetSoloGmt ? targetSoloGmtHist : null,
+    soloMaintenanceBtc,
+    soloMaintenanceGmt,
+    soloMaintenanceUsd,
+    soloNetBtc,
+    soloNetGmt,
+    soloNetUsd,
     btcPrice: maintBtcPrice > 0 ? maintBtcPrice : null,
     gmtPrice: maintGmtPrice > 0 ? maintGmtPrice : null,
     zeroedRounds,
     zeroedRoundsHint,
     leagueDiscountPct,
     personalDiscountPct: 1 - maintDiscountFactor,
+    rewardDistributionDiscountPct: rewardDistributionDiscount,
     personalGmtRewards,
     personalBlocksMined,
     personalBoostCostGmt,

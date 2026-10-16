@@ -87,7 +87,9 @@ export function computeMaintenanceAndNet(
   let worstMaxUserEE = Infinity;
   let worstMaxUserEEAtMaxGmt = Infinity;
 
-  if (maintBtcPrice > 0 && elapsedMWDays > 0) {
+  if (maintBtcPrice > 0) {
+    // elapsedMWDays may legitimately be 0 (e.g. cycle just started) — the loop below
+    // naturally yields 0 maintenance in that case, which must still be shown, not hidden.
     let totalMaintSats = 0;
     let totalMaintUsd = 0;
     let totalMaintGmt = 0;
