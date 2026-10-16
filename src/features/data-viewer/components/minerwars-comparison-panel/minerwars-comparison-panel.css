@@ -685,6 +685,102 @@
   color: #9aa3af;
 }
 
+.minerwars-panel-tags-col--center {
+  align-items: center;
+}
+
+/* Two-column Solo-vs-MinerWars comparison table — only shown for live/pending
+   cycles (soloMaintenanceBtc/soloNetBtc are only computed for those), mirrors
+   mobile's indCompareHeaderRow/indCompareRow. */
+.minerwars-panel-compare-header-row {
+  display: flex;
+  padding-bottom: 8px;
+}
+
+.minerwars-panel-compare-header-row--modal {
+  margin-top: 14px;
+}
+
+.minerwars-panel-compare-row {
+  display: flex;
+  align-items: flex-start;
+  padding: 10px 0;
+}
+
+.minerwars-panel-compare-label-col {
+  flex: 1.1 1.1 0%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.minerwars-panel-compare-value-col {
+  flex: 1 1 0%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.minerwars-panel-compare-value-col--right {
+  align-items: flex-end;
+}
+
+.minerwars-panel-compare-header-text {
+  font-size: 0.69rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  text-align: center;
+  color: #9aa3af;
+}
+
+.minerwars-panel-compare-header-text--right {
+  text-align: right;
+}
+
+.minerwars-panel-compare-value {
+  font-weight: 700;
+  font-size: 0.875rem;
+  text-align: center;
+  color: #f0f0f0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.minerwars-panel-compare-value-col--right .minerwars-panel-compare-value {
+  justify-content: flex-end;
+}
+
+.minerwars-panel-compare-badge {
+  margin-top: 2px;
+  font-size: 0.6rem;
+  font-weight: 400;
+  color: #9aa3af;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  padding: 1px 4px;
+}
+
+.minerwars-panel-info-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  color: #9aa3af;
+  cursor: pointer;
+}
+
+.minerwars-panel-info-btn:hover {
+  color: #d8dce8;
+}
+
 .minerwars-panel-value {
   font-weight: 700;
   font-size: 0.94rem;
@@ -1361,6 +1457,27 @@
 
 .page.theme-light .minerwars-panel-divider {
   background: #e5e7eb;
+}
+
+.page.theme-light .minerwars-panel-compare-header-text {
+  color: #6b7280;
+}
+
+.page.theme-light .minerwars-panel-compare-value {
+  color: #22283a;
+}
+
+.page.theme-light .minerwars-panel-compare-badge {
+  background: rgba(0, 0, 0, 0.07);
+  color: #6b7280;
+}
+
+.page.theme-light .minerwars-panel-info-btn {
+  color: #6b7280;
+}
+
+.page.theme-light .minerwars-panel-info-btn:hover {
+  color: #22283a;
 }
 
 .page.theme-light .minerwars-panel-personal-row {

@@ -1,8 +1,11 @@
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { MinerWarsComparison } from "@/lib/minerwars/comparison";
 import { BtcIcon, FiatIcon, GmtIcon, UsdIcon } from "../icons/currency-icons";
-import { AlertTriangleIcon, CalculatorIcon } from "../icons";
+import { AlertTriangleIcon, CalculatorIcon, InfoIcon } from "../icons";
 import { TargetRing } from "./minerwars-panel-parts";
+import { MinerWarsDiscountInfoModal } from "./minerwars-discount-info-modal";
+import { useOutsideClick } from "../../hooks/use-outside-click";
 import { fmtBtc, fmtFiat, fmtGmt, fmtPct } from "./minerwars-panel-view-model";
 
 interface MinerWarsIndividualViewProps {
@@ -84,6 +87,20 @@ export function MinerWarsIndividualView({
 }: MinerWarsIndividualViewProps) {
   const { t } = useTranslation();
 
+  const [discountInfoOpen, setDiscountInfoOpen] = useState(false);
+  const discountInfoRef = useRef<HTMLDivElement>(null);
+  useOutsideClick(discountInfoRef, () => setDiscountInfoOpen(false), discountInfoOpen);
+
+  const fmtMultiplier = (mw: number | null, solo: number | null): string | null => {
+    if (mw == null || solo == null || solo === 0) return null;
+    return `${(mw / solo).toFixed(2)}x`;
+  };
+
+  const netValue = data.netBtc ?? effectiveDiff;
+  const netLabel = isActual ? t("cycleTracker.net") : t("cycleTracker.netEst");
+  const netIsPositive = netValue >= 0;
+  const soloNetIsPositive = data.soloNetBtc != null ? data.soloNetBtc >= 0 : null;
+
   const personalNetGmt =
     data.personalGmtRewards != null || data.personalBoostCostGmt != null
       ? (data.personalGmtRewards ?? 0) - (data.personalBoostCostGmt ?? 0)
@@ -94,10 +111,11 @@ export function MinerWarsIndividualView({
     negative = false,
   ): { icon: React.ReactNode; text: string } => {
     const signed = negative ? -Math.abs(gmt) : gmt;
-    if (showUsd && data.gmtPrice != null) {
+    // Completed cycles always display Personal GMT/Boost/Net in GMT — no currency switching.
+    if (!isActual && showUsd && data.gmtPrice != null) {
       return { icon: <UsdIcon />, text: fmtFiat(signed * data.gmtPrice, "USD") };
     }
-    if (showFiat && data.gmtPrice != null && extraFiatRate != null && extraFiatCode) {
+    if (!isActual && showFiat && data.gmtPrice != null && extraFiatRate != null && extraFiatCode) {
       return {
         icon: <FiatIcon code={extraFiatCode} />,
         text: fmtFiat(signed * data.gmtPrice * extraFiatRate, extraFiatCode),
@@ -236,151 +254,274 @@ export function MinerWarsIndividualView({
 
           <div className="minerwars-panel-hero-col-right">
             <div className="minerwars-panel-breakdown">
-              <div className="minerwars-panel-row">
-                <span className="minerwars-panel-label minerwars-panel-label--sub">
-                  {t("cycleTracker.soloEquiv")}
-                  <span className="minerwars-panel-projection-badge">
-                    {t("cycleTracker.day", { count: data.targetActualDays })}
-                  </span>
-                </span>
-                <span className="minerwars-panel-value">
-                  {renderValueIcon()} {formatBtcValue(soloEquivBtc, soloGmt, soloUsd)}
-                </span>
-              </div>
-
-              <div className="minerwars-panel-row minerwars-panel-row--tags">
-                <span className="minerwars-panel-label-col">
-                  <span className="minerwars-panel-label minerwars-panel-label--sub">
-                    {t("cycleTracker.difference")}
-                  </span>
-                </span>
-                <span className="minerwars-panel-value-col">
-                  <span
-                    className={`minerwars-panel-value minerwars-panel-value--diff ${isPositive ? "minerwars-panel-value--pos" : "minerwars-panel-value--neg"}`}
-                  >
-                    {renderValueIcon()}{" "}
-                    {(effectiveDiff > 0 ? "+" : "") +
-                      formatBtcValue(effectiveDiff, diffGmt, diffUsd)}
-                  </span>
-                  {effectiveDiffPct != null && (
-                    <span className="minerwars-panel-caption">
-                      {fmtPct(effectiveDiffPct)} {t("cycleTracker.vsSolo")}
-                    </span>
-                  )}
-                </span>
-              </div>
-
-              {data.maintenanceBtc != null && (
+              {isActual ? (
                 <>
-                  <div className="minerwars-panel-divider" />
+                  <div className="minerwars-panel-row">
+                    <span className="minerwars-panel-label minerwars-panel-label--sub">
+                      {t("cycleTracker.soloEquiv")}
+                      <span className="minerwars-panel-projection-badge">
+                        {t("cycleTracker.day", { count: data.targetActualDays })}
+                      </span>
+                    </span>
+                    <span className="minerwars-panel-value">
+                      {renderValueIcon()} {formatBtcValue(soloEquivBtc, soloGmt, soloUsd)}
+                    </span>
+                  </div>
+
                   <div className="minerwars-panel-row minerwars-panel-row--tags">
                     <span className="minerwars-panel-label-col">
                       <span className="minerwars-panel-label minerwars-panel-label--sub">
-                        {isActual
-                          ? t("cycleTracker.maintenance")
-                          : t("cycleTracker.maintenanceEst")}
+                        {t("cycleTracker.difference")}
                       </span>
-                      {(data.personalDiscountPct != null || !isActual) && (
-                        <span className="minerwars-panel-tags-col">
-                          {data.personalDiscountPct != null && (
-                            <span className="minerwars-panel-tag">
-                              <span className="minerwars-panel-tag-label">
-                                {t("cycleTracker.personalDiscountLabel")}
-                              </span>
-                              <span className="minerwars-panel-tag-value">
-                                {(data.personalDiscountPct * 100).toFixed(2)}%
-                              </span>
-                            </span>
-                          )}
-                          {!isActual && (
-                            <span className="minerwars-panel-tag">
-                              <span className="minerwars-panel-tag-label">
-                                {t("cycleTracker.leagueDiscountSectionLabel")}
-                              </span>
-                              <span className="minerwars-panel-tag-value">
-                                {data.leagueDiscountPct != null
-                                  ? `${(data.leagueDiscountPct * 100).toFixed(2)}%`
-                                  : "-"}
-                              </span>
-                            </span>
-                          )}
-                        </span>
-                      )}
                     </span>
                     <span className="minerwars-panel-value-col">
-                      <span className="minerwars-panel-value minerwars-panel-value--neg">
-                        {showGmt && data.maintenanceGmt != null ? (
-                          <>
-                            <GmtIcon /> {`-${fmtGmt(data.maintenanceGmt)}`}
-                          </>
-                        ) : showUsd && data.maintenanceUsd != null ? (
-                          <>
-                            <UsdIcon /> {`-${fmtFiat(data.maintenanceUsd, "USD")}`}
-                          </>
-                        ) : showFiat &&
-                          data.maintenanceUsd != null &&
-                          extraFiatRate != null &&
-                          extraFiatCode ? (
-                          <>
-                            <FiatIcon code={extraFiatCode} />{" "}
-                            {`-${fmtFiat(data.maintenanceUsd * extraFiatRate, extraFiatCode)}`}
-                          </>
-                        ) : (
-                          <>
-                            <BtcIcon /> {`-${fmtBtc(data.maintenanceBtc)}`}
-                          </>
-                        )}
+                      <span
+                        className={`minerwars-panel-value minerwars-panel-value--diff ${isPositive ? "minerwars-panel-value--pos" : "minerwars-panel-value--neg"}`}
+                      >
+                        {renderValueIcon()}{" "}
+                        {(effectiveDiff > 0 ? "+" : "") +
+                          formatBtcValue(effectiveDiff, diffGmt, diffUsd)}
                       </span>
-                      {maintenancePct != null && (
+                      {effectiveDiffPct != null && (
                         <span className="minerwars-panel-caption">
-                          {t("cycleTracker.maintenanceShare", { pct: maintenancePct.toFixed(1) })}
+                          {fmtPct(effectiveDiffPct)} {t("cycleTracker.vsSolo")}
                         </span>
                       )}
                     </span>
                   </div>
-                  {data.netBtc != null && (
+
+                  {data.maintenanceBtc != null && (
                     <>
                       <div className="minerwars-panel-divider" />
-                      <div className="minerwars-panel-row">
-                        <span className="minerwars-panel-label minerwars-panel-label--sub">
-                          {isActual ? t("cycleTracker.net") : t("cycleTracker.netEst")}
-                          <span className="minerwars-panel-projection-badge">
-                            {t("cycleTracker.day", { count: data.targetActualDays })}
+                      <div className="minerwars-panel-row minerwars-panel-row--tags">
+                        <span className="minerwars-panel-label-col">
+                          <span className="minerwars-panel-label minerwars-panel-label--sub">
+                            {t("cycleTracker.maintenance")}
                           </span>
                         </span>
-                        <span
-                          className={`minerwars-panel-value ${(showFiat || showUsd ? (data.netUsd ?? 0) : showGmt ? (data.netGmt ?? 0) : data.netBtc) >= 0 ? "minerwars-panel-value--pos" : "minerwars-panel-value--neg"}`}
-                        >
-                          {showGmt && data.netGmt != null ? (
-                            <>
-                              <GmtIcon /> {fmtGmt(data.netGmt)}
-                            </>
-                          ) : showUsd && data.netUsd != null ? (
-                            <>
-                              <UsdIcon /> {fmtFiat(data.netUsd, "USD")}
-                            </>
-                          ) : showFiat &&
-                            data.netUsd != null &&
-                            extraFiatRate != null &&
-                            extraFiatCode ? (
-                            <>
-                              <FiatIcon code={extraFiatCode} />{" "}
-                              {fmtFiat(data.netUsd * extraFiatRate, extraFiatCode)}
-                            </>
-                          ) : (
-                            <>
-                              <BtcIcon /> {fmtBtc(data.netBtc)}
-                            </>
+                        <span className="minerwars-panel-value-col">
+                          <span className="minerwars-panel-value minerwars-panel-value--neg">
+                            {showGmt && data.maintenanceGmt != null ? (
+                              <>
+                                <GmtIcon /> {`-${fmtGmt(data.maintenanceGmt)}`}
+                              </>
+                            ) : showUsd && data.maintenanceUsd != null ? (
+                              <>
+                                <UsdIcon /> {`-${fmtFiat(data.maintenanceUsd, "USD")}`}
+                              </>
+                            ) : showFiat &&
+                              data.maintenanceUsd != null &&
+                              extraFiatRate != null &&
+                              extraFiatCode ? (
+                              <>
+                                <FiatIcon code={extraFiatCode} />{" "}
+                                {`-${fmtFiat(data.maintenanceUsd * extraFiatRate, extraFiatCode)}`}
+                              </>
+                            ) : (
+                              <>
+                                <BtcIcon /> {`-${fmtBtc(data.maintenanceBtc)}`}
+                              </>
+                            )}
+                          </span>
+                          {maintenancePct != null && (
+                            <span className="minerwars-panel-caption">
+                              {t("cycleTracker.maintenanceShare", {
+                                pct: maintenancePct.toFixed(1),
+                              })}
+                            </span>
                           )}
                         </span>
                       </div>
+                      {data.netBtc != null && (
+                        <>
+                          <div className="minerwars-panel-divider" />
+                          <div className="minerwars-panel-row">
+                            <span className="minerwars-panel-label minerwars-panel-label--sub">
+                              {t("cycleTracker.net")}
+                              <span className="minerwars-panel-projection-badge">
+                                {t("cycleTracker.day", { count: data.targetActualDays })}
+                              </span>
+                            </span>
+                            <span
+                              className={`minerwars-panel-value ${(showFiat || showUsd ? (data.netUsd ?? 0) : showGmt ? (data.netGmt ?? 0) : data.netBtc) >= 0 ? "minerwars-panel-value--pos" : "minerwars-panel-value--neg"}`}
+                            >
+                              {showGmt && data.netGmt != null ? (
+                                <>
+                                  <GmtIcon /> {fmtGmt(data.netGmt)}
+                                </>
+                              ) : showUsd && data.netUsd != null ? (
+                                <>
+                                  <UsdIcon /> {fmtFiat(data.netUsd, "USD")}
+                                </>
+                              ) : showFiat &&
+                                data.netUsd != null &&
+                                extraFiatRate != null &&
+                                extraFiatCode ? (
+                                <>
+                                  <FiatIcon code={extraFiatCode} />{" "}
+                                  {fmtFiat(data.netUsd * extraFiatRate, extraFiatCode)}
+                                </>
+                              ) : (
+                                <>
+                                  <BtcIcon /> {fmtBtc(data.netBtc)}
+                                </>
+                              )}
+                            </span>
+                          </div>
+                        </>
+                      )}
                     </>
                   )}
+                </>
+              ) : (
+                <>
+                  <div className="minerwars-panel-compare-header-row">
+                    <span className="minerwars-panel-compare-label-col" />
+                    <span className="minerwars-panel-compare-value-col">
+                      <span className="minerwars-panel-compare-header-text">
+                        {t("cycleTracker.solo")}
+                      </span>
+                    </span>
+                    <span className="minerwars-panel-compare-value-col minerwars-panel-compare-value-col--right">
+                      <span className="minerwars-panel-compare-header-text minerwars-panel-compare-header-text--right">
+                        {t("cycleTracker.minerWarsColumn")}
+                      </span>
+                    </span>
+                  </div>
+
+                  <div className="minerwars-panel-compare-row">
+                    <span className="minerwars-panel-compare-label-col">
+                      <span className="minerwars-panel-label minerwars-panel-label--sub">
+                        {t("cycleTracker.gross")}
+                        <span className="minerwars-panel-projection-badge">
+                          {t("cycleTracker.day", { count: data.targetActualDays })}
+                        </span>
+                      </span>
+                    </span>
+                    <span className="minerwars-panel-compare-value-col">
+                      <span className="minerwars-panel-compare-value">
+                        {renderValueIcon()} {formatBtcValue(soloEquivBtc, soloGmt, soloUsd)}
+                      </span>
+                    </span>
+                    <span className="minerwars-panel-compare-value-col minerwars-panel-compare-value-col--right">
+                      <span className="minerwars-panel-compare-value">
+                        {renderValueIcon()} {formatBtcValue(effectiveMw, heroGmt, heroUsd)}
+                      </span>
+                      {fmtMultiplier(effectiveMw, soloEquivBtc) != null && (
+                        <span className="minerwars-panel-compare-badge">
+                          {fmtMultiplier(effectiveMw, soloEquivBtc)} {t("cycleTracker.vsSolo")}
+                        </span>
+                      )}
+                    </span>
+                  </div>
+
+                  <div className="minerwars-panel-divider" />
+
+                  <div className="minerwars-panel-compare-row">
+                    <span className="minerwars-panel-compare-label-col">
+                      <span className="minerwars-panel-label minerwars-panel-label--sub">
+                        {t("cycleTracker.maintenanceEst")}
+                        <button
+                          type="button"
+                          className="minerwars-panel-info-btn"
+                          onClick={() => setDiscountInfoOpen(true)}
+                          aria-label={t("cycleTracker.maintenanceDiscountInfoTitle")}
+                        >
+                          <InfoIcon width={13} height={13} />
+                        </button>
+                      </span>
+                    </span>
+                    <span className="minerwars-panel-compare-value-col">
+                      <span className="minerwars-panel-compare-value minerwars-panel-value--neg">
+                        {data.soloMaintenanceBtc != null ? (
+                          <>
+                            {renderValueIcon()}{" "}
+                            {`-${formatBtcValue(data.soloMaintenanceBtc, data.soloMaintenanceGmt, data.soloMaintenanceUsd)}`}
+                          </>
+                        ) : (
+                          "\u2014"
+                        )}
+                      </span>
+                    </span>
+                    <span className="minerwars-panel-compare-value-col minerwars-panel-compare-value-col--right">
+                      <span className="minerwars-panel-compare-value minerwars-panel-value--neg">
+                        {renderValueIcon()}{" "}
+                        {`-${formatBtcValue(data.maintenanceBtc ?? 0, data.maintenanceGmt, data.maintenanceUsd)}`}
+                      </span>
+                      {effectiveMw > 0 && data.maintenanceBtc != null && (
+                        <span className="minerwars-panel-compare-badge">
+                          {t("cycleTracker.maintenanceShareShort", {
+                            pct: ((data.maintenanceBtc / effectiveMw) * 100).toFixed(1),
+                          })}
+                        </span>
+                      )}
+                    </span>
+                  </div>
+
+                  <div className="minerwars-panel-divider" />
+
+                  <div className="minerwars-panel-compare-row">
+                    <span className="minerwars-panel-compare-label-col">
+                      <span className="minerwars-panel-label minerwars-panel-label--sub">
+                        {netLabel}
+                        <span className="minerwars-panel-projection-badge">
+                          {t("cycleTracker.day", { count: data.targetActualDays })}
+                        </span>
+                      </span>
+                    </span>
+                    <span className="minerwars-panel-compare-value-col">
+                      <span
+                        className={`minerwars-panel-compare-value ${soloNetIsPositive == null ? "" : soloNetIsPositive ? "minerwars-panel-value--pos" : "minerwars-panel-value--neg"}`}
+                      >
+                        {data.soloNetBtc != null ? (
+                          <>
+                            {renderValueIcon()}{" "}
+                            {formatBtcValue(data.soloNetBtc, data.soloNetGmt, data.soloNetUsd)}
+                          </>
+                        ) : (
+                          "\u2014"
+                        )}
+                      </span>
+                    </span>
+                    <span className="minerwars-panel-compare-value-col minerwars-panel-compare-value-col--right">
+                      <span
+                        className={`minerwars-panel-compare-value ${netIsPositive ? "minerwars-panel-value--pos" : "minerwars-panel-value--neg"}`}
+                      >
+                        {data.netBtc != null ? (
+                          <>
+                            {renderValueIcon()}{" "}
+                            {formatBtcValue(data.netBtc, data.netGmt, data.netUsd)}
+                          </>
+                        ) : (
+                          <>
+                            {renderValueIcon()} {formatBtcValue(effectiveDiff, diffGmt, diffUsd)}
+                          </>
+                        )}
+                      </span>
+                      {fmtMultiplier(data.netBtc ?? netValue, data.soloNetBtc) != null && (
+                        <span className="minerwars-panel-compare-badge">
+                          {fmtMultiplier(data.netBtc ?? netValue, data.soloNetBtc)}{" "}
+                          {t("cycleTracker.vsSolo")}
+                        </span>
+                      )}
+                    </span>
+                  </div>
                 </>
               )}
             </div>
           </div>
         </div>
+
+        {!isActual && (
+          <MinerWarsDiscountInfoModal
+            open={discountInfoOpen}
+            personalDiscountPct={data.personalDiscountPct}
+            rewardDistributionDiscountPct={data.rewardDistributionDiscountPct}
+            leagueDiscountPct={data.leagueDiscountPct}
+            onClose={() => setDiscountInfoOpen(false)}
+            containerRef={discountInfoRef}
+          />
+        )}
       </div>
 
       {showBtcFundZeroWarning && (
