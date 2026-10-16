@@ -202,8 +202,11 @@ export function MinerWarsComparisonPanel({
     loading || manualClanRefreshing || (tab === "clan" && clanPerf.loading);
   const handleSelectedViewRefresh = useCallback(async () => {
     // Clan metrics derive from the individual comparison (target days, mined sats), so
-    // refreshing either tab must refetch both to keep them consistent.
-    if (tab === "clan") {
+    // refreshing must also refetch clan performance once it's been loaded at least once
+    // (e.g. the user visited the Clan tab earlier this session) — otherwise elements fed
+    // by clanPerf.data (blocksMined, clan position, etc., incl. in the share card) stay
+    // stale when refreshing from the Individual tab.
+    if (tab === "clan" || clanPerf.data != null) {
       setManualClanRefreshing(true);
       try {
         await Promise.all([refresh(), clanPerf.refresh()]);
