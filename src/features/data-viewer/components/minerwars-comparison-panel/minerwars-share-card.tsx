@@ -66,9 +66,12 @@ function toRoman(num: number): string {
 }
 function leagueName(leagueId: number): string {
   if (leagueId === 1) return "Odyssey";
-  if (leagueId === 3) return "Eclipse";
-  if (leagueId === 4) return "Horizon";
-  return `Dune ${toRoman(leagueId - 4)}`;
+  if (leagueId === 3) return "Eclipse I";
+  if (leagueId === 4) return "Horizon I";
+  if (leagueId >= 5 && leagueId <= 31) return `Dune ${toRoman(leagueId - 4)}`;
+  if (leagueId >= 50 && leagueId <= 51) return `Eclipse ${toRoman(leagueId - 48)}`;
+  if (leagueId >= 52 && leagueId <= 59) return `Horizon ${toRoman(leagueId - 50)}`;
+  return `League ${leagueId}`;
 }
 
 function ProgressRing({ pct, light }: { pct: number | null; light: boolean }) {
@@ -240,7 +243,6 @@ export const MinerWarsShareCard = forwardRef<HTMLDivElement, CardProps>(function
       showIcon?: boolean;
       icon?: React.ReactNode;
       dividerBefore?: boolean;
-      tags?: Array<{ label: string; value: string }>;
     }
     const metrics: Metric[] = [
       {
@@ -261,51 +263,32 @@ export const MinerWarsShareCard = forwardRef<HTMLDivElement, CardProps>(function
       },
       {
         label: isActual ? t("cycleTracker.maintenance") : t("cycleTracker.maintenanceEst"),
-        value:
-          cmp.maintenanceBtc != null
-            ? `-${fmtVal(cmp.maintenanceBtc, cmp.maintenanceGmt, cmp.maintenanceUsd)}`
-            : "—",
+        value: `-${fmtVal(cmp.maintenanceBtc ?? 0, cmp.maintenanceGmt, cmp.maintenanceUsd)}`,
         caption:
           maintPct != null
             ? t("cycleTracker.maintenanceShare", { pct: maintPct.toFixed(1) })
             : undefined,
-        tone: cmp.maintenanceBtc != null ? "neg" : undefined,
-        showIcon: cmp.maintenanceBtc != null,
+        tone: "neg" as const,
+        showIcon: true,
         dividerBefore: true,
-        tags:
-          cmp.personalDiscountPct != null || !isActual
-            ? [
-                ...(cmp.personalDiscountPct != null
-                  ? [
-                      {
-                        label: t("cycleTracker.personalDiscountLabel"),
-                        value: `${(cmp.personalDiscountPct * 100).toFixed(2)}%`,
-                      },
-                    ]
-                  : []),
-                ...(!isActual
-                  ? [
-                      {
-                        label: t("cycleTracker.leagueDiscountSectionLabel"),
-                        value:
-                          cmp.leagueDiscountPct != null
-                            ? `${(cmp.leagueDiscountPct * 100).toFixed(2)}%`
-                            : "-",
-                      },
-                    ]
-                  : []),
-              ]
-            : undefined,
       },
       {
         label: isActual ? t("cycleTracker.net") : t("cycleTracker.netEst"),
-        value: cmp.netBtc != null ? fmtVal(cmp.netBtc, cmp.netGmt, cmp.netUsd) : "—",
-        tone: cmp.netBtc == null ? undefined : cmp.netBtc >= 0 ? "pos" : "neg",
+        value: fmtVal(cmp.netBtc ?? 0, cmp.netGmt, cmp.netUsd),
+        tone: (cmp.netBtc ?? 0) >= 0 ? ("pos" as const) : ("neg" as const),
         labelTag: daysLabel,
-        showIcon: cmp.netBtc != null,
+        showIcon: true,
         dividerBefore: true,
       },
     ];
+
+    // Live cycle: 2-column Solo-vs-MinerWars Gross/Maintenance/Net breakdown (mirrors the
+    // comparison panel's compare table), shown instead of the single-column metrics above.
+    const fmtMultiplier = (mw: number | null, solo: number | null): string | null => {
+      if (mw == null || solo == null || solo === 0) return null;
+      return `${(mw / solo).toFixed(2)}x`;
+    };
+    const netValue = cmp.netBtc ?? diffBtc;
 
     const personalNetGmt =
       cmp.personalGmtRewards != null || cmp.personalBoostCostGmt != null
@@ -313,10 +296,11 @@ export const MinerWarsShareCard = forwardRef<HTMLDivElement, CardProps>(function
         : null;
 
     const renderPersonalGmt = (gmt: number): { icon: React.ReactNode; text: string } => {
-      if (individualMode === "usd" && cmp.gmtPrice != null) {
+      // Completed cycles always display Personal GMT/Boost/Net in GMT — no currency switching.
+      if (!isActual && individualMode === "usd" && cmp.gmtPrice != null) {
         return { icon: <UsdIcon />, text: fmtFiat(gmt * cmp.gmtPrice) };
       }
-      if (individualMode === "extra" && cmp.gmtPrice != null && extraRate != null) {
+      if (!isActual && individualMode === "extra" && cmp.gmtPrice != null && extraRate != null) {
         return {
           icon: <FiatIcon code={extraCode ?? "USD"} />,
           text: fmtFiat(gmt * cmp.gmtPrice * extraRate),
@@ -450,46 +434,141 @@ export const MinerWarsShareCard = forwardRef<HTMLDivElement, CardProps>(function
             <div className="mwpc-ind-vdivider" />
 
             <div className="mwpc-ind-right">
-              <div className="mwpc-metric-list">
-                {metrics.map((m, i) => (
-                  <Fragment key={`${m.label}-${i}`}>
-                    {m.dividerBefore ? <div className="mwpc-metric-divider" /> : null}
-                    <div className="mwpc-metric-row">
-                      <div className="mwpc-metric-label-col">
-                        <div className="mwpc-metric-label-row">
-                          <span className="mwpc-metric-label">{m.label}</span>
-                          {m.labelTag ? <span className="mwpc-tag">{m.labelTag}</span> : null}
-                        </div>
-                        {m.tags && m.tags.length > 0 ? (
-                          <div className="mwpc-metric-tags-col">
-                            {m.tags.map((tag, ti) => (
-                              <span key={`${tag.label}-${ti}`} className="mwpc-metric-tag">
-                                <span className="mwpc-metric-tag-label">{tag.label}</span>
-                                <span className="mwpc-metric-tag-value">{tag.value}</span>
-                              </span>
-                            ))}
+              {isActual ? (
+                <div className="mwpc-metric-list">
+                  {metrics.map((m, i) => (
+                    <Fragment key={`${m.label}-${i}`}>
+                      {m.dividerBefore ? <div className="mwpc-metric-divider" /> : null}
+                      <div className="mwpc-metric-row">
+                        <div className="mwpc-metric-label-col">
+                          <div className="mwpc-metric-label-row">
+                            <span className="mwpc-metric-label">{m.label}</span>
+                            {m.labelTag ? <span className="mwpc-tag">{m.labelTag}</span> : null}
                           </div>
-                        ) : null}
-                      </div>
-                      <div className="mwpc-metric-value-wrap">
-                        <div className="mwpc-metric-value-row">
-                          {m.showIcon ? (
-                            <span className="mwpc-cicon mwpc-cicon--sm">{m.icon ?? valIcon}</span>
-                          ) : null}
-                          <span
-                            className={`mwpc-metric-value${m.tone === "pos" ? " mwpc-pos" : m.tone === "neg" ? " mwpc-neg" : ""}`}
-                          >
-                            {m.value}
-                          </span>
                         </div>
-                        {m.caption ? (
-                          <span className="mwpc-metric-caption">{m.caption}</span>
-                        ) : null}
+                        <div className="mwpc-metric-value-wrap">
+                          <div className="mwpc-metric-value-row">
+                            {m.showIcon ? (
+                              <span className="mwpc-cicon mwpc-cicon--sm">{m.icon ?? valIcon}</span>
+                            ) : null}
+                            <span
+                              className={`mwpc-metric-value${m.tone === "pos" ? " mwpc-pos" : m.tone === "neg" ? " mwpc-neg" : ""}`}
+                            >
+                              {m.value}
+                            </span>
+                          </div>
+                          {m.caption ? (
+                            <span className="mwpc-metric-caption">{m.caption}</span>
+                          ) : null}
+                        </div>
                       </div>
-                    </div>
-                  </Fragment>
-                ))}
-              </div>
+                    </Fragment>
+                  ))}
+                </div>
+              ) : (
+                <div className="mwpc-compare-list">
+                  <div className="mwpc-compare-header-row">
+                    <span className="mwpc-compare-label-col" />
+                    <span className="mwpc-compare-value-col">
+                      <span className="mwpc-compare-header-text">{t("cycleTracker.solo")}</span>
+                    </span>
+                    <span className="mwpc-compare-value-col mwpc-compare-value-col--right">
+                      <span className="mwpc-compare-header-text mwpc-compare-header-text--right">
+                        {t("cycleTracker.minerWarsColumn")}
+                      </span>
+                    </span>
+                  </div>
+
+                  <div className="mwpc-compare-row">
+                    <span className="mwpc-compare-label-col">
+                      <span className="mwpc-compare-label">{t("cycleTracker.gross")}</span>
+                    </span>
+                    <span className="mwpc-compare-value-col">
+                      <span className="mwpc-compare-value">
+                        <span className="mwpc-cicon mwpc-cicon--sm">{valIcon}</span>
+                        {fmtVal(soloBtc, cmp.soloEquivGmt, null)}
+                      </span>
+                    </span>
+                    <span className="mwpc-compare-value-col mwpc-compare-value-col--right">
+                      <span className="mwpc-compare-value">
+                        <span className="mwpc-cicon mwpc-cicon--sm">{valIcon}</span>
+                        {fmtVal(effectiveMw, cmp.minerWarsGmt, cmp.minerWarsUsd)}
+                      </span>
+                      {fmtMultiplier(effectiveMw, soloBtc) != null && (
+                        <span className="mwpc-compare-badge">
+                          {fmtMultiplier(effectiveMw, soloBtc)} {t("cycleTracker.vsSolo")}
+                        </span>
+                      )}
+                    </span>
+                  </div>
+
+                  <div className="mwpc-metric-divider" />
+
+                  <div className="mwpc-compare-row">
+                    <span className="mwpc-compare-label-col">
+                      <span className="mwpc-compare-label">{t("cycleTracker.maintenanceEst")}</span>
+                    </span>
+                    <span className="mwpc-compare-value-col">
+                      <span className="mwpc-compare-value mwpc-neg">
+                        {cmp.soloMaintenanceBtc != null ? (
+                          <>
+                            <span className="mwpc-cicon mwpc-cicon--sm">{valIcon}</span>
+                            {`-${fmtVal(Math.abs(cmp.soloMaintenanceBtc), cmp.soloMaintenanceGmt, cmp.soloMaintenanceUsd)}`}
+                          </>
+                        ) : (
+                          "\u2014"
+                        )}
+                      </span>
+                    </span>
+                    <span className="mwpc-compare-value-col mwpc-compare-value-col--right">
+                      <span className="mwpc-compare-value mwpc-neg">
+                        <span className="mwpc-cicon mwpc-cicon--sm">{valIcon}</span>
+                        {`-${fmtVal(cmp.maintenanceBtc ?? 0, cmp.maintenanceGmt, cmp.maintenanceUsd)}`}
+                      </span>
+                      {maintPct != null && (
+                        <span className="mwpc-compare-badge">
+                          {t("cycleTracker.maintenanceShareShort", { pct: maintPct.toFixed(1) })}
+                        </span>
+                      )}
+                    </span>
+                  </div>
+
+                  <div className="mwpc-metric-divider" />
+
+                  <div className="mwpc-compare-row">
+                    <span className="mwpc-compare-label-col">
+                      <span className="mwpc-compare-label">{t("cycleTracker.netEst")}</span>
+                    </span>
+                    <span className="mwpc-compare-value-col">
+                      <span
+                        className={`mwpc-compare-value${cmp.soloNetBtc != null ? (cmp.soloNetBtc >= 0 ? " mwpc-pos" : " mwpc-neg") : ""}`}
+                      >
+                        {cmp.soloNetBtc != null ? (
+                          <>
+                            <span className="mwpc-cicon mwpc-cicon--sm">{valIcon}</span>
+                            {fmtVal(cmp.soloNetBtc, cmp.soloNetGmt, cmp.soloNetUsd)}
+                          </>
+                        ) : (
+                          "\u2014"
+                        )}
+                      </span>
+                    </span>
+                    <span className="mwpc-compare-value-col mwpc-compare-value-col--right">
+                      <span
+                        className={`mwpc-compare-value${netValue >= 0 ? " mwpc-pos" : " mwpc-neg"}`}
+                      >
+                        <span className="mwpc-cicon mwpc-cicon--sm">{valIcon}</span>
+                        {fmtVal(netValue, cmp.netGmt, cmp.netUsd)}
+                      </span>
+                      {fmtMultiplier(netValue, cmp.soloNetBtc) != null && (
+                        <span className="mwpc-compare-badge">
+                          {fmtMultiplier(netValue, cmp.soloNetBtc)} {t("cycleTracker.vsSolo")}
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
