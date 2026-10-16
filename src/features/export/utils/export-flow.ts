@@ -1132,7 +1132,13 @@ export async function executeExportFlow({
           () => null,
         );
         if (currentClanId != null) invalidateStaleClanPerformanceCache(currentClanId);
-        await prefetchAllCompletedCycles(accessToken, cycles).catch(() => {});
+        let lastHistoryProgressTs = 0;
+        await prefetchAllCompletedCycles(accessToken, cycles, (done, total) => {
+          const now = Date.now();
+          if (done < total && now - lastHistoryProgressTs < 250) return;
+          lastHistoryProgressTs = now;
+          onMessage(i18n.t("cycleTracker.computingHistoryProgress", { done, total }));
+        }).catch(() => {});
         const today = new Date().toISOString().slice(0, 10);
         const uncached = cycles.filter(
           (c) => c.cycleEnd < today && getCachedMinerWarsComparison(c.cycleId) === null,

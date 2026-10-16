@@ -33,7 +33,6 @@ export function transformSoloMining(
   const gmtPrice = raw.incomeStatistic?.gmtPrice ?? 0;
 
   let maintenanceInBtcSum = 0;
-  let hasMaintenanceInBtc = false;
   let maintenanceGMTDirect = 0;
   let hasGmtMaintenance = false;
   let reinvested = false;
@@ -47,7 +46,6 @@ export function transformSoloMining(
       const maintenanceBtcVal = inc?.metaData?.maintenanceInBtc ?? null;
       if (maintenanceBtcVal != null) {
         maintenanceInBtcSum += maintenanceBtcVal;
-        hasMaintenanceInBtc = true;
       }
       const gmtAmt = inc?.maintenanceForWithdrawInGmt ?? null;
       if (gmtAmt != null) {
@@ -73,23 +71,22 @@ export function transformSoloMining(
   const discount = discountMax;
   const rawValue = raw.value ?? 0;
 
-  const maintenanceBtc = hasMaintenanceInBtc
-    ? maintenanceInBtcSum
-    : hasGmtMaintenance && gmtPrice > 0 && btcPrice > 0
-      ? (maintenanceGMTDirect * gmtPrice) / btcPrice
-      : 0;
+  // Maintenance can be paid partly in BTC and partly in GMT within the same record (mixed
+  // week) — add both actual portions together, converting each into the other currency,
+  // instead of exclusively picking one and dropping the other.
+  const canConvertMaintenance = gmtPrice > 0 && btcPrice > 0;
+  const maintenanceBtc =
+    maintenanceInBtcSum +
+    (canConvertMaintenance ? (maintenanceGMTDirect * gmtPrice) / btcPrice : 0);
+  const maintenanceGMT =
+    maintenanceGMTDirect +
+    (canConvertMaintenance ? (maintenanceInBtcSum * btcPrice) / gmtPrice : 0);
+  const maintenanceUSD = maintenanceInBtcSum * btcPrice + maintenanceGMTDirect * gmtPrice;
 
   // When maintenance is paid in GMT, raw.value is already the net reward (no maintenance deducted)
   const poolReward = hasGmtMaintenance ? rawValue : rawValue + maintenanceBtc;
   const reward = poolReward - maintenanceBtc;
 
-  const maintenanceGMT = hasGmtMaintenance
-    ? maintenanceGMTDirect
-    : btcPrice > 0 && gmtPrice > 0
-      ? (maintenanceBtc * btcPrice) / gmtPrice
-      : 0;
-
-  const maintenanceUSD = maintenanceBtc * btcPrice;
   const poolRewardUSD = poolReward * btcPrice;
   const rewardInUSD = reward * btcPrice;
 
@@ -139,24 +136,26 @@ export function transformMinerWars(
 
   const c1Gmt = raw.c1ValueInGmt ?? 0;
   const c2Gmt = raw.c2ValueInGmt ?? 0;
+  const rawMaintenanceGmt = c1Gmt + c2Gmt;
 
+  // Maintenance can be split across BTC and GMT in the same cycle (e.g. usually-GMT-paid
+  // weeks that still carry a residual BTC charge) — add both actual portions together,
+  // converting each into the other currency, instead of exclusively picking one.
+  const canConvertMaintenance = gmtPrice > 0 && btcPrice > 0;
   const maintenanceGMT =
-    maintenanceByGmt && c1Gmt + c2Gmt > 0
-      ? c1Gmt + c2Gmt
-      : usdToGmt(rawMaintenanceBtc * btcPrice, gmtPrice);
-
-  // When maintenanceByGmt is true, server sends 0 for BTC fields — derive from GMT instead
-  const maintenanceBtc = maintenanceByGmt
-    ? (maintenanceGMT * gmtPrice) / (btcPrice || 1)
-    : rawMaintenanceBtc;
+    rawMaintenanceGmt + (canConvertMaintenance ? (rawMaintenanceBtc * btcPrice) / gmtPrice : 0);
+  const maintenanceBtc =
+    rawMaintenanceBtc + (canConvertMaintenance ? (rawMaintenanceGmt * gmtPrice) / btcPrice : 0);
+  const maintenanceUSD = rawMaintenanceBtc * btcPrice + rawMaintenanceGmt * gmtPrice;
 
   const netReward = raw.totalReward ?? 0;
-  // When maintenanceByGmt, maintenance is paid separately in GMT — BTC reward is untouched
+  // totalReward is gross when maintenance is in GMT and net when it's in BTC; normalize
+  // to poolReward (gross) and reward (net). This flag only drives that derivation, not the
+  // maintenance totals above (which already combine both currencies when both are present).
   const poolReward = maintenanceByGmt ? netReward : netReward + maintenanceBtc;
   const reward = maintenanceByGmt ? netReward - maintenanceBtc : netReward;
 
   const poolRewardUSD = poolReward * btcPrice;
-  const maintenanceUSD = maintenanceByGmt ? maintenanceGMT * gmtPrice : maintenanceBtc * btcPrice;
   const rewardUSD = reward * btcPrice;
 
   return {
