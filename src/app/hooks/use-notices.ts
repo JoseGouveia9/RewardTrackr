@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
-import { fetchAnnouncement } from "@/features/sharing";
-import type { Announcement } from "@/features/sharing";
 import {
-  LS_KEY_NOTICE_RATE_LIMITS,
-  LS_KEY_NOTICE_UNOFFICIAL,
-  LS_KEY_NOTICE_OPENSOURCE,
-  LS_KEY_NOTICE_ANNOUNCEMENT_PREFIX,
+  fetchAnnouncement,
+  type Announcement,
+} from "@/components/announcement-banner/api/announcement";
+import {
+  LOCAL_STORAGE_KEY_NOTICE_RATE_LIMITS,
+  LOCAL_STORAGE_KEY_NOTICE_UNOFFICIAL,
+  LOCAL_STORAGE_KEY_NOTICE_OPENSOURCE,
+  LOCAL_STORAGE_KEY_NOTICE_ANNOUNCEMENT_PREFIX,
 } from "@/lib/storage-keys";
 
 export interface NoticesState {
@@ -20,15 +22,19 @@ export interface NoticesState {
   dismissAnnouncement: () => void;
 }
 
+/**
+ * Dismissal state for the info notices (persisted) and the remote announcement, which is
+ * dismissed per announcement id.
+ */
 export function useNotices(): NoticesState {
   const [noticeRateLimitsDismissed, setNoticeRateLimitsDismissed] = useState(
-    () => localStorage.getItem(LS_KEY_NOTICE_RATE_LIMITS) === "1",
+    () => localStorage.getItem(LOCAL_STORAGE_KEY_NOTICE_RATE_LIMITS) === "1",
   );
   const [noticeUnofficialDismissed, setNoticeUnofficialDismissed] = useState(
-    () => localStorage.getItem(LS_KEY_NOTICE_UNOFFICIAL) === "1",
+    () => localStorage.getItem(LOCAL_STORAGE_KEY_NOTICE_UNOFFICIAL) === "1",
   );
   const [noticeOpenSourceDismissed, setNoticeOpenSourceDismissed] = useState(
-    () => localStorage.getItem(LS_KEY_NOTICE_OPENSOURCE) === "1",
+    () => localStorage.getItem(LOCAL_STORAGE_KEY_NOTICE_OPENSOURCE) === "1",
   );
   const [announcement, setAnnouncement] = useState<Announcement | null>(null);
   const [announcementDismissed, setAnnouncementDismissed] = useState(false);
@@ -36,13 +42,14 @@ export function useNotices(): NoticesState {
   useEffect(() => {
     fetchAnnouncement().then((data) => {
       if (!data) return;
-      const dismissed = localStorage.getItem(LS_KEY_NOTICE_ANNOUNCEMENT_PREFIX + data.id) === "1";
+      const dismissed =
+        localStorage.getItem(LOCAL_STORAGE_KEY_NOTICE_ANNOUNCEMENT_PREFIX + data.id) === "1";
       setAnnouncementDismissed(dismissed);
       setAnnouncement(data);
     });
   }, []);
 
-  function dismiss(key: string, setter: (v: boolean) => void) {
+  function dismiss(key: string, setter: (isDismissed: boolean) => void) {
     localStorage.setItem(key, "1");
     setter(true);
   }
@@ -53,12 +60,15 @@ export function useNotices(): NoticesState {
     noticeOpenSourceDismissed,
     announcement,
     announcementDismissed,
-    dismissRateLimits: () => dismiss(LS_KEY_NOTICE_RATE_LIMITS, setNoticeRateLimitsDismissed),
-    dismissUnofficial: () => dismiss(LS_KEY_NOTICE_UNOFFICIAL, setNoticeUnofficialDismissed),
-    dismissOpenSource: () => dismiss(LS_KEY_NOTICE_OPENSOURCE, setNoticeOpenSourceDismissed),
+    dismissRateLimits: () =>
+      dismiss(LOCAL_STORAGE_KEY_NOTICE_RATE_LIMITS, setNoticeRateLimitsDismissed),
+    dismissUnofficial: () =>
+      dismiss(LOCAL_STORAGE_KEY_NOTICE_UNOFFICIAL, setNoticeUnofficialDismissed),
+    dismissOpenSource: () =>
+      dismiss(LOCAL_STORAGE_KEY_NOTICE_OPENSOURCE, setNoticeOpenSourceDismissed),
     dismissAnnouncement: () => {
       if (!announcement) return;
-      localStorage.setItem(LS_KEY_NOTICE_ANNOUNCEMENT_PREFIX + announcement.id, "1");
+      localStorage.setItem(LOCAL_STORAGE_KEY_NOTICE_ANNOUNCEMENT_PREFIX + announcement.id, "1");
       setAnnouncementDismissed(true);
     },
   };

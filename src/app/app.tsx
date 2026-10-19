@@ -1,117 +1,66 @@
-import { useCallback, useEffect, useRef, useMemo, useState, type KeyboardEvent } from "react";
-import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
-import { Routes, Route, Navigate, Link, useNavigate, useLocation } from "react-router";
-import { AppNotice } from "@/components/app-notice/app-notice";
-import { loadAllCacheEntries } from "@/lib/reward-cache";
-import { reconcileCacheVersions } from "@/lib/cache-versions";
-import { ALL_REWARD_KEYS } from "@/config/reward-configs";
-import { AuthPanel, HeaderUserMenu, useAuth } from "@/features/auth";
-import { SupportButton } from "@/components/support-button/support-button";
-import { SheetSelector, ExportOptions, useExport, useExportConfig } from "@/features/export";
-import type { CacheState, RewardKey } from "@/types/rewards";
-import { AnnouncementBanner } from "@/components/announcement-banner/announcement-banner";
-import { ReferralButton } from "@/components/referral-button/referral-button";
-import { DataViewerButton, DataViewer } from "@/features/data-viewer";
-import { ShareModal, CommunityPage } from "@/features/sharing";
+import { Suspense, lazy, useCallback, useEffect, useRef, useState } from "react";
+import { AnimatePresence, LayoutGroup } from "framer-motion";
+import { Routes, Route, Navigate, useNavigate } from "react-router";
+import { AuthPanel, useAuth } from "@/features/auth";
+import { useExport } from "@/features/export";
+import { BuildScreen, useExportConfig, useLiveMinerWarsSetting } from "@/features/settings";
+import { ShareModal } from "@/features/records";
 import { FetchFailedModal } from "@/components/fetch-failed-modal/fetch-failed-modal";
-import { ErrorBoundary } from "@/components/error-boundary/error-boundary";
-import { useTheme } from "./theme-context";
-import { useTranslation } from "react-i18next";
-import { MessageBanner } from "@/components/message-banner/message-banner";
-import { useNotices } from "./hooks/use-notices";
-import { useAccountSwitch } from "./hooks/use-account-switch";
-import { SharedView } from "./routes/shared-view";
-import { AboutPage } from "./routes/about-page";
-import { PrivacyPage } from "./routes/privacy-page";
-import { TermsPage } from "./routes/terms-page";
-import { LS_KEY_MW_LIVE_ENABLED, LS_KEY_REWARD_PREFIX } from "@/lib/storage-keys";
 import { LanguagePicker } from "@/components/language-picker/language-picker";
-import logo from "/logo.webp";
+import { StatusMessage } from "@/components/status-message/status-message";
+import { useTheme } from "./theme-context";
+import { useAccountSwitch } from "./hooks/use-account-switch";
+import { useAutoResync } from "./hooks/use-auto-resync";
+import { useCacheState } from "./hooks/use-cache-state";
+import { useLegacyHashRedirect } from "./hooks/use-legacy-hash-redirect";
+import { AppFooter } from "./components/app-footer/app-footer";
+import { AppHeader } from "./components/app-header/app-header";
+import { AppNotices } from "./components/app-notices/app-notices";
+import { RecordsPage } from "./routes/records-page";
 import "./app.css";
 
-const LAYOUT_SPRING = { layout: { type: "spring" as const, stiffness: 220, damping: 28 } };
-
-function WarningNoticeIcon() {
-  return (
-    <svg
-      className="app-notice-icon"
-      xmlns="http://www.w3.org/2000/svg"
-      width="15"
-      height="15"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" />
-      <path d="M12 9v4" />
-      <path d="M12 17h.01" />
-    </svg>
-  );
-}
-
-function ShieldNoticeIcon() {
-  return (
-    <svg
-      className="app-notice-icon"
-      xmlns="http://www.w3.org/2000/svg"
-      width="15"
-      height="15"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-    </svg>
-  );
-}
+const CommunityPage = lazy(() =>
+  import("@/features/community").then((loadedModule) => ({ default: loadedModule.CommunityPage })),
+);
+const SharedView = lazy(() =>
+  import("./routes/shared-view").then((loadedModule) => ({ default: loadedModule.SharedView })),
+);
+const AboutPage = lazy(() =>
+  import("@/features/legal").then((loadedModule) => ({ default: loadedModule.AboutPage })),
+);
+const PrivacyPage = lazy(() =>
+  import("@/features/legal").then((loadedModule) => ({ default: loadedModule.PrivacyPage })),
+);
+const TermsPage = lazy(() =>
+  import("@/features/legal").then((loadedModule) => ({ default: loadedModule.TermsPage })),
+);
 
 function App() {
   const navigate = useNavigate();
-  const location = useLocation();
+  const { theme, toggleTheme } = useTheme();
 
   const [message, setMessage] = useState<string>("");
-  const [cache, setCache] = useState<CacheState>(() => loadAllCacheEntries());
-  const [cacheVersion, setCacheVersion] = useState(0);
-  const [liveMinerWarsEnabled, setLiveMinerWarsEnabled] = useState<boolean>(() => {
-    try {
-      const raw = localStorage.getItem(LS_KEY_MW_LIVE_ENABLED);
-      return raw == null ? true : raw === "1";
-    } catch {
-      return true;
-    }
-  });
-  const [referralOpen, setReferralOpen] = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [languagePickerOpen, setLanguagePickerOpen] = useState(false);
+  const [liveMinerWarsEnabled, setLiveMinerWarsEnabled] = useLiveMinerWarsSetting();
 
-  const { theme, toggleTheme } = useTheme();
-  const { t } = useTranslation();
-  const notices = useNotices();
+  const exportConfig = useExportConfig();
+  const { selectedKeys, includeWalletFiat, includeExcelFiat, excelFiatCurrency, resetConfig } =
+    exportConfig;
 
   const {
-    selectedKeys,
-    includeWalletFiat,
-    includeExcelFiat,
-    excelFiatCurrency,
-    isGroupSelected,
-    walletSheetsSelected,
-    toggleGroup,
-    toggleAll,
-    setIncludeWalletFiat,
-    setIncludeExcelFiat,
-    setFiatCurrency,
-    resetConfig,
-  } = useExportConfig();
+    cache,
+    cacheVersion,
+    dataVersionWiped,
+    setCache,
+    setCacheVersion,
+    handleCacheUpdate,
+    handleTabSeen,
+    hasCachedSheets,
+    hasNewRecords,
+  } = useCacheState();
 
-  const { storedToken, user, syncedAlias, handleCheckSync, handleManualTokenSync, handleLogout } =
+  const { storedToken, user, syncedAlias, handleManualTokenSync, handleLogout } =
     useAuth(setMessage);
 
   const isDevHost =
@@ -120,19 +69,7 @@ function App() {
   const showManualTokenInput = import.meta.env.DEV || isDevHost;
 
   useAccountSwitch({ user, resetConfig, setCache, setCacheVersion, setMessage });
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(LS_KEY_MW_LIVE_ENABLED, liveMinerWarsEnabled ? "1" : "0");
-    } catch {
-      // ignore storage failures
-    }
-  }, [liveMinerWarsEnabled]);
-
-  const handleCacheUpdate = useCallback((nextCache: CacheState) => {
-    setCache(nextCache);
-    setCacheVersion((v) => v + 1);
-  }, []);
+  useLegacyHashRedirect();
 
   const {
     loading,
@@ -155,247 +92,27 @@ function App() {
     onStarted: useCallback(() => void navigate("/records"), [navigate]),
   });
 
+  useAutoResync({
+    dataVersionWiped,
+    storedToken,
+    selectedKeys,
+    handleExport,
+    onMessage: setMessage,
+  });
+
   const displayAlias = syncedAlias || user?.alias?.trim() || "User";
+  const defaultSignedInPath = hasCachedSheets ? "/records" : "/build";
+  const homePath = user ? defaultSignedInPath : "/";
 
-  const [dataVersionWiped, setDataVersionWiped] = useState(false);
+  const previousUserRef = useRef(user);
   useEffect(() => {
-    if (reconcileCacheVersions()) {
-      setCache(loadAllCacheEntries());
-      setCacheVersion((v) => v + 1);
-      setDataVersionWiped(true);
-    }
-  }, []);
-
-  const autoResyncStartedRef = useRef(false);
-  useEffect(() => {
-    if (!dataVersionWiped || autoResyncStartedRef.current) return;
-    if (!storedToken || selectedKeys.length === 0) return;
-    autoResyncStartedRef.current = true;
-    setMessage(
-      t("app.dataUpdatedResync", {
-        defaultValue: "We updated how records/MinerWars are calculated — resyncing your data…",
-      }),
-    );
-    void handleExport();
-  }, [dataVersionWiped, storedToken, selectedKeys, handleExport, t]);
-
-  const prevUserRef = useRef(user);
-  useEffect(() => {
-    if (prevUserRef.current !== null && user === null) {
+    if (previousUserRef.current !== null && user === null) {
       setShareModalOpen(false);
     }
-    prevUserRef.current = user;
+    previousUserRef.current = user;
   }, [user]);
 
-  // Backwards compat: migrate old "#view=<id>" hash URLs to the "/view/<id>" route
-  useEffect(() => {
-    const hash = window.location.hash;
-    if (hash.startsWith("#view=")) {
-      const id = hash.slice(6).trim();
-      if (id) void navigate(`/view/${id}`, { replace: true });
-    }
-  }, [navigate]);
-
-  const cachedCount = useMemo(
-    () => selectedKeys.filter((k) => cache[k]).length,
-    [selectedKeys, cache],
-  );
-
-  const hasCachedSheets = useMemo(
-    () => ALL_REWARD_KEYS.some((key) => cache[key] !== null),
-    [cache],
-  );
-
-  const hasNewRecords = useMemo(() => {
-    const purchasesNew =
-      (cache["purchases"]?.newEntriesCount ?? 0) + (cache["upgrades"]?.newEntriesCount ?? 0);
-    return (
-      (cache["solo-mining"]?.newEntriesCount ?? 0) > 0 ||
-      (cache["minerwars"]?.newEntriesCount ?? 0) > 0 ||
-      (cache["bounty"]?.newEntriesCount ?? 0) > 0 ||
-      (cache["referrals"]?.newEntriesCount ?? 0) > 0 ||
-      (cache["ambassador"]?.newEntriesCount ?? 0) > 0 ||
-      (cache["deposits"]?.newEntriesCount ?? 0) > 0 ||
-      (cache["withdrawals"]?.newEntriesCount ?? 0) > 0 ||
-      purchasesNew > 0 ||
-      (cache["simple-earn"]?.newEntriesCount ?? 0) > 0 ||
-      (cache["transactions"]?.newEntriesCount ?? 0) > 0
-    );
-  }, [cache]);
-
-  const handleTabSeen = useCallback((key: RewardKey) => {
-    setCache((prev) => {
-      const entry = prev[key];
-      if (!entry || (entry.newEntriesCount ?? 0) <= 0) return prev;
-      const nextEntry = { ...entry, newEntriesCount: 0 };
-      try {
-        localStorage.setItem(LS_KEY_REWARD_PREFIX + key, JSON.stringify(nextEntry));
-        // eslint-disable-next-line no-empty
-      } catch {}
-      return { ...prev, [key]: nextEntry };
-    });
-    setCacheVersion((v) => v + 1);
-  }, []);
-
-  const handleRecordsRefresh = useCallback(async (): Promise<void> => {
-    const keys = ALL_REWARD_KEYS.filter((key) => cache[key] !== null);
-    if (keys.length === 0) return;
-    await refreshKeys(keys);
-  }, [cache, refreshKeys]);
-
-  const isRecords = location.pathname === "/records";
-  const isSharedView = location.pathname.startsWith("/view/");
-  const isCommunity = location.pathname === "/community" || isSharedView;
-  const primaryBuildCtaLabel = hasCachedSheets
-    ? t("app.saveSettings", { defaultValue: "Save Settings" })
-    : t("app.buildReport");
-  const defaultSignedInPath = hasCachedSheets ? "/records" : "/build";
-
-  const handleHeroTitleClick = useCallback(() => {
-    void navigate(user ? defaultSignedInPath : "/");
-  }, [defaultSignedInPath, navigate, user]);
-
-  const handleHeroTitleKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLDivElement>) => {
-      if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
-        void navigate(user ? defaultSignedInPath : "/");
-      }
-    },
-    [defaultSignedInPath, navigate, user],
-  );
-
-  const buildScreen = (
-    <ErrorBoundary>
-      <motion.section className="panel-glass" layout transition={LAYOUT_SPRING}>
-        <div className="actions-header">
-          <h3>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-              className="section-icon"
-            >
-              <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18" />
-            </svg>
-            {t("app.selectSheets")}
-          </h3>
-          {hasCachedSheets && (
-            <button className="btn-danger btn-danger-small" onClick={handleClearCache}>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="13"
-                height="13"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M3 6h18" />
-                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
-                <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-              </svg>
-              {t("app.clearCache")}
-            </button>
-          )}
-        </div>
-        <SheetSelector
-          cache={cache}
-          onToggleGroup={toggleGroup}
-          onToggleAll={toggleAll}
-          isGroupSelected={isGroupSelected}
-        />
-      </motion.section>
-
-      <ExportOptions
-        selectedKeys={selectedKeys}
-        walletSheetsSelected={walletSheetsSelected}
-        liveMinerWarsEnabled={liveMinerWarsEnabled}
-        includeWalletFiat={includeWalletFiat}
-        onToggleLiveMinerWars={setLiveMinerWarsEnabled}
-        onToggleWalletFiat={setIncludeWalletFiat}
-        includeExcelFiat={includeExcelFiat}
-        onToggleExcelFiat={setIncludeExcelFiat}
-        excelFiatCurrency={excelFiatCurrency}
-        onChangeFiatCurrency={setFiatCurrency}
-      />
-
-      <motion.section className="export-section panel-glass" layout transition={LAYOUT_SPRING}>
-        <div className="export-meta-row">
-          {cachedCount > 0 && cachedCount < selectedKeys.length && (
-            <p className="subtle">
-              {t("app.sheetsToFetch", {
-                fetch: selectedKeys.length - cachedCount,
-                stored: cachedCount,
-              })}
-            </p>
-          )}
-          {cachedCount === selectedKeys.length && selectedKeys.length > 0 && (
-            <p className="subtle">{t("app.allSheetsStored")}</p>
-          )}
-          <p className="export-limit-notice">{t("app.maxExportsPerDay", { max: 3 })}</p>
-        </div>
-        <div className="export-button-wrapper">
-          <button
-            className="btn-primary btn-primary-large"
-            disabled={loading || selectedKeys.length === 0}
-            onClick={() => {
-              void handleExport();
-            }}
-          >
-            {loading ? (
-              t("app.processing")
-            ) : (
-              <>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                  className="btn-icon"
-                >
-                  <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
-                  <path d="M14 2v4a2 2 0 0 0 2 2h4" />
-                  <path d="M8 18v-2" />
-                  <path d="M12 18v-4" />
-                  <path d="M16 18v-6" />
-                </svg>
-                {primaryBuildCtaLabel}
-              </>
-            )}
-          </button>
-        </div>
-      </motion.section>
-
-      <AnimatePresence mode="popLayout">
-        {message ? (
-          <motion.div layout transition={LAYOUT_SPRING}>
-            <MessageBanner
-              key={`main-message-${message.replace(/\b\d+s\b/g, "").replace(/\d+\/\d+/g, "")}`}
-              message={message}
-              onClose={() => setMessage("")}
-            />
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
-    </ErrorBoundary>
-  );
+  const closeMessage = () => setMessage("");
 
   return (
     <div className={`page ${theme === "dark" ? "theme-dark" : "theme-light"}`}>
@@ -403,305 +120,104 @@ function App() {
       <div className="background-shape background-shape-bottom" />
 
       <main className="container">
-        <header className="hero">
-          <div className="hero-top">
-            <div
-              className="hero-title-row"
-              role="button"
-              tabIndex={0}
-              onClick={handleHeroTitleClick}
-              onKeyDown={handleHeroTitleKeyDown}
-              aria-label={t("app.goToMain")}
-            >
-              <img src={logo} alt="RewardTrackr logo" className="hero-logo" />
-              <div>
-                <motion.span
-                  className="hero-label"
-                  initial={
-                    user
-                      ? { fontSize: "0.65rem", letterSpacing: "0.08em", marginBottom: "2px" }
-                      : { fontSize: "1.35rem", letterSpacing: "0.06em", marginBottom: "0px" }
-                  }
-                  animate={
-                    user
-                      ? { fontSize: "0.65rem", letterSpacing: "0.08em", marginBottom: "2px" }
-                      : { fontSize: "1.35rem", letterSpacing: "0.06em", marginBottom: "0px" }
-                  }
-                  transition={{ duration: 0.3, ease: "easeOut" }}
-                >
-                  <motion.span
-                    className="hero-label-main"
-                    initial={{ color: user ? "#6d7589" : theme === "dark" ? "#ffffff" : "#22283a" }}
-                    animate={{ color: user ? "#6d7589" : theme === "dark" ? "#ffffff" : "#22283a" }}
-                    transition={{ duration: 0.3, ease: "easeOut" }}
-                  >
-                    REWARD
-                  </motion.span>
-                  <span className="hero-label-accent">TRACKR</span>
-                </motion.span>
-                <AnimatePresence>
-                  {user && (
-                    <motion.h1
-                      key="greeting"
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 6 }}
-                      transition={{ duration: 0.25, ease: "easeOut" }}
-                    >
-                      {t("common.greeting", { name: displayAlias })}
-                    </motion.h1>
-                  )}
-                </AnimatePresence>
-              </div>
-            </div>
-            {!user && location.pathname === "/" && (
-              <p className="hero-subtitle">{t("app.heroSubtitle")}</p>
-            )}
-            <div className="hero-actions">
-              <SupportButton />
-              {!user && (
-                <button
-                  type="button"
-                  className="community-button language-button"
-                  onClick={() => setLanguagePickerOpen(true)}
-                  aria-label={t("language.selectLanguage")}
-                >
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
-                    <circle cx="12" cy="12" r="10" />
-                    <line x1="2" y1="12" x2="22" y2="12" />
-                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-                  </svg>
-                </button>
-              )}
-              <button
-                type="button"
-                className={`community-button${isCommunity ? " community-button--active" : ""}`}
-                onClick={() =>
-                  void navigate(isCommunity ? (user ? defaultSignedInPath : "/") : "/community")
-                }
-                aria-label={t("app.community")}
-              >
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                  <circle cx="9" cy="7" r="4" />
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                </svg>
-                <span>{t("app.community")}</span>
-              </button>
-              <AnimatePresence initial={false}>
-                {hasCachedSheets ? (
-                  <motion.div
-                    key="records-trigger"
-                    className="dv-trigger-wrap"
-                    initial={{ opacity: 0, scale: 0.82 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.82 }}
-                    transition={{ duration: 0.2, ease: "easeOut" }}
-                  >
-                    <DataViewerButton
-                      active={isRecords}
-                      onClick={() => void navigate(isRecords ? "/build" : "/records")}
-                      hasNew={hasNewRecords}
-                    />
-                  </motion.div>
-                ) : null}
-              </AnimatePresence>
-              <motion.div
-                layout
-                transition={{ duration: 0.2, ease: "easeOut" }}
-                className={`hero-profile-wrapper${hasCachedSheets ? " hero-profile-wrapper--narrow" : ""}`}
-              >
-                {!user && (
-                  <ReferralButton
-                    open={referralOpen}
-                    onOpen={() => setReferralOpen(true)}
-                    onClose={() => setReferralOpen(false)}
-                  />
-                )}
-                {user && (
-                  <HeaderUserMenu
-                    user={user}
-                    displayAlias={displayAlias}
-                    theme={theme}
-                    onToggleTheme={toggleTheme}
-                    onLogout={handleLogout}
-                    onOpenLanguage={() => setLanguagePickerOpen(true)}
-                  />
-                )}
-              </motion.div>
-            </div>
-          </div>
-        </header>
+        <AppHeader
+          user={user}
+          displayAlias={displayAlias}
+          theme={theme}
+          hasCachedSheets={hasCachedSheets}
+          hasNewRecords={hasNewRecords}
+          homePath={homePath}
+          onToggleTheme={toggleTheme}
+          onLogout={handleLogout}
+          onOpenLanguage={() => setLanguagePickerOpen(true)}
+        />
 
-        {notices.announcement && (
-          <AnnouncementBanner
-            visible={!notices.announcementDismissed}
-            message={notices.announcement.message}
-            onDismiss={notices.dismissAnnouncement}
-          />
-        )}
-
-        <AppNotice
-          visible={!isSharedView && !notices.noticeRateLimitsDismissed}
-          onDismiss={notices.dismissRateLimits}
-          icon={<WarningNoticeIcon />}
-        >
-          {t("app.rateLimitsNotice")}
-        </AppNotice>
-
-        <AppNotice
-          visible={!isSharedView && !notices.noticeUnofficialDismissed}
-          className="app-notice-unofficial"
-          onDismiss={notices.dismissUnofficial}
-          icon={<WarningNoticeIcon />}
-        >
-          {t("app.unofficialNotice")}
-        </AppNotice>
-
-        <AppNotice
-          visible={!isSharedView && !user && !notices.noticeOpenSourceDismissed}
-          className="app-notice-opensource"
-          onDismiss={notices.dismissOpenSource}
-          icon={<ShieldNoticeIcon />}
-        >
-          {t("app.openSourceNotice")}{" "}
-          <a
-            href="https://github.com/JoseGouveia9/RewardTrackr"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {t("app.checkItHere")}
-          </a>
-        </AppNotice>
+        <AppNotices signedIn={!!user} />
 
         <LayoutGroup>
-          <Routes>
-            <Route
-              path="/community"
-              element={
-                <CommunityPage onClose={() => void navigate(user ? defaultSignedInPath : "/")} />
-              }
-            />
+          <Suspense fallback={null}>
+            <Routes>
+              <Route
+                path="/community"
+                element={<CommunityPage onClose={() => void navigate(homePath)} />}
+              />
 
-            <Route
-              path="/records"
-              element={
-                <>
-                  <AnimatePresence mode="popLayout">
-                    {message ? (
-                      <motion.div layout transition={LAYOUT_SPRING}>
-                        <MessageBanner message={message} onClose={() => setMessage("")} />
-                      </motion.div>
-                    ) : null}
-                  </AnimatePresence>
-                  <DataViewer
-                    onClose={() => void navigate("/")}
-                    isFetching={loading}
-                    fetchingKeys={fetchingKeys}
+              <Route
+                path="/records"
+                element={
+                  <RecordsPage
+                    cache={cache}
                     cacheVersion={cacheVersion}
-                    minerWarsPrefetching={minerWarsPrefetching}
-                    onRefreshKeys={refreshKeys}
-                    onRefreshRecords={handleRecordsRefresh}
-                    onDownloadRecords={handleDownloadCachedExport}
-                    onOpenBuildSettings={() => void navigate("/build")}
                     onTabSeen={handleTabSeen}
-                    sharedData={null}
-                    title={null}
-                    banner={undefined}
-                    onShare={user && hasCachedSheets ? () => setShareModalOpen(true) : undefined}
-                    shareDisabled={loading}
-                    showBackButton={false}
+                    status={{ message, onClose: closeMessage }}
+                    fetchState={{ loading, fetchingKeys, minerWarsPrefetching }}
+                    actions={{
+                      onRefreshKeys: refreshKeys,
+                      onDownloadRecords: handleDownloadCachedExport,
+                      onShare: user && hasCachedSheets ? () => setShareModalOpen(true) : undefined,
+                    }}
                   />
-                </>
-              }
-            />
+                }
+              />
 
-            <Route path="/view/:id" element={<SharedView />} />
+              <Route path="/view/:id" element={<SharedView />} />
 
-            <Route path="/build" element={!user ? <Navigate to="/" replace /> : buildScreen} />
-
-            <Route
-              path="/"
-              element={
-                !user ? (
-                  <>
-                    <AuthPanel
-                      onSync={handleCheckSync}
-                      showManualTokenInput={showManualTokenInput}
-                      onManualTokenSubmit={handleManualTokenSync}
+              <Route
+                path="/build"
+                element={
+                  !user ? (
+                    <Navigate to="/" replace />
+                  ) : (
+                    <BuildScreen
+                      config={exportConfig}
+                      cache={cache}
+                      hasCachedSheets={hasCachedSheets}
+                      liveMinerWars={{
+                        enabled: liveMinerWarsEnabled,
+                        onToggle: setLiveMinerWarsEnabled,
+                      }}
+                      buildFlow={{
+                        loading,
+                        message,
+                        onExport: handleExport,
+                        onClearCache: handleClearCache,
+                        onCloseMessage: closeMessage,
+                      }}
                     />
-                    <AnimatePresence mode="popLayout">
-                      {message ? (
-                        <motion.div layout transition={LAYOUT_SPRING}>
-                          {/* Key strips changing numbers (countdowns, "X of Y") to prevent remount on each tick */}
-                          <MessageBanner
-                            key={`auth-message-${message.replace(/\b\d+s\b/g, "").replace(/\d+\/\d+/g, "")}`}
-                            message={message}
-                            onClose={() => setMessage("")}
-                          />
-                        </motion.div>
-                      ) : null}
-                    </AnimatePresence>
-                  </>
-                ) : hasCachedSheets ? (
-                  <Navigate to="/records" replace />
-                ) : (
-                  <Navigate to="/build" replace />
-                )
-              }
-            />
+                  )
+                }
+              />
 
-            <Route path="/about" element={<AboutPage />} />
-            <Route path="/privacy" element={<PrivacyPage />} />
-            <Route path="/terms" element={<TermsPage />} />
+              <Route
+                path="/"
+                element={
+                  !user ? (
+                    <>
+                      <AuthPanel
+                        showManualTokenInput={showManualTokenInput}
+                        onManualTokenSubmit={handleManualTokenSync}
+                      />
+                      <StatusMessage
+                        message={message}
+                        onClose={closeMessage}
+                        keyPrefix="auth-message"
+                      />
+                    </>
+                  ) : (
+                    <Navigate to={defaultSignedInPath} replace />
+                  )
+                }
+              />
 
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+              <Route path="/about" element={<AboutPage />} />
+              <Route path="/privacy" element={<PrivacyPage />} />
+              <Route path="/terms" element={<TermsPage />} />
 
-          <motion.p className="copyright" layout transition={LAYOUT_SPRING}>
-            <Link className="copyright-link" to="/about">
-              {t("footer.about")}
-            </Link>
-            {" · "}
-            <Link className="copyright-link" to="/privacy">
-              {t("footer.privacy")}
-            </Link>
-            {" · "}
-            <Link className="copyright-link" to="/terms">
-              {t("footer.terms")}
-            </Link>
-            {" · "}
-            <a
-              className="copyright-link"
-              href="https://docs.google.com/forms/d/e/1FAIpQLSe98CKOga2pnoXh2SdXu0uxOBd9OOIDm1JsR6ludeGH5HOoLg/viewform"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {t("app.feedbackSuggestions")}
-            </a>
-            <br />© 2026 José Gouveia · Moustachio
-          </motion.p>
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Suspense>
+
+          <AppFooter />
         </LayoutGroup>
       </main>
 

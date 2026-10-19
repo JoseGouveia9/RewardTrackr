@@ -19,8 +19,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   });
 
   const toggleTheme = useCallback((): void => {
-    setTheme((prev) => {
-      const next = prev === "dark" ? "light" : "dark";
+    setTheme((previousTheme) => {
+      const next = previousTheme === "dark" ? "light" : "dark";
       localStorage.setItem(THEME_STORAGE_KEY, next);
       return next;
     });
@@ -33,7 +33,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
 // eslint-disable-next-line react-refresh/only-export-components
 export function useTheme(): ThemeContextValue {
-  const ctx = useContext(ThemeContext);
-  if (!ctx) throw new Error("useTheme must be used within ThemeProvider");
-  return ctx;
+  const context = useContext(ThemeContext);
+  if (!context) throw new Error("useTheme must be used within ThemeProvider");
+  return context;
 }

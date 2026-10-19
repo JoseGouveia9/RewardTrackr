@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams, useNavigate, useLocation } from "react-router";
-import { DataViewer } from "@/features/data-viewer";
-import { SharedBanner, fetchSharedProfile } from "@/features/sharing";
-import type { SharedProfile } from "@/features/sharing";
+import { DataViewer } from "@/features/records";
+import { SharedBanner, fetchSharedProfile, type SharedProfile } from "@/features/community";
 
 export function SharedView() {
   const { t } = useTranslation();
@@ -17,7 +16,7 @@ export function SharedView() {
     if (!id) return;
     setLoading(true);
     fetchSharedProfile(id)
-      .then((p) => setProfile(p))
+      .then((sharedProfile) => setProfile(sharedProfile))
       .catch(() => void navigate("/", { replace: true }))
       .finally(() => setLoading(false));
   }, [id, navigate]);
@@ -33,14 +32,9 @@ export function SharedView() {
     <DataViewer
       onClose={handleClose}
       isFetching={loading}
-      fetchingKeys={undefined}
-      cacheVersion={0}
-      onTabSeen={() => {}}
       sharedData={loading ? {} : (profile?.sheets ?? null)}
-      title={t("share.communityTitle")}
+      header={{ title: t("share.communityTitle") }}
       banner={<SharedBanner profile={profile ?? undefined} loading={loading} />}
-      onShare={undefined}
-      shareDisabled={false}
     />
   );
 }
