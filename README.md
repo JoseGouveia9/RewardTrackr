@@ -38,7 +38,7 @@ You can also browse your data directly in the app before exporting, with filters
 
 ## Privacy
 
-Your GoMining session token is used only inside your browser to fetch your data directly from the GoMining API. It is never sent to any third-party server or stored anywhere outside your device.
+Your GoMining session token is only ever sent to GoMining. On rewardtrackr.com the requests go through RewardTrackr's Cloudflare Worker, which relays them unchanged and also uses the token to verify who you are for the export limit and Share. The Worker never stores or logs the token, and nothing is sent to any other third-party server.
 
 ## How to use
 
@@ -75,7 +75,36 @@ That's it, your file will download automatically.
 | Error tracking   | Sentry                              | Production error visibility with source maps                          |
 | Code quality     | ESLint 10 + Prettier + Husky        | Enforced on every commit via lint-staged                              |
 
-The folder structure follows a **feature-based layout** (`features/auth`, `features/export`, `features/data-viewer`) where each feature owns its components, hooks, types, and utilities. Shared utilities live in `src/lib`. There is no UI component library, all components are hand-built.
+The code follows a **feature-based layout** that mirrors the screens of the app:
+
+```
+src/
++-- app/            # shell: routes, providers, theme, header/footer, global hooks
++-- components/     # components shared across the whole application
++-- config/ hooks/ lib/ types/   # shared building blocks
++-- features/
+    +-- auth/       # login (GoMining token / extension handoff), user menu
+    +-- settings/   # /build: sheet selection, export options, live MinerWars toggle
+    +-- export/     # build-report engine: fetch pipeline, pricing, Excel
+    +-- records/    # /records: viewer, tabs, tables, filters, share (publish link, PNG card)
+    +-- minerwars/  # cycle tracker: individual + clan views, simulation, share card
+    +-- community/  # community directory and shared-profile banner
+    +-- legal/      # about, privacy, terms
+```
+
+Every feature, and every component that grows big enough, uses the same internal layout (only the folders it needs):
+
+```
++-- api         # request declarations for this feature/component
++-- assets      # static files
++-- components  # components scoped to it
++-- hooks       # hooks scoped to it
++-- stores      # state/cache stores
++-- types       # TypeScript types
++-- utils       # utility functions
+```
+
+Dependencies only flow `app -> features -> shared`, and between features only `records -> minerwars | community` and `export -> minerwars` (enforced by ESLint, see `eslint.config.js`). There is no UI component library, all components are hand-built.
 
 ### How does Share work?
 
@@ -95,9 +124,24 @@ This was a deliberate choice, driven by two things:
 
 **Deployment simplicity** - a fully static app can be hosted on GitHub Pages at zero cost with no infrastructure to maintain. There is no server to provision, scale, or keep alive.
 
-**User trust** - your GoMining session token is the most sensitive piece of data in this flow. By keeping everything client-side, the token never leaves your browser. It is used directly to call the GoMining API from your machine, the resulting data is processed locally, and the final `.xlsx` file is assembled and downloaded entirely in-browser. There is no server that could log, store, or misuse it. You can verify this yourself by inspecting the source, what you read is exactly what runs.
+**User trust** - your GoMining session token is the most sensitive piece of data in this flow. The reward data is fetched, processed and turned into the final `.xlsx` file entirely in your browser; no server stores your records. The token only travels to GoMining (directly or through the Worker relay described below) and is never persisted. You can verify this yourself by inspecting the source, what you read is exactly what runs.
 
-The Cloudflare Worker listed in the stack handles two things: acting as a thin CORS proxy for third-party API calls (CoinGecko, FX rates), and powering the Share feature by reading and writing profile JSON files to a private GitHub repository. It never sees your GoMining session token or processes your reward data directly. The Worker only receives the already-processed, already-in-browser data that you explicitly choose to share.
+The Cloudflare Worker (`workers/`) handles the following: relaying GoMining API calls and CryptoCompare (which has no CORS headers), the daily export/share limits, Share storage on a private GitHub repository, community announcements, a unique-user counter, a daily BTC/GMT price history (cron), and Open Graph previews for shared links. It only receives the data you explicitly choose to share.
+
+## Development
+
+```bash
+npm install
+cp .env.example .env   # optional, see the file for every VITE_ variable
+npm run dev            # Vite dev server
+npm run build          # type-check + production build
+npm run lint           # ESLint on src
+npm run format         # Prettier on src
+npm run worker:deploy  # deploy workers/worker.js with Wrangler (see wrangler.toml for secrets)
+npm run package:extension:store  # zip extension/ into release/ (Windows PowerShell)
+```
+
+The browser extension lives in `extension/` (plain JS, no build step); load it unpacked from `chrome://extensions`.
 
 ## Feedback & issues
 

@@ -2,9 +2,7 @@ name = "rewardtrackr"
 main = "workers/worker.js"
 compatibility_date = "2025-03-21"
 
-# rewardtrackr.com's DNS origin is GitHub Pages (see .github/workflows/deploy.yml) —
-# these routes only carve out the Worker's own API/proxy paths; every other path keeps
-# going straight to GitHub Pages, untouched.
+# The zone's origin is GitHub Pages; these routes only carve out the Worker paths.
 routes = [
 	{ pattern = "rewardtrackr.com/se/*", zone_name = "rewardtrackr.com" },
 	{ pattern = "rewardtrackr.com/bm/*", zone_name = "rewardtrackr.com" },
@@ -36,25 +34,22 @@ id = "38cbf75598354271b35cecd1fba305cb"
 binding = "PRICE_HISTORY"
 id = "deb1408fbb894b65b1d2ce02fbe2be0e"
 
-# Cron Trigger for the scheduled() handler in workers/worker.js — fetches and
-# stores daily BTC/GMT prices every day at 00:00 UTC.
+# scheduled() in workers/worker.js: daily BTC/GMT price snapshot at 00:00 UTC.
 [triggers]
 crons = ["0 0 * * *"]
 
 [vars]
-# Public OAuth client_id (dynamically registered, no secret — see
-# workers/lib/gomining-mcp.js) used to refresh the GoMining MCP access token.
-# The refresh token itself lives in the PRICE_HISTORY KV under "gomining:oauth"
-# (rotates on every use, so it can't be a static `wrangler secret`).
+# Public OAuth client_id (no secret). The rotating refresh token lives in the
+# PRICE_HISTORY KV under "gomining:oauth", not in a static secret.
 GOMINING_MCP_CLIENT_ID = "21fff519-9860-4c89-b0a9-12e55fb54e49"
 
-# Secrets required — set via CLI, never commit them:
-# wrangler secret put GITHUB_TOKEN   (for the /share endpoint)
-# wrangler secret put CMC_API_KEY     (CoinMarketCap fallback for daily BTC/GMT prices)
+# Secrets (set via CLI, never commit):
+# wrangler secret put GITHUB_TOKEN   (/share endpoints)
+# wrangler secret put CMC_API_KEY    (CoinMarketCap price fallback)
+# wrangler secret put CRYPTOCOMPARE_API_KEY    (CryptoCompare price fallback, used by the /cc proxy)
 
 [env.dev]
-# Inherit top-level settings and deploy with:
-# npx wrangler deploy --env dev
+# Deploy with: npx wrangler deploy --env dev
 name = "rewardtrackr-dev"
 routes = [
 	{ pattern = "dev.rewardtrackr.com/*", zone_name = "rewardtrackr.com" }

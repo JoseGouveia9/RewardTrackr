@@ -7,7 +7,6 @@ export default defineConfig({
   plugins: [
     tailwindcss(),
     react(),
-    // Only active in CI when SENTRY_AUTH_TOKEN is set; no-ops locally.
     sentryVitePlugin({
       org: process.env.SENTRY_ORG,
       project: process.env.SENTRY_PROJECT,
@@ -17,10 +16,6 @@ export default defineConfig({
   ],
   build: {
     sourcemap: true,
-    // LightningCSS (used by @tailwindcss/vite) has a bug where it strips the
-    // standard backdrop-filter and only outputs -webkit-backdrop-filter, which
-    // modern Chrome/Opera no longer recognise. Targeting chrome100 tells
-    // LightningCSS to emit the unprefixed property.
     cssTarget: "chrome100",
   },
   base: "/",
@@ -31,27 +26,25 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      // In local dev, proxy /gomining-api/* → https://api.gomining.com/*
-      // This bypasses CORS since the request originates from the Node server, not the browser.
       "/gomining-api/se": {
         target: "https://api.se.gomining.com",
         changeOrigin: true,
-        rewrite: (p) => p.replace(/^\/gomining-api\/se/, ""),
+        rewrite: (requestPath) => requestPath.replace(/^\/gomining-api\/se/, ""),
       },
       "/gomining-api/bm": {
         target: "https://api.bonus-miner.gomining.com",
         changeOrigin: true,
-        rewrite: (p) => p.replace(/^\/gomining-api\/bm/, ""),
+        rewrite: (requestPath) => requestPath.replace(/^\/gomining-api\/bm/, ""),
       },
       "/gomining-api": {
         target: "https://api.gomining.com",
         changeOrigin: true,
-        rewrite: (p) => p.replace(/^\/gomining-api/, ""),
+        rewrite: (requestPath) => requestPath.replace(/^\/gomining-api/, ""),
       },
       "/cc": {
         target: "https://min-api.cryptocompare.com",
         changeOrigin: true,
-        rewrite: (p) => p.replace(/^\/cc/, ""),
+        rewrite: (requestPath) => requestPath.replace(/^\/cc/, ""),
       },
     },
   },
