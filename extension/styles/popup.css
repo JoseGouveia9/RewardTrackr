@@ -1,5 +1,3 @@
-/* ── Base ────────────────────────────────────────────────────── */
-
 body {
   margin: 0;
   min-width: 500px;
@@ -11,14 +9,6 @@ body {
   color: #2f3647;
 }
 
-h1,
-h2,
-h3 {
-  font-family: "Space Grotesk", sans-serif;
-}
-
-/* ── Popup card ──────────────────────────────────────────────── */
-
 .popup-card {
   padding: 16px;
   margin: 12px;
@@ -29,8 +19,6 @@ h3 {
   max-height: calc(100vh - 24px);
   overflow-y: auto;
 }
-
-/* ── Hero title ──────────────────────────────────────────────── */
 
 .hero-title-row {
   display: flex;
@@ -77,8 +65,6 @@ body.theme-dark .hero-title-row.synced .hero-label-main {
   color: #6d7589;
 }
 
-/* ── Greeting ────────────────────────────────────────────────── */
-
 .hero-greeting {
   margin: 2px 0 0;
   font-family: "Space Grotesk", sans-serif;
@@ -103,8 +89,6 @@ body.theme-dark .hero-title-row.synced .hero-label-main {
   max-height: 2rem;
 }
 
-/* ── Screen subtitle ─────────────────────────────────────────── */
-
 .screen-subtitle {
   margin: 0 0 12px;
   font-size: 0.8rem;
@@ -112,8 +96,6 @@ body.theme-dark .hero-title-row.synced .hero-label-main {
   line-height: 1.5;
   color: #6f758b;
 }
-
-/* ── Open source notice ──────────────────────────────────────── */
 
 .opensource-notice {
   display: flex;
@@ -156,8 +138,6 @@ body.theme-dark .opensource-notice a {
   color: #4ade80;
 }
 
-/* ── Unofficial notice ───────────────────────────────────────── */
-
 .unofficial-notice {
   display: flex;
   align-items: flex-start;
@@ -178,8 +158,6 @@ body.theme-dark .opensource-notice a {
   margin-top: 1px;
   color: #c97d10;
 }
-
-/* ── Intro cards ─────────────────────────────────────────────── */
 
 .intro-card {
   background: rgba(247, 147, 26, 0.07);
@@ -205,8 +183,6 @@ body.theme-dark .opensource-notice a {
   line-height: 1.5;
   color: #2b3150;
 }
-
-/* ── Button ──────────────────────────────────────────────────── */
 
 button {
   width: 100%;
@@ -256,8 +232,6 @@ button.not-ready:hover:not(:disabled) {
   border-color: transparent;
 }
 
-/* ── Status banner ───────────────────────────────────────────── */
-
 .status {
   display: flex;
   align-items: center;
@@ -300,8 +274,6 @@ button.not-ready:hover:not(:disabled) {
   color: #e0192a;
   border-color: rgba(252, 165, 165, 0.45);
 }
-
-/* ── QR login UI ─────────────────────────────────────────────── */
 
 .qr-trigger-btn {
   margin-top: 8px;
@@ -443,8 +415,6 @@ button.not-ready:hover:not(:disabled) {
   height: 100%;
 }
 
-/* ── Footer ──────────────────────────────────────────────────── */
-
 .copyright {
   margin: 10px 0 0;
   font-size: 0.7rem;
@@ -452,13 +422,9 @@ button.not-ready:hover:not(:disabled) {
   text-align: center;
 }
 
-/* ── Utility ─────────────────────────────────────────────────── */
-
 .hidden {
   display: none;
 }
-
-/* ── Dark mode ───────────────────────────────────────────────── */
 
 body.theme-dark {
   background: #121214;
@@ -550,70 +516,6 @@ body.theme-dark .qr-inline-back {
   background-image: none;
 }
 
-.qr-inline-panel.is-entering .qr-enter-title,
-.qr-inline-panel.is-entering .qr-enter-subtitle,
-.qr-inline-panel.is-entering .qr-enter-qr {
-  animation-name: qrSlideInRight;
-  animation-duration: 260ms;
-  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
-  animation-fill-mode: both;
-}
-
-.qr-inline-panel.is-entering .qr-enter-title {
-  animation-delay: 10ms;
-}
-
-.qr-inline-panel.is-entering .qr-enter-subtitle {
-  animation-delay: 70ms;
-}
-
-.qr-inline-panel.is-entering .qr-enter-qr {
-  animation-delay: 120ms;
-}
-
-.qr-inline-panel.is-leaving .qr-enter-title,
-.qr-inline-panel.is-leaving .qr-enter-subtitle,
-.qr-inline-panel.is-leaving .qr-enter-qr {
-  animation-name: qrSlideOutRight;
-  animation-duration: 210ms;
-  animation-timing-function: ease-in;
-  animation-fill-mode: both;
-}
-
-.qr-inline-panel.is-leaving .qr-enter-title {
-  animation-delay: 0ms;
-}
-
-.qr-inline-panel.is-leaving .qr-enter-subtitle {
-  animation-delay: 30ms;
-}
-
-.qr-inline-panel.is-leaving .qr-enter-qr {
-  animation-delay: 60ms;
-}
-
-@keyframes qrSlideInRight {
-  from {
-    opacity: 0;
-    transform: translateX(18px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes qrSlideOutRight {
-  from {
-    opacity: 1;
-    transform: translateX(0);
-  }
-  to {
-    opacity: 0;
-    transform: translateX(18px);
-  }
-}
-
 body.theme-dark .qr-title {
   color: #f0f4ff;
 }
@@ -649,8 +551,6 @@ body.theme-dark .status-error {
   color: #ff6b8a;
   border-color: rgba(252, 165, 165, 0.2);
 }
-
-/* ── Mobile viewport (e.g. iOS Orion) ────────────────────────── */
 
 @media (pointer: coarse) {
   body {

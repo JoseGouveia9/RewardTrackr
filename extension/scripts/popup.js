@@ -11,30 +11,27 @@
   const PENDING_ALIAS_KEY = "rt_pending_alias";
   const GOMINING_URL = "https://app.gomining.com";
 
-  // Promise helpers
-
-  // Wraps a promise with a timeout so a hung extension API call can't block the UI forever.
-  function withTimeout(promise, timeoutMs) {
+  /** Keeps a hung extension API call from blocking the UI. */
+  function withTimeout(promise, timeoutMilliseconds) {
     let timeoutId;
     return Promise.race([
       promise,
       new Promise((_, reject) => {
-        timeoutId = setTimeout(() => reject(new Error("timeout")), timeoutMs);
+        timeoutId = setTimeout(() => reject(new Error("timeout")), timeoutMilliseconds);
       }),
     ]).finally(() => {
       if (timeoutId) clearTimeout(timeoutId);
     });
   }
 
-  // Theme
-
-  // Applies a theme class to the body, removing the other.
   function applyTheme(theme) {
     document.body.classList.toggle("theme-dark", theme === "dark");
     document.body.classList.toggle("theme-light", theme === "light");
   }
 
-  // Reads the active RewardTrackr tab's stored theme preference and applies it; falls back to localStorage.
+  /**
+   * The open RewardTrackr tab is the source of truth for the theme; localStorage is the fallback.
+   */
   async function loadTheme() {
     try {
       const [tab] = await chrome.tabs.query({ url: `${EXPORTER_URL}*` });
@@ -45,7 +42,7 @@
             func: (key) => localStorage.getItem(key),
             args: [THEME_KEY],
           }),
-          1200
+          1200,
         );
         const theme = result?.result;
         if (theme === "light" || theme === "dark") {
@@ -54,31 +51,25 @@
           return;
         }
       }
-    } catch {
-      // tab not accessible, fall through to stored preference
-    }
+    } catch {}
     applyTheme(localStorage.getItem(THEME_KEY) || "dark");
   }
 
   void loadTheme();
 
-  // DOM refs
-
-  const syncBtn = document.getElementById("syncBtn");
-  const ctaOrEl = document.getElementById("ctaOr");
-  const statusEl = document.getElementById("status");
-  const greetingEl = document.getElementById("greeting");
-  const syncHeroRowEl = document.querySelector("#syncScreen .hero-title-row");
-  const mobileQrBtn = document.getElementById("mobileQrBtn");
-  const syncSubtitleEl = document.getElementById("syncSubtitle");
-  const syncCopyrightEl = document.getElementById("syncCopyright");
-  const qrInlinePanelEl = document.getElementById("qrInlinePanel");
-  const qrInlineBackEl = document.getElementById("qrInlineBack");
-  const qrInlineCodeEl = document.getElementById("qrInlineCode");
+  const syncButton = document.getElementById("syncBtn");
+  const callToActionOrElement = document.getElementById("ctaOr");
+  const statusElement = document.getElementById("status");
+  const greetingElement = document.getElementById("greeting");
+  const syncHeroRowElement = document.querySelector("#syncScreen .hero-title-row");
+  const mobileQrButton = document.getElementById("mobileQrBtn");
+  const syncSubtitleElement = document.getElementById("syncSubtitle");
+  const syncCopyrightElement = document.getElementById("syncCopyright");
+  const qrInlinePanelElement = document.getElementById("qrInlinePanel");
+  const qrInlineBackElement = document.getElementById("qrInlineBack");
+  const qrInlineCodeElement = document.getElementById("qrInlineCode");
 
   let lastSyncedToken = null;
-
-  // Status icons
 
   const STATUS_ICONS = {
     ready: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg>`,
@@ -87,109 +78,99 @@
     error: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`,
   };
 
-  // UI helpers
-
-  // Updates the status bar with an icon and message for the given type (ready, loading, success, error).
   function setStatus(text, type = "loading") {
-    if (!statusEl) return;
-    statusEl.className = `status status-${type}`;
-    statusEl.innerHTML = STATUS_ICONS[type] ?? "";
+    if (!statusElement) return;
+    statusElement.className = `status status-${type}`;
+    statusElement.innerHTML = STATUS_ICONS[type] ?? "";
     const span = document.createElement("span");
     span.textContent = text;
-    statusEl.appendChild(span);
+    statusElement.appendChild(span);
   }
 
-  // Shows or hides the personalised greeting on the sync screen.
   function setWelcome(alias) {
-    const titleRow = document.querySelector("#syncScreen .hero-title-row");
-    if (!greetingEl) return;
+    if (!greetingElement) return;
     if (!alias) {
-      greetingEl.textContent = "";
-      greetingEl.classList.remove("visible");
-      titleRow?.classList.remove("synced");
+      greetingElement.textContent = "";
+      greetingElement.classList.remove("visible");
+      syncHeroRowElement?.classList.remove("synced");
       return;
     }
-    greetingEl.textContent = `Hello ${alias} 👋`;
-    titleRow?.classList.add("synced");
-    requestAnimationFrame(() => greetingEl.classList.add("visible"));
+    greetingElement.textContent = `Hello ${alias} 👋`;
+    syncHeroRowElement?.classList.add("synced");
+    requestAnimationFrame(() => greetingElement.classList.add("visible"));
   }
 
   function setBaseViewVisible(visible) {
-    syncHeroRowEl?.classList.toggle("hidden", !visible);
-    syncSubtitleEl?.classList.toggle("hidden", !visible);
-    syncBtn?.classList.toggle("hidden", !visible);
-    statusEl?.classList.toggle("hidden", !visible);
-    syncCopyrightEl?.classList.toggle("hidden", !visible);
-    if (!mobileQrBtn) return;
+    syncHeroRowElement?.classList.toggle("hidden", !visible);
+    syncSubtitleElement?.classList.toggle("hidden", !visible);
+    syncButton?.classList.toggle("hidden", !visible);
+    statusElement?.classList.toggle("hidden", !visible);
+    syncCopyrightElement?.classList.toggle("hidden", !visible);
+    if (!mobileQrButton) return;
     if (!visible) {
-      mobileQrBtn.classList.add("hidden");
-      ctaOrEl?.classList.add("hidden");
+      mobileQrButton.classList.add("hidden");
+      callToActionOrElement?.classList.add("hidden");
       return;
     }
-    mobileQrBtn.classList.toggle("hidden", !lastSyncedToken);
-    ctaOrEl?.classList.toggle("hidden", !lastSyncedToken);
+    mobileQrButton.classList.toggle("hidden", !lastSyncedToken);
+    callToActionOrElement?.classList.toggle("hidden", !lastSyncedToken);
   }
 
   function closeQrInlinePanelImmediate() {
-    qrInlinePanelEl?.classList.remove("is-entering", "is-leaving");
-    qrInlineCodeEl && (qrInlineCodeEl.innerHTML = "");
-    qrInlinePanelEl?.classList.add("hidden");
-    qrInlinePanelEl?.setAttribute("aria-hidden", "true");
+    qrInlineCodeElement && (qrInlineCodeElement.innerHTML = "");
+    qrInlinePanelElement?.classList.add("hidden");
+    qrInlinePanelElement?.setAttribute("aria-hidden", "true");
     setBaseViewVisible(true);
   }
 
   function resetQrState() {
     closeQrInlinePanelImmediate();
     lastSyncedToken = null;
-    if (mobileQrBtn) {
-      mobileQrBtn.classList.add("hidden");
-      mobileQrBtn.disabled = true;
+    if (mobileQrButton) {
+      mobileQrButton.classList.add("hidden");
+      mobileQrButton.disabled = true;
     }
-    ctaOrEl?.classList.add("hidden");
+    callToActionOrElement?.classList.add("hidden");
   }
 
+  /** Compact payload eases camera scans; the `RTQR1:` prefix identifies our format. */
   function buildMobileQrPayload(token) {
-    // Keep payload compact for easier camera scans while still identifying our format.
     return `RTQR1:${token}`;
   }
 
   function renderQr(token) {
-    if (!qrInlineCodeEl || typeof qrcode !== "function") return;
+    if (!qrInlineCodeElement || typeof qrcode !== "function") return;
     const payload = buildMobileQrPayload(token);
-    const qr = qrcode(0, "M");
-    qr.addData(payload);
-    qr.make();
-    qrInlineCodeEl.innerHTML = qr.createSvgTag(6, 0);
+    const qrCode = qrcode(0, "M");
+    qrCode.addData(payload);
+    qrCode.make();
+    qrInlineCodeElement.innerHTML = qrCode.createSvgTag(6, 0);
   }
 
   function openQrInlinePanel() {
     if (!lastSyncedToken) return;
     renderQr(lastSyncedToken);
     setBaseViewVisible(false);
-    qrInlinePanelEl?.classList.remove("hidden", "is-entering", "is-leaving");
-    qrInlinePanelEl?.setAttribute("aria-hidden", "false");
+    qrInlinePanelElement?.classList.remove("hidden");
+    qrInlinePanelElement?.setAttribute("aria-hidden", "false");
   }
 
   function showQrButton(token) {
     lastSyncedToken = token;
-    if (!mobileQrBtn) return;
-    mobileQrBtn.classList.remove("hidden");
-    mobileQrBtn.disabled = false;
-    ctaOrEl?.classList.remove("hidden");
+    if (!mobileQrButton) return;
+    mobileQrButton.classList.remove("hidden");
+    mobileQrButton.disabled = false;
+    callToActionOrElement?.classList.remove("hidden");
   }
 
-  // Sets the sync button's label, click handler, and disabled/not-ready visual state.
   function setButtonState(label, onClick, options = {}) {
-    if (!syncBtn) return;
-    syncBtn.textContent = label;
-    syncBtn.disabled = Boolean(options.disabled);
-    syncBtn.classList.toggle("not-ready", Boolean(options.notReady));
-    syncBtn.onclick = onClick;
+    if (!syncButton) return;
+    syncButton.textContent = label;
+    syncButton.disabled = Boolean(options.disabled);
+    syncButton.classList.toggle("not-ready", Boolean(options.notReady));
+    syncButton.onclick = onClick;
   }
 
-  // JWT helpers
-
-  // Decodes the JWT payload and returns the exp claim as a Unix timestamp, or null if unreadable.
   function getJwtExpiry(token) {
     try {
       const payload = token.split(".")[1];
@@ -201,15 +182,11 @@
     }
   }
 
-  // Returns true if the token's exp claim is in the past.
   function isTokenExpired(token) {
-    const exp = getJwtExpiry(token);
-    return exp !== null && exp * 1000 < Date.now();
+    const expiresAt = getJwtExpiry(token);
+    return expiresAt !== null && expiresAt * 1000 < Date.now();
   }
 
-  // GoMining API
-
-  // Extracts a display name from the GoMining profile, falling back to email prefix then user ID.
   function resolveAlias(profile) {
     if (!profile) return null;
     if (profile.alias?.trim()) return profile.alias.trim();
@@ -217,7 +194,6 @@
     return profile.id ? String(profile.id) : null;
   }
 
-  // Fetches the authenticated GoMining user profile using the provided access token.
   async function fetchGoMiningProfile(accessToken) {
     const response = await fetch(`${GOMINING_URL.replace("app.", "api.")}/api/auth/isAuth`, {
       headers: {
@@ -232,16 +208,16 @@
     return data.data;
   }
 
-  // Ready state check
-
-  // Checks the active tab URL and the GoMining access_token cookie to determine which button state to show.
+  /**
+   * Checks the active tab and cookie, then validates the session against the API before enabling sync.
+   * A token cookie can exist mid-login (e.g. 2FA) without being a fully authenticated session.
+   */
   async function updateReadyStatus() {
     try {
       resetQrState();
       const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
       const activeUrl = activeTab?.url ?? "";
-      const onCorrectSite =
-        activeUrl.startsWith(`${GOMINING_URL}/`) || activeUrl === GOMINING_URL;
+      const onCorrectSite = activeUrl.startsWith(`${GOMINING_URL}/`) || activeUrl === GOMINING_URL;
 
       const cookie = await chrome.cookies.get({ url: GOMINING_URL, name: "access_token" });
       const hasToken = Boolean(cookie?.value);
@@ -253,8 +229,6 @@
           setStatus("Ready to sync.", "ready");
           setButtonState("Sync to RewardTrackr", syncProfile);
         } catch {
-          // Token can exist during intermediate auth steps (e.g. 2FA) but still
-          // not represent a fully authenticated GoMining session yet.
           setStatus("Finish login/2FA on app.gomining.com first.", "error");
           setButtonState("Not Ready", null, { disabled: true, notReady: true });
         }
@@ -265,7 +239,6 @@
         setStatus("Login required on app.gomining.com.", "error");
         setButtonState("Not Ready", null, { disabled: true, notReady: true });
       } else {
-        // has token but expired
         setStatus("Session expired. Please log in again.", "error");
         setButtonState("Not Ready", null, { disabled: true, notReady: true });
       }
@@ -275,23 +248,32 @@
     }
   }
 
-  // Token injection
-
-  // Writes the token and alias into the tab's localStorage and fires a StorageEvent so the app reacts immediately.
+  /**
+   * Sets the token/alias in the page's storage and fires a `storage` event so an already-loaded
+   * app picks it up.
+   */
   async function injectTokenIntoTab(tabId, token, alias) {
     await chrome.scripting.executeScript({
       target: { tabId },
       func: (token, alias, tokenKey, aliasKey) => {
         sessionStorage.setItem(tokenKey, token);
         if (alias) localStorage.setItem(aliasKey, alias);
-        window.dispatchEvent(new StorageEvent("storage", { key: tokenKey, newValue: token, storageArea: sessionStorage }));
+        window.dispatchEvent(
+          new StorageEvent("storage", {
+            key: tokenKey,
+            newValue: token,
+            storageArea: sessionStorage,
+          }),
+        );
       },
       args: [token, alias, TOKEN_KEY, ALIAS_KEY],
     });
   }
 
-  // Opens or focuses the RewardTrackr tab and injects the token; persists it to extension storage first
-  // so the content script can inject it at document_start even if the popup closes before the tab loads.
+  /**
+   * Focuses an open RewardTrackr tab and injects the token, or opens a new tab otherwise.
+   * For a new tab the token is stored first so the content script can inject it at document_start.
+   */
   async function openRewardTrackr(token, alias) {
     const [existingTab] = await chrome.tabs.query({ url: `${EXPORTER_URL}*` });
 
@@ -301,27 +283,10 @@
       return;
     }
 
-    if (chrome.storage?.local) {
-      await chrome.storage.local.set({ [PENDING_TOKEN_KEY]: token, [PENDING_ALIAS_KEY]: alias });
-      chrome.tabs.create({ url: EXPORTER_URL });
-    } else {
-      // Fallback: inject via tabs.onUpdated (may not fire if popup closes first).
-      chrome.tabs.create({ url: EXPORTER_URL }, (tab) => {
-        const listener = (tabId, changeInfo) => {
-          if (tabId !== tab.id || changeInfo.status !== "complete") return;
-          chrome.tabs.onUpdated.removeListener(listener);
-          injectTokenIntoTab(tabId, token, alias).catch(() => {});
-        };
-        chrome.tabs.onUpdated.addListener(listener);
-      });
-    }
+    await chrome.storage.local.set({ [PENDING_TOKEN_KEY]: token, [PENDING_ALIAS_KEY]: alias });
+    chrome.tabs.create({ url: EXPORTER_URL });
   }
 
-
-  // Sync profile
-
-  // Validates the GoMining session cookie, fetches the user profile, injects the token into open tabs,
-  // and shows the Open RewardTrackr button on success.
   async function syncProfile() {
     setWelcome(null);
     resetQrState();
@@ -330,7 +295,8 @@
 
     try {
       const cookie = await chrome.cookies.get({ url: GOMINING_URL, name: "access_token" });
-      if (!cookie?.value) throw new Error("access_token cookie not found. Log in at app.gomining.com first.");
+      if (!cookie?.value)
+        throw new Error("access_token cookie not found. Log in at app.gomining.com first.");
 
       if (isTokenExpired(cookie.value)) {
         setStatus("Session expired. Please log in again.", "error");
@@ -345,12 +311,11 @@
       setWelcome(alias);
       setStatus("Profile synced.", "success");
 
-      // Push token into all already-open RewardTrackr tabs in parallel.
       const openTabs = await chrome.tabs.query({ url: `${EXPORTER_URL}*` });
       await Promise.allSettled(
         openTabs
           .filter((t) => t.id != null)
-          .map((t) => withTimeout(injectTokenIntoTab(t.id, cookie.value, alias), 1200))
+          .map((t) => withTimeout(injectTokenIntoTab(t.id, cookie.value, alias), 1200)),
       );
 
       showQrButton(cookie.value);
@@ -363,16 +328,13 @@
     }
   }
 
-  mobileQrBtn?.addEventListener("click", openQrInlinePanel);
-  qrInlineBackEl?.addEventListener("click", closeQrInlinePanelImmediate);
+  mobileQrButton?.addEventListener("click", openQrInlinePanel);
+  qrInlineBackElement?.addEventListener("click", closeQrInlinePanelImmediate);
 
-  // Screen navigation
-
-  // Transitions from the intro screen to the sync screen and triggers the ready-state check.
   function showSyncScreen() {
     introScreen?.classList.add("hidden");
     syncScreen?.classList.remove("hidden");
-    if (syncBtn) {
+    if (syncButton) {
       setButtonState("Not Ready", null, { disabled: true, notReady: true });
       void updateReadyStatus();
     }
@@ -380,12 +342,12 @@
 
   const introScreen = document.getElementById("introScreen");
   const syncScreen = document.getElementById("syncScreen");
-  const nextBtn = document.getElementById("nextBtn");
+  const nextButton = document.getElementById("nextBtn");
 
   if (localStorage.getItem(INTRO_SEEN_KEY)) {
     showSyncScreen();
   } else {
-    nextBtn?.addEventListener("click", () => {
+    nextButton?.addEventListener("click", () => {
       localStorage.setItem(INTRO_SEEN_KEY, "1");
       showSyncScreen();
     });
