@@ -1,7 +1,18 @@
 const CRAWLERS =
   /whatsapp|facebookexternalhit|twitterbot|linkedinbot|telegrambot|slackbot|discordbot|pinterest|vkshare/i;
 
-function ogHtml(alias, id) {
+function escapeHtml(value) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+/** Builds the minimal HTML with Open Graph tags that link-preview crawlers read. */
+function ogHtml(rawAlias, id) {
+  const alias = escapeHtml(rawAlias);
   const pageUrl = `https://rewardtrackr.com/view/${id}`;
   const title = `${alias}'s GoMining Rewards on RewardTrackr`;
   const description = `Check out ${alias}'s GoMining rewards records — Solo Mining, MinerWars, Bounties and more.`;
@@ -26,30 +37,31 @@ function ogHtml(alias, id) {
 </head><body></body></html>`;
 }
 
+/**
+ * Serves OG preview HTML for `/view/:id` to known crawlers only; browsers pass through to the SPA.
+ * The alias comes from the shared profile on GitHub, falling back to one derived from the id.
+ */
 export async function handleOgRoute({ url, request }) {
   const match = url.pathname.match(/^\/view\/([a-z0-9_-]+)$/i);
   if (!match) return null;
 
-  const ua = request.headers.get("User-Agent") ?? "";
-  if (!CRAWLERS.test(ua)) return fetch(request);
+  const userAgent = request.headers.get("User-Agent") ?? "";
+  if (!CRAWLERS.test(userAgent)) return fetch(request);
 
   const id = match[1].toLowerCase().replace(/[^a-z0-9_-]/g, "");
-  // Best-effort capitalisation fallback: "moustachio" → "Moustachio", "my-alias" → "My Alias"
   let alias = id
     .split(/[-_]/)
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
 
   try {
     const rawUrl = `https://raw.githubusercontent.com/JoseGouveia9/rewardtrackr-shared/main/shared/${id}.json`;
-    const res = await fetch(rawUrl, { headers: { "User-Agent": "RewardTrackr-OG/1.0" } });
-    if (res.ok) {
-      const data = await res.json();
+    const response = await fetch(rawUrl, { headers: { "User-Agent": "RewardTrackr-OG/1.0" } });
+    if (response.ok) {
+      const data = await response.json();
       if (typeof data.alias === "string" && data.alias.trim()) alias = data.alias.trim();
     }
-  } catch {
-    // use capitalised fallback
-  }
+  } catch {}
 
   return new Response(ogHtml(alias, id), {
     headers: {

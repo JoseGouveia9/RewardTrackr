@@ -22,6 +22,7 @@ const ALLOWED_ORIGINS = new Set([
   "http://localhost:4173",
 ]);
 
+/** Echoes the Origin only if allow-listed, otherwise falls back to the production origin. */
 function corsHeaders(request) {
   const origin = request.headers.get("Origin") ?? "";
   const allowed = ALLOWED_ORIGINS.has(origin) ? origin : "https://rewardtrackr.com";
@@ -30,11 +31,12 @@ function corsHeaders(request) {
     "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
     "Access-Control-Allow-Headers": "*",
     "Access-Control-Max-Age": "86400",
+    Vary: "Origin",
   };
 }
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, environment) {
     const url = new URL(request.url);
     const CORS_HEADERS = corsHeaders(request);
     const jsonResponse = (body, status = 200) =>
@@ -50,19 +52,24 @@ export default {
     const ogResponse = await handleOgRoute({ url, request });
     if (ogResponse) return ogResponse;
 
-    const announcementResponse = await handleAnnouncementRoute({ url, request, env, jsonResponse });
+    const announcementResponse = await handleAnnouncementRoute({
+      url,
+      request,
+      environment,
+      jsonResponse,
+    });
     if (announcementResponse) return announcementResponse;
 
-    const statsResponse = await handleStatsRoute({ url, request, jsonResponse, env });
+    const statsResponse = await handleStatsRoute({ url, request, jsonResponse, environment });
     if (statsResponse) return statsResponse;
 
-    const pricesResponse = await handlePricesRoute({ url, jsonResponse, env });
+    const pricesResponse = await handlePricesRoute({ url, jsonResponse, environment });
     if (pricesResponse) return pricesResponse;
 
     const rateLimitResponse = await handleRateLimitRoutes({
       url,
       request,
-      env,
+      environment,
       jsonResponse,
       maxExportsPerDay: MAX_EXPORTS_PER_DAY,
     });
@@ -71,7 +78,7 @@ export default {
     const shareResponse = await handleShareRoutes({
       url,
       request,
-      env,
+      environment,
       jsonResponse,
       maxBytes: MAX_BYTES,
       maxSharesPerDay: MAX_SHARES_PER_DAY,
@@ -85,19 +92,20 @@ export default {
     });
     if (seProxyResponse) return seProxyResponse;
 
-    const bmProxyResponse = await handleBonusMinerProxy({
+    const bonusMinerProxyResponse = await handleBonusMinerProxy({
       url,
       request,
       corsHeaders: CORS_HEADERS,
     });
-    if (bmProxyResponse) return bmProxyResponse;
+    if (bonusMinerProxyResponse) return bonusMinerProxyResponse;
 
-    const ccProxyResponse = await handleCryptoCompareProxy({
+    const cryptoCompareProxyResponse = await handleCryptoCompareProxy({
       url,
       request,
+      environment,
       corsHeaders: CORS_HEADERS,
     });
-    if (ccProxyResponse) return ccProxyResponse;
+    if (cryptoCompareProxyResponse) return cryptoCompareProxyResponse;
 
     return handleDefaultProxy({
       url,
@@ -106,11 +114,10 @@ export default {
     });
   },
 
-  // Cron Trigger (see [triggers] in wrangler.toml) — runs daily at 00:00 UTC.
-  async scheduled(event, env, ctx) {
-    ctx.waitUntil(
-      fetchAndStoreDailyPrices(env).catch((err) => {
-        console.error("[scheduled] failed to fetch/store daily prices:", err);
+  async scheduled(event, environment, executionContext) {
+    executionContext.waitUntil(
+      fetchAndStoreDailyPrices(environment).catch((error) => {
+        console.error("[scheduled] failed to fetch/store daily prices:", error);
       }),
     );
   },

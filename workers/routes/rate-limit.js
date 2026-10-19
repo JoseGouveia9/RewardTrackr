@@ -1,10 +1,15 @@
 import { resolveVerifiedUser } from "../lib/auth.js";
+import { decrementCount, readCount, utcDay } from "../lib/counter.js";
 import { trackUserIfNew } from "./stats.js";
 
+/**
+ * `/rl-check` counts a daily export per verified user (KV `rl_<id>_<day>`) and answers 429 over the limit.
+ * `/rl-rollback` gives the export back when it failed.
+ */
 export async function handleRateLimitRoutes({
   url,
   request,
-  env,
+  environment,
   jsonResponse,
   maxExportsPerDay,
 }) {
@@ -14,13 +19,10 @@ export async function handleRateLimitRoutes({
       return jsonResponse({ allowed: false, message: "Unauthorized." }, 401);
     }
 
-    // Track unique users for the stats counter (no-op after first call)
-    await trackUserIfNew(env, userId);
+    await trackUserIfNew(environment, userId);
 
-    const day = new Date().toISOString().slice(0, 10);
-    const key = `rl_${userId}_${day}`;
-    const current = await env.RATE_LIMIT.get(key);
-    const count = current ? parseInt(current) : 0;
+    const key = `rl_${userId}_${utcDay()}`;
+    const count = await readCount(environment.RATE_LIMIT, key);
 
     if (count >= maxExportsPerDay) {
       return jsonResponse(
@@ -33,10 +35,8 @@ export async function handleRateLimitRoutes({
     }
 
     try {
-      await env.RATE_LIMIT.put(key, String(count + 1), { expirationTtl: 86400 });
-    } catch {
-      // KV write failed, allow the export anyway
-    }
+      await environment.RATE_LIMIT.put(key, String(count + 1), { expirationTtl: 86400 });
+    } catch {}
 
     return jsonResponse({ allowed: true, used: count + 1, limit: maxExportsPerDay });
   }
@@ -47,21 +47,9 @@ export async function handleRateLimitRoutes({
       return jsonResponse({ message: "Unauthorized." }, 401);
     }
 
-    const day = new Date().toISOString().slice(0, 10);
-    const key = `rl_${userId}_${day}`;
-    const current = await env.RATE_LIMIT.get(key);
-    const count = current ? parseInt(current) : 0;
-
     try {
-      const next = Math.max(0, count - 1);
-      if (next === 0) {
-        await env.RATE_LIMIT.delete(key);
-      } else {
-        await env.RATE_LIMIT.put(key, String(next), { expirationTtl: 86400 });
-      }
-    } catch {
-      // Non-fatal
-    }
+      await decrementCount(environment.RATE_LIMIT, `rl_${userId}_${utcDay()}`);
+    } catch {}
 
     return jsonResponse({ rolled_back: true });
   }

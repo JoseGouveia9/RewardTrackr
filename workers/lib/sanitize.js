@@ -61,22 +61,8 @@ const SHARE_FIELDS_BY_KEY = {
     "btcPriceGmt",
   ],
   bounty: ["createdAt", "currency", "reward", "rewardInUSD", "rewardInUsd", "rewardInFiat"],
-  referrals: [
-    "createdAt",
-    "currency",
-    "reward",
-    "rewardInUSD",
-    "rewardInUsd",
-    "rewardInFiat",
-  ],
-  ambassador: [
-    "createdAt",
-    "currency",
-    "reward",
-    "rewardInUSD",
-    "rewardInUsd",
-    "rewardInFiat",
-  ],
+  referrals: ["createdAt", "currency", "reward", "rewardInUSD", "rewardInUsd", "rewardInFiat"],
+  ambassador: ["createdAt", "currency", "reward", "rewardInUSD", "rewardInUsd", "rewardInFiat"],
   deposits: ["createdAt", "currency", "reward", "rewardInUSD", "rewardInUsd", "rewardInFiat"],
   withdrawals: ["createdAt", "currency", "reward", "rewardInUSD", "rewardInUsd", "rewardInFiat"],
   purchases: ["createdAt", "type", "currency", "reward", "valueUsd", "valueFiat"],
@@ -114,22 +100,31 @@ const STRING_FIELDS = new Set([
 
 const BOOLEAN_FIELDS = new Set(["reinvested"]);
 
-const OPTIONAL_NUMBER_FIELDS = new Set(["satsPerTh", "btcPriceAtTime", "btcPriceGmt", "energyEfficiency"]);
+const OPTIONAL_NUMBER_FIELDS = new Set([
+  "satsPerTh",
+  "btcPriceAtTime",
+  "btcPriceGmt",
+  "energyEfficiency",
+]);
 
 function isPlainObject(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function sanitizeNumber(value) {
-  const n = Number(value);
-  return Number.isFinite(n) ? n : 0;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : 0;
 }
 
-function sanitizeString(value, maxLen = 80) {
+function sanitizeString(value, maxLength = 80) {
   if (typeof value !== "string") return "";
-  return value.trim().slice(0, maxLen);
+  return value.trim().slice(0, maxLength);
 }
 
+/**
+ * Copies only whitelisted fields, coercing each by type; returns null when `createdAt` is
+ * missing.
+ */
 function sanitizeRecord(record, allowedFields) {
   if (!isPlainObject(record)) return null;
 
@@ -138,7 +133,10 @@ function sanitizeRecord(record, allowedFields) {
     if (!(field in record)) continue;
     if (STRING_FIELDS.has(field)) {
       const raw = record[field];
-      if (raw === null) { out[field] = null; continue; }
+      if (raw === null) {
+        out[field] = null;
+        continue;
+      }
       const value = sanitizeString(raw, 40);
       if (value) out[field] = value;
       continue;
@@ -149,8 +147,8 @@ function sanitizeRecord(record, allowedFields) {
     }
     if (OPTIONAL_NUMBER_FIELDS.has(field)) {
       if (record[field] == null) continue;
-      const n = Number(record[field]);
-      if (Number.isFinite(n) && n > 0) out[field] = n;
+      const number = Number(record[field]);
+      if (Number.isFinite(number) && number > 0) out[field] = number;
       continue;
     }
     out[field] = sanitizeNumber(record[field]);
@@ -160,6 +158,10 @@ function sanitizeRecord(record, allowedFields) {
   return out;
 }
 
+/**
+ * Rebuilds a client-supplied share payload keeping only known sheet keys and whitelisted record
+ * fields.
+ */
 export function sanitizeSheetsPayload(rawData) {
   if (!isPlainObject(rawData)) return {};
 
