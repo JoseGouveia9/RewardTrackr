@@ -2,11 +2,11 @@ import ExcelJS from "exceljs";
 import type { Worksheet } from "exceljs";
 import type { ExtraFiatCurrency } from "@/types/rewards";
 
-export const FMT_DATE = "dd/mm/yyyy hh:mm:ss";
-export const FMT_BTC = "0.00000000";
-export const FMT_OTHER = "[<=0.009]0.000;0.00";
-export const FMT_USD = "[<=0.009]$#,##0.000;$#,##0.00";
-const FMT_EUR = "[<=0.009]€#,##0.000;€#,##0.00";
+export const FORMAT_DATE = "dd/mm/yyyy hh:mm:ss";
+export const FORMAT_BTC = "0.00000000";
+export const FORMAT_OTHER = "[<=0.009]0.000;0.00";
+export const FORMAT_USD = "[<=0.009]$#,##0.000;$#,##0.00";
+const FORMAT_EUR = "[<=0.009]€#,##0.000;€#,##0.00";
 
 export const PURPLE_FILL: ExcelJS.FillPattern = {
   type: "pattern",
@@ -14,10 +14,10 @@ export const PURPLE_FILL: ExcelJS.FillPattern = {
   fgColor: { argb: "FF7A4DF6" },
 };
 export const BOLD_WHITE: Partial<ExcelJS.Font> = { bold: true, color: { argb: "FFFFFFFF" } };
-export const CENTER: Partial<ExcelJS.Alignment> = { horizontal: "center", vertical: "middle" };
+const CENTER: Partial<ExcelJS.Alignment> = { horizontal: "center", vertical: "middle" };
 
-const CURRENCY_FMT: Record<string, string> = {
-  EUR: FMT_EUR,
+const CURRENCY_FORMAT: Record<string, string> = {
+  EUR: FORMAT_EUR,
   GBP: '"£"#,##0.00',
   JPY: '"¥"#,##0',
   CNY: '"¥"#,##0.00',
@@ -130,7 +130,6 @@ const CURRENCY_FMT: Record<string, string> = {
   KGS: '"лв"#,##0.00',
   LKR: '"Rs"#,##0.00',
   MOP: '"P"#,##0.00',
-  MRU2: '"UM"#,##0.00',
   MVR: '"Rf"#,##0.00',
   MYR: '"RM"#,##0.00',
   NPR: '"Rs"#,##0.00',
@@ -149,7 +148,7 @@ const CURRENCY_FMT: Record<string, string> = {
 };
 
 export function getCurrencyFormat(currency: string): string {
-  return CURRENCY_FMT[currency] ?? `"${currency} "#,##0.00`;
+  return CURRENCY_FORMAT[currency] ?? `"${currency} "#,##0.00`;
 }
 
 export function getFiatHeaders(
@@ -165,7 +164,7 @@ export function getFiatFormats(
   includeUsd = true,
 ): string[] {
   if (!includeUsd) return [];
-  return extraCurrency ? [FMT_USD, getCurrencyFormat(extraCurrency)] : [FMT_USD];
+  return extraCurrency ? [FORMAT_USD, getCurrencyFormat(extraCurrency)] : [FORMAT_USD];
 }
 
 export function getFiatValues(
@@ -178,47 +177,51 @@ export function getFiatValues(
   return extraCurrency ? [usdValue, fiatValue] : [usdValue];
 }
 
-export function autoFitColumns(ws: Worksheet): void {
-  ws.columns.forEach((col) => {
-    if (!col?.eachCell) return;
-    let maxLen = 8;
-    col.eachCell({ includeEmpty: false }, (cell) => {
-      let len = 8;
-      const val = cell.value;
-      if (val instanceof Date) {
-        len = 20;
-      } else if (typeof val === "string") {
-        len = val.length;
-      } else if (typeof val === "number") {
-        len = String(val).length + 4;
-      } else if (val && typeof val === "object" && "formula" in val) {
-        len = 14;
-      } else if (val != null) {
-        len = String(val).length;
+/**
+ * Sizes each column from its widest cell (dates, numbers and formulas use fixed estimates),
+ * capped at 60.
+ */
+export function autoFitColumns(worksheet: Worksheet): void {
+  worksheet.columns.forEach((column) => {
+    if (!column?.eachCell) return;
+    let maxCellLength = 8;
+    column.eachCell({ includeEmpty: false }, (cell) => {
+      let cellLength = 8;
+      const value = cell.value;
+      if (value instanceof Date) {
+        cellLength = 20;
+      } else if (typeof value === "string") {
+        cellLength = value.length;
+      } else if (typeof value === "number") {
+        cellLength = String(value).length + 4;
+      } else if (value && typeof value === "object" && "formula" in value) {
+        cellLength = 14;
+      } else if (value != null) {
+        cellLength = String(value).length;
       }
-      if (len > maxLen) maxLen = len;
+      if (cellLength > maxCellLength) maxCellLength = cellLength;
     });
-    col.width = Math.min(maxLen + 2, 60);
+    column.width = Math.min(maxCellLength + 2, 60);
   });
 }
 
-export function styleTotal(ws: Worksheet, rowNumber: number, colCount: number): void {
-  const row = ws.getRow(rowNumber);
-  for (let c = 1; c <= colCount; c++) {
-    row.getCell(c).fill = PURPLE_FILL;
-    row.getCell(c).font = BOLD_WHITE;
+export function styleTotal(worksheet: Worksheet, rowNumber: number, columnCount: number): void {
+  const row = worksheet.getRow(rowNumber);
+  for (let columnIndex = 1; columnIndex <= columnCount; columnIndex++) {
+    row.getCell(columnIndex).fill = PURPLE_FILL;
+    row.getCell(columnIndex).font = BOLD_WHITE;
   }
 }
 
-export function styleHeader(ws: Worksheet, rowNumber: number, colCount: number): void {
-  const row = ws.getRow(rowNumber);
-  for (let c = 1; c <= colCount; c++) {
-    row.getCell(c).fill = PURPLE_FILL;
-    row.getCell(c).font = BOLD_WHITE;
-    row.getCell(c).alignment = CENTER;
+export function styleHeader(worksheet: Worksheet, rowNumber: number, columnCount: number): void {
+  const row = worksheet.getRow(rowNumber);
+  for (let columnIndex = 1; columnIndex <= columnCount; columnIndex++) {
+    row.getCell(columnIndex).fill = PURPLE_FILL;
+    row.getCell(columnIndex).font = BOLD_WHITE;
+    row.getCell(columnIndex).alignment = CENTER;
   }
 }
 
-export function subtotal(col: string, from: number, to: number): { formula: string } {
-  return { formula: `SUBTOTAL(9,${col}$${from}:${col}$${to})` };
+export function subtotal(column: string, from: number, to: number): { formula: string } {
+  return { formula: `SUBTOTAL(9,${column}$${from}:${column}$${to})` };
 }

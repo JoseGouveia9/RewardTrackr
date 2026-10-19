@@ -1,5 +1,5 @@
 import { CURRENCY_TO_COINGECKO, WALLET_TO_CURRENCY } from "@/config/currencies";
-import { TX_FROM_TYPE_LABEL } from "@/config/wallet-types";
+import { TRANSACTION_FROM_TYPE_LABEL } from "@/config/wallet-types";
 import type {
   CoinGeckoPriceCacheValue,
   ExistingPriceRawRecord,
@@ -12,8 +12,8 @@ import type {
   SoloMiningRawRecord,
   StandardEnrichedRecord,
   UpgradeRawRecord,
-  WalletTxEnrichedRecord,
-  WalletTxRawRecord,
+  WalletTransactionEnrichedRecord,
+  WalletTransactionRawRecord,
 } from "@/types/rewards";
 import { fetchCoinGeckoPrice } from "../../api/coingecko";
 
@@ -25,6 +25,10 @@ export function currencyFromWalletType(walletType: string | undefined): string {
   return WALLET_TO_CURRENCY[walletType ?? ""] || walletType || "UNKNOWN";
 }
 
+/**
+ * Solo mining: maintenance paid in GMT leaves raw.value net, otherwise it is gross of maintenance.
+ * maintenanceInBtc is counted only for non-GMT items to avoid duplicating the GMT amount.
+ */
 export function transformSoloMining(
   raw: SoloMiningRawRecord,
   fiatRate: number,
@@ -38,38 +42,35 @@ export function transformSoloMining(
   let reinvested = false;
   let totalPower = 0;
   let discountMax = 0;
-  const satsPerThValues: number[] = [];
+  const satsPerTerahashValues: number[] = [];
   const efficiencyValues: number[] = [];
 
   if (Array.isArray(raw.incomeList)) {
-    for (const inc of raw.incomeList) {
-      // metaData.maintenanceInBtc is always populated as the BTC-equivalent value, even when
-      // maintenanceByGmt is true (the actual deduction happened in GMT) — only trust it as a
-      // real charge when this item wasn't paid in GMT, otherwise it duplicates maintenanceForWithdrawInGmt.
-      if (inc?.maintenanceByGmt) {
-        const gmtAmt = inc?.maintenanceForWithdrawInGmt ?? null;
-        if (gmtAmt != null) {
-          maintenanceGMTDirect += gmtAmt;
+    for (const incomeItem of raw.incomeList) {
+      if (incomeItem?.maintenanceByGmt) {
+        const gmtAmount = incomeItem?.maintenanceForWithdrawInGmt ?? null;
+        if (gmtAmount != null) {
+          maintenanceGMTDirect += gmtAmount;
           hasGmtMaintenance = true;
         }
       } else {
-        const maintenanceBtcVal = inc?.metaData?.maintenanceInBtc ?? null;
-        if (maintenanceBtcVal != null) {
-          maintenanceInBtcSum += maintenanceBtcVal;
+        const maintenanceBtcValue = incomeItem?.metaData?.maintenanceInBtc ?? null;
+        if (maintenanceBtcValue != null) {
+          maintenanceInBtcSum += maintenanceBtcValue;
         }
       }
-      if (inc?.reinvestmentInPowerNftStatusExecuted === true) reinvested = true;
-      totalPower += inc?.power ?? 0;
-      if (inc?.totalDiscount != null && inc.totalDiscount > discountMax) {
-        discountMax = inc.totalDiscount;
+      if (incomeItem?.reinvestmentInPowerNftStatusExecuted === true) reinvested = true;
+      totalPower += incomeItem?.power ?? 0;
+      if (incomeItem?.totalDiscount != null && incomeItem.totalDiscount > discountMax) {
+        discountMax = incomeItem.totalDiscount;
       }
-      const pr = inc?.metaData?.poolReward;
-      const pw = inc?.power;
-      if (pr != null && pw != null && pw > 0) {
-        satsPerThValues.push((pr * 1e8) / pw);
+      const incomePoolReward = incomeItem?.metaData?.poolReward;
+      const incomePower = incomeItem?.power;
+      if (incomePoolReward != null && incomePower != null && incomePower > 0) {
+        satsPerTerahashValues.push((incomePoolReward * 1e8) / incomePower);
       }
-      if (inc?.energyEfficiency != null && inc.energyEfficiency > 0) {
-        efficiencyValues.push(inc.energyEfficiency);
+      if (incomeItem?.energyEfficiency != null && incomeItem.energyEfficiency > 0) {
+        efficiencyValues.push(incomeItem.energyEfficiency);
       }
     }
   }
@@ -77,9 +78,6 @@ export function transformSoloMining(
   const discount = discountMax;
   const rawValue = raw.value ?? 0;
 
-  // Each item above was already bucketed into exactly one of these sums based on its own
-  // maintenanceByGmt flag, so adding them (converted to the other currency) is safe even
-  // when some items in the period were paid in BTC and others in GMT.
   const canConvertMaintenance = gmtPrice > 0 && btcPrice > 0;
   const maintenanceBtc =
     maintenanceInBtcSum +
@@ -89,7 +87,6 @@ export function transformSoloMining(
     (canConvertMaintenance ? (maintenanceInBtcSum * btcPrice) / gmtPrice : 0);
   const maintenanceUSD = maintenanceInBtcSum * btcPrice + maintenanceGMTDirect * gmtPrice;
 
-  // When maintenance is paid in GMT, raw.value is already the net reward (no maintenance deducted)
   const poolReward = hasGmtMaintenance ? rawValue : rawValue + maintenanceBtc;
   const reward = poolReward - maintenanceBtc;
 
@@ -117,17 +114,22 @@ export function transformSoloMining(
     discount,
     energyEfficiency:
       efficiencyValues.length > 0
-        ? efficiencyValues.reduce((a, b) => a + b, 0) / efficiencyValues.length
+        ? efficiencyValues.reduce((total, value) => total + value, 0) / efficiencyValues.length
         : undefined,
     satsPerTh:
-      satsPerThValues.length > 0
-        ? satsPerThValues.reduce((a, b) => a + b, 0) / satsPerThValues.length
+      satsPerTerahashValues.length > 0
+        ? satsPerTerahashValues.reduce((total, value) => total + value, 0) /
+          satsPerTerahashValues.length
         : undefined,
     btcPriceAtTime: btcPrice > 0 ? btcPrice : undefined,
     btcPriceGmt: btcPrice > 0 && gmtPrice > 0 ? btcPrice / gmtPrice : undefined,
   };
 }
 
+/**
+ * MinerWars: totalReward is gross when maintenance is in GMT and net when in BTC, normalized to pool/reward.
+ * Maintenance may be split across BTC and GMT in one cycle, so both portions are summed and cross-converted.
+ */
 export function transformMinerWars(
   raw: MinerWarsRawRecord,
   fiatRate: number,
@@ -144,9 +146,6 @@ export function transformMinerWars(
   const c2Gmt = raw.c2ValueInGmt ?? 0;
   const rawMaintenanceGmt = c1Gmt + c2Gmt;
 
-  // Maintenance can be split across BTC and GMT in the same cycle (e.g. usually-GMT-paid
-  // weeks that still carry a residual BTC charge) — add both actual portions together,
-  // converting each into the other currency, instead of exclusively picking one.
   const canConvertMaintenance = gmtPrice > 0 && btcPrice > 0;
   const maintenanceGMT =
     rawMaintenanceGmt + (canConvertMaintenance ? (rawMaintenanceBtc * btcPrice) / gmtPrice : 0);
@@ -155,9 +154,6 @@ export function transformMinerWars(
   const maintenanceUSD = rawMaintenanceBtc * btcPrice + rawMaintenanceGmt * gmtPrice;
 
   const netReward = raw.totalReward ?? 0;
-  // totalReward is gross when maintenance is in GMT and net when it's in BTC; normalize
-  // to poolReward (gross) and reward (net). This flag only drives that derivation, not the
-  // maintenance totals above (which already combine both currencies when both are present).
   const poolReward = maintenanceByGmt ? netReward : netReward + maintenanceBtc;
   const reward = maintenanceByGmt ? netReward - maintenanceBtc : netReward;
 
@@ -190,18 +186,24 @@ export function transformMinerWars(
   };
 }
 
-export async function transformWalletTxCoingecko(
-  raw: WalletTxRawRecord,
+/**
+ * Converts a raw wallet transaction (wei, 1e18) to a priced record; stablecoins are fixed at 1 USD.
+ * With includeFiat false no price is fetched and all USD/fiat values are 0.
+ */
+export async function transformWalletTransactionCoingecko(
+  raw: WalletTransactionRawRecord,
   fiatRate: number,
   priceCache: Map<string, CoinGeckoPriceCacheValue>,
   includeFiat: boolean,
-  onWait?: (msg: string) => void,
+  onWait?: (message: string) => void,
   entryProgress?: string,
-): Promise<WalletTxEnrichedRecord> {
+): Promise<WalletTransactionEnrichedRecord> {
   const currency = currencyFromWalletType(raw.walletType);
   const reward = parseFloat(raw.valueNumeric || "0") / 1e18;
   const fromType = raw.fromType;
-  const txType = fromType ? (TX_FROM_TYPE_LABEL[fromType] ?? fromType) : undefined;
+  const transactionType = fromType
+    ? (TRANSACTION_FROM_TYPE_LABEL[fromType] ?? fromType)
+    : undefined;
 
   if (!includeFiat) {
     return {
@@ -213,7 +215,7 @@ export async function transformWalletTxCoingecko(
       rewardInUSD: 0,
       rewardInFiat: 0,
       fromType,
-      txType,
+      txType: transactionType,
     };
   }
 
@@ -224,10 +226,10 @@ export async function transformWalletTxCoingecko(
     priceAtTime = 1;
     priceTimestamp = raw.createdAt;
   } else {
-    const cgId = CURRENCY_TO_COINGECKO[currency];
-    if (cgId) {
+    const coinGeckoId = CURRENCY_TO_COINGECKO[currency];
+    if (coinGeckoId) {
       const result = await fetchCoinGeckoPrice(
-        cgId,
+        coinGeckoId,
         raw.createdAt,
         priceCache,
         onWait,
@@ -250,7 +252,7 @@ export async function transformWalletTxCoingecko(
     rewardInUSD,
     rewardInFiat: rewardInUSD * fiatRate,
     fromType,
-    txType,
+    txType: transactionType,
   };
 }
 
@@ -286,20 +288,25 @@ export function transformPurchase(
   };
 }
 
+/**
+ * Flattens one Simple Earn payout into a row per asset (amounts in wei, 1e18).
+ * APR includes the VIP multiplier, and non-BTC rewards are converted into the payout asset.
+ */
 export function transformSimpleEarn(
   raw: SimpleEarnRawRecord,
   fiatRate: number,
 ): SimpleEarnEnrichedRecord[] {
-  return (raw.assets ?? []).map((a) => {
-    const reward = Number(a.reward) / 1e18;
-    const rewardInUSD = Number(a.rewardInUsd) / 1e18;
-    const apr = (a.apr ?? 0) * (a.vipLevelMultiplier ?? 1);
+  return (raw.assets ?? []).map((asset) => {
+    const reward = Number(asset.reward) / 1e18;
+    const rewardInUSD = Number(asset.rewardInUsd) / 1e18;
+    const apr = (asset.apr ?? 0) * (asset.vipLevelMultiplier ?? 1);
     return {
       createdAt: raw.createdAt,
-      asset: a.asset ?? "BTC",
+      asset: asset.asset ?? "BTC",
       apr,
       currency: raw.asset ?? "BTC",
-      reward: a.asset != "BTC" ? (reward * Number(a.price)) / Number(raw.assetToUsd) : reward,
+      reward:
+        asset.asset != "BTC" ? (reward * Number(asset.price)) / Number(raw.assetToUsd) : reward,
       priceAtTime: reward > 0 ? rewardInUSD / reward : 0,
       rewardInUSD,
       rewardInFiat: rewardInUSD * fiatRate,

@@ -5,12 +5,12 @@ import extensionSuccessImg from "../../assets/extension-success.webp";
 import { useUserStats } from "../../hooks/use-user-stats";
 import { useEscapeKey } from "@/hooks/use-escape-key";
 import "./auth-panel.css";
+import { ArrowDownToLineIcon, CloseIcon, QuestionCircleIcon } from "@/components/icons";
 
 const CHROME_WEB_STORE_URL =
   "https://chromewebstore.google.com/detail/hglbdmgkgidakkjbgndjebipocbgggkh?utm_source=item-share-cb";
 
 interface AuthPanelProps {
-  onSync: () => void;
   showManualTokenInput?: boolean;
   onManualTokenSubmit?: (token: string) => void;
 }
@@ -27,24 +27,11 @@ function HowToModal({ onClose }: { onClose: () => void }) {
       aria-modal="true"
       aria-label={t("auth.howToUseExtension")}
     >
-      <div className="auth-modal" onClick={(e) => e.stopPropagation()}>
+      <div className="auth-modal" onClick={(event) => event.stopPropagation()}>
         <div className="auth-modal-header">
           <h3>{t("auth.howToUseExtension")}</h3>
           <button className="auth-modal-close" onClick={onClose} aria-label="Close">
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
+            <CloseIcon />
           </button>
         </div>
         <div className="auth-modal-body">
@@ -99,7 +86,6 @@ function HowToModal({ onClose }: { onClose: () => void }) {
 }
 
 export const AuthPanel = memo(function AuthPanel({
-  onSync: _onSync,
   showManualTokenInput = false,
   onManualTokenSubmit,
 }: AuthPanelProps) {
@@ -131,22 +117,7 @@ export const AuthPanel = memo(function AuthPanel({
             )}
           </div>
           <button className="auth-howto-btn" onClick={openHowTo}>
-            <svg
-              className="auth-howto-btn-icon"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <path d="M9.09 9a3 3 0 1 1 5.82 1c0 2-3 2-3 4" />
-              <line x1="12" y1="17" x2="12.01" y2="17" />
-            </svg>
+            <QuestionCircleIcon className="auth-howto-btn-icon" />
             {t("auth.howToUseExtension")}
           </button>
         </div>
@@ -157,20 +128,7 @@ export const AuthPanel = memo(function AuthPanel({
           target="_blank"
           rel="noopener noreferrer"
         >
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 18 18"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M9 2v10M9 12l-3.5-3.5M9 12l3.5-3.5" />
-            <path d="M2 15h14" />
-          </svg>
+          <ArrowDownToLineIcon />
           {t("auth.installExtension")}
         </a>
 
@@ -180,7 +138,7 @@ export const AuthPanel = memo(function AuthPanel({
             <textarea
               className="auth-manual-token-input"
               value={manualToken}
-              onChange={(e) => setManualToken(e.target.value)}
+              onChange={(event) => setManualToken(event.target.value)}
               placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
               rows={3}
               autoComplete="off"

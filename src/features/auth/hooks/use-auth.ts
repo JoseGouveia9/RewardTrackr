@@ -2,15 +2,19 @@
 import { useTranslation } from "react-i18next";
 import * as Sentry from "@sentry/react";
 import { decodeJwt } from "@/lib/http";
-import { LS_KEY_SYNC_ALIAS, LS_KEY_SYNC_TOKEN } from "@/lib/storage-keys";
+import { LOCAL_STORAGE_KEY_SYNC_ALIAS, LOCAL_STORAGE_KEY_SYNC_TOKEN } from "@/lib/storage-keys";
 import type { AuthUser } from "../types";
 
+/**
+ * Decodes the JWT client-side into a user (alias falls back through username, name, email, id);
+ * null if invalid or expired.
+ */
 function loginWithToken(token: string): AuthUser | null {
   const decoded = decodeJwt(token);
   if (!decoded || typeof decoded !== "object") return null;
 
-  const nowSec = Math.floor(Date.now() / 1000);
-  if (decoded.exp && nowSec >= decoded.exp) return null;
+  const nowSeconds = Math.floor(Date.now() / 1000);
+  if (decoded.exp && nowSeconds >= decoded.exp) return null;
 
   const alias =
     decoded.alias ||
@@ -33,21 +37,24 @@ interface UseAuthReturn {
   storedToken: string;
   user: AuthUser | null;
   syncedAlias: string;
-  handleCheckSync: () => void;
   handleManualTokenSync: (token: string) => void;
   handleLogout: () => void;
 }
 
 function getCachedToken(): string {
-  return sessionStorage.getItem(LS_KEY_SYNC_TOKEN) || "";
+  return sessionStorage.getItem(LOCAL_STORAGE_KEY_SYNC_TOKEN) || "";
 }
 
-export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
+/**
+ * Holds the sync token from session storage, manual entry, or the extension (polled every second while logged out).
+ * Auto-logs out shortly before the token expires and when the API reports an expired session.
+ */
+export function useAuth(onMessage: (message: string) => void): UseAuthReturn {
   const { t } = useTranslation();
   const [storedToken, setStoredToken] = useState<string>("");
   const [user, setUser] = useState<AuthUser | null>(null);
   const [syncedAlias] = useState<string>(() =>
-    (localStorage.getItem(LS_KEY_SYNC_ALIAS) || "").trim(),
+    (localStorage.getItem(LOCAL_STORAGE_KEY_SYNC_ALIAS) || "").trim(),
   );
   const expiryTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -61,7 +68,7 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
   const performLogout = useCallback(
     (message: string) => {
       clearExpiryTimer();
-      sessionStorage.removeItem(LS_KEY_SYNC_TOKEN);
+      sessionStorage.removeItem(LOCAL_STORAGE_KEY_SYNC_TOKEN);
       setUser(null);
       setStoredToken("");
       onMessage(message);
@@ -69,16 +76,16 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
     [clearExpiryTimer, onMessage],
   );
 
+  /** Schedules logout 30s before the JWT expires to avoid an auth failure mid-export. */
   const scheduleExpiry = useCallback(
-    (exp: number | null) => {
+    (expiresAtSeconds: number | null) => {
       clearExpiryTimer();
-      if (!exp) return;
-      // Log out 30s before actual expiry to avoid a mid-export auth failure
-      const msUntilExpiry = exp * 1000 - Date.now() - 30_000;
-      if (msUntilExpiry <= 0) return;
+      if (!expiresAtSeconds) return;
+      const millisecondsUntilExpiry = expiresAtSeconds * 1000 - Date.now() - 30_000;
+      if (millisecondsUntilExpiry <= 0) return;
       expiryTimer.current = setTimeout(
         () => performLogout(t("auth.sessionExpired")),
-        msUntilExpiry,
+        millisecondsUntilExpiry,
       );
     },
     [clearExpiryTimer, performLogout, t],
@@ -88,9 +95,9 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
     (token: string, message?: string): boolean => {
       const userData = loginWithToken(token);
       if (!userData) return false;
-      const storedAlias = localStorage.getItem(LS_KEY_SYNC_ALIAS)?.trim() ?? null;
+      const storedAlias = localStorage.getItem(LOCAL_STORAGE_KEY_SYNC_ALIAS)?.trim() ?? null;
       if (storedAlias) userData.alias = storedAlias;
-      sessionStorage.setItem(LS_KEY_SYNC_TOKEN, token);
+      sessionStorage.setItem(LOCAL_STORAGE_KEY_SYNC_TOKEN, token);
       setStoredToken(token);
       setUser(userData);
       scheduleExpiry(userData.exp ?? null);
@@ -107,9 +114,9 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    const handleStorage = (e: StorageEvent): void => {
-      if (e.key !== LS_KEY_SYNC_TOKEN || !e.newValue) return;
-      applyToken(e.newValue, t("auth.sessionRefreshed"));
+    const handleStorage = (event: StorageEvent): void => {
+      if (event.key !== LOCAL_STORAGE_KEY_SYNC_TOKEN || !event.newValue) return;
+      applyToken(event.newValue, t("auth.sessionRefreshed"));
     };
     window.addEventListener("storage", handleStorage);
     return () => window.removeEventListener("storage", handleStorage);
@@ -121,7 +128,6 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
     return () => window.removeEventListener("rt:session-expired", handleApiExpiry);
   }, [performLogout, t]);
 
-  // Polls sessionStorage for a token written by the browser extension (cross-context write)
   useEffect(() => {
     if (user) return;
     const interval = setInterval(() => {
@@ -130,22 +136,6 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
     }, 1000);
     return () => clearInterval(interval);
   }, [user, applyToken, t]);
-
-  const handleCheckSync = useCallback((): void => {
-    const syncToken = getCachedToken();
-    if (syncToken) {
-      const success = applyToken(syncToken);
-      if (success) {
-        Sentry.logger.info("User synced via manual check");
-        onMessage(t("auth.syncedSuccessfully"));
-      } else {
-        Sentry.logger.warn("Extension token invalid or expired on manual check");
-        onMessage(t("auth.tokenInvalid"));
-      }
-    } else {
-      onMessage(t("auth.noToken"));
-    }
-  }, [applyToken, onMessage, t]);
 
   const handleManualTokenSync = useCallback(
     (token: string): void => {
@@ -172,5 +162,5 @@ export function useAuth(onMessage: (msg: string) => void): UseAuthReturn {
     performLogout(t("auth.loggedOut"));
   }, [performLogout, t]);
 
-  return { storedToken, user, syncedAlias, handleCheckSync, handleManualTokenSync, handleLogout };
+  return { storedToken, user, syncedAlias, handleManualTokenSync, handleLogout };
 }

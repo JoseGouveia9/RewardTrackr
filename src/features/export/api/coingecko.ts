@@ -1,4 +1,4 @@
-﻿import { LS_KEY_PRICE_CACHE } from "@/lib/storage-keys";
+import { LOCAL_STORAGE_KEY_PRICE_CACHE } from "@/lib/storage-keys";
 import { resolveCryptoCompareApiBase } from "@/lib/http";
 import type {
   CoinGeckoMarketRangeResponse,
@@ -6,14 +6,12 @@ import type {
   CoinGeckoPriceResult,
   CoinGeckoPriceTuple,
 } from "@/types/rewards";
-
-export { LS_KEY_PRICE_CACHE };
+import { sleepWithCountdown } from "../utils/sleep-with-countdown";
 
 const COINGECKO_MAX_RETRIES = 10;
-const COINGECKO_RETRY_WAIT_MS = 65_000; // CoinGecko's free tier resets its rate limit each minute, so wait just over 60s
-const COINGECKO_FETCH_TIMEOUT_MS = 15_000;
+const COINGECKO_RETRY_WAIT_MILLISECONDS = 65_000;
+const COINGECKO_FETCH_TIMEOUT_MILLISECONDS = 15_000;
 
-/** Maps CoinGecko IDs → CryptoCompare symbols for the fallback API. */
 const COINGECKO_TO_CRYPTOCOMPARE: Record<string, string> = {
   "gmt-token": "GMTT",
   bitcoin: "BTC",
@@ -23,6 +21,10 @@ const COINGECKO_TO_CRYPTOCOMPARE: Record<string, string> = {
   "the-open-network": "TON",
 };
 
+/**
+ * Fallback price source used when CoinGecko answers 401; picks the hourly candle closest to the
+ * timestamp.
+ */
 async function fetchCryptoComparePrice(
   coingeckoId: string,
   createdAtIso: string,
@@ -32,12 +34,11 @@ async function fetchCryptoComparePrice(
     console.warn(`[CryptoCompare] No symbol mapping for coingeckoId "${coingeckoId}"`);
     return null;
   }
-  const toTs = Math.floor(new Date(createdAtIso).getTime() / 1000);
-  const apiKey = import.meta.env.VITE_CRYPTOCOMPARE_API_KEY ?? "";
-  const url = `${resolveCryptoCompareApiBase()}/data/v2/histohour?fsym=${symbol}&tsym=USD&limit=2&toTs=${toTs}${apiKey ? `&api_key=${apiKey}` : ""}`;
+  const toTimestamp = Math.floor(new Date(createdAtIso).getTime() / 1000);
+  const url = `${resolveCryptoCompareApiBase()}/data/v2/histohour?fsym=${symbol}&tsym=USD&limit=2&toTs=${toTimestamp}`;
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), COINGECKO_FETCH_TIMEOUT_MS);
+    const timeout = setTimeout(() => controller.abort(), COINGECKO_FETCH_TIMEOUT_MILLISECONDS);
     let response: Response;
     try {
       response = await fetch(url, { signal: controller.signal });
@@ -51,10 +52,10 @@ async function fetchCryptoComparePrice(
       Data?: { Data?: Array<{ time: number; close: number }> };
     };
     if (data.Response !== "Success" || !data.Data?.Data?.length) return null;
-    const points = data.Data.Data.filter((p) => p.time > 0 && p.close > 0);
+    const points = data.Data.Data.filter((point) => point.time > 0 && point.close > 0);
     if (!points.length) return null;
-    const best = points.reduce((a, b) =>
-      Math.abs(a.time - toTs) <= Math.abs(b.time - toTs) ? a : b,
+    const best = points.reduce((left, right) =>
+      Math.abs(left.time - toTimestamp) <= Math.abs(right.time - toTimestamp) ? left : right,
     );
     return {
       price: best.close,
@@ -68,82 +69,68 @@ async function fetchCryptoComparePrice(
 const SHARED_PRICE_CACHE = new Map<string, CoinGeckoPriceCacheValue>();
 let priceCacheSeeded = false;
 
+/** Loads persisted prices into the shared in-memory cache once per session. */
 function seedPriceCache(): void {
   if (priceCacheSeeded) return;
   priceCacheSeeded = true;
   try {
-    const raw = localStorage.getItem(LS_KEY_PRICE_CACHE);
+    const raw = localStorage.getItem(LOCAL_STORAGE_KEY_PRICE_CACHE);
     if (!raw) return;
     const store = JSON.parse(raw) as Record<string, CoinGeckoPriceCacheValue>;
-    for (const [k, v] of Object.entries(store)) {
-      if (v != null) SHARED_PRICE_CACHE.set(k, v);
+    for (const [key, value] of Object.entries(store)) {
+      if (value != null) SHARED_PRICE_CACHE.set(key, value);
     }
     // eslint-disable-next-line no-empty
   } catch {}
 }
 
-function sleep(ms: number) {
-  return new Promise<void>((resolve) => setTimeout(resolve, ms));
-}
-
-async function sleepWithCountdown(ms: number, onTick: (seconds: number) => void) {
-  const end = Date.now() + ms;
-  while (true) {
-    const remaining = end - Date.now();
-    if (remaining <= 0) break;
-    onTick(Math.ceil(remaining / 1000));
-    await sleep(Math.min(1000, remaining));
-  }
-}
-
-function findNearestPrice(prices: CoinGeckoPriceTuple[], targetMs: number) {
+/** Returns the [timestamp, price] point closest to targetMilliseconds, or null when none is finite. */
+function findNearestPrice(prices: CoinGeckoPriceTuple[], targetMilliseconds: number) {
   if (!prices.length) return null;
 
   let best = prices[0];
-  let minDiff = Math.abs(prices[0][0] - targetMs);
-  for (const pt of prices) {
-    const diff = Math.abs(pt[0] - targetMs);
-    if (diff < minDiff) {
-      minDiff = diff;
-      best = pt;
+  let minDifference = Math.abs(prices[0][0] - targetMilliseconds);
+  for (const priceTuple of prices) {
+    const diff = Math.abs(priceTuple[0] - targetMilliseconds);
+    if (diff < minDifference) {
+      minDifference = diff;
+      best = priceTuple;
     }
   }
 
   const price = best[1] ?? null;
-  const timestampMs = best[0] ?? null;
-  if (!Number.isFinite(price) || !Number.isFinite(timestampMs)) return null;
-  return { price, timestampMs };
+  const timestampMilliseconds = best[0] ?? null;
+  if (!Number.isFinite(price) || !Number.isFinite(timestampMilliseconds)) return null;
+  return { price, timestampMilliseconds };
 }
 
 export function persistCoinGeckoPriceCache(cache: Map<string, CoinGeckoPriceCacheValue>): void {
   try {
-    const obj: Record<string, CoinGeckoPriceCacheValue> = {};
-    for (const [k, v] of cache.entries()) obj[k] = v;
-    localStorage.setItem(LS_KEY_PRICE_CACHE, JSON.stringify(obj));
-  } catch {
-    // ignore
-  }
+    const serialized: Record<string, CoinGeckoPriceCacheValue> = {};
+    for (const [key, value] of cache.entries()) serialized[key] = value;
+    localStorage.setItem(LOCAL_STORAGE_KEY_PRICE_CACHE, JSON.stringify(serialized));
+    // eslint-disable-next-line no-empty
+  } catch {}
 }
 
-export function clearSessionPriceCache(): void {
-  SHARED_PRICE_CACHE.clear();
-  priceCacheSeeded = false;
-}
-
+/**
+ * Historical USD price near a timestamp, memoized in priceCache (null = known miss); stablecoins are fixed at 1.
+ * Queries a ±3h range (hourly granularity), retries 429s with a countdown and falls back to CryptoCompare on 401.
+ */
 export async function fetchCoinGeckoPrice(
   coingeckoId: string,
   createdAtIso: string,
   priceCache: Map<string, CoinGeckoPriceCacheValue>,
-  onWait?: (msg: string) => void,
+  onWait?: (message: string) => void,
   entryProgress?: string,
 ): Promise<CoinGeckoPriceResult | null> {
   if (coingeckoId === "tether" || coingeckoId === "usd-coin") {
     return { price: 1, priceTimestamp: createdAtIso };
   }
 
-  const d = new Date(createdAtIso);
-  if (isNaN(d.getTime())) return null;
-  const cacheKey = `${coingeckoId}_${d.toISOString().slice(0, 16)}`;
+  const createdAt = new Date(createdAtIso);
+  if (isNaN(createdAt.getTime())) return null;
+  const cacheKey = `${coingeckoId}_${createdAt.toISOString().slice(0, 16)}`;
 
   if (priceCache.has(cacheKey)) {
     const cached = priceCache.get(cacheKey);
@@ -152,18 +139,25 @@ export async function fetchCoinGeckoPrice(
     return cached;
   }
 
-  const targetMs = d.getTime();
-  // ±3h window: CoinGecko's hourly granularity means an exact timestamp may fall between data points
-  const fromSec = Math.floor((targetMs - 3 * 60 * 60 * 1000) / 1000);
-  const toSec = Math.floor((targetMs + 3 * 60 * 60 * 1000) / 1000);
+  const targetMilliseconds = createdAt.getTime();
+  const fromSeconds = Math.floor((targetMilliseconds - 3 * 60 * 60 * 1000) / 1000);
+  const toSeconds = Math.floor((targetMilliseconds + 3 * 60 * 60 * 1000) / 1000);
   const url =
     `https://api.coingecko.com/api/v3/coins/${coingeckoId}/market_chart/range` +
-    `?vs_currency=usd&from=${fromSec}&to=${toSec}`;
+    `?vs_currency=usd&from=${fromSeconds}&to=${toSeconds}`;
+
+  const waitBeforeRetry = (attempt: number) =>
+    sleepWithCountdown(COINGECKO_RETRY_WAIT_MILLISECONDS, (secondsLeft) => {
+      const entrySuffix = entryProgress ? `, entry ${entryProgress}` : "";
+      onWait?.(
+        `CoinGecko rate limit hit. Retrying in ${secondsLeft}s (attempt ${attempt}/${COINGECKO_MAX_RETRIES}${entrySuffix})...`,
+      );
+    });
 
   for (let attempt = 1; attempt <= COINGECKO_MAX_RETRIES; attempt++) {
     try {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), COINGECKO_FETCH_TIMEOUT_MS);
+      const timeout = setTimeout(() => controller.abort(), COINGECKO_FETCH_TIMEOUT_MILLISECONDS);
       let response: Response;
       try {
         response = await fetch(url, { signal: controller.signal });
@@ -188,12 +182,7 @@ export async function fetchCoinGeckoPrice(
       const isRateLimited = data?.status?.error_code === 429 || response.status === 429;
       if (!response.ok || isRateLimited) {
         if (attempt < COINGECKO_MAX_RETRIES) {
-          await sleepWithCountdown(COINGECKO_RETRY_WAIT_MS, (s) => {
-            const entrySuffix = entryProgress ? `, entry ${entryProgress}` : "";
-            onWait?.(
-              `CoinGecko rate limit hit. Retrying in ${s}s (attempt ${attempt}/${COINGECKO_MAX_RETRIES}${entrySuffix})...`,
-            );
-          });
+          await waitBeforeRetry(attempt);
           continue;
         }
         break;
@@ -204,7 +193,7 @@ export async function fetchCoinGeckoPrice(
         return null;
       }
 
-      const nearest = findNearestPrice(data.prices, targetMs);
+      const nearest = findNearestPrice(data.prices, targetMilliseconds);
       if (!nearest) {
         priceCache.set(cacheKey, null);
         return null;
@@ -212,19 +201,14 @@ export async function fetchCoinGeckoPrice(
 
       const result: CoinGeckoPriceResult = {
         price: nearest.price,
-        priceTimestamp: new Date(nearest.timestampMs).toISOString(),
+        priceTimestamp: new Date(nearest.timestampMilliseconds).toISOString(),
       };
 
       priceCache.set(cacheKey, result);
       return result;
     } catch {
       if (attempt < COINGECKO_MAX_RETRIES) {
-        await sleepWithCountdown(COINGECKO_RETRY_WAIT_MS, (s) => {
-          const entrySuffix = entryProgress ? `, entry ${entryProgress}` : "";
-          onWait?.(
-            `CoinGecko rate limit hit. Retrying in ${s}s (attempt ${attempt}/${COINGECKO_MAX_RETRIES}${entrySuffix})...`,
-          );
-        });
+        await waitBeforeRetry(attempt);
         continue;
       }
       break;

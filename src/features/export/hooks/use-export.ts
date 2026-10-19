@@ -5,8 +5,7 @@ import { decodeJwt } from "@/lib/http";
 import { ALL_REWARD_KEYS, REWARD_CONFIG_MAP } from "@/config/reward-configs";
 import { clearAllCacheEntries } from "@/lib/reward-cache";
 import { executeExportFlow, refreshCacheKeys } from "../utils/export-flow";
-import { invalidateMinerWarsCache } from "@/lib/minerwars/comparison";
-import { buildExcelFromSheets } from "../utils/excel-builder";
+import { invalidateMinerWarsCache } from "@/features/minerwars/utils/comparison";
 import type {
   CacheState,
   ExtraFiatCurrency,
@@ -15,7 +14,7 @@ import type {
   RewardSheetPayload,
 } from "@/types/rewards";
 
-interface UseExportParams {
+interface UseExportParameters {
   storedToken: string;
   selectedKeys: RewardKey[];
   cache: CacheState;
@@ -23,7 +22,7 @@ interface UseExportParams {
   includeExcelFiat: boolean;
   excelFiatCurrency: ExtraFiatCurrency;
   liveMinerWarsEnabled: boolean;
-  onMessage: (msg: string) => void;
+  onMessage: (message: string) => void;
   onCacheUpdate: (cache: CacheState) => void;
   onStarted?: () => void;
 }
@@ -38,6 +37,9 @@ interface UseExportReturn {
   handleClearCache: () => void;
 }
 
+/**
+ * Saves the workbook through a temporary object-URL link, which is revoked right after the click.
+ */
 function triggerFileDownload(buffer: ArrayBuffer, fileName: string): void {
   const blob = new Blob([buffer], {
     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -52,6 +54,10 @@ function triggerFileDownload(buffer: ArrayBuffer, fileName: string): void {
   URL.revokeObjectURL(url);
 }
 
+/**
+ * Runs the export flow, tracking which sheets are still being fetched.
+ * Re-emits the cache after the MinerWars prefetch so the cycle tracker re-reads local caches.
+ */
 export function useExport({
   storedToken,
   selectedKeys,
@@ -63,7 +69,7 @@ export function useExport({
   onMessage,
   onCacheUpdate,
   onStarted,
-}: UseExportParams): UseExportReturn {
+}: UseExportParameters): UseExportReturn {
   const { t } = useTranslation();
   const [loading, setLoading] = useState<boolean>(false);
   const [fetchingKeys, setFetchingKeys] = useState<Set<RewardKey>>(new Set());
@@ -73,7 +79,7 @@ export function useExport({
   const handleClearCache = useCallback((): void => {
     clearAllCacheEntries();
     invalidateMinerWarsCache();
-    onCacheUpdate(Object.fromEntries(ALL_REWARD_KEYS.map((k) => [k, null])) as CacheState);
+    onCacheUpdate(Object.fromEntries(ALL_REWARD_KEYS.map((key) => [key, null])) as CacheState);
     onMessage(t("export.cacheCleared"));
   }, [onMessage, onCacheUpdate, t]);
 
@@ -101,28 +107,23 @@ export function useExport({
         selectedKeys,
         cache,
         includeWalletFiat,
-        includeExcelFiat,
         excelFiatCurrency,
         disableMinerWarsLiveFetch: !liveMinerWarsEnabled,
         onMessage,
         onStarted,
         onCacheUpdate: (newCache) => {
           latestCacheRef.current = newCache;
-          setFetchingKeys((prev) => {
-            const next = new Set(prev);
-            for (const k of prev) {
-              if (newCache[k]) next.delete(k);
+          setFetchingKeys((previousKeys) => {
+            const next = new Set(previousKeys);
+            for (const key of previousKeys) {
+              if (newCache[key]) next.delete(key);
             }
             return next;
           });
           onCacheUpdate(newCache);
         },
-        onBeforeDownload: undefined,
         onMinerWarsPrefetchingChange: setMinerWarsPrefetching,
-        downloadExcel: false,
       });
-      // Ensure a final same-tab cache bump after MinerWars prefetch completes,
-      // so the cycle tracker re-reads local caches without a full page refresh.
       const latestCache = { ...latestCacheRef.current };
       latestCacheRef.current = latestCache;
       onCacheUpdate(latestCache);
@@ -130,31 +131,27 @@ export function useExport({
       onMessage(successMessage);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : t("export.failedGeneric");
-      const msgLower = msg.toLowerCase();
+      const message = error instanceof Error ? error.message : t("export.failedGeneric");
+      const messageLower = message.toLowerCase();
       const isCors =
-        msgLower.includes("failed to fetch") ||
-        msgLower.includes("cors") ||
-        msgLower.includes("networkerror");
+        messageLower.includes("failed to fetch") ||
+        messageLower.includes("cors") ||
+        messageLower.includes("networkerror");
       const isAuth =
-        msgLower.includes("unauthorized") ||
-        msgLower.includes("unauthenticated") ||
-        msgLower.includes("expired") ||
-        msgLower.includes("jwt") ||
-        msgLower.includes("forbidden");
-      Sentry.captureException(error, {
-        extra: { reason: isCors ? "cors" : isAuth ? "auth" : "unknown" },
-      });
-      Sentry.logger.error("Export failed", {
-        reason: isCors ? "cors" : isAuth ? "auth" : "unknown",
-        message: msg,
-      });
+        messageLower.includes("unauthorized") ||
+        messageLower.includes("unauthenticated") ||
+        messageLower.includes("expired") ||
+        messageLower.includes("jwt") ||
+        messageLower.includes("forbidden");
+      const reason = isCors ? "cors" : isAuth ? "auth" : "unknown";
+      Sentry.captureException(error, { extra: { reason } });
+      Sentry.logger.error("Export failed", { reason, message });
       onMessage(
         isCors
           ? t("export.networkError")
           : isAuth
             ? t("export.sessionExpired")
-            : t("export.failed", { details: msg }),
+            : t("export.failed", { details: message }),
       );
       if (isAuth) window.dispatchEvent(new CustomEvent("rt:session-expired"));
       else window.dispatchEvent(new CustomEvent("rt:fetch-failed"));
@@ -167,7 +164,6 @@ export function useExport({
     selectedKeys,
     cache,
     includeWalletFiat,
-    includeExcelFiat,
     excelFiatCurrency,
     liveMinerWarsEnabled,
     onMessage,
@@ -198,10 +194,10 @@ export function useExport({
           onMessage,
           onCacheUpdate: (newCache) => {
             onCacheUpdate(newCache);
-            setFetchingKeys((prev) => {
-              const next = new Set(prev);
-              for (const k of prev) {
-                if (newCache[k]) next.delete(k);
+            setFetchingKeys((previousKeys) => {
+              const next = new Set(previousKeys);
+              for (const key of previousKeys) {
+                if (newCache[key]) next.delete(key);
               }
               return next;
             });
@@ -209,8 +205,8 @@ export function useExport({
         });
         onCacheUpdate(updated);
       } catch (error: unknown) {
-        const msg = error instanceof Error ? error.message : t("export.failedGeneric");
-        onMessage(t("export.failed", { details: msg }));
+        const message = error instanceof Error ? error.message : t("export.failedGeneric");
+        onMessage(t("export.failed", { details: message }));
       } finally {
         setLoading(false);
         setFetchingKeys(new Set());
@@ -247,10 +243,11 @@ export function useExport({
       });
 
       const options: FetchRewardsOptions = {
-        walletTx: { includeFiat: includeWalletFiat },
+        walletTransaction: { includeFiat: includeWalletFiat },
         excel: { includeFiat: includeExcelFiat, fiatCurrency: excelFiatCurrency },
       };
 
+      const { buildExcelFromSheets } = await import("../utils/excel-builder");
       const buffer = await buildExcelFromSheets(sheetsPayload, options);
       triggerFileDownload(buffer, `rewards-${new Date().toISOString().slice(0, 10)}.xlsx`);
 
@@ -261,8 +258,8 @@ export function useExport({
       );
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : t("export.failedGeneric");
-      onMessage(t("export.failed", { details: msg }));
+      const message = error instanceof Error ? error.message : t("export.failedGeneric");
+      onMessage(t("export.failed", { details: message }));
     } finally {
       setLoading(false);
     }
