@@ -1,0 +1,255 @@
+/* ─── Individual card ──────────────────────────────────────────────────────── */
+.mwpc-ind-card {
+  border-radius: 12px;
+  background: var(--mwpc-inner);
+  padding: 14px;
+}
+.mwpc-ind-split {
+  display: flex;
+  align-items: stretch;
+}
+.mwpc-ind-left {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.mwpc-ind-right {
+  flex: 1.2 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.mwpc-ind-vdivider {
+  width: 1px;
+  align-self: stretch;
+  background: rgba(148, 163, 184, 0.2);
+  margin: 0 16px;
+}
+.mwpc-ind-hero-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: -14px 0 0 -14px;
+  padding: 16px 12px 14px 30px;
+}
+.mwpc-ind-hero-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.mwpc-ind-hero-label-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.mwpc-ind-hero-label {
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--mwpc-muted);
+}
+.mwpc-ind-hero-value-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.mwpc-ind-hero-value {
+  font-weight: 700;
+  font-size: 24px;
+  color: var(--mwpc-primary);
+}
+.mwpc-ind-target-block {
+  padding-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mwpc-personal-row {
+  display: grid;
+  grid-template-columns: max-content 1fr 1fr;
+  margin-top: 12px;
+  border-top: 1px solid rgba(148, 163, 184, 0.2);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+}
+.mwpc-personal-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 4px;
+  padding: 8px 16px;
+  min-width: 0;
+}
+.mwpc-personal-col--divided {
+  border-right: 1px solid rgba(148, 163, 184, 0.2);
+}
+.mwpc-personal-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-height: 20px;
+  justify-content: center;
+}
+.mwpc-personal-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--mwpc-muted, #9aa3af);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.mwpc-personal-value {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 6px;
+  font-size: 15px;
+  font-weight: 700;
+}
+.mwpc-personal-tag {
+  font-size: 10px;
+  padding: 1px 5px;
+  color: var(--mwpc-muted, #9aa3af);
+}
+
+.mwpc-metric-list {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 0 8px;
+}
+.mwpc-metric-divider {
+  height: 1px;
+  background: rgba(148, 163, 184, 0.2);
+}
+.mwpc-metric-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 3px;
+}
+.mwpc-metric-label-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.mwpc-metric-label-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.mwpc-metric-label {
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: var(--mwpc-muted);
+}
+.mwpc-metric-value-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.mwpc-metric-value-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.mwpc-metric-value {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--mwpc-primary);
+  text-align: right;
+}
+.mwpc-metric-caption {
+  font-weight: 500;
+  font-size: 11px;
+  color: var(--mwpc-faint);
+  text-align: right;
+}
+
+/* ─── Live-cycle Solo-vs-MinerWars compare table ───────────────────────────── */
+.mwpc-compare-list {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 0;
+}
+.mwpc-compare-header-row {
+  display: flex;
+}
+.mwpc-compare-row {
+  display: flex;
+  align-items: flex-start;
+}
+.mwpc-compare-label-col {
+  flex: 1.1 1.1 0%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+.mwpc-compare-value-col {
+  flex: 1 1 0%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.mwpc-compare-value-col--right {
+  align-items: flex-end;
+}
+.mwpc-compare-label {
+  font-weight: 600;
+  font-size: 10px;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: var(--mwpc-muted);
+}
+.mwpc-compare-header-text {
+  font-weight: 600;
+  font-size: 10px;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--mwpc-faint);
+}
+.mwpc-compare-header-text--right {
+  text-align: right;
+}
+.mwpc-compare-value {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--mwpc-primary);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.mwpc-compare-value-col--right .mwpc-compare-value {
+  justify-content: flex-end;
+}
+.mwpc-compare-badge {
+  margin-top: 2px;
+  font-size: 9px;
+  font-weight: 500;
+  color: var(--mwpc-faint);
+  background: var(--mwpc-tag-bg);
+  border-radius: 4px;
+  padding: 1px 4px;
+}

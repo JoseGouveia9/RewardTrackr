@@ -1,0 +1,445 @@
+/* Hero card (Individual tab) — two-column layout: ring+solo-target on the left,
+   the equiv/difference/maintenance/net breakdown on the right (mirrors the mobile
+   share card's pngIndividualCard / pngIndividualSplitRow layout). */
+.minerwars-panel-hero-card {
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 16px;
+  margin-bottom: 10px;
+}
+
+.minerwars-panel-hero-grid {
+  display: flex;
+  align-items: stretch;
+  gap: 20px;
+}
+
+.minerwars-panel-hero-col-left {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1 1 42%;
+  min-width: 0;
+  position: relative;
+}
+
+.minerwars-panel-hero-col-left--with-tools .minerwars-panel-hero-row {
+  padding-right: 34px;
+}
+
+.minerwars-panel-hero-tools {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 2;
+}
+
+.minerwars-panel-hero-divider {
+  width: 1px;
+  align-self: stretch;
+  background: rgba(148, 163, 184, 0.2);
+  flex-shrink: 0;
+}
+
+.minerwars-panel-hero-col-right {
+  flex: 1 1 58%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 640px) {
+  .minerwars-panel-hero-grid {
+    flex-direction: column;
+  }
+  .minerwars-panel-hero-divider {
+    width: auto;
+    height: 1px;
+  }
+  .minerwars-panel-hero-col-left,
+  .minerwars-panel-hero-col-right {
+    flex-basis: auto;
+  }
+}
+
+.minerwars-panel-personal-row {
+  display: grid;
+  grid-template-columns: max-content 1fr 1fr;
+  margin-top: 12px;
+  border-top: 1px solid rgba(148, 163, 184, 0.2);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.minerwars-panel-personal-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 4px;
+  padding: 8px 16px;
+  min-width: 0;
+}
+
+.minerwars-panel-personal-col--divided {
+  border-right: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.minerwars-panel-personal-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-height: 26px;
+  justify-content: center;
+}
+
+.minerwars-panel-personal-label {
+  font-size: 0.66rem;
+  font-weight: 600;
+  color: #9aa3af;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.minerwars-panel-personal-value {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #f0f0f0;
+  min-width: 0;
+}
+
+.minerwars-panel-personal-tag {
+  font-size: 0.6rem;
+  padding: 1px 5px;
+  color: #9aa3af;
+}
+
+@media (max-width: 560px) {
+  .minerwars-panel-personal-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.minerwars-panel-hero-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.minerwars-panel-ring-wrap {
+  position: relative;
+  flex-shrink: 0;
+  width: 92px;
+  height: 92px;
+}
+
+.minerwars-panel-ring-svg {
+  display: block;
+}
+
+.minerwars-panel-ring-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.minerwars-panel-ring-pct {
+  font-weight: 700;
+  font-size: 0.95rem;
+  line-height: 1.1;
+  color: #f0f0f0;
+}
+
+.minerwars-panel-ring-label {
+  font-size: 0.62rem;
+  color: #9aa3af;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 2px;
+}
+
+.minerwars-panel-hero-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
+
+.minerwars-panel-hero-value {
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: #f0f0f0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.minerwars-panel-breakdown {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 0 8px;
+}
+
+/* Solo/Clan target block within the hero card — plain (no card bg), matching
+   mobile's pngIndTargetBlock/pngClanTargetBlock which sit directly in the flow. */
+.minerwars-panel-target-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 12px;
+}
+
+.minerwars-panel-target-value-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.minerwars-panel-target-value {
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: #f0f0f0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Row */
+.minerwars-panel-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 3px;
+  min-height: 0;
+}
+
+.minerwars-panel-label {
+  color: #9aa3af;
+  font-size: 0.69rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.minerwars-panel-caption {
+  flex-basis: auto;
+  text-align: right;
+  font-size: 0.69rem;
+  font-weight: 500;
+  line-height: 1.15;
+  margin-top: 0;
+  color: #6b7280;
+}
+
+/* Row variant with a label column (label + discount tags) and a value column
+   (value + caption), used by the Maintenance row — mirrors mobile's
+   pngIndividualMetricLabelCol / pngIndividualMetricValueWrap. */
+.minerwars-panel-row--tags {
+  align-items: center;
+}
+
+.minerwars-panel-label-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.minerwars-panel-value-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.minerwars-panel-value-col .minerwars-panel-caption {
+  flex-basis: auto;
+  margin-top: 0;
+}
+
+.minerwars-panel-tags-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.minerwars-panel-tag {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+
+.minerwars-panel-tag-label {
+  font-size: 0.62rem;
+  font-weight: 400;
+  text-transform: none;
+  color: #6b7280;
+}
+
+.minerwars-panel-tag-value {
+  font-size: 0.62rem;
+  font-weight: 600;
+  text-transform: none;
+  color: #9aa3af;
+}
+
+.minerwars-panel-tags-col--center {
+  align-items: center;
+}
+
+/* Two-column Solo-vs-MinerWars comparison table — only shown for live/pending
+   cycles (soloMaintenanceBtc/soloNetBtc are only computed for those), mirrors
+   mobile's indCompareHeaderRow/indCompareRow. */
+.minerwars-panel-compare-header-row {
+  display: flex;
+  padding-bottom: 8px;
+}
+
+.minerwars-panel-compare-header-row--modal {
+  margin-top: 14px;
+}
+
+.minerwars-panel-compare-row {
+  display: flex;
+  align-items: flex-start;
+  padding: 10px 0;
+}
+
+.minerwars-panel-compare-label-col {
+  flex: 1.1 1.1 0%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.minerwars-panel-compare-value-col {
+  flex: 1 1 0%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.minerwars-panel-compare-value-col--right {
+  align-items: flex-end;
+}
+
+.minerwars-panel-compare-header-text {
+  font-size: 0.69rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  text-align: center;
+  color: #9aa3af;
+}
+
+.minerwars-panel-compare-header-text--right {
+  text-align: right;
+}
+
+.minerwars-panel-compare-value {
+  font-weight: 700;
+  font-size: 0.875rem;
+  text-align: center;
+  color: #f0f0f0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.minerwars-panel-compare-value-col--right .minerwars-panel-compare-value {
+  justify-content: flex-end;
+}
+
+.minerwars-panel-compare-badge {
+  margin-top: 2px;
+  font-size: 0.6rem;
+  font-weight: 400;
+  color: #9aa3af;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  padding: 1px 4px;
+}
+
+.minerwars-panel-info-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  color: #9aa3af;
+  cursor: pointer;
+}
+
+.minerwars-panel-info-btn:hover {
+  color: #d8dce8;
+}
+
+.minerwars-panel-value {
+  font-weight: 700;
+  font-size: 0.94rem;
+  line-height: 1.15;
+  color: #f0f0f0;
+  text-align: right;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  justify-content: flex-end;
+}
+
+.minerwars-panel-value--pos {
+  color: #4ade80;
+}
+
+.minerwars-panel-value--neg {
+  color: #f87171;
+}
+
+.minerwars-panel-divider {
+  height: 1px;
+  background: rgba(148, 163, 184, 0.2);
+  margin: 0;
+}
+
+/* Projection badge — must reset text-transform since it's nested inside
+   .minerwars-panel-label, which is uppercase (text-transform is inherited). */
+.minerwars-panel-projection-badge {
+  font-size: 0.7rem;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  color: #9aa3af;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  padding: 1px 5px;
+  white-space: nowrap;
+}

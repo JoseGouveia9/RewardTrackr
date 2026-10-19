@@ -1,0 +1,322 @@
+/* ─── Light mode overrides ───────────────────────────────────────────────── */
+
+.page.theme-light .minerwars-panel {
+  border-color: transparent;
+  background: transparent;
+}
+
+.page.theme-light .minerwars-panel-tab-bar {
+  border-color: rgba(0, 0, 0, 0.12);
+  background: #ffffff;
+}
+
+.page.theme-light .minerwars-panel-tab-slider {
+  background: #f7931a;
+}
+
+.page.theme-light .minerwars-panel-tab-btn {
+  color: rgba(0, 0, 0, 0.72);
+}
+
+.page.theme-light .minerwars-panel-tab-btn:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.05);
+  color: #22283a;
+}
+
+.page.theme-light .minerwars-panel-tab-btn--active {
+  color: #1a1208;
+}
+
+.page.theme-light .minerwars-panel-skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.06) 25%,
+    rgba(0, 0, 0, 0.1) 50%,
+    rgba(0, 0, 0, 0.06) 75%
+  );
+  background-size: 200% 100%;
+}
+
+.page.theme-light .minerwars-panel-cycle-dropdown-btn {
+  border-color: rgba(0, 0, 0, 0.08);
+  background: #ffffff;
+  color: #22283a;
+}
+.page.theme-light .minerwars-panel-cycle-dropdown-btn:hover {
+  border-color: rgba(0, 0, 0, 0.25);
+  background: #f8fafc;
+}
+
+.page.theme-light .minerwars-panel-cycle-dropdown-date {
+  color: #6b7280;
+}
+
+.page.theme-light .minerwars-panel-dropdown-chevron {
+  color: #6b7280;
+}
+
+.page.theme-light .minerwars-panel-cycle-dropdown-list {
+  background: rgba(255, 255, 255, 0.97);
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+}
+
+.page.theme-light .minerwars-panel-cycle-dropdown-item {
+  color: #4b5468;
+}
+.page.theme-light .minerwars-panel-cycle-dropdown-item:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #22283a;
+}
+.page.theme-light .minerwars-panel-cycle-dropdown-item--active {
+  background: rgba(247, 147, 26, 0.1);
+  color: #c97010;
+}
+
+.page.theme-light .minerwars-panel-cycle-badge--completed {
+  background: rgba(0, 0, 0, 0.07);
+  color: #888;
+}
+
+.page.theme-light .minerwars-panel-cycle-badge--in-progress {
+  background: #16a34a;
+  color: #ffffff;
+  border-color: rgba(12, 94, 39, 0.35);
+}
+
+.page.theme-light .minerwars-panel-cycle-badge--pending {
+  background: rgba(245, 158, 11, 0.12);
+  color: #b45309;
+  border-color: rgba(180, 83, 9, 0.25);
+}
+
+.page.theme-light .minerwars-panel-hero-card {
+  background: #eceff3;
+  border: 1px solid #dfe5ec;
+}
+
+.page.theme-light .minerwars-panel-hero-divider {
+  background: #e5e7eb;
+}
+
+.page.theme-light .minerwars-panel-ring-pct,
+.page.theme-light .minerwars-panel-hero-value,
+.page.theme-light .minerwars-panel-target-value {
+  color: #14161c;
+}
+
+.page.theme-light .minerwars-panel-ring-label {
+  color: #6b7280;
+}
+
+.page.theme-light .minerwars-panel-label {
+  color: #6b7280;
+}
+
+.page.theme-light .minerwars-panel-value {
+  color: #22283a;
+}
+
+.page.theme-light .minerwars-panel-value--pos {
+  color: #16a34a;
+}
+
+.page.theme-light .minerwars-panel-value--neg {
+  color: #dc2626;
+}
+
+.page.theme-light .minerwars-panel-divider {
+  background: #e5e7eb;
+}
+
+.page.theme-light .minerwars-panel-compare-header-text {
+  color: #6b7280;
+}
+
+.page.theme-light .minerwars-panel-compare-value {
+  color: #22283a;
+}
+
+.page.theme-light .minerwars-panel-compare-badge {
+  background: rgba(0, 0, 0, 0.07);
+  color: #6b7280;
+}
+
+.page.theme-light .minerwars-panel-info-btn {
+  color: #6b7280;
+}
+
+.page.theme-light .minerwars-panel-info-btn:hover {
+  color: #22283a;
+}
+
+.page.theme-light .minerwars-panel-personal-row {
+  border-top-color: #e5e7eb;
+  border-bottom-color: #e5e7eb;
+}
+
+.page.theme-light .minerwars-panel-personal-col--divided {
+  border-right-color: #e5e7eb;
+}
+
+.page.theme-light .minerwars-panel-personal-label {
+  color: #6b7280;
+}
+
+.page.theme-light .minerwars-panel-personal-value {
+  color: #22283a;
+}
+
+.page.theme-light .minerwars-panel-personal-tag {
+  background: rgba(0, 0, 0, 0.05);
+  color: #6b7280;
+}
+
+.page.theme-light .minerwars-panel-projection-badge {
+  background: rgba(0, 0, 0, 0.05);
+  color: #6b7280;
+}
+
+.page.theme-light .minerwars-panel-progress-bar {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.page.theme-light .minerwars-panel-notice--warn {
+  background: rgba(234, 179, 8, 0.1);
+  border-color: rgba(234, 179, 8, 0.4);
+  color: #92600a;
+}
+
+.page.theme-light .minerwars-panel-refresh-btn {
+  color: #6b7280;
+  border-color: rgba(0, 0, 0, 0.1);
+  background: #ffffff;
+}
+.page.theme-light .minerwars-panel-mode-btn {
+  color: #6b7280;
+  border-color: rgba(0, 0, 0, 0.1);
+  background: #ffffff;
+}
+.page.theme-light .minerwars-panel-mode-btn:hover {
+  color: #22283a;
+  border-color: rgba(0, 0, 0, 0.2);
+  background: #f8fafc;
+}
+.page.theme-light .minerwars-panel-refresh-btn:hover:not(:disabled) {
+  color: #22283a;
+  border-color: rgba(0, 0, 0, 0.2);
+  background: #f8fafc;
+}
+
+@media (max-width: 640px) {
+  .minerwars-panel-cycle-selector-row {
+    flex-wrap: wrap;
+  }
+
+  .minerwars-panel-cycle-meta {
+    width: 100%;
+    flex-basis: 100%;
+  }
+}
+
+.page.theme-light .minerwars-panel-simulate-btn {
+  color: #6b7280;
+  border-color: rgba(0, 0, 0, 0.1);
+  background: #ffffff;
+}
+.page.theme-light .minerwars-panel-simulate-btn:hover {
+  color: #22283a;
+  background: #f8fafc;
+}
+.page.theme-light .minerwars-panel-simulate-btn--active {
+  color: #1a1208;
+  border-color: #f7931a;
+  background: #f7931a;
+}
+
+.page.theme-light .minerwars-panel-simulate {
+  border-color: rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.16);
+}
+
+.page.theme-light .minerwars-panel-simulate-overlay {
+  background: rgba(15, 23, 42, 0.2);
+}
+
+.page.theme-light .minerwars-panel-simulate-close {
+  color: #6b7280;
+}
+
+.page.theme-light .minerwars-panel-simulate-title,
+.page.theme-light .minerwars-panel-simulate-input-suffix,
+.page.theme-light .minerwars-panel-simulate-stat-card input,
+.page.theme-light .minerwars-panel-simulate-input-group input {
+  color: #111827;
+}
+
+.page.theme-light .minerwars-panel-simulate-hint,
+.page.theme-light .minerwars-panel-simulate-stat-label {
+  color: #6b7280;
+}
+
+.page.theme-light .minerwars-panel-simulate-header,
+.page.theme-light .minerwars-panel-simulate-stat-row,
+.page.theme-light .minerwars-panel-simulate-stat-card--divider,
+.page.theme-light .minerwars-panel-simulate-results {
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.page.theme-light .minerwars-panel-simulate-currency-btn {
+  border-color: rgba(0, 0, 0, 0.1);
+  background: rgba(0, 0, 0, 0.04);
+  color: #6b7280;
+}
+
+.page.theme-light .minerwars-panel-simulate-currency-btn:hover,
+.page.theme-light .minerwars-panel-simulate-close:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: #22283a;
+}
+.page.theme-light .minerwars-panel-simulate-close:hover {
+  color: #22283a;
+  background: rgba(0, 0, 0, 0.04);
+}
+
+@media (max-width: 640px) {
+  .minerwars-panel-simulate-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .minerwars-panel-simulate {
+    width: 100%;
+    max-height: 88vh;
+    border-radius: 22px 22px 0 0;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+  }
+
+  .minerwars-panel-simulate-body {
+    padding: 14px 14px 18px;
+  }
+
+  .minerwars-panel-simulate-desc-row {
+    align-items: flex-start;
+  }
+
+  .minerwars-panel-simulate-stat-row,
+  .minerwars-panel-simulate-stat-row--second {
+    grid-template-columns: 1fr;
+  }
+
+  .minerwars-panel-simulate-stat-card--divider {
+    border-right: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .page.theme-light .minerwars-panel-simulate-stat-card--divider {
+    border-bottom-color: rgba(0, 0, 0, 0.08);
+  }
+}

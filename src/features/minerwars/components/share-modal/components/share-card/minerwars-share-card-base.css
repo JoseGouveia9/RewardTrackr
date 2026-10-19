@@ -1,0 +1,234 @@
+/* MinerWars share PNG card — faithful web port of the mobile ShareCard
+   (screens/minerwars/components/ShareMinerWarsModal/components/ShareCard).
+   Rendered at a fixed 1080px width so html-to-image exports a share image that
+   matches the mobile app's PNG_WIDTH. Colors mirror the mobile LIGHT/DARK tokens. */
+
+.mwpc-root {
+  width: 1080px;
+  box-sizing: border-box;
+  border-top: 4px solid #f7931a;
+  padding: 52px 64px 44px;
+  font-family: "Space Grotesk", sans-serif;
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+.mwpc-root *,
+.mwpc-root *::before,
+.mwpc-root *::after {
+  box-sizing: border-box;
+}
+
+/* ─── Color tokens ─────────────────────────────────────────────────────────── */
+.mwpc-root--light {
+  --mwpc-surface: #ffffff;
+  --mwpc-inner: #f4f5f7;
+  --mwpc-primary: #14161c;
+  --mwpc-muted: #6b7280;
+  --mwpc-faint: #9aa1ab;
+  --mwpc-divider: #e5e7eb;
+  --mwpc-neg: #dc2626;
+  --mwpc-pos: #16a34a;
+  --mwpc-tag-bg: rgba(0, 0, 0, 0.07);
+  --mwpc-tag2-bg: rgba(0, 0, 0, 0.05);
+  --mwpc-bar-track: rgba(0, 0, 0, 0.12);
+  --mwpc-pill-text: #ffffff;
+}
+.mwpc-root--dark {
+  --mwpc-surface: #0f0f0f;
+  --mwpc-inner: #1a1a1a;
+  --mwpc-primary: #f0f0f0;
+  --mwpc-muted: #9aa3af;
+  --mwpc-faint: #6b7280;
+  --mwpc-divider: #2a2a2a;
+  --mwpc-neg: #f87171;
+  --mwpc-pos: #4ade80;
+  --mwpc-tag-bg: rgba(255, 255, 255, 0.08);
+  --mwpc-tag2-bg: rgba(255, 255, 255, 0.06);
+  --mwpc-bar-track: rgba(255, 255, 255, 0.12);
+  --mwpc-pill-text: #1a1208;
+}
+
+.mwpc-root {
+  background: var(--mwpc-surface);
+  color: var(--mwpc-primary);
+}
+
+/* ─── Currency icon sizing ─────────────────────────────────────────────────── */
+.mwpc-cicon {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+.mwpc-cicon .dv-currency-icon-svg {
+  width: 22px;
+  height: 22px;
+}
+.mwpc-cicon--sm .dv-currency-icon-svg {
+  width: 18px;
+  height: 18px;
+}
+
+.mwpc-pos {
+  color: var(--mwpc-pos) !important;
+}
+.mwpc-neg {
+  color: var(--mwpc-neg) !important;
+}
+
+/* ─── Hero / brand ─────────────────────────────────────────────────────────── */
+.mwpc-hero {
+  padding: 10px 0;
+}
+.mwpc-brand-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.mwpc-brand-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+.mwpc-logo {
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.mwpc-brand-text {
+  font-weight: 700;
+  font-size: 28px;
+  letter-spacing: 1px;
+  color: var(--mwpc-primary);
+}
+.mwpc-brand-text-accent {
+  color: #f7931a;
+}
+.mwpc-brand-sub {
+  margin-top: 4px;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.9px;
+  color: var(--mwpc-muted);
+}
+.mwpc-brand-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.mwpc-meta-pill {
+  border-radius: 999px;
+  padding: 5px 11px;
+  background: #f7931a;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--mwpc-pill-text);
+  white-space: nowrap;
+}
+
+/* ─── Sections ─────────────────────────────────────────────────────────────── */
+.mwpc-sections {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.mwpc-section-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+.mwpc-section-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.mwpc-section-title {
+  font-weight: 700;
+  font-size: 24px;
+  color: var(--mwpc-primary);
+}
+
+/* ─── Shared: rings, tags, target blocks ───────────────────────────────────── */
+.mwpc-ring-wrap {
+  position: relative;
+  width: 92px;
+  height: 92px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.mwpc-ring-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+.mwpc-ring-pct {
+  font-weight: 700;
+  font-size: 19px;
+  line-height: 21px;
+  color: var(--mwpc-primary);
+}
+.mwpc-ring-label {
+  font-weight: 500;
+  font-size: 12px;
+  letter-spacing: 0.4px;
+  color: var(--mwpc-muted);
+  margin-top: 2px;
+}
+.mwpc-tag {
+  border-radius: 4px;
+  background: var(--mwpc-tag-bg);
+  padding: 1px 5px;
+  font-weight: 400;
+  font-size: 11px;
+  color: var(--mwpc-muted);
+  white-space: nowrap;
+}
+.mwpc-stat-label {
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--mwpc-muted);
+}
+.mwpc-target-header-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.mwpc-target-value-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 2px;
+}
+.mwpc-target-value {
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--mwpc-primary);
+}
+.mwpc-target-bar {
+  height: 9px;
+  border-radius: 5px;
+  background: var(--mwpc-bar-track);
+  overflow: hidden;
+}
+.mwpc-target-bar-fill {
+  height: 9px;
+  border-radius: 5px;
+  background: #f7931a;
+}

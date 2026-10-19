@@ -1,0 +1,199 @@
+/* ─── Clan card ────────────────────────────────────────────────────────────── */
+.mwpc-clan-card {
+  border-radius: 22px;
+  background: var(--mwpc-inner);
+  border: 1px solid var(--mwpc-divider);
+  overflow: hidden;
+  padding-bottom: 14px;
+}
+.mwpc-clan-split {
+  display: flex;
+  align-items: stretch;
+}
+.mwpc-clan-left {
+  flex: 1.05 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.mwpc-clan-right {
+  flex: 1.25 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.mwpc-clan-mid-divider {
+  width: 1px;
+  background: var(--mwpc-divider);
+}
+.mwpc-clan-top-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 12px 14px 30px;
+}
+.mwpc-clan-top-info {
+  flex-shrink: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+.mwpc-clan-rank-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+.mwpc-clan-rank-pill {
+  border-radius: 999px;
+  background: #f7931a;
+  padding: 3px 8px;
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--mwpc-pill-text);
+}
+.mwpc-clan-members {
+  font-weight: 500;
+  font-size: 13px;
+  color: var(--mwpc-muted);
+}
+.mwpc-clan-mined-kicker {
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.6px;
+  color: var(--mwpc-muted);
+  text-transform: uppercase;
+}
+.mwpc-clan-mined-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.mwpc-clan-mined-value {
+  font-weight: 700;
+  font-size: 24px;
+  color: var(--mwpc-primary);
+}
+.mwpc-clan-strip {
+  display: flex;
+  border-top: 1px solid var(--mwpc-divider);
+  border-bottom: 1px solid var(--mwpc-divider);
+  width: 90%;
+  margin: 0 auto;
+}
+.mwpc-clan-strip-col {
+  flex: 1;
+  min-width: 0;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.mwpc-clan-strip-divider {
+  border-right: 1px solid var(--mwpc-divider);
+}
+.mwpc-clan-strip-label {
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--mwpc-muted);
+}
+.mwpc-clan-strip-value {
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--mwpc-primary);
+}
+.mwpc-clan-target-block {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.mwpc-clan-target-footer {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--mwpc-primary);
+  text-align: right;
+}
+
+/* ─── Clan trend chart (blocks / % target reached) ────────────────────────── */
+.mwpc-line-trend-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}
+.mwpc-line-card {
+  flex: 1;
+  border-radius: 14px;
+  background: var(--mwpc-inner);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.mwpc-line-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.mwpc-line-card-title {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--mwpc-primary);
+  flex: 1;
+}
+.mwpc-line-diff-tag {
+  border-radius: 999px;
+  padding: 3px 8px;
+  border: 1px solid;
+  font-weight: 600;
+  font-size: 10px;
+  white-space: nowrap;
+}
+.mwpc-line-diff-tag--pos {
+  background: rgba(22, 163, 74, 0.12);
+  border-color: rgba(22, 163, 74, 0.35);
+  color: var(--mwpc-pos);
+}
+.mwpc-line-diff-tag--neg {
+  background: rgba(220, 38, 38, 0.12);
+  border-color: rgba(220, 38, 38, 0.35);
+  color: var(--mwpc-neg);
+}
+.mwpc-line-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.mwpc-line-fallback {
+  height: 104px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--mwpc-faint);
+}
+
+/* ─── Footer ───────────────────────────────────────────────────────────────── */
+.mwpc-footer {
+  margin-top: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.mwpc-footer-text {
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--mwpc-muted);
+}
