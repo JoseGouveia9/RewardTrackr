@@ -7,9 +7,11 @@ import {
   LS_KEY_SYNC_ALIAS,
 } from "./storage-keys";
 
-export const RECORDS_VERSION = 2;
+export const RECORDS_VERSION = 3;
 // v2: solo-mining maintenance is now additive across BTC+GMT (mixed weeks no longer drop
 // one currency's portion); EE is now power-weighted and includes the bonus miner.
+// v3: fixed solo-mining maintenance double-counting when an item's metaData.maintenanceInBtc
+// is just the BTC-equivalent of a maintenanceByGmt=true item's real GMT charge.
 
 // v2: the v1->unsuffixed MinerWars key rename orphaned existing users' data without ever
 // routing them through the wipe+auto-resync flow below (a missing version key was

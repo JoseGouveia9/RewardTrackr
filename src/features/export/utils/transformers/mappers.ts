@@ -43,14 +43,20 @@ export function transformSoloMining(
 
   if (Array.isArray(raw.incomeList)) {
     for (const inc of raw.incomeList) {
-      const maintenanceBtcVal = inc?.metaData?.maintenanceInBtc ?? null;
-      if (maintenanceBtcVal != null) {
-        maintenanceInBtcSum += maintenanceBtcVal;
-      }
-      const gmtAmt = inc?.maintenanceForWithdrawInGmt ?? null;
-      if (gmtAmt != null) {
-        maintenanceGMTDirect += gmtAmt;
-        hasGmtMaintenance = true;
+      // metaData.maintenanceInBtc is always populated as the BTC-equivalent value, even when
+      // maintenanceByGmt is true (the actual deduction happened in GMT) — only trust it as a
+      // real charge when this item wasn't paid in GMT, otherwise it duplicates maintenanceForWithdrawInGmt.
+      if (inc?.maintenanceByGmt) {
+        const gmtAmt = inc?.maintenanceForWithdrawInGmt ?? null;
+        if (gmtAmt != null) {
+          maintenanceGMTDirect += gmtAmt;
+          hasGmtMaintenance = true;
+        }
+      } else {
+        const maintenanceBtcVal = inc?.metaData?.maintenanceInBtc ?? null;
+        if (maintenanceBtcVal != null) {
+          maintenanceInBtcSum += maintenanceBtcVal;
+        }
       }
       if (inc?.reinvestmentInPowerNftStatusExecuted === true) reinvested = true;
       totalPower += inc?.power ?? 0;
@@ -71,9 +77,9 @@ export function transformSoloMining(
   const discount = discountMax;
   const rawValue = raw.value ?? 0;
 
-  // Maintenance can be paid partly in BTC and partly in GMT within the same record (mixed
-  // week) — add both actual portions together, converting each into the other currency,
-  // instead of exclusively picking one and dropping the other.
+  // Each item above was already bucketed into exactly one of these sums based on its own
+  // maintenanceByGmt flag, so adding them (converted to the other currency) is safe even
+  // when some items in the period were paid in BTC and others in GMT.
   const canConvertMaintenance = gmtPrice > 0 && btcPrice > 0;
   const maintenanceBtc =
     maintenanceInBtcSum +
