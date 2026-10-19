@@ -1,16 +1,16 @@
 ﻿import i18n from "@/i18n";
 import { CURRENCY_TO_COINGECKO } from "@/config/currencies";
-import { WALLET_TX_KEYS } from "@/config/wallet-types";
+import { WALLET_TRANSACTION_KEYS } from "@/config/wallet-types";
 import { ALL_REWARD_KEYS } from "@/config/reward-configs";
 import {
-  LS_KEY_MIGRATED_PREFIX,
-  LS_KEY_MW_CLAN_PERF,
-  LS_KEY_MW_COMPARISON,
-  LS_KEY_MW_CYCLES,
-  LS_KEY_MW_ROUND_PARTICIPANTS,
-  LS_KEY_MW_SIM_INPUTS,
-  LS_KEY_PRICE_CACHE,
-  LS_KEY_REWARD_PREFIX,
+  LOCAL_STORAGE_KEY_MIGRATED_PREFIX,
+  LOCAL_STORAGE_KEY_MINERWARS_CLAN_PERFORMANCE,
+  LOCAL_STORAGE_KEY_MINERWARS_COMPARISON,
+  LOCAL_STORAGE_KEY_MINERWARS_CYCLES,
+  LOCAL_STORAGE_KEY_MINERWARS_ROUND_PARTICIPANTS,
+  LOCAL_STORAGE_KEY_MINERWARS_SIMULATION_INPUTS,
+  LOCAL_STORAGE_KEY_PRICE_CACHE,
+  LOCAL_STORAGE_KEY_REWARD_PREFIX,
 } from "@/lib/storage-keys";
 import { parseJsonSafe } from "@/lib/parse-json-safe";
 import type { CacheEntry, CacheState, RewardKey, RewardRecord } from "@/types/rewards";
@@ -27,9 +27,10 @@ function asNumber(value: unknown): number {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
+/** Reads and validates a cached sheet from localStorage; null when absent or malformed. */
 export function loadCacheEntry(key: RewardKey): CacheEntry | null {
   try {
-    const raw = localStorage.getItem(LS_KEY_REWARD_PREFIX + key);
+    const raw = localStorage.getItem(LOCAL_STORAGE_KEY_REWARD_PREFIX + key);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<CacheEntry>;
     if (!parsed || typeof parsed !== "object") return null;
@@ -51,9 +52,13 @@ export function loadCacheEntry(key: RewardKey): CacheEntry | null {
 }
 
 export function wasCacheMigrated(key: RewardKey): boolean {
-  return localStorage.getItem(LS_KEY_MIGRATED_PREFIX + key) === "1";
+  return localStorage.getItem(LOCAL_STORAGE_KEY_MIGRATED_PREFIX + key) === "1";
 }
 
+/**
+ * Writes a sheet to localStorage and clears its migrated flag; storage errors (e.g. quota) are
+ * swallowed.
+ */
 export function saveCacheEntry(
   key: RewardKey,
   sheetName: string,
@@ -63,10 +68,10 @@ export function saveCacheEntry(
 ): void {
   try {
     localStorage.setItem(
-      LS_KEY_REWARD_PREFIX + key,
+      LOCAL_STORAGE_KEY_REWARD_PREFIX + key,
       JSON.stringify({ sheetName, records, totalCount, fetchedAt: Date.now(), ...extras }),
     );
-    localStorage.removeItem(LS_KEY_MIGRATED_PREFIX + key);
+    localStorage.removeItem(LOCAL_STORAGE_KEY_MIGRATED_PREFIX + key);
     // eslint-disable-next-line no-empty
   } catch {}
 }
@@ -81,17 +86,17 @@ export function loadAllCacheEntries(): CacheState {
 
 export function clearRecordsCacheEntries(): void {
   ALL_REWARD_KEYS.filter((key) => key !== "minerwars").forEach((key) =>
-    localStorage.removeItem(LS_KEY_REWARD_PREFIX + key),
+    localStorage.removeItem(LOCAL_STORAGE_KEY_REWARD_PREFIX + key),
   );
 }
 
+/** Removes MinerWars sheet and caches, including legacy pre-rename keys. */
 export function clearMinerWarsCacheEntries(): void {
-  localStorage.removeItem(LS_KEY_REWARD_PREFIX + "minerwars");
-  localStorage.removeItem(LS_KEY_MW_COMPARISON);
-  localStorage.removeItem(LS_KEY_MW_CYCLES);
-  localStorage.removeItem(LS_KEY_MW_SIM_INPUTS);
-  localStorage.removeItem(LS_KEY_MW_CLAN_PERF);
-  // Legacy pre-rename keys, now orphaned dead weight.
+  localStorage.removeItem(LOCAL_STORAGE_KEY_REWARD_PREFIX + "minerwars");
+  localStorage.removeItem(LOCAL_STORAGE_KEY_MINERWARS_COMPARISON);
+  localStorage.removeItem(LOCAL_STORAGE_KEY_MINERWARS_CYCLES);
+  localStorage.removeItem(LOCAL_STORAGE_KEY_MINERWARS_SIMULATION_INPUTS);
+  localStorage.removeItem(LOCAL_STORAGE_KEY_MINERWARS_CLAN_PERFORMANCE);
   localStorage.removeItem("rt_mw_comparison_v1");
   localStorage.removeItem("rt_mw_cycles_v1");
   localStorage.removeItem("rt_mw_day_gate_v1");
@@ -100,14 +105,18 @@ export function clearMinerWarsCacheEntries(): void {
 export function clearAllCacheEntries(): void {
   clearRecordsCacheEntries();
   clearMinerWarsCacheEntries();
-  localStorage.removeItem(LS_KEY_MW_ROUND_PARTICIPANTS);
+  localStorage.removeItem(LOCAL_STORAGE_KEY_MINERWARS_ROUND_PARTICIPANTS);
 }
 
+/**
+ * Stores each priced wallet-tx record's price in the shared CoinGecko cache so later exports skip
+ * the lookup.
+ */
 export function persistPriceCache(key: RewardKey, records: RewardRecord[]): void {
-  if (!WALLET_TX_KEYS.has(key) || !records.length) return;
+  if (!WALLET_TRANSACTION_KEYS.has(key) || !records.length) return;
   try {
     const store = parseJsonSafe<Record<string, PriceCacheValue>>(
-      localStorage.getItem(LS_KEY_PRICE_CACHE),
+      localStorage.getItem(LOCAL_STORAGE_KEY_PRICE_CACHE),
       {},
     );
 
@@ -140,25 +149,33 @@ export function persistPriceCache(key: RewardKey, records: RewardRecord[]): void
       }
     }
 
-    localStorage.setItem(LS_KEY_PRICE_CACHE, JSON.stringify(store));
+    localStorage.setItem(LOCAL_STORAGE_KEY_PRICE_CACHE, JSON.stringify(store));
     // eslint-disable-next-line no-empty
   } catch {}
 }
 
+/**
+ * True when a wallet-tx sheet has non-stablecoin rewards without a price, so it must be refetched
+ * with fiat.
+ */
 export function hasMissingPrices(
   cacheEntry: CacheEntry | null,
   key: RewardKey,
   includeWalletFiat: boolean,
 ): boolean {
   if (!cacheEntry || !Array.isArray(cacheEntry.records)) return false;
-  if (!WALLET_TX_KEYS.has(key) || !includeWalletFiat) return false;
-  return cacheEntry.records.some((r) => {
-    if (!r || typeof r !== "object") return false;
-    if (r.currency === "USDT" || r.currency === "USDC") return false;
-    return asNumber(r.reward) > 0 && asNumber(r.priceAtTime) <= 0;
+  if (!WALLET_TRANSACTION_KEYS.has(key) || !includeWalletFiat) return false;
+  return cacheEntry.records.some((record) => {
+    if (!record || typeof record !== "object") return false;
+    if (record.currency === "USDT" || record.currency === "USDC") return false;
+    return asNumber(record.reward) > 0 && asNumber(record.priceAtTime) <= 0;
   });
 }
 
+/**
+ * For solo-mining and MinerWars, drops records whose reinvestment is still "created" (not yet executed)
+ * to avoid double-counting, and reports how many were removed.
+ */
 export function filterCacheableRecords(
   key: RewardKey,
   records: RewardRecord[],
@@ -175,9 +192,8 @@ export function filterCacheableRecords(
     };
   }
 
-  // "created" means the reinvestment hasn't executed yet — exclude to avoid double-counting
   const filtered = records.filter(
-    (r) => String(r?.reinvestmentStatus || "").toLowerCase() !== "created",
+    (record) => String(record?.reinvestmentStatus || "").toLowerCase() !== "created",
   );
   const removedCreated = records.length - filtered.length;
   const cachedTotalCount =

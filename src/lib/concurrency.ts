@@ -1,19 +1,16 @@
-// Runs `fn` over `items` with at most `concurrency` calls in flight at once, preserving
-// result order. Used anywhere a batch of independent network calls would otherwise be
-// awaited one-by-one in a for loop (which pays full network latency per item instead of
-// overlapping it).
+/** Runs `fn` over `items` with at most `concurrency` calls in flight, preserving result order. */
 export async function mapWithConcurrency<T, R>(
   items: T[],
   concurrency: number,
-  fn: (item: T, index: number) => Promise<R>,
+  mapItem: (item: T, index: number) => Promise<R>,
 ): Promise<R[]> {
   const results: R[] = new Array(items.length);
   let next = 0;
   async function worker(): Promise<void> {
     while (true) {
-      const i = next++;
-      if (i >= items.length) return;
-      results[i] = await fn(items[i], i);
+      const index = next++;
+      if (index >= items.length) return;
+      results[index] = await mapItem(items[index], index);
     }
   }
   await Promise.all(Array.from({ length: Math.min(concurrency, items.length) }, worker));

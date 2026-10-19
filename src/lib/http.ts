@@ -1,45 +1,51 @@
-﻿const REQUEST_TIMEOUT_MS = 30_000;
-const GET_TIMEOUT_MS = 15_000;
+const REQUEST_TIMEOUT_MILLISECONDS = 30_000;
+const GET_TIMEOUT_MILLISECONDS = 15_000;
 
-export function resolveApiBase(): string {
-  const envBase = (import.meta.env.VITE_API_BASE as string | undefined)?.replace(/\/$/, "");
-  if (envBase) return envBase;
+/**
+ * Picks the env override, else the same-origin proxy path on rewardtrackr.com, else the direct
+ * API URL.
+ */
+function resolveBase(
+  environmentBase: string | undefined,
+  proxyPath: string,
+  fallback: string,
+): string {
+  const fromEnvironment = environmentBase?.replace(/\/$/, "");
+  if (fromEnvironment) return fromEnvironment;
 
   if (typeof window !== "undefined" && /(^|\.)rewardtrackr\.com$/i.test(window.location.hostname)) {
-    return window.location.origin;
+    return `${window.location.origin}${proxyPath}`;
   }
 
-  return "https://api.gomining.com";
+  return fallback;
+}
+
+export function resolveApiBase(): string {
+  return resolveBase(
+    import.meta.env.VITE_API_BASE as string | undefined,
+    "",
+    "https://api.gomining.com",
+  );
 }
 
 export function resolveBonusMinerApiBase(): string {
-  const envBase = (import.meta.env.VITE_BONUS_MINER_API_BASE as string | undefined)?.replace(
-    /\/$/,
-    "",
+  return resolveBase(
+    import.meta.env.VITE_BONUS_MINER_API_BASE as string | undefined,
+    "/gomining-api/bm",
+    "https://api.bonus-miner.gomining.com",
   );
-  if (envBase) return envBase;
-
-  if (typeof window !== "undefined" && /(^|\.)rewardtrackr\.com$/i.test(window.location.hostname)) {
-    return `${window.location.origin}/gomining-api/bm`;
-  }
-
-  return "https://api.bonus-miner.gomining.com";
 }
 
-// CryptoCompare's min-api doesn't send CORS headers for browser requests, so on
-// rewardtrackr.com this is routed through the Worker's /cc/ proxy instead.
+/**
+ * CryptoCompare sends no CORS headers, so rewardtrackr.com routes it through the Worker /cc/
+ * proxy.
+ */
 export function resolveCryptoCompareApiBase(): string {
-  const envBase = (import.meta.env.VITE_CRYPTOCOMPARE_API_BASE as string | undefined)?.replace(
-    /\/$/,
-    "",
+  return resolveBase(
+    import.meta.env.VITE_CRYPTOCOMPARE_API_BASE as string | undefined,
+    "/cc",
+    "https://min-api.cryptocompare.com",
   );
-  if (envBase) return envBase;
-
-  if (typeof window !== "undefined" && /(^|\.)rewardtrackr\.com$/i.test(window.location.hostname)) {
-    return `${window.location.origin}/cc`;
-  }
-
-  return "https://min-api.cryptocompare.com";
 }
 
 interface JwtPayload {
@@ -62,13 +68,17 @@ export function buildApiHeaders(token: string): Record<string, string> {
   };
 }
 
+/**
+ * POSTs JSON with a 30s timeout; non-2xx throws the API message and a 401 fires the
+ * rt:session-expired event.
+ */
 export async function postJson<TResponse = unknown>(
   url: string,
   headers: Record<string, string>,
   body: unknown,
 ): Promise<TResponse> {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MILLISECONDS);
 
   try {
     const response = await fetch(url, {
@@ -107,7 +117,7 @@ export async function postJson<TResponse = unknown>(
 
 export async function getJson<TResponse = unknown>(url: string): Promise<TResponse> {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), GET_TIMEOUT_MS);
+  const timeout = setTimeout(() => controller.abort(), GET_TIMEOUT_MILLISECONDS);
   try {
     const response = await fetch(url, { signal: controller.signal });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -117,9 +127,12 @@ export async function getJson<TResponse = unknown>(url: string): Promise<TRespon
   }
 }
 
+/**
+ * GET that parses the body as JSON even on error statuses, throwing only if it is not valid JSON.
+ */
 export async function getJsonTolerant<TResponse = unknown>(url: string): Promise<TResponse> {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), GET_TIMEOUT_MS);
+  const timeout = setTimeout(() => controller.abort(), GET_TIMEOUT_MILLISECONDS);
   try {
     const response = await fetch(url, { signal: controller.signal });
     const text = await response.text();
@@ -133,12 +146,15 @@ export async function getJsonTolerant<TResponse = unknown>(url: string): Promise
   }
 }
 
+/** Decodes the JWT payload without verifying the signature; null when malformed. */
 export function decodeJwt(token: string): JwtPayload | null {
   try {
     const parts = token.split(".");
     if (parts.length !== 3) return null;
     const payload = parts[1].replace(/-/g, "+").replace(/_/g, "/");
-    const json = new TextDecoder().decode(Uint8Array.from(atob(payload), (c) => c.charCodeAt(0)));
+    const json = new TextDecoder().decode(
+      Uint8Array.from(atob(payload), (character) => character.charCodeAt(0)),
+    );
     return JSON.parse(json) as JwtPayload;
   } catch {
     return null;

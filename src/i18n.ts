@@ -3,14 +3,14 @@ import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 import HttpBackend from "i18next-http-backend";
 
-export interface LangMeta {
+export interface LanguageMetadata {
   code: string;
   nativeName: string;
   englishName: string;
   rtl?: boolean;
 }
 
-export const LANGUAGES: LangMeta[] = [
+export const LANGUAGES: LanguageMetadata[] = [
   { code: "en", nativeName: "English", englishName: "English" },
   { code: "zh-CN", nativeName: "简体中文", englishName: "Chinese Simplified" },
   { code: "de", nativeName: "Deutsch", englishName: "German" },
@@ -25,7 +25,7 @@ export const LANGUAGES: LangMeta[] = [
   { code: "es", nativeName: "Español", englishName: "Spanish" },
 ];
 
-const supportedLngs = LANGUAGES.map((l) => l.code);
+const supportedLanguages = LANGUAGES.map((language) => language.code);
 
 void i18n
   .use(HttpBackend)
@@ -33,7 +33,7 @@ void i18n
   .use(initReactI18next)
   .init({
     fallbackLng: "en",
-    supportedLngs,
+    supportedLngs: supportedLanguages,
     backend: { loadPath: "/locales/{{lng}}/translation.json" },
     detection: {
       order: ["localStorage", "navigator"],
@@ -43,13 +43,13 @@ void i18n
     interpolation: { escapeValue: false },
   })
   .then(() => {
-    applyDocumentDir(i18n.language);
+    applyDocumentDirection(i18n.language);
   });
 
-export function applyDocumentDir(lang: string) {
-  const meta = LANGUAGES.find((l) => l.code === lang);
-  document.documentElement.dir = meta?.rtl ? "rtl" : "ltr";
-  document.documentElement.lang = lang;
+export function applyDocumentDirection(languageCode: string) {
+  const metadata = LANGUAGES.find((language) => language.code === languageCode);
+  document.documentElement.dir = metadata?.rtl ? "rtl" : "ltr";
+  document.documentElement.lang = languageCode;
 }
 
 export default i18n;

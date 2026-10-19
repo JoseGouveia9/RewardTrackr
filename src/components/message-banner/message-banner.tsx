@@ -1,10 +1,14 @@
 import { motion } from "framer-motion";
+import { CheckCircleIcon, ClockIcon, CrossCircleIcon } from "@/components/icons";
 
+/**
+ * Splits text into plain strings and links, turning `[label](url)` markdown into new-tab anchors.
+ */
 function parseParts(text: string) {
-  return text.split(/(\[[^\]]+\]\([^)]+\))/g).map((part, i) => {
+  return text.split(/(\[[^\]]+\]\([^)]+\))/g).map((part, index) => {
     const match = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
     return match ? (
-      <a key={i} href={match[2]} target="_blank" rel="noopener noreferrer">
+      <a key={index} href={match[2]} target="_blank" rel="noopener noreferrer">
         {match[1]}
       </a>
     ) : (
@@ -13,8 +17,12 @@ function parseParts(text: string) {
   });
 }
 
-function getMessageType(msg: string): "success" | "error" | "loading" {
-  const lower = msg.toLowerCase();
+/**
+ * Classifies a status message by English keywords: error, success, otherwise in-progress
+ * (loading).
+ */
+function getMessageType(message: string): "success" | "error" | "loading" {
+  const lower = message.toLowerCase();
   if (
     lower.includes("invalid") ||
     lower.includes("expired") ||
@@ -50,62 +58,16 @@ export function MessageBanner({ message, onClose }: MessageBannerProps) {
 
   const icon =
     type === "success" ? (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="15"
-        height="15"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-        className="message-icon"
-      >
-        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-        <polyline points="22 4 12 14.01 9 11.01" />
-      </svg>
+      <CheckCircleIcon className="message-icon" />
     ) : type === "error" ? (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="15"
-        height="15"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-        className="message-icon"
-      >
-        <circle cx="12" cy="12" r="10" />
-        <line x1="15" y1="9" x2="9" y2="15" />
-        <line x1="9" y1="9" x2="15" y2="15" />
-      </svg>
+      <CrossCircleIcon className="message-icon" />
     ) : (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="15"
-        height="15"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-        className="message-icon"
-      >
-        <circle cx="12" cy="12" r="10" />
-        <polyline points="12 6 12 12 16 14" />
-      </svg>
+      <ClockIcon className="message-icon" />
     );
 
-  const newlineIdx = message.indexOf("\n");
-  const mainMessage = newlineIdx === -1 ? message : message.slice(0, newlineIdx);
-  const hintMessage = newlineIdx === -1 ? null : message.slice(newlineIdx + 1);
+  const newlineIndex = message.indexOf("\n");
+  const mainMessage = newlineIndex === -1 ? message : message.slice(0, newlineIndex);
+  const hintMessage = newlineIndex === -1 ? null : message.slice(newlineIndex + 1);
 
   return (
     <motion.div

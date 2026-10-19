@@ -14,13 +14,3 @@ body {
   margin: 0;
   padding: 0;
 }
-
-.floatingchat-container-wrap,
-.floatingchat-container-wrap-mobi {
-  width: 280px !important;
-}
-
-.floatingchat-container,
-.floatingchat-container-mobi {
-  width: 280px !important;
-}

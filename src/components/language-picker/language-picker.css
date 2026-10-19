@@ -122,7 +122,6 @@
   align-items: center;
 }
 
-/* Light theme */
 .page.theme-light .lang-overlay {
   background: rgba(0, 0, 0, 0.45);
 }

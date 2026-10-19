@@ -19,7 +19,7 @@ export type SheetType =
   | "transactions"
   | "simple-earn";
 
-export type EnrichType =
+type EnrichType =
   | "solo-mining"
   | "minerwars"
   | "wallet-tx-coingecko"
@@ -48,19 +48,19 @@ interface RewardConfigBase {
   pageSize: number;
 }
 
-export interface SkipRewardConfig extends RewardConfigBase {
+interface SkipRewardConfig extends RewardConfigBase {
   pagination: "skip";
   buildBody: (skip: number) => RewardRequestBody;
   getNextCursor?: never;
 }
 
-export interface CursorRewardConfig extends RewardConfigBase {
+interface CursorRewardConfig extends RewardConfigBase {
   pagination: "cursor";
   buildBody: (cursor: number) => RewardRequestBody;
   getNextCursor: (item: CursorPaginationItem) => number;
 }
 
-export interface DateCursorRewardConfig extends RewardConfigBase {
+interface DateCursorRewardConfig extends RewardConfigBase {
   pagination: "date-cursor";
   buildBody: (cursor: string) => RewardRequestBody;
   getNextCursor: (item: CursorPaginationItem) => string;
@@ -70,7 +70,7 @@ export type RewardConfig = SkipRewardConfig | CursorRewardConfig | DateCursorRew
 
 export type ExtraFiatCurrency = string;
 
-export interface FiatOptions {
+interface FiatOptions {
   includeFiat?: boolean;
   fiatCurrency?: ExtraFiatCurrency;
 }
@@ -81,12 +81,12 @@ export interface IncrementalFetchOptions {
 }
 
 export interface FetchRewardsOptions {
-  walletTx?: FiatOptions;
+  walletTransaction?: FiatOptions;
   excel?: FiatOptions;
   incremental?: IncrementalFetchOptions;
 }
 
-export interface GoMiningDataArray<TRecord = unknown> {
+interface GoMiningDataArray<TRecord = unknown> {
   array?: TRecord[];
   count?: number;
 }
@@ -101,7 +101,7 @@ export interface FxLatestResponse {
   rates?: { EUR?: number; [currency: string]: number | undefined };
 }
 
-export interface FxTimeseriesRateEntry {
+interface FxTimeseriesRateEntry {
   EUR?: number;
   [currency: string]: number | undefined;
 }
@@ -126,7 +126,7 @@ export interface CoinGeckoPriceResult {
 
 export type CoinGeckoPriceCacheValue = CoinGeckoPriceResult | number | null;
 
-export interface SoloIncomeListItem {
+interface SoloIncomeListItem {
   metaData?: { poolReward?: number; maintenanceInBtc?: number };
   c1Value?: number;
   c2Value?: number;
@@ -164,7 +164,7 @@ export interface MinerWarsRawRecord {
   energyEfficiency?: number;
 }
 
-export interface WalletTxRawRecord {
+export interface WalletTransactionRawRecord {
   createdAt: string;
   walletType?: string;
   valueNumeric?: string;
@@ -179,7 +179,7 @@ export interface ExistingPriceRawRecord {
   rewardInUSD?: number;
 }
 
-export interface SimpleEarnAsset {
+interface SimpleEarnAsset {
   asset: string;
   price: string;
   apr?: number;
@@ -235,7 +235,7 @@ export interface MiningEnrichedRecord {
   btcPriceGmt?: number;
 }
 
-export interface WalletTxEnrichedRecord {
+export interface WalletTransactionEnrichedRecord {
   createdAt: string;
   currency: string;
   reward: number;
@@ -278,7 +278,7 @@ export interface SimpleEarnEnrichedRecord {
 
 export type EnrichedRecord =
   | MiningEnrichedRecord
-  | WalletTxEnrichedRecord
+  | WalletTransactionEnrichedRecord
   | StandardEnrichedRecord
   | PurchaseEnrichedRecord
   | SimpleEarnEnrichedRecord
@@ -292,9 +292,7 @@ export interface RewardSheetPayload {
   totalCount: number | null;
 }
 
-export type ProbeCountsMap = Record<string, number | null>;
-
-export type PricingMode = "fiat-on" | "fiat-off";
+type PricingMode = "fiat-on" | "fiat-off";
 
 export interface RewardRecord {
   createdAt?: string;

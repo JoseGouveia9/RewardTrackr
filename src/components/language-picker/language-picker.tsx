@@ -1,9 +1,10 @@
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { AnimatePresence, motion } from "framer-motion";
-import { LANGUAGES, applyDocumentDir } from "@/i18n";
+import { LANGUAGES, applyDocumentDirection } from "@/i18n";
 import { useEscapeKey } from "@/hooks/use-escape-key";
 import "./language-picker.css";
+import { CheckIcon, CloseIcon } from "@/components/icons";
 
 interface LanguagePickerProps {
   open: boolean;
@@ -25,11 +26,11 @@ export function LanguagePicker({ open, onClose }: LanguagePickerProps) {
 
   function handleSelect(code: string) {
     void i18n.changeLanguage(code);
-    applyDocumentDir(code);
+    applyDocumentDirection(code);
     onClose();
   }
 
-  const currentLang = i18n.language;
+  const currentLanguage = i18n.language;
 
   return (
     <AnimatePresence>
@@ -41,8 +42,8 @@ export function LanguagePicker({ open, onClose }: LanguagePickerProps) {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.15 }}
-          onMouseDown={(e) => {
-            if (e.target === overlayRef.current) onClose();
+          onMouseDown={(event) => {
+            if (event.target === overlayRef.current) onClose();
           }}
         >
           <motion.div
@@ -60,52 +61,28 @@ export function LanguagePicker({ open, onClose }: LanguagePickerProps) {
                 onClick={onClose}
                 aria-label={t("common.close")}
               >
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
+                <CloseIcon />
               </button>
             </div>
 
             <div className="lang-grid">
-              {LANGUAGES.map((lang) => {
+              {LANGUAGES.map((language) => {
                 const isSelected =
-                  currentLang === lang.code ||
-                  currentLang.startsWith(lang.code + "-") ||
-                  (lang.code.includes("-") && currentLang === lang.code.split("-")[0]);
+                  currentLanguage === language.code ||
+                  currentLanguage.startsWith(language.code + "-") ||
+                  (language.code.includes("-") && currentLanguage === language.code.split("-")[0]);
                 return (
                   <button
-                    key={lang.code}
+                    key={language.code}
                     type="button"
                     className={`lang-option${isSelected ? " lang-option--active" : ""}`}
-                    onClick={() => handleSelect(lang.code)}
+                    onClick={() => handleSelect(language.code)}
                   >
-                    <span className="lang-option-native">{lang.nativeName}</span>
-                    <span className="lang-option-english">{lang.englishName}</span>
+                    <span className="lang-option-native">{language.nativeName}</span>
+                    <span className="lang-option-english">{language.englishName}</span>
                     {isSelected && (
                       <span className="lang-option-check" aria-hidden="true">
-                        <svg
-                          width="13"
-                          height="13"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <polyline points="20 6 9 17 4 12" />
-                        </svg>
+                        <CheckIcon size={13} />
                       </span>
                     )}
                   </button>

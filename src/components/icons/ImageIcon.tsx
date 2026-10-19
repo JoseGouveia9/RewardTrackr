@@ -1,0 +1,11 @@
+import { SvgIcon, type SvgIconProps } from "./svg-icon";
+
+export function ImageIcon(props: SvgIconProps) {
+  return (
+    <SvgIcon size={14} strokeWidth={2} {...props}>
+      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+      <circle cx="8.5" cy="8.5" r="1.5" />
+      <polyline points="21 15 16 10 5 21" />
+    </SvgIcon>
+  );
+}

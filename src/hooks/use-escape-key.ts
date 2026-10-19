@@ -3,8 +3,8 @@
 export function useEscapeKey(onEscape: () => void, enabled: boolean): void {
   useEffect(() => {
     if (!enabled) return;
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onEscape();
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") onEscape();
     }
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);

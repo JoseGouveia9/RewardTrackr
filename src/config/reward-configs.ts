@@ -1,6 +1,6 @@
 import type { CursorPaginationItem, RewardConfig, RewardGroup, RewardKey } from "@/types/rewards";
 import { resolveApiBase } from "@/lib/http";
-import { ALL_TX_FROM_TYPES } from "./wallet-types";
+import { ALL_TRANSACTION_FROM_TYPES } from "./wallet-types";
 
 const API = resolveApiBase();
 
@@ -20,7 +20,9 @@ export const REWARD_GROUPS: RewardGroup[] = [
   { id: "transactions", label: "tabs.transactions", keys: ["transactions"] },
 ];
 
-export const ALL_REWARD_KEYS: RewardKey[] = [...new Set(REWARD_GROUPS.flatMap((g) => g.keys))];
+export const ALL_REWARD_KEYS: RewardKey[] = [
+  ...new Set(REWARD_GROUPS.flatMap((group) => group.keys)),
+];
 
 const WALLET_TYPES = [
   "VIRTUAL_BNB",
@@ -33,7 +35,7 @@ const WALLET_TYPES = [
   "VIRTUAL_USDT",
 ];
 
-export const REWARD_CONFIGS: RewardConfig[] = [
+const REWARD_CONFIGS: RewardConfig[] = [
   {
     key: "solo-mining",
     sheetName: "Solo Mining",
@@ -227,7 +229,7 @@ export const REWARD_CONFIGS: RewardConfig[] = [
     buildBody: (cursor: number) => ({
       filter: {
         walletType: WALLET_TYPES,
-        fromType: ALL_TX_FROM_TYPES,
+        fromType: ALL_TRANSACTION_FROM_TYPES,
         range: null,
       },
       pagination: { cursor, limit: 100 },
@@ -246,8 +248,8 @@ export const REWARD_CONFIGS: RewardConfig[] = [
         .replace(" ", "T")
         .replace(/(\.\d{3})\d+/, "$1")
         .replace(/\+00$/, "Z");
-      const d = new Date(normalized);
-      return Number.isNaN(d.getTime()) ? "" : d.toISOString();
+      const date = new Date(normalized);
+      return Number.isNaN(date.getTime()) ? "" : date.toISOString();
     },
     buildBody: (cursor: string) => ({
       pagination: { limit: 50, cursorCreatedAt: cursor },
@@ -256,5 +258,5 @@ export const REWARD_CONFIGS: RewardConfig[] = [
 ];
 
 export const REWARD_CONFIG_MAP: Record<string, RewardConfig> = Object.fromEntries(
-  REWARD_CONFIGS.map((c) => [c.key, c]),
+  REWARD_CONFIGS.map((config) => [config.key, config]),
 );
