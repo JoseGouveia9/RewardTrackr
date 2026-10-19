@@ -5,28 +5,20 @@
     "close": "Close",
     "apply": "Apply",
     "clear": "Clear",
-    "copy": "Copy",
     "copied": "Copied",
-    "delete": "Delete",
     "share": "Share",
-    "search": "Search",
-    "loading": "Loading...",
-    "tryAgain": "Try again",
-    "confirm": "Confirm",
-    "dismiss": "Dismiss",
     "new": "NEW",
     "total": "Total",
     "user": "User",
     "updated": "Updated",
     "records": "Records",
-    "date": "Date",
     "power": "Power",
     "lessThanAMinuteAgo": "<1m ago",
     "minutesAgo": "{{count}}m ago",
     "hoursAgo": "{{count}}h ago",
     "daysAgo": "{{count}}d ago",
-    "transactionsFilter": "Transactions Filter",
-    "greeting": "Hello {{name}} 👋"
+    "greeting": "Hello {{name}} 👋",
+    "refresh": "Refresh"
   },
   "app": {
     "goToMain": "Go to main page",
@@ -45,7 +37,9 @@
     "maxExportsPerDay": "Max {{max}} exports per day.",
     "feedbackSuggestions": "Feedback & Suggestions",
     "sheetsToFetch": "{{fetch}} sheet(s) will be fetched. {{stored}} stored, will be probed for updates first.",
-    "allSheetsStored": "All sheets stored. Will probe for updates before building."
+    "allSheetsStored": "All sheets stored. Will probe for updates before building.",
+    "dataUpdatedResync": "We updated how records/MinerWars are calculated — resyncing your data…",
+    "downloadExcel": "Download Excel"
   },
   "auth": {
     "connectViaBrowserExtension": "Get Started",
@@ -55,7 +49,6 @@
     "step2": "Click 'Sync to Exporter' when the extension shows 'Ready to sync.'",
     "step3": "Once synced, the extension shows 'Hello [name] 👋' and 'Profile synced.'",
     "step4": "Click 'Open Exporter' and you will be redirected here",
-    "iVeSynced": "I've synced, open exporter",
     "howToUseExtension": "How to use the extension",
     "trustedBy": "Trusted by {{count}} GoMining miners",
     "havingIssues": "Having issues syncing?",
@@ -111,7 +104,8 @@
     "farm": "Farm",
     "kwhCostNote": "kWh cost: GoMining uses the project average over the billing period ($0.05–$0.07/kWh).",
     "maintenanceUsdNote": "Maintenance is always calculated in USD and then converted to the selected currency.",
-    "btcPrice": "BTC Price"
+    "btcPrice": "BTC Price",
+    "preview": "Preview"
   },
   "tabs": {
     "soloMining": "Solo Mining",
@@ -154,7 +148,6 @@
     "enrichingSheet": "Enriching {{name}} ({{current}} of {{total}})...",
     "skippedPending": "{{name}}: Skipped {{count}} pending reinvestment entr(y/ies), will retry on next export.",
     "buildingExcel": "Building Excel file...",
-    "preparingCycleTracker": "MinerWars: Preparing cycle data...",
     "downloaded": "Excel file downloaded! ({{details}})",
     "allFromCache": "all from cache",
     "partFetched": "{{count}} fetched",
@@ -208,8 +201,6 @@
     "loadingProfile": "Loading profile...",
     "updatedAge": "· Updated {{age}} · Read only",
     "filterEntries": "Filter",
-    "filterAll": "All",
-    "filterNone": "None",
     "filterSave": "Save",
     "filterDiscard": "Discard"
   },
@@ -231,9 +222,6 @@
     "bonus2Sub": "Within 90 days after registration",
     "bonus3Title": "30 days of Platinum+ for free",
     "bonus3Sub": "Within 30 days after registration"
-  },
-  "errors": {
-    "somethingWentWrong": "Something went wrong"
   },
   "language": {
     "selectLanguage": "Select language"
@@ -273,16 +261,10 @@
     "difference": "Difference",
     "vsSolo": "vs solo",
     "soloTarget": "Solo target",
-    "minerWarsProgress": "MinerWars progress",
-    "ofTarget": "% of target",
-    "clanTarget": "Clan target",
-    "clanProgress": "Clan progress (est.)",
-    "blocksNeeded": "Blocks needed",
     "block_one": "{{count}} block",
     "block_other": "{{count}} blocks",
     "blockShort_one": "{{count}} blk",
     "blockShort_other": "{{count}} blks",
-    "satsPerBlock": "@ {{sats}} sats/block",
     "warnBtcFundZero": "Your league BTC fund is currently 0. MinerWars estimate will show 0 until the fund starts being filled.\nTry refreshing tomorrow once the first day of the cycle has been funded.",
     "warnNoClanAnalyticsLive": "No clan analytics (clan may be <30 days old) — using current clan power for all rounds. Estimation may be over/under-inflated.",
     "warnNoClanAnalyticsDone": "No clan analytics (clan may be <30 days old) — using clan power at cycle end for all rounds. Estimation may be over/under-inflated.",
@@ -311,21 +293,11 @@
     "maintenanceDiscountInfoTitle": "Maintenance discounts",
     "maintenanceDiscountInfoDesc": "Solo maintenance always uses your personal discount, plus any Mining Mode discount (an extra discount while you're not in MinerWars). MinerWars maintenance blends your personal discount (for rewards up to the solo-mining-equivalent threshold) with the league discount (beyond it).",
     "simulate": "Simulate",
-    "simulateTitle": "Simulate maintenance & net",
-    "simulateHint": "Try hypothetical values — nothing here is saved.",
-    "simulateTh": "Hashrate (TH/s)",
-    "simulateUserEE": "Your EE (W/TH)",
-    "simulateLeagueEE": "League EE (W/TH)",
-    "simulatePersonalDiscountPct": "Your maintenance discount (%)",
-    "simulateLeagueDiscountPct": "League maintenance discount (%)",
-    "simulateReset": "Reset",
     "simulateClose": "Close",
     "tabIndividual": "Individual",
     "tabClan": "Clan",
     "clanNotAvailableCompleted": "Clan performance isn't available for completed cycles",
-    "loading": "Loading…",
     "clanNoData": "No clan data available",
-    "unknown": "Unknown",
     "target": "Target",
     "rankNumber": "Rank #{{position}}",
     "rankUnknown": "Rank —",
@@ -335,20 +307,19 @@
     "clanTh": "Clan TH",
     "clanPps": "Clan PPS",
     "cycleTarget": "Cycle target",
-    "performance": "Performance",
-    "sortGmt": "Sort: GMT",
-    "sortBoost": "Sort: Boost cost",
-    "sortShare": "Sort: Share %",
-    "sharePct": "Power share",
-    "reward": "Reward",
     "personalGmt": "Personal GMT",
     "boostCost": "Boost cost",
     "breakEvenReached": "Break-even reached 🎉",
     "blocksNeededCount_one": "{{count}} block needed",
     "blocksNeededCount_other": "{{count}} blocks needed",
-    "newRecord": "New record!",
-    "beReachedRecordBlocks_one": "Break-even reached — {{count}} block to new record",
-    "beReachedRecordBlocks_other": "Break-even reached — {{count}} blocks to new record"
+    "noBaseline": "No baseline",
+    "simulateModalTitle": "Simulate",
+    "simulateModalDesc": "See how the maintenance/net numbers would change with hypothetical TH, efficiency and discount values — this doesn't affect your real data.",
+    "simulateThLabel": "TH",
+    "simulateUserEELabel": "EE (W/TH)",
+    "simulatePreviousClan": "previous clan",
+    "simulateLeagueEELabel": "League EE (W/TH)",
+    "simulateUnavailable": "Nothing to simulate yet — reopen this cycle once its data has finished loading."
   },
   "footer": {
     "about": "About",
@@ -435,5 +406,27 @@
     "changesP1": "These terms may be updated at any time. Continued use of RewardTrackr after changes are posted constitutes acceptance of the updated terms.",
     "governingLawTitle": "Governing law",
     "governingLawP1": "These terms shall be governed by the laws of Portugal."
+  },
+  "minerwars": {
+    "clan": "Clan",
+    "individual": "Individual"
+  },
+  "minerwarsShare": {
+    "generatedOn": "Generated {{date}}",
+    "both": "Both",
+    "title": "Share MinerWars",
+    "subtitle": "Create a dedicated MinerWars image from this cycle and share the individual view, clan view, or both together.",
+    "individualCurrency": "Individual currency",
+    "clanPerformanceCurrency": "Clan currency",
+    "leagueTag": "League tag",
+    "clanName": "Clan name",
+    "trendChart": "Trend chart",
+    "personalRewardRow": "Personal GMT/Boost/Net",
+    "nothingToShare": "No data available for this selection.",
+    "generating": "Generating preview..."
+  },
+  "shareImage": {
+    "lightImage": "Light mode image",
+    "downloadPng": "Download PNG"
   }
 }
