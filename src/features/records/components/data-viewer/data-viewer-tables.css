@@ -1,0 +1,410 @@
+/* ============================
+   Data Table
+   ============================ */
+
+.dv-content {
+  flex: 1;
+}
+
+/* MinerWars Cycle Tracker toggle + slide layout */
+
+.dv-minerwars-toolbar {
+  display: flex;
+  justify-content: stretch;
+  margin-bottom: 10px;
+}
+
+.dv-minerwars-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(246, 247, 250, 0.88));
+  color: #44506a;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    background 0.16s ease,
+    color 0.16s ease,
+    border-color 0.16s ease,
+    transform 0.16s ease;
+}
+
+.dv-minerwars-toggle-btn:hover {
+  background: linear-gradient(180deg, #ffffff, #f4f6fa);
+  color: #22283a;
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+.dv-minerwars-toggle-btn--active {
+  background: linear-gradient(180deg, rgba(247, 147, 26, 0.2), rgba(247, 147, 26, 0.12));
+  border-color: rgba(247, 147, 26, 0.6);
+  color: #cb7010;
+}
+
+.dv-minerwars-toggle-btn svg {
+  flex-shrink: 0;
+}
+
+.page.theme-dark .dv-minerwars-toggle-btn {
+  color: rgba(255, 255, 255, 0.74);
+  border-color: rgba(255, 255, 255, 0.1);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.045));
+}
+
+.page.theme-dark .dv-minerwars-toggle-btn:hover {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.07));
+  color: rgba(255, 255, 255, 0.95);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.page.theme-dark .dv-minerwars-toggle-btn--active {
+  background: linear-gradient(180deg, rgba(247, 147, 26, 0.26), rgba(247, 147, 26, 0.14));
+  border-color: rgba(247, 147, 26, 0.58);
+  color: #ffd6a3;
+}
+
+.dv-minerwars-slider-viewport {
+  overflow: hidden;
+}
+
+.dv-minerwars-slider-track {
+  display: flex;
+  width: 200%;
+  align-items: flex-start;
+  transition: transform 0.4s ease;
+}
+
+.dv-minerwars-slider-track--open {
+  transform: translateX(-50%);
+}
+
+.dv-minerwars-slider-pane {
+  flex: 0 0 50%;
+  min-width: 0;
+  max-width: 50%;
+}
+
+@media (max-width: 900px) {
+  .dv-minerwars-slider-track {
+    align-items: stretch;
+  }
+}
+
+.dv-tables-wrap {
+  overflow-x: auto;
+  overflow-y: clip;
+  overflow-clip-margin: 600px;
+  -webkit-overflow-scrolling: touch;
+  min-height: 697px;
+}
+
+.dv-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  table-layout: fixed;
+}
+
+.dv-tables-wrap--wide .dv-table {
+  width: 750px;
+}
+
+.dv-tables-wrap--scroll .dv-table {
+  width: 560px;
+}
+
+@media (min-width: 641px) {
+  .dv-tables-wrap--wide .dv-table,
+  .dv-tables-wrap--scroll .dv-table {
+    width: 100%;
+  }
+}
+
+.dv-table-totals {
+  border: 1px solid rgba(247, 147, 26, 0.4);
+  border-radius: 14px;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+
+.dv-table-totals td {
+  background: rgba(247, 147, 26, 0.1);
+}
+
+.dv-table.dv-table-totals tbody tr:hover td {
+  background: rgba(247, 147, 26, 0.1);
+}
+
+.page.theme-dark .dv-table-totals {
+  border-color: rgba(247, 147, 26, 0.45);
+}
+
+.page.theme-dark .dv-table-totals td {
+  background: rgba(247, 147, 26, 0.12);
+}
+
+.page.theme-dark .dv-table.dv-table-totals tbody tr:hover td {
+  background: rgba(247, 147, 26, 0.12);
+}
+
+.page.theme-light .dv-table-totals {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.page.theme-light .dv-table-totals td,
+.page.theme-light .dv-table.dv-table-totals tbody tr:hover td {
+  background: rgba(0, 0, 0, 0.02) !important;
+}
+
+.page.theme-light .dv-table-totals .dv-totals-label {
+  color: #f7931a !important;
+}
+
+.page.theme-light .dv-table-totals .dv-total-cell-label {
+  color: #9fa5be;
+}
+
+.page.theme-light .dv-table-totals .dv-total-cell-value {
+  color: #22283a;
+}
+
+.page.theme-light .dv-table-totals .dv-total-cell-value--accent {
+  color: #f7931a;
+}
+
+.dv-totals-row--clickable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.dv-table.dv-table-totals tbody .dv-totals-row--clickable:hover td {
+  background: rgba(247, 147, 26, 0.2);
+}
+
+.page.theme-dark .dv-table.dv-table-totals tbody .dv-totals-row--clickable:hover td {
+  background: rgb(247 147 26 / 15%);
+}
+
+.page.theme-light .dv-table.dv-table-totals tbody .dv-totals-row--clickable:hover td {
+  background: rgb(0 0 0 / 11%) !important;
+}
+
+.page.theme-dark .dv-totals-row--hidden td {
+  opacity: 0.35;
+}
+
+.page.theme-light .dv-table.dv-table-totals tbody .dv-totals-row--hidden td {
+  background: rgba(0, 0, 0, 0.02) !important;
+}
+
+.page.theme-light .dv-table.dv-table-totals tbody .dv-totals-row--hidden td > * {
+  opacity: 0.35;
+}
+
+.dv-totals-row--hidden .dv-totals-currency-label {
+  text-decoration: line-through;
+}
+
+/* ============================
+   Multi-currency totals — collapse rows into one inline flex row
+   Only tables with more than one <tr> (simple, purchases).
+   Mining / transactions / earn have a single row and are unaffected.
+   ============================ */
+
+.dv-table-totals:has(tr ~ tr) {
+  display: flex;
+}
+
+.dv-table-totals:has(tr ~ tr) colgroup {
+  display: none;
+}
+
+.dv-table-totals:has(tr ~ tr) tbody {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+}
+
+.dv-table-totals:has(tr ~ tr) tr {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 12px;
+  background: rgba(247, 147, 26, 0.1);
+}
+
+.page.theme-dark .dv-table-totals:has(tr ~ tr) tr {
+  background: rgba(247, 147, 26, 0.12);
+}
+
+.page.theme-light .dv-table-totals:has(tr ~ tr) tr {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.dv-table-totals:has(tr ~ tr) tr:not(:last-child) {
+  border-right: 1px solid rgba(247, 147, 26, 0.2);
+}
+
+.dv-table-totals:has(tr ~ tr) td:empty {
+  display: none;
+}
+
+.dv-table-totals:has(tr ~ tr) td {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none !important;
+  background: transparent !important;
+}
+
+.dv-table-totals:has(tr ~ tr) .dv-total-cell-label {
+  display: none;
+}
+
+.dv-table-totals:has(tr ~ tr) .dv-total-cell-value {
+  display: flex;
+  align-items: center;
+  font-size: 0.75rem;
+}
+
+.dv-table-data {
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 14px;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.page.theme-light .dv-table-data {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(52, 66, 97, 0.15);
+  box-shadow: 0 8px 18px rgba(40, 52, 84, 0.04);
+}
+
+.page.theme-light .dv-table-data thead th {
+  background: rgba(31, 43, 68, 0.05);
+  border-bottom-color: rgba(52, 66, 97, 0.15);
+}
+
+.dv-table-data thead th:first-child {
+  border-top-left-radius: 13px;
+}
+.dv-table-data thead th:last-child {
+  border-top-right-radius: 13px;
+}
+.dv-table-data tbody tr:last-child td:first-child {
+  border-bottom-left-radius: 13px;
+}
+.dv-table-data tbody tr:last-child td:last-child {
+  border-bottom-right-radius: 13px;
+}
+
+.page.theme-dark .dv-table-data {
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.dv-table td {
+  padding: 9px 16px;
+  color: #22283a;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  vertical-align: middle;
+}
+
+.dv-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.page.theme-dark .dv-table td {
+  color: rgba(255, 255, 255, 0.85);
+  border-bottom-color: rgba(255, 255, 255, 0.04);
+}
+
+.dv-table tbody tr:hover td {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.page.theme-light .dv-table tbody tr:hover td {
+  background: rgb(0 0 0 / 11%) !important;
+}
+
+.page.theme-dark .dv-table tbody tr:hover td {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* ============================
+   Row Selection Mode
+   ============================ */
+
+.dv-table-data.dv-selection-mode tbody tr {
+  cursor: pointer;
+}
+
+.dv-table-data.dv-selection-mode .dv-row--selected td {
+  background: rgba(0, 0, 0, 0.06) !important;
+}
+
+.page.theme-light .dv-table-data.dv-selection-mode .dv-row--selected td {
+  background: rgb(0 0 0 / 11%) !important;
+}
+
+.page.theme-dark .dv-table-data.dv-selection-mode .dv-row--selected td {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.dv-table-data.dv-selection-mode .dv-row--excluded td {
+  opacity: 0.3;
+}
+
+.dv-cell-date {
+  color: #6d7589 !important;
+  font-size: 0.78rem;
+}
+
+.dv-cell-accent {
+  color: #f7931a !important;
+  font-weight: 600;
+}
+
+.page.theme-dark .dv-cell-accent {
+  color: #fbb060 !important;
+}
+
+.dv-table td.dv-cell-type {
+  white-space: normal;
+  overflow-wrap: break-word;
+  max-width: 130px;
+}
+
+.dv-label--short {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .dv-label--full {
+    display: none;
+  }
+  .dv-label--short {
+    display: inline;
+  }
+}
+
+.dv-cell-with-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  vertical-align: middle;
+}

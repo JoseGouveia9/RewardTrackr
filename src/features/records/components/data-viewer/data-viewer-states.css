@@ -1,0 +1,306 @@
+/* ============================
+   Filter Checkboxes
+   ============================ */
+
+.dv-filter-checks {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.dv-filter-check-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 6px;
+  border-radius: 7px;
+  font-size: 0.8rem;
+  font-family: "Inter", sans-serif;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: #3a445a;
+  cursor: pointer;
+  transition: background 0.1s ease;
+}
+
+.dv-filter-check-label:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.page.theme-dark .dv-filter-check-label {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.page.theme-dark .dv-filter-check-label:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.dv-filter-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 15px;
+  height: 15px;
+  border-radius: 4px;
+  border: 1.5px solid #c8cedf;
+  background: #ffffff;
+  cursor: pointer;
+  flex-shrink: 0;
+  position: relative;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease;
+}
+
+.dv-filter-checkbox:checked {
+  background: #f7931a;
+  border-color: #f7931a;
+}
+
+.dv-filter-checkbox:checked::after {
+  content: "";
+  position: absolute;
+  top: 1px;
+  left: 4px;
+  width: 4px;
+  height: 8px;
+  border: 2px solid #ffffff;
+  border-top: none;
+  border-left: none;
+  transform: rotate(45deg);
+}
+
+.page.theme-dark .dv-filter-checkbox {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.page.theme-dark .dv-filter-checkbox:checked {
+  background: #f7931a;
+  border-color: #f7931a;
+}
+
+/* ============================
+   Loading & Empty States
+   ============================ */
+
+.dv-empty {
+  padding: 40px 20px;
+  text-align: center;
+  color: #9fa5be;
+  font-size: 0.85rem;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-top: none;
+  border-radius: 0 0 14px 14px;
+}
+
+.dv-loading-row td {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.dv-loading-cell {
+  text-align: center;
+  color: #7b8197;
+  font-size: 0.78rem;
+}
+
+.dv-loading-cell .dv-loading-inline {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+}
+
+.page.theme-dark .dv-loading-row td {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.page.theme-dark .dv-loading-cell {
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.dv-loading-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dv-spinner {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  animation: dv-spin 0.7s linear infinite;
+}
+
+.dv-tab-spinner {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+}
+
+.dv-tab-spinner-wrapper {
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.dv-tab-spinner-inner {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.dv-animated-totals {
+  overflow-y: clip;
+}
+
+@keyframes dv-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================
+   Mobile Overrides
+   ============================ */
+
+@media (max-width: 640px) {
+  .trends-label-full {
+    display: none;
+  }
+
+  .trends-label-short {
+    display: inline;
+  }
+
+  .dv-column-filter-dropdown {
+    backdrop-filter: none;
+    background: rgba(252, 252, 253, 0.98);
+  }
+  .page.theme-dark .dv-column-filter-dropdown {
+    background: rgba(30, 30, 32, 0.98);
+  }
+
+  .dv-table {
+    table-layout: auto;
+    width: 100%;
+  }
+
+  .dv-tables-wrap--scroll .dv-table {
+    width: 100%;
+  }
+
+  .dv-table td {
+    padding: 6px 8px;
+  }
+  .dv-table-data thead th {
+    padding: 7px 8px;
+  }
+  .dv-table-data thead th:first-child {
+    padding-left: 16px;
+  }
+  .dv-table-data thead th:last-child {
+    padding-right: 16px;
+  }
+  .dv-tables-wrap {
+    min-height: 581px;
+  }
+
+  .dv-toolbar {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 6px;
+  }
+
+  .dv-toolbar-separator {
+    display: none;
+  }
+
+  .dv-back-button {
+    padding: 6px;
+  }
+
+  .dv-back-button span {
+    display: none;
+  }
+
+  .dv-share-button {
+    padding: 6px;
+  }
+
+  .dv-share-button span {
+    display: none;
+  }
+
+  .dv-group-button {
+    padding: 5px;
+  }
+
+  .dv-currency-button {
+    padding: 5px;
+  }
+
+  /* ── Multi-currency totals on mobile ──────────────────────────────────
+     Rules are ordered from lowest → highest specificity so more-specific
+     count-based selectors always win.
+     ─────────────────────────────────────────────────────────────────── */
+
+  /* Default: 3 per row (covers 3, 5, 6, 7+) */
+  .dv-table-totals:has(tr ~ tr) tr:not(.dv-totals-row--summary) {
+    flex: 0 0 33.333%;
+    max-width: 33.333%;
+  }
+  /* No border after last item in each 3-wide row */
+  .dv-table-totals:has(tr ~ tr) tr:nth-child(3n):not(.dv-totals-row--summary) {
+    border-right: none;
+  }
+
+  /* 2 currencies → 2 per row (50% each) */
+  .dv-table-totals:has(tr.dv-totals-row--clickable:nth-child(2)):not(
+      :has(tr.dv-totals-row--clickable:nth-child(3))
+    )
+    tr:not(.dv-totals-row--summary) {
+    flex: 0 0 50%;
+    max-width: 50%;
+  }
+  .dv-table-totals:has(tr.dv-totals-row--clickable:nth-child(2)):not(
+      :has(tr.dv-totals-row--clickable:nth-child(3))
+    )
+    tr:nth-child(2n):not(.dv-totals-row--summary) {
+    border-right: none;
+  }
+
+  /* 4 currencies → all 4 in one row (25% each) */
+  .dv-table-totals:has(tr.dv-totals-row--clickable:nth-child(4)):not(
+      :has(tr.dv-totals-row--clickable:nth-child(5))
+    )
+    tr:not(.dv-totals-row--summary) {
+    flex: 0 0 25%;
+    max-width: 25%;
+  }
+  /* Restore border on 3rd item (undoes the nth-child(3n) removal above) */
+  .dv-table-totals:has(tr.dv-totals-row--clickable:nth-child(4)):not(
+      :has(tr.dv-totals-row--clickable:nth-child(5))
+    )
+    tr:nth-child(3):not(.dv-totals-row--summary) {
+    border-right: 1px solid rgba(247, 147, 26, 0.2);
+  }
+  /* No border after the 4th item (last in the single row) */
+  .dv-table-totals:has(tr.dv-totals-row--clickable:nth-child(4)):not(
+      :has(tr.dv-totals-row--clickable:nth-child(5))
+    )
+    tr:nth-child(4):not(.dv-totals-row--summary) {
+    border-right: none;
+  }
+
+  /* Grand total row: always alone, full width, with top separator */
+  .dv-table-totals:has(tr ~ tr) tr.dv-totals-row--summary {
+    flex: 0 0 100%;
+    max-width: 100%;
+    border-right: none;
+    border-top: 1px solid rgba(247, 147, 26, 0.25);
+  }
+}

@@ -1,0 +1,366 @@
+/* ============================
+   Formula Tooltip
+   ============================ */
+
+.dv-info-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  margin-left: 3px;
+  vertical-align: middle;
+}
+
+.dv-info-icon {
+  cursor: default;
+  opacity: 0.4;
+  color: inherit;
+  line-height: 0;
+  transition: opacity 0.12s;
+}
+
+.dv-info-wrap:hover .dv-info-icon {
+  opacity: 0.9;
+}
+
+.dv-formula-tooltip {
+  display: none;
+  position: absolute;
+  top: calc(100% + 7px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1a1a1c;
+  color: #dde1f0;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  border-radius: 8px;
+  padding: 10px 13px;
+  width: max-content;
+  white-space: normal;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.65;
+  z-index: 200;
+  pointer-events: none;
+  text-align: left;
+  overflow-wrap: break-word;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+
+.page.theme-light .dv-formula-tooltip {
+  background: #ffffff;
+  color: #22283a;
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.page.theme-light .dv-formula-tooltip::before {
+  border-bottom-color: rgba(0, 0, 0, 0.1);
+}
+
+.dv-formula-tooltip::before {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-bottom-color: var(--border-color, rgba(255, 255, 255, 0.1));
+}
+
+.dv-formula-tooltip--right {
+  left: auto;
+  right: 0;
+  transform: none;
+}
+
+.dv-formula-tooltip--right::before {
+  left: auto;
+  right: 5px;
+  transform: none;
+}
+
+.dv-formula-tooltip--left {
+  left: 0;
+  right: auto;
+  transform: none;
+}
+
+.dv-formula-tooltip--left::before {
+  left: 5px;
+  right: auto;
+  transform: none;
+}
+
+.dv-info-wrap:hover .dv-formula-tooltip {
+  display: block;
+}
+
+.dv-table-data thead th:has(.dv-info-wrap:hover),
+.dv-table-data thead th:has(.dv-column-filter-dropdown) {
+  z-index: 3;
+}
+
+.dv-math-line {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+  font-size: 11px;
+}
+
+.dv-math-line:last-child {
+  margin-bottom: 0;
+}
+
+.dv-math-frac {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  vertical-align: middle;
+  margin: 0 2px;
+  line-height: 1.25;
+}
+
+.dv-math-num {
+  border-bottom: 1px solid currentColor;
+  padding: 0 3px 2px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.dv-math-den {
+  padding: 2px 3px 0;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.dv-math-label {
+  font-weight: 600;
+  font-size: 11.5px;
+  margin-bottom: 8px;
+  opacity: 0.9;
+  text-align: center;
+}
+
+.dv-math-sep {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 6px 0 8px;
+}
+
+.page.theme-light .dv-math-sep {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.dv-math-var {
+  opacity: 0.75;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.dv-math-note {
+  font-size: 10px;
+  opacity: 0.65;
+  line-height: 1.4;
+  margin-top: 4px;
+}
+
+/* ============================
+   Sub-labels & Currency Icons
+   ============================ */
+
+.dv-th-sub {
+  display: block;
+  font-size: 0.6rem;
+  font-weight: inherit;
+  color: inherit;
+  margin-top: 1px;
+  text-transform: none;
+  letter-spacing: 0;
+  opacity: 0.35;
+  overflow: hidden;
+}
+
+.dv-cell-sub {
+  font-size: 0.62rem;
+  color: rgba(176, 183, 204, 0.7);
+  margin-top: 1px;
+  line-height: 1.4;
+  overflow: hidden;
+}
+
+/* ============================
+   Trends Toggle
+   ============================ */
+
+.dv-trends-toggle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  background: transparent;
+  color: #6d7589;
+  cursor: pointer;
+  font-size: 0.75rem !important;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition:
+    background 0.12s ease,
+    color 0.12s ease,
+    border-color 0.12s ease;
+}
+
+.trends-label-short {
+  display: none;
+}
+
+.dv-trends-toggle:not(.dv-trends-toggle--active):hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #22283a;
+}
+
+.dv-trends-toggle--active {
+  background: rgba(22, 163, 74, 0.08);
+  border-color: rgba(22, 163, 74, 0.25);
+  color: #16a34a;
+}
+
+.page.theme-light .dv-trends-toggle--active {
+  background: #16a34a;
+  border-color: #16a34a;
+  color: #ffffff;
+}
+
+.page.theme-dark .dv-trends-toggle {
+  border-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.page.theme-dark .dv-trends-toggle:not(.dv-trends-toggle--active):hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.page.theme-dark .dv-trends-toggle--active {
+  background: rgba(74, 222, 128, 0.1);
+  border-color: rgba(74, 222, 128, 0.25);
+  color: #4ade80;
+}
+
+/* ============================
+   Trend Arrow
+   ============================ */
+
+.dv-trends-active .dv-cell-sub:not(.dv-cell-sub--static),
+.dv-trends-active .dv-th-sub {
+  animation: dv-bop-in 0.22s ease both;
+}
+
+.dv-trends-visible .dv-cell-sub:not(.dv-cell-sub--static),
+.dv-trends-visible .dv-th-sub {
+  opacity: 1;
+  max-height: 24px;
+  transform: translateY(0);
+}
+
+.dv-trends-exiting .dv-cell-sub:not(.dv-cell-sub--static),
+.dv-trends-exiting .dv-th-sub {
+  animation: dv-bop-out 0.18s ease both;
+}
+
+@keyframes dv-bop-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-6px);
+    max-height: 0;
+  }
+  65% {
+    transform: translateY(1px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 24px;
+  }
+}
+
+@keyframes dv-bop-out {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 24px;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-6px);
+    max-height: 0;
+  }
+}
+
+.dv-trend {
+  display: inline;
+  vertical-align: middle;
+  margin-left: 4px;
+  letter-spacing: 0.01em;
+}
+
+.dv-trend--up {
+  color: #16a34a;
+}
+
+.dv-trend--down {
+  color: #dc2626;
+}
+
+.page.theme-dark .dv-trend--up {
+  color: #4ade80;
+}
+
+.page.theme-dark .dv-trend--down {
+  color: #f87171;
+}
+
+.dv-currency-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+.dv-currency-icon-svg {
+  width: 18px;
+  height: 18px;
+}
+
+.dv-totals-currency-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  vertical-align: middle;
+}
+
+.dv-totals-currency-cell .dv-currency-icon,
+.dv-totals-currency-cell .dv-currency-icon-svg {
+  width: 22px;
+  height: 22px;
+}
+
+.dv-totals-currency-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-family: "Space Grotesk", sans-serif;
+  color: #ffffff;
+  line-height: 1;
+}
+
+.page.theme-dark .dv-totals-currency-label {
+  color: #f0f4ff;
+}
+
+.page.theme-light .dv-totals-currency-label {
+  color: #22283a;
+}

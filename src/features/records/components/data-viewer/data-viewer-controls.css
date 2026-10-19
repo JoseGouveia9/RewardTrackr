@@ -1,0 +1,276 @@
+/* ============================
+   Group & Currency Controls
+   ============================ */
+
+.dv-group-button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  background: transparent;
+  color: #6d7589;
+  cursor: pointer;
+  font-size: 0.75rem !important;
+  white-space: nowrap;
+  transition:
+    background 0.12s ease,
+    color 0.12s ease,
+    border-color 0.12s ease;
+  flex-shrink: 0;
+}
+
+.dv-group-button:not(.dv-group-button--active):hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #22283a;
+}
+
+.dv-group-button--active {
+  background: #000000;
+  border-color: #22283a;
+  color: #ffffff;
+}
+
+.page.theme-dark .dv-group-button {
+  color: rgba(255, 255, 255, 0.45);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.page.theme-dark .dv-group-button:not(.dv-group-button--active):hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.page.theme-dark .dv-group-button--active {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+.dv-currency-selector {
+  display: flex;
+  gap: 4px;
+}
+
+.dv-currency-button {
+  padding: 5px 10px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  background: transparent;
+  color: #6d7589;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  cursor: pointer;
+  transition:
+    background 0.12s ease,
+    color 0.12s ease,
+    border-color 0.12s ease;
+  white-space: nowrap;
+}
+
+.dv-currency-button:not(.dv-currency-button--active):hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #22283a;
+}
+
+.dv-currency-button--active {
+  background: #000000;
+  border-color: #22283a;
+  color: #ffffff;
+}
+
+.page.theme-dark .dv-currency-button {
+  color: rgba(255, 255, 255, 0.45);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.page.theme-dark .dv-currency-button:not(.dv-currency-button--active):hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.page.theme-dark .dv-currency-button--active {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+/* ============================
+   Tabs
+   ============================ */
+
+.dv-tabs {
+  display: flex;
+  gap: 10px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-top: 8px;
+  padding-bottom: 2px;
+  margin-bottom: 10px;
+}
+
+.dv-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.dv-tab {
+  padding: 6px 0;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  background: transparent;
+  color: #6d7589;
+  font-size: 0.82rem !important;
+  font-weight: 600 !important;
+  cursor: pointer;
+  transition:
+    background 0.12s ease,
+    color 0.12s ease,
+    border-color 0.12s ease;
+  white-space: nowrap;
+}
+
+.dv-tab--has-new {
+  padding-left: 14px;
+  padding-right: 14px;
+}
+
+.dv-new-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border-radius: 999px;
+  background: #f7931a;
+  color: #ffffff;
+  font-size: 0.4rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  line-height: 1;
+}
+
+.dv-new-badge--button {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+}
+
+.dv-tab:not(.dv-tab--active):hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #22283a;
+}
+
+.dv-tab--active {
+  background: rgba(247, 147, 26, 0.1);
+  border-color: rgba(247, 147, 26, 0.25);
+  color: #cb7010;
+}
+
+.page.theme-light .dv-tab--active {
+  background: #f7931a;
+  border-color: #f7931a;
+  color: #ffffff;
+}
+
+.page.theme-dark .dv-tab {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.page.theme-dark .dv-tab:not(.dv-tab--active):hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.page.theme-dark .dv-tab--active {
+  background: rgba(247, 147, 26, 0.12);
+  border-color: rgba(247, 147, 26, 0.3);
+  color: #fbb060;
+}
+
+/* ============================
+   Totals Table
+   ============================ */
+
+.dv-total-cell-label {
+  display: block;
+  font-size: 0.68rem;
+  color: #9fa5be;
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+
+.dv-total-cell-value {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-family: "Space Grotesk", sans-serif;
+  color: #22283a;
+  font-variant-numeric: tabular-nums;
+}
+
+.page.theme-dark .dv-total-cell-value {
+  color: #f0f4ff;
+}
+
+.dv-total-cell-value--accent {
+  color: #cb7010;
+}
+
+.page.theme-dark .dv-total-cell-value--accent {
+  color: #fbb060;
+}
+
+.dv-table-data thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 10px 16px;
+  text-align: start;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: "Space Grotesk", sans-serif;
+  color: #9fa5be;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: rgba(0, 0, 0, 0.02);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  white-space: nowrap;
+}
+
+.page.theme-dark .dv-table-data thead th {
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+
+.dv-totals-label {
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  font-family: "Space Grotesk", sans-serif;
+  color: #cb7010 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.page.theme-dark .dv-totals-label {
+  color: #fbb060 !important;
+}
+
+.dv-toolbar-pop.dv-grouped-control-row {
+  display: inline-flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 8px;
+  width: max-content;
+  white-space: nowrap;
+}
