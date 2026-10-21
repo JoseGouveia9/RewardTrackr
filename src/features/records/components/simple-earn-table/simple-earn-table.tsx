@@ -18,6 +18,7 @@ import { usePagedRows } from "../../hooks/use-paged-rows";
 import { useRowExclusions } from "../../hooks/use-row-exclusions";
 import { useSyncTableColumns } from "../../hooks/use-sync-table-columns";
 import { getSelectableRowProps } from "../../stores/row-selection-context";
+import { useRegisterRowSelectionControls } from "../../stores/row-selection-controls-context";
 import { RecordsTable } from "../records-table/records-table";
 import {
   DateCell,
@@ -85,7 +86,11 @@ export function SimpleEarnTable({
     () => rows.filter((row) => matchesDateRange(row.date, dateRange)),
     [rows, dateRange],
   );
-  const { rowSelection, excluded, selectedRows } = useRowExclusions(rewardKey, filteredRows);
+  const { rowSelection, excluded, selectedRows, selectAll, selectNone } = useRowExclusions(
+    rewardKey,
+    filteredRows,
+  );
+  useRegisterRowSelectionControls(Boolean(rowSelection), selectAll, selectNone);
 
   useEffect(() => setPage(0), [dateRange, groupByDay]);
 

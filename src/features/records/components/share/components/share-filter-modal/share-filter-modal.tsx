@@ -37,6 +37,17 @@ export function ShareFilterModal({
     });
   }, []);
 
+  const onSetExclusion = useCallback((key: RewardKey, ids: string[], excluded: boolean) => {
+    setDraft((previousDraft) => {
+      const current = new Set<string>(previousDraft[key] ?? []);
+      if (excluded) ids.forEach((id) => current.add(id));
+      else ids.forEach((id) => current.delete(id));
+      const next = { ...previousDraft, [key]: [...current] };
+      if (next[key]?.length === 0) delete next[key];
+      return next;
+    });
+  }, []);
+
   function handleSave() {
     onSave(draft);
   }
@@ -74,7 +85,7 @@ export function ShareFilterModal({
             onClose={onClose}
             sharedData={cache}
             pageSize={10}
-            rowSelection={{ exclusions: draft, onToggle }}
+            rowSelection={{ exclusions: draft, onToggle, onSetExclusion }}
           />
         </div>
 

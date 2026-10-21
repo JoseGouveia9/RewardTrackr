@@ -264,6 +264,12 @@
   gap: 8px;
 }
 
+.dv-row-selection-toolbar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .dv-toolbar-separator {
   color: rgba(0, 0, 0, 0.2);
   font-size: 14px;

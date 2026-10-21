@@ -78,7 +78,7 @@
 }
 
 .sfm-content .dv-header {
-  justify-content: flex-end;
+  justify-content: space-between;
   margin-top: 12px;
   margin-bottom: 6px;
 }

@@ -12,6 +12,7 @@ import { usePagedRows } from "../../hooks/use-paged-rows";
 import { useRowExclusions } from "../../hooks/use-row-exclusions";
 import { useSyncTableColumns } from "../../hooks/use-sync-table-columns";
 import { getSelectableRowProps } from "../../stores/row-selection-context";
+import { useRegisterRowSelectionControls } from "../../stores/row-selection-controls-context";
 import { CurrencyTotalsRows } from "../currency-totals-rows/currency-totals-rows";
 import { RecordsTable } from "../records-table/records-table";
 import {
@@ -125,7 +126,11 @@ export function PurchasesTable({
       ),
     [rows, dateRange, selectedTypes],
   );
-  const { rowSelection, excluded, selectedRows } = useRowExclusions("purchases", filteredRows);
+  const { rowSelection, excluded, selectedRows, selectAll, selectNone } = useRowExclusions(
+    "purchases",
+    filteredRows,
+  );
+  useRegisterRowSelectionControls(Boolean(rowSelection), selectAll, selectNone);
 
   useEffect(() => setPage(0), [dateRange, selectedTypes, hiddenCurrencies, groupByDay]);
 

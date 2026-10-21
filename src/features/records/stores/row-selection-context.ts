@@ -4,6 +4,7 @@ import type { RewardKey } from "@/types/rewards";
 export interface RowSelectionContextValue {
   exclusions: Partial<Record<RewardKey, string[]>>;
   onToggle: (key: RewardKey, ids: string[]) => void;
+  onSetExclusion: (key: RewardKey, ids: string[], excluded: boolean) => void;
 }
 
 const RowSelectionContext = createContext<RowSelectionContextValue | null>(null);

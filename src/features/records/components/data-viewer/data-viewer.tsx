@@ -23,6 +23,10 @@ import {
   useVisibleTabs,
 } from "./hooks/use-data-viewer-data";
 import { useTrendsToggle } from "./hooks/use-trends-toggle";
+import {
+  type RowSelectionControls,
+  RowSelectionControlsProvider,
+} from "../../stores/row-selection-controls-context";
 import { DataViewerHeader } from "./components/data-viewer-header/data-viewer-header";
 import { DataViewerContent } from "./components/data-viewer-content/data-viewer-content";
 import { DataViewerTabs } from "./components/data-viewer-tabs/data-viewer-tabs";
@@ -48,6 +52,7 @@ interface DataViewerProps {
   rowSelection?: {
     exclusions: Partial<Record<RewardKey, string[]>>;
     onToggle: (key: RewardKey, ids: string[]) => void;
+    onSetExclusion: (key: RewardKey, ids: string[], excluded: boolean) => void;
   };
   actions?: RecordsActions;
   header?: HeaderOptions;
@@ -96,6 +101,10 @@ export const DataViewer = memo(function DataViewer({
   useEffect(() => setMiningPage(0), [activeKey, dateRange, setMiningPage]);
   const fiatCode = useMemo(() => loadFiatCode(), []);
 
+  const [rowSelectionControls, setRowSelectionControls] = useState<RowSelectionControls | null>(
+    null,
+  );
+
   const isSharedContext = sharedData !== null && sharedData !== undefined;
 
   const rowSelectionContextValue = useMemo(() => {
@@ -103,6 +112,7 @@ export const DataViewer = memo(function DataViewer({
     return {
       exclusions: rowSelection.exclusions,
       onToggle: rowSelection.onToggle,
+      onSetExclusion: rowSelection.onSetExclusion,
     };
   }, [rowSelection]);
 
@@ -204,6 +214,7 @@ export const DataViewer = memo(function DataViewer({
                 ? resolveTabViewSelector(activeTab.kind, viewOptions, effectiveViews, setView)
                 : null
             }
+            rowSelectionToolbar={trackerOpen ? null : rowSelectionControls}
           />
         )}
 
@@ -217,33 +228,35 @@ export const DataViewer = memo(function DataViewer({
           fetchingKeys={fetchingKeys}
         />
 
-        <DataViewerContent
-          rowSelection={rowSelectionContextValue}
-          animationKey={tableAnimationKey}
-          tab={{ key: activeKey, kind: activeTab.kind }}
-          currency={currency}
-          views={effectiveViews}
-          sharedData={sharedData}
-          table={{
-            fiatCode,
-            isFetching: isActiveKeyFetching,
-            cacheVersion,
-            groupByDay,
-            dateRange,
-            setDateRange,
-            pageSize,
-          }}
-          mining={{
-            minerWarsPrefetching,
-            page: miningPage,
-            setPage: setMiningPage,
-            trends: { show: showTrends, animating: trendsAnimating, exiting: trendsExiting },
-            difficultyMap,
-            isShared: isSharedContext,
-            onCycleTrackerOpenChange: setIsMinerWarsTrackerOpen,
-            shareDisabled,
-          }}
-        />
+        <RowSelectionControlsProvider value={setRowSelectionControls}>
+          <DataViewerContent
+            rowSelection={rowSelectionContextValue}
+            animationKey={tableAnimationKey}
+            tab={{ key: activeKey, kind: activeTab.kind }}
+            currency={currency}
+            views={effectiveViews}
+            sharedData={sharedData}
+            table={{
+              fiatCode,
+              isFetching: isActiveKeyFetching,
+              cacheVersion,
+              groupByDay,
+              dateRange,
+              setDateRange,
+              pageSize,
+            }}
+            mining={{
+              minerWarsPrefetching,
+              page: miningPage,
+              setPage: setMiningPage,
+              trends: { show: showTrends, animating: trendsAnimating, exiting: trendsExiting },
+              difficultyMap,
+              isShared: isSharedContext,
+              onCycleTrackerOpenChange: setIsMinerWarsTrackerOpen,
+              shareDisabled,
+            }}
+          />
+        </RowSelectionControlsProvider>
       </div>
     </>
   );

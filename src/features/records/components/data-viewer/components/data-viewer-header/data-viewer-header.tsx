@@ -1,6 +1,8 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { ViewSelector } from "@/features/records/components/view-selector/view-selector";
+import { RowSelectionToolbar } from "@/features/records/components/row-selection-toolbar/row-selection-toolbar";
+import type { RowSelectionControls } from "@/features/records/stores/row-selection-controls-context";
 import {
   BackIcon,
   DownloadIcon,
@@ -26,6 +28,7 @@ interface DataViewerHeaderProps {
   trendsToggle: ToggleConfig | null;
   currencySelector: ViewSelectorConfig | null;
   tabViewSelector: ViewSelectorConfig | null;
+  rowSelectionToolbar: RowSelectionControls | null;
 }
 
 const headerControlMotion = {
@@ -51,6 +54,7 @@ export function DataViewerHeader({
   trendsToggle,
   currencySelector,
   tabViewSelector,
+  rowSelectionToolbar,
 }: DataViewerHeaderProps) {
   const { t } = useTranslation();
   const { onShare, onRefresh, onDownload, onOpenSettings, disabled = false } = actions;
@@ -59,6 +63,14 @@ export function DataViewerHeader({
 
   return (
     <div className="dv-header">
+      {rowSelectionToolbar && (
+        <div className="dv-row-selection-toolbar-wrap">
+          <RowSelectionToolbar
+            onSelectAll={rowSelectionToolbar.selectAll}
+            onSelectNone={rowSelectionToolbar.selectNone}
+          />
+        </div>
+      )}
       <motion.div className="dv-header-left" layout transition={headerLayoutTransition}>
         {showBackButton && (
           <button

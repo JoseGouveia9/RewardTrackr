@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import type { RewardKey } from "@/types/rewards";
 import { useRowSelection } from "../stores/row-selection-context";
 
@@ -19,5 +19,14 @@ export function useRowExclusions<T extends { rowId: string }>(
     () => (rowSelection ? filteredRows.filter((row) => !excluded.has(row.rowId)) : filteredRows),
     [filteredRows, rowSelection, excluded],
   );
-  return { rowSelection, excluded, selectedRows };
+  const allIds = useMemo(() => filteredRows.map((row) => row.rowId), [filteredRows]);
+  const selectAll = useCallback(
+    () => rowSelection?.onSetExclusion(rewardKey, allIds, false),
+    [rowSelection, rewardKey, allIds],
+  );
+  const selectNone = useCallback(
+    () => rowSelection?.onSetExclusion(rewardKey, allIds, true),
+    [rowSelection, rewardKey, allIds],
+  );
+  return { rowSelection, excluded, selectedRows, selectAll, selectNone };
 }
