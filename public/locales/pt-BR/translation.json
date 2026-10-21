@@ -142,6 +142,7 @@
     "fetchingSheet": "Buscando {{name}} ({{current}} de {{total}})...",
     "applyingRates": "Aplicando taxas {{currency}} em {{name}}...",
     "enrichingSheet": "Enriquecendo {{name}} ({{current}} de {{total}})...",
+    "fetchingDetails": "Buscando detalhes ({{done}} de {{total}})...",
     "skippedPending": "{{name}}: {{count}} entrada(s) de reinvestimento pendente ignorada(s), será refeita no próximo exporto.",
     "buildingExcel": "Gerando arquivo Excel...",
     "downloaded": "Arquivo Excel baixado! ({{details}})",
@@ -198,6 +199,8 @@
     "updatedAge": "· Atualizado {{age}} · Somente leitura",
     "filterEntries": "Filtrar",
     "filterSave": "Guardar",
+    "selectAll": "Selecionar tudo",
+    "selectNone": "Desmarcar tudo",
     "filterDiscard": "Descartar"
   },
   "support": {

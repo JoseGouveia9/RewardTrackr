@@ -142,6 +142,7 @@
     "fetchingSheet": "Obteniendo {{name}} ({{current}} de {{total}})...",
     "applyingRates": "Aplicando tasas {{currency}} a {{name}}...",
     "enrichingSheet": "Enriqueciendo {{name}} ({{current}} de {{total}})...",
+    "fetchingDetails": "Obteniendo detalles ({{done}} de {{total}})...",
     "skippedPending": "{{name}}: Se omitieron {{count}} entrada(s) de reinversión pendiente, se reintentará en el próximo exportado.",
     "buildingExcel": "Generando archivo Excel...",
     "downloaded": "Archivo Excel descargado! ({{details}})",
@@ -198,6 +199,8 @@
     "updatedAge": "· Actualizado {{age}} · Solo lectura",
     "filterEntries": "Filtrar",
     "filterSave": "Guardar",
+    "selectAll": "Seleccionar todo",
+    "selectNone": "Deseleccionar todo",
     "filterDiscard": "Descartar"
   },
   "support": {

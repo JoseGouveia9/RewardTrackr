@@ -142,6 +142,7 @@
     "fetchingSheet": "Загрузка {{name}} ({{current}} из {{total}})...",
     "applyingRates": "Применение курсов {{currency}} к {{name}}...",
     "enrichingSheet": "Обработка {{name}} ({{current}} из {{total}})...",
+    "fetchingDetails": "Загрузка деталей ({{done}} из {{total}})...",
     "skippedPending": "{{name}}: Пропущено {{count}} ожидающих записей реинвестирования, повтор при следующем экспорте.",
     "buildingExcel": "Создание файла Excel...",
     "downloaded": "Файл Excel загружен! ({{details}})",
@@ -198,6 +199,8 @@
     "updatedAge": "· Обновлено {{age}} · Только для чтения",
     "filterEntries": "Фильтр",
     "filterSave": "Сохранить",
+    "selectAll": "Выбрать все",
+    "selectNone": "Снять выделение",
     "filterDiscard": "Отменить"
   },
   "support": {

@@ -142,6 +142,7 @@
     "fetchingSheet": "جارٍ جلب {{name}} ({{current}} من {{total}})...",
     "applyingRates": "تطبيق أسعار {{currency}} على {{name}}...",
     "enrichingSheet": "جارٍ إثراء {{name}} ({{current}} من {{total}})...",
+    "fetchingDetails": "جارٍ جلب التفاصيل ({{done}} من {{total}})...",
     "skippedPending": "{{name}}: تجاوزنا {{count}} إدخال معلق لإعادة الاستثمار، ستُعاد المحاولة عند التصدير التالي.",
     "buildingExcel": "جارٍ إنشاء ملف Excel...",
     "downloaded": "تم تنزيل ملف Excel! ({{details}})",
@@ -198,7 +199,9 @@
     "updatedAge": "· محدَّث {{age}} · للقراءة فقط",
     "filterEntries": "تصفية",
     "filterSave": "حفظ",
-    "filterDiscard": "تجاهل"
+    "filterDiscard": "تجاهل",
+    "selectAll": "تحديد الكل",
+    "selectNone": "إلغاء تحديد الكل"
   },
   "support": {
     "supportProject": "دعم المشروع",

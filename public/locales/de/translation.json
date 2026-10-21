@@ -142,6 +142,7 @@
     "fetchingSheet": "{{name}} abrufen ({{current}} von {{total}})...",
     "applyingRates": "{{currency}}-Kurse auf {{name}} anwenden...",
     "enrichingSheet": "{{name}} anreichern ({{current}} von {{total}})...",
+    "fetchingDetails": "Details werden abgerufen ({{done}} von {{total}})...",
     "skippedPending": "{{name}}: {{count}} ausstehende Reinvestitions-Einträge übersprungen, werden beim nächsten Export wiederholt.",
     "buildingExcel": "Excel-Datei wird erstellt...",
     "downloaded": "Excel-Datei heruntergeladen! ({{details}})",
@@ -198,6 +199,8 @@
     "updatedAge": "· Aktualisiert {{age}} · Schreibgeschützt",
     "filterEntries": "Filter",
     "filterSave": "Speichern",
+    "selectAll": "Alle auswählen",
+    "selectNone": "Alle abwählen",
     "filterDiscard": "Verwerfen"
   },
   "support": {

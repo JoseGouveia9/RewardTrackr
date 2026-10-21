@@ -146,6 +146,7 @@
     "fetchingSheet": "Fetching {{name}} ({{current}} of {{total}})...",
     "applyingRates": "Applying {{currency}} rates to {{name}}...",
     "enrichingSheet": "Enriching {{name}} ({{current}} of {{total}})...",
+    "fetchingDetails": "Fetching details ({{done}} of {{total}})...",
     "skippedPending": "{{name}}: Skipped {{count}} pending reinvestment entr(y/ies), will retry on next export.",
     "buildingExcel": "Building Excel file...",
     "downloaded": "Excel file downloaded! ({{details}})",
@@ -202,7 +203,9 @@
     "updatedAge": "· Updated {{age}} · Read only",
     "filterEntries": "Filter",
     "filterSave": "Save",
-    "filterDiscard": "Discard"
+    "filterDiscard": "Discard",
+    "selectAll": "Select All",
+    "selectNone": "Select None"
   },
   "support": {
     "supportProject": "Support the project",

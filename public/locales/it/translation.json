@@ -142,6 +142,7 @@
     "fetchingSheet": "Recupero {{name}} ({{current}} di {{total}})...",
     "applyingRates": "Applicazione tassi {{currency}} a {{name}}...",
     "enrichingSheet": "Arricchimento {{name}} ({{current}} di {{total}})...",
+    "fetchingDetails": "Recupero dei dettagli ({{done}} di {{total}})...",
     "skippedPending": "{{name}}: {{count}} voce/i di reinvestimento in sospeso saltata/e, verrà riprovato al prossimo export.",
     "buildingExcel": "Generazione file Excel...",
     "downloaded": "File Excel scaricato! ({{details}})",
@@ -198,6 +199,8 @@
     "updatedAge": "· Aggiornato {{age}} · Sola lettura",
     "filterEntries": "Filtra",
     "filterSave": "Salva",
+    "selectAll": "Seleziona tutto",
+    "selectNone": "Deseleziona tutto",
     "filterDiscard": "Annulla"
   },
   "support": {

@@ -142,6 +142,7 @@
     "fetchingSheet": "{{name}} 가져오는 중 ({{current}}/{{total}})...",
     "applyingRates": "{{name}}에 {{currency}} 환율 적용 중...",
     "enrichingSheet": "{{name}} 처리 중 ({{current}}/{{total}})...",
+    "fetchingDetails": "세부 정보 가져오는 중 ({{total}}개 중 {{done}}개)...",
     "skippedPending": "{{name}}: 재투자 대기 중인 {{count}}개 항목 건너뜀, 다음 내보내기에서 재시도합니다.",
     "buildingExcel": "Excel 파일 생성 중...",
     "downloaded": "Excel 파일이 다운로드되었습니다! ({{details}})",
@@ -198,6 +199,8 @@
     "updatedAge": "· {{age}} 업데이트됨 · 읽기 전용",
     "filterEntries": "필터",
     "filterSave": "저장",
+    "selectAll": "전체 선택",
+    "selectNone": "전체 해제",
     "filterDiscard": "취소"
   },
   "support": {
