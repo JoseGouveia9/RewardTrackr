@@ -81,8 +81,9 @@ export function MinerWarsComparisonPanel({
     enabled: tab === "clan",
   });
 
-  const canRefreshSelectedCycle =
-    isLoggedIn && (selectedCycle?.status === "in-progress" || selectedCycle?.status === "pending");
+  // Always available (not just while viewing a live/pending cycle) so a newly started
+  // live cycle can be discovered by refreshing from a completed one.
+  const canRefreshSelectedCycle = isLoggedIn;
   const [manualClanRefreshing, setManualClanRefreshing] = useState(false);
   const refreshingSelectedView =
     loading || manualClanRefreshing || (tab === "clan" && clanPerformance.loading);
@@ -199,7 +200,9 @@ export function MinerWarsComparisonPanel({
                 title={
                   selectedCycle?.status === "pending"
                     ? t("cycleTracker.refreshPending")
-                    : t("cycleTracker.refreshLive")
+                    : selectedCycle?.status === "in-progress"
+                      ? t("cycleTracker.refreshLive")
+                      : t("common.refresh")
                 }
               >
                 <RefreshIcon
