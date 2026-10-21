@@ -64,7 +64,7 @@ export async function fetchLiveCounts(
         const payload = await postJson<GoMiningApiResponse>(config.apiUrl, headers, probeBody);
         const first = Array.isArray(payload?.data?.array)
           ? (payload.data.array[0] as Record<string, unknown> | undefined)
-          : undefined;
+          : (payload?.data?.items?.[0] as Record<string, unknown> | undefined);
         const latestCreatedAt = typeof first?.createdAt === "string" ? first.createdAt : null;
         return [config.key, { count: payload?.data?.count ?? null, latestCreatedAt }] as const;
       } catch {
@@ -77,8 +77,9 @@ export async function fetchLiveCounts(
 }
 
 /**
- * Decides whether a cached sheet needs a full refetch, an incremental one, or none, by comparing live vs cached counts.
- * Simple Earn also compares newest timestamps because its counts are unreliable.
+ * Decides whether a cached sheet needs a full refetch, an incremental one, or none, by comparing
+ * live vs cached counts. Simple Earn and the list-cursor endpoints (solo-mining, minerwars)
+ * compare newest timestamps instead, since their counts are unreliable or absent.
  */
 export function evaluateCacheFreshness(
   key: RewardKey,
@@ -98,7 +99,9 @@ export function evaluateCacheFreshness(
 
   const liveCount = liveProbe?.count ?? null;
 
-  if (config.key === "simple-earn") {
+  const countUnreliable = config.key === "simple-earn" || config.pagination === "list-cursor";
+
+  if (countUnreliable) {
     const hasLiveLatest = typeof liveProbe?.latestCreatedAt === "string";
     const liveCountReliable = liveCount != null && (liveCount > 0 || !hasLiveLatest);
 

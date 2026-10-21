@@ -12,24 +12,30 @@ import { fetchWithRetry } from "./fetch-with-retry";
 const MAX_PAGES = 1000;
 
 /**
- * Starting cursor per pagination style: now (ms), now (ISO) or offset 0; paging walks backwards
- * in time.
+ * Starting cursor per pagination style: now (ms), now (ISO), 0, or null for list-cursor (the
+ * server returns the first cursor to continue with). Paging walks backwards in time.
  */
-export function getInitialPointer(config: RewardConfig): number | string {
+export function getInitialPointer(config: RewardConfig): number | string | null {
   switch (config.pagination) {
     case "cursor":
       return Date.now();
     case "date-cursor":
       return new Date().toISOString();
+    case "list-cursor":
+      return null;
     case "skip":
     default:
       return 0;
   }
 }
 
+/**
+ * Builds the next page's request body per pagination style. list-cursor's cursor is an opaque
+ * server token, so it's passed through untouched instead of being coerced by JS type.
+ */
 export function buildRequestBody(
   config: RewardConfig,
-  pointer: number | string,
+  pointer: number | string | null,
 ): RewardRequestBody {
   switch (config.pagination) {
     case "cursor":
@@ -38,6 +44,8 @@ export function buildRequestBody(
       return config.buildBody(
         typeof pointer === "string" ? pointer : new Date(pointer || Date.now()).toISOString(),
       );
+    case "list-cursor":
+      return config.buildBody(pointer as number | string | null);
     case "skip":
     default:
       return config.buildBody(typeof pointer === "number" ? pointer : 0);
@@ -61,7 +69,7 @@ export async function fetchAllPages(
 ): Promise<{ records: unknown[]; totalCount: number | null }> {
   const headers = buildApiHeaders(accessToken);
   const all: unknown[] = [];
-  let pointer: number | string = getInitialPointer(config);
+  let pointer: number | string | null = getInitialPointer(config);
   let guard = 0;
   let totalCount: number | null = null;
 
@@ -82,7 +90,7 @@ export async function fetchAllPages(
         postJson<GoMiningApiResponse>(config.apiUrl, headers, buildRequestBody(config, pointer)),
       onProgress,
     );
-    const page = payload?.data?.array || [];
+    const page = payload?.data?.array || payload?.data?.items || [];
 
     if (totalCount === null && payload?.data?.count !== undefined) {
       totalCount = payload.data.count ?? null;
@@ -132,6 +140,8 @@ export async function fetchAllPages(
       const last = page[page.length - 1] as CursorPaginationItem;
       const next = config.getNextCursor?.(last) ?? null;
       if (next && next !== pointer) nextPointer = next;
+    } else if (config.pagination === "list-cursor") {
+      nextPointer = payload?.data?.nextCursor ?? null;
     } else {
       nextPointer = (pointer as number) + config.pageSize;
     }

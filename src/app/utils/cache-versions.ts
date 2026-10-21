@@ -7,8 +7,11 @@ import {
   LOCAL_STORAGE_KEY_SYNC_ALIAS,
 } from "@/lib/storage-keys";
 
-const RECORDS_VERSION = 3;
-const MINERWARS_VERSION = 3;
+// v4: fixed solo-mining/MinerWars gross-net miscalculation when BTC- and GMT-paid maintenance
+// mix in the same record, and migrated fetching to the new cursor-paginated /list + /details
+// endpoints (MinerWars has no /details equivalent, so its energyEfficiency is unavailable).
+const RECORDS_VERSION = 4;
+const MINERWARS_VERSION = 4;
 
 /** A never-set version key is only "nothing to reconcile" for users who never synced before. */
 function hasSyncedBefore(): boolean {

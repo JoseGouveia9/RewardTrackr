@@ -1,3 +1,4 @@
+import i18n from "@/i18n";
 import { CURRENCY_TO_COINGECKO } from "@/config/currencies";
 import type {
   CoinGeckoPriceCacheValue,
@@ -73,6 +74,7 @@ export async function enrichRecords(
   includeWalletFiat: boolean,
   extraFiatCurrency: ExtraFiatCurrency,
   onProgress?: (message: string) => void,
+  accessToken?: string,
 ): Promise<EnrichedRecord[]> {
   const includeFiat = config.enrichType !== "wallet-tx-coingecko" || includeWalletFiat;
 
@@ -130,7 +132,10 @@ export async function enrichRecords(
       let record: EnrichedRecord;
       switch (config.enrichType) {
         case "solo-mining":
-          record = transformSoloMining(raw as never, fiatRate);
+          onProgress?.(
+            i18n.t("export.fetchingDetails", { done: index + 1, total: rawRecords.length }),
+          );
+          record = await transformSoloMining(raw as never, fiatRate, accessToken);
           break;
         case "minerwars":
           record = transformMinerWars(raw as never, fiatRate);

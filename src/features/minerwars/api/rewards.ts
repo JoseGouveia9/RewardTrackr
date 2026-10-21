@@ -180,19 +180,35 @@ export async function getSoloMiningDates(
   endPlus1.setUTCDate(endPlus1.getUTCDate() + 1);
   const endDateString = endPlus1.toISOString().slice(0, 10);
 
-  const response = await postJson<{
-    data: { array: Array<{ incomeStatistic?: { calculatedAt?: string }; createdAt?: string }> };
-  }>(`${API}/api/nft-income/find-aggregated-by-date`, headers, {
-    startDate: `${cycleStartDate}T00:00:00.000Z`,
-    endDate: `${endDateString}T23:59:59.999Z`,
-    limit: 20,
-    skip: 0,
-  });
-
   const dates = new Set<string>();
-  for (const row of response.data?.array ?? []) {
-    const date = (row.incomeStatistic?.calculatedAt ?? row.createdAt ?? "").slice(0, 10);
-    if (date) dates.add(date);
+  let cursor: number | string | null = null;
+  for (let page = 0; page < 20; page++) {
+    type SoloMiningListResponse = {
+      data: {
+        items?: Array<{ incomeStatistic?: { calculatedAt?: string }; createdAt?: string }>;
+        nextCursor?: number | string | null;
+      };
+    };
+    const response: SoloMiningListResponse = await postJson<SoloMiningListResponse>(
+      `${API}/api/nft-income/list`,
+      headers,
+      {
+        dateFrom: `${cycleStartDate}T00:00:00.000Z`,
+        dateTo: `${endDateString}T23:59:59.999Z`,
+        limit: 50,
+        ...(cursor != null ? { cursor } : {}),
+      },
+    );
+
+    const items = response.data?.items ?? [];
+    for (const row of items) {
+      const date = (row.incomeStatistic?.calculatedAt ?? row.createdAt ?? "").slice(0, 10);
+      if (date) dates.add(date);
+    }
+
+    const next = response.data?.nextCursor ?? null;
+    if (next == null || items.length < 50) break;
+    cursor = next;
   }
   return dates;
 }

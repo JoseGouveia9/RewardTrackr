@@ -66,7 +66,19 @@ interface DateCursorRewardConfig extends RewardConfigBase {
   getNextCursor: (item: CursorPaginationItem) => string;
 }
 
-export type RewardConfig = SkipRewardConfig | CursorRewardConfig | DateCursorRewardConfig;
+// GoMining's newer /list endpoints (solo-mining, minerwars) return an opaque, not-necessarily-
+// numeric nextCursor in the response body instead of deriving one from the last item's fields.
+interface ListCursorRewardConfig extends RewardConfigBase {
+  pagination: "list-cursor";
+  buildBody: (cursor: number | string | null) => RewardRequestBody;
+  getNextCursor?: never;
+}
+
+export type RewardConfig =
+  | SkipRewardConfig
+  | CursorRewardConfig
+  | DateCursorRewardConfig
+  | ListCursorRewardConfig;
 
 export type ExtraFiatCurrency = string;
 
@@ -89,6 +101,11 @@ export interface FetchRewardsOptions {
 interface GoMiningDataArray<TRecord = unknown> {
   array?: TRecord[];
   count?: number;
+  // Newer /list and /details endpoints use cursor pagination instead of array+count.
+  items?: TRecord[];
+  nextCursor?: number | string | null;
+  prevCursor?: number | null;
+  total?: number;
 }
 
 export interface GoMiningApiResponse<TRecord = unknown> {
@@ -126,42 +143,44 @@ export interface CoinGeckoPriceResult {
 
 export type CoinGeckoPriceCacheValue = CoinGeckoPriceResult | number | null;
 
-interface SoloIncomeListItem {
-  metaData?: { poolReward?: number; maintenanceInBtc?: number };
-  c1Value?: number;
-  c2Value?: number;
-  maintenanceForWithdrawInGmt?: number;
-  maintenanceByGmt?: boolean;
-  reinvestmentInPowerNftStatusExecuted?: boolean;
+// Per-NFT breakdown for a solo-mining day, from the separate /api/nft-income/details
+// endpoint — the day-level /list record no longer embeds this.
+export interface SoloMiningNftDetailRecord {
+  poolRewardInBtc?: number;
   power?: number;
-  totalDiscount?: number;
-  energyEfficiency?: number;
+  nft?: { energyEfficiency?: number };
 }
 
 export interface SoloMiningRawRecord {
   createdAt: string;
-  value?: number;
+  nftIncomeStatisticId?: number;
+  totalInBtc?: number;
+  poolRewardInBtc?: number;
+  goBtcPayBonus?: number;
+  totalPower?: number;
+  c1InBtc?: number;
+  c2InBtc?: number;
+  c1MaintenanceInGmt?: number;
+  c2MaintenanceInGmt?: number;
+  totalDiscount?: number;
   reinvestmentStatus?: string | null;
+  reinvestmentInPowerNftStatusExecuted?: boolean;
   incomeStatistic?: { btcCourseInUsd?: number; gmtPrice?: number };
-  incomeList?: SoloIncomeListItem[];
 }
 
 export interface MinerWarsRawRecord {
   createdAt: string;
-  totalReward?: number;
-  c1Value?: number;
-  c2Value?: number;
-  c1ValueInBtc?: number;
-  c2ValueInBtc?: number;
-  c1ValueInGmt?: number;
-  c2ValueInGmt?: number;
-  maintenanceByGmt?: boolean;
+  nftGameIncomeStatisticId?: number;
+  poolRewardInBtc?: number;
+  avgPower?: number;
+  c1InBtc?: number;
+  c2InBtc?: number;
+  c1MaintenanceInGmt?: number;
+  c2MaintenanceInGmt?: number;
+  totalDiscount?: number;
   reinvestmentStatus?: string | null;
   reinvestmentInPowerNftStatusExecuted?: boolean;
   incomeStatistic?: { btcCourseInUsd?: number; gmtPrice?: number };
-  power?: number;
-  totalDiscount?: number;
-  energyEfficiency?: number;
 }
 
 export interface WalletTransactionRawRecord {

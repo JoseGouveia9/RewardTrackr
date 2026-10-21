@@ -189,6 +189,7 @@ export async function refreshSelectedSheets({
       includeWalletFiat,
       excelFiatCurrency,
       onMessage,
+      accessToken,
     );
 
     const currentEntry = updatedCache[key];
@@ -246,6 +247,7 @@ export async function refreshSelectedSheets({
       false,
       excelFiatCurrency,
       onMessage,
+      accessToken,
     );
 
     const { recordsForCache, totalCountForCache } = prepareSheetRecords(
