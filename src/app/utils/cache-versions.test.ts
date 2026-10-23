@@ -5,8 +5,8 @@ vi.mock("@/i18n", () => ({ default: {} }));
 vi.mock("@/features/minerwars/utils/comparison", () => ({ invalidateMinerWarsCache: vi.fn() }));
 
 const CURRENT_VERSIONS = {
-  rt_records_version: "3",
-  rt_minerwars_version: "3",
+  rt_records_version: "4",
+  rt_minerwars_version: "4",
 };
 
 function stubLocalStorage(initial: Record<string, string>) {
