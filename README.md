@@ -24,7 +24,7 @@ You can also browse your data directly in the app before exporting, with filters
 - Purchases & Upgrades
 - Transactions (veGoMining Rewards, Personal MinerWars Rewards, Miner Sales, Liquidity Rewards, Clan Ownership Rewards, Bonuses)
 
-**Fiat values** are fetched automatically using historical rates (CoinGecko + FX Rates API), so each row shows what your rewards were worth in USD, and optionally in your local currency, at the time they were received.
+**Fiat values** are fetched automatically using historical rates (exchange candles from Binance, Coinbase, Bitget, MEXC and Gate + FX Rates API), so each row shows what your rewards were worth in USD, and optionally in your local currency, at the time they were received.
 
 ## Features
 
@@ -52,7 +52,7 @@ That's it, your file will download automatically.
 
 ## Notes
 
-- The app runs on free-tier services (Cloudflare, CoinGecko, FX Rates API). If a request fails due to rate limits, wait a moment and try again.
+- The app runs on free-tier services (Cloudflare, public exchange APIs, FX Rates API). If a request fails due to rate limits, wait a moment and try again.
 - Exports are limited to **3 per day** to keep the service free and available for everyone.
 - Shares are limited to **3 per day** to keep the community directory healthy.
 - Data is cached in your browser after the first export, so future exports only fetch new records.
@@ -70,7 +70,7 @@ That's it, your file will download automatically.
 | State            | `useState` + custom hooks           | Feature logic is self-contained, no global store needed               |
 | Data fetching    | Native `fetch` with custom wrappers | Lightweight, no extra dependency for simple REST calls                |
 | Excel generation | ExcelJS                             | Full control over cell formatting, column widths, and sheet structure |
-| Pricing data     | CoinGecko + FX Rates API            | Historical USD prices and fiat exchange rates per day                 |
+| Pricing data     | Exchange candles + FX Rates API     | Historical USD prices and fiat exchange rates per day                 |
 | Backend          | Cloudflare Workers                  | Edge-deployed, free-tier friendly, low-latency proxy                  |
 | Error tracking   | Sentry                              | Production error visibility with source maps                          |
 | Code quality     | ESLint 10 + Prettier + Husky        | Enforced on every commit via lint-staged                              |
@@ -126,7 +126,7 @@ This was a deliberate choice, driven by two things:
 
 **User trust** - your GoMining session token is the most sensitive piece of data in this flow. The reward data is fetched, processed and turned into the final `.xlsx` file entirely in your browser; no server stores your records. The token only travels to GoMining (directly or through the Worker relay described below) and is never persisted. You can verify this yourself by inspecting the source, what you read is exactly what runs.
 
-The Cloudflare Worker (`workers/`) handles the following: relaying GoMining API calls and CryptoCompare (which has no CORS headers), the daily export/share limits, Share storage on a private GitHub repository, community announcements, a unique-user counter, a daily BTC/GMT price history (cron), and Open Graph previews for shared links. It only receives the data you explicitly choose to share.
+The Cloudflare Worker (`workers/`) handles the following: relaying GoMining API calls and MEXC klines (which has no CORS headers), the daily export/share limits, Share storage on a private GitHub repository, community announcements, a unique-user counter, a daily BTC/GMT price history (cron), and Open Graph previews for shared links. It only receives the data you explicitly choose to share.
 
 ## Development
 
