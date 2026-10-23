@@ -102,6 +102,18 @@ export function clearMinerWarsCacheEntries(): void {
   localStorage.removeItem("rt_mw_day_gate_v1");
 }
 
+/** Drops the shared price cache so the next pricing pass looks every price up again. */
+export function clearPriceCache(): void {
+  localStorage.removeItem(LOCAL_STORAGE_KEY_PRICE_CACHE);
+}
+
+/** Removes the cached wallet-transaction sheets, whose rows carry the prices to look up again. */
+export function clearWalletTransactionCacheEntries(): void {
+  WALLET_TRANSACTION_KEYS.forEach((key) =>
+    localStorage.removeItem(LOCAL_STORAGE_KEY_REWARD_PREFIX + key),
+  );
+}
+
 export function clearAllCacheEntries(): void {
   clearRecordsCacheEntries();
   clearMinerWarsCacheEntries();
@@ -109,7 +121,7 @@ export function clearAllCacheEntries(): void {
 }
 
 /**
- * Stores each priced wallet-tx record's price in the shared CoinGecko cache so later exports skip
+ * Stores each priced wallet-tx record's price in the shared price cache so later exports skip
  * the lookup.
  */
 export function persistPriceCache(key: RewardKey, records: RewardRecord[]): void {

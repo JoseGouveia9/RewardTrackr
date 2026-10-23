@@ -1,8 +1,14 @@
-import { clearMinerWarsCacheEntries, clearRecordsCacheEntries } from "@/lib/reward-cache";
+import {
+  clearMinerWarsCacheEntries,
+  clearPriceCache,
+  clearRecordsCacheEntries,
+  clearWalletTransactionCacheEntries,
+} from "@/lib/reward-cache";
 import { invalidateMinerWarsCache } from "@/features/minerwars/utils/comparison";
 import {
   LOCAL_STORAGE_KEY_LAST_SYNC_USER,
   LOCAL_STORAGE_KEY_MINERWARS_VERSION,
+  LOCAL_STORAGE_KEY_PRICING_VERSION,
   LOCAL_STORAGE_KEY_RECORDS_VERSION,
   LOCAL_STORAGE_KEY_SYNC_ALIAS,
 } from "@/lib/storage-keys";
@@ -12,6 +18,7 @@ import {
 // endpoints (MinerWars has no /details equivalent, so its energyEfficiency is unavailable).
 const RECORDS_VERSION = 4;
 const MINERWARS_VERSION = 4;
+const PRICING_VERSION = 1;
 
 /** A never-set version key is only "nothing to reconcile" for users who never synced before. */
 function hasSyncedBefore(): boolean {
@@ -53,9 +60,9 @@ function reconcileVersion(storageKey: string, current: number, onStale: () => vo
 
 /**
  * Wipes caches whose version constant was bumped (forcing a resync after calculation changes);
- * true if any were wiped.
+ * wallet-transaction prices are wiped only when wallet pricing is on. True if any data was wiped.
  */
-export function reconcileCacheVersions(): boolean {
+export function reconcileCacheVersions(includeWalletFiat: boolean): boolean {
   const recordsWiped = reconcileVersion(LOCAL_STORAGE_KEY_RECORDS_VERSION, RECORDS_VERSION, () => {
     clearRecordsCacheEntries();
   });
@@ -67,5 +74,9 @@ export function reconcileCacheVersions(): boolean {
       invalidateMinerWarsCache();
     },
   );
-  return recordsWiped || minerwarsWiped;
+  const pricingStale = reconcileVersion(LOCAL_STORAGE_KEY_PRICING_VERSION, PRICING_VERSION, () => {
+    clearPriceCache();
+    if (includeWalletFiat) clearWalletTransactionCacheEntries();
+  });
+  return recordsWiped || minerwarsWiped || (pricingStale && includeWalletFiat);
 }

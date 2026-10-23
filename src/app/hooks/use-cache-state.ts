@@ -9,18 +9,18 @@ import type { CacheState, RewardKey } from "@/types/rewards";
  * Mirrors the localStorage reward cache in state; cacheVersion bumps on each change to trigger dependents.
  * Runs the cache version reconciliation on mount and flags when it wiped data.
  */
-export function useCacheState() {
+export function useCacheState(includeWalletFiat: boolean) {
   const [cache, setCache] = useState<CacheState>(() => loadAllCacheEntries());
   const [cacheVersion, setCacheVersion] = useState(0);
   const [dataVersionWiped, setDataVersionWiped] = useState(false);
 
   useEffect(() => {
-    if (reconcileCacheVersions()) {
+    if (reconcileCacheVersions(includeWalletFiat)) {
       setCache(loadAllCacheEntries());
       setCacheVersion((version) => version + 1);
       setDataVersionWiped(true);
     }
-  }, []);
+  }, [includeWalletFiat]);
 
   const handleCacheUpdate = useCallback((nextCache: CacheState) => {
     setCache(nextCache);

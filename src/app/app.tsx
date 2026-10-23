@@ -58,7 +58,7 @@ function App() {
     handleTabSeen,
     hasCachedSheets,
     hasNewRecords,
-  } = useCacheState();
+  } = useCacheState(includeWalletFiat);
 
   const { storedToken, user, syncedAlias, handleManualTokenSync, handleLogout } =
     useAuth(setMessage);

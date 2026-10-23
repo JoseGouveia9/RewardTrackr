@@ -20,3 +20,4 @@ export const LOCAL_STORAGE_KEY_MINERWARS_ROUND_PARTICIPANTS = "rt_mw_round_parti
 export const LOCAL_STORAGE_KEY_MINERWARS_SIMULATION_INPUTS = "rt_mw_sim_inputs";
 export const LOCAL_STORAGE_KEY_RECORDS_VERSION = "rt_records_version";
 export const LOCAL_STORAGE_KEY_MINERWARS_VERSION = "rt_minerwars_version";
+export const LOCAL_STORAGE_KEY_PRICING_VERSION = "rt_pricing_version";
