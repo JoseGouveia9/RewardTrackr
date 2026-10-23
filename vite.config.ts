@@ -41,10 +41,10 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (requestPath) => requestPath.replace(/^\/gomining-api/, ""),
       },
-      "/cc": {
-        target: "https://min-api.cryptocompare.com",
+      "/mexc": {
+        target: "https://api.mexc.com",
         changeOrigin: true,
-        rewrite: (requestPath) => requestPath.replace(/^\/cc/, ""),
+        rewrite: (requestPath) => requestPath.replace(/^\/mexc/, ""),
       },
     },
   },

@@ -45,15 +45,13 @@ export async function handleBonusMinerProxy({ url, request, corsHeaders }) {
   return relayRequest(target, request, corsHeaders);
 }
 
-/** CryptoCompare sends no CORS headers; the API key stays server-side. */
-export async function handleCryptoCompareProxy({ url, corsHeaders, environment }) {
-  if (!url.pathname.startsWith("/cc/data/")) return null;
+/** MEXC sends no CORS headers; only its public klines endpoint is relayed. */
+export async function handleMexcProxy({ url, corsHeaders }) {
+  if (!url.pathname.startsWith("/mexc/")) return null;
+  if (url.pathname !== "/mexc/api/v3/klines") return new Response("Not found", { status: 404 });
 
-  const target = new URL("https://min-api.cryptocompare.com" + url.pathname.slice(3) + url.search);
-  const headers = environment.CRYPTOCOMPARE_API_KEY
-    ? { Authorization: `Apikey ${environment.CRYPTOCOMPARE_API_KEY}` }
-    : {};
-  return relay(corsHeaders, target, { method: "GET", headers });
+  const target = new URL("https://api.mexc.com" + url.pathname.slice(5) + url.search);
+  return relay(corsHeaders, target, { method: "GET" });
 }
 
 export async function handleDefaultProxy({ url, request, corsHeaders }) {

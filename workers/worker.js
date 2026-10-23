@@ -4,7 +4,7 @@ import {
   handleDefaultProxy,
   handleSeProxy,
   handleBonusMinerProxy,
-  handleCryptoCompareProxy,
+  handleMexcProxy,
 } from "./routes/proxy.js";
 import { fetchAndStoreDailyPrices, handlePricesRoute } from "./routes/prices.js";
 import { handleRateLimitRoutes } from "./routes/rate-limit.js";
@@ -99,13 +99,11 @@ export default {
     });
     if (bonusMinerProxyResponse) return bonusMinerProxyResponse;
 
-    const cryptoCompareProxyResponse = await handleCryptoCompareProxy({
+    const mexcProxyResponse = await handleMexcProxy({
       url,
-      request,
-      environment,
       corsHeaders: CORS_HEADERS,
     });
-    if (cryptoCompareProxyResponse) return cryptoCompareProxyResponse;
+    if (mexcProxyResponse) return mexcProxyResponse;
 
     return handleDefaultProxy({
       url,

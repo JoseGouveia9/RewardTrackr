@@ -46,7 +46,6 @@ GOMINING_MCP_CLIENT_ID = "21fff519-9860-4c89-b0a9-12e55fb54e49"
 # Secrets (set via CLI, never commit):
 # wrangler secret put GITHUB_TOKEN   (/share endpoints)
 # wrangler secret put CMC_API_KEY    (CoinMarketCap price fallback)
-# wrangler secret put CRYPTOCOMPARE_API_KEY    (CryptoCompare price fallback, used by the /cc proxy)
 
 [env.dev]
 # Deploy with: npx wrangler deploy --env dev
