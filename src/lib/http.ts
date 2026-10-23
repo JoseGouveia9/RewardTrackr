@@ -37,15 +37,16 @@ export function resolveBonusMinerApiBase(): string {
 }
 
 /**
- * CryptoCompare sends no CORS headers, so rewardtrackr.com routes it through the Worker /cc/
- * proxy.
+ * MEXC sends no CORS headers, so browsers always reach it through a same-origin /mexc proxy (the
+ * Vite dev/preview server locally, the Worker on rewardtrackr.com); only non-browser callers go direct.
  */
-export function resolveCryptoCompareApiBase(): string {
-  return resolveBase(
-    import.meta.env.VITE_CRYPTOCOMPARE_API_BASE as string | undefined,
-    "/cc",
-    "https://min-api.cryptocompare.com",
+export function resolveMexcApiBase(): string {
+  const fromEnvironment = (import.meta.env.VITE_MEXC_API_BASE as string | undefined)?.replace(
+    /\/$/,
+    "",
   );
+  if (fromEnvironment) return fromEnvironment;
+  return typeof window !== "undefined" ? `${window.location.origin}/mexc` : "https://api.mexc.com";
 }
 
 interface JwtPayload {

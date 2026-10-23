@@ -129,13 +129,6 @@ export interface FxTimeseriesResponse {
   rates?: Record<string, FxTimeseriesRateEntry>;
 }
 
-export type CoinGeckoPriceTuple = [number, number];
-
-export interface CoinGeckoMarketRangeResponse {
-  prices?: CoinGeckoPriceTuple[];
-  status?: { error_code?: number };
-}
-
 export interface CoinGeckoPriceResult {
   price: number;
   priceTimestamp: string;

@@ -1,6 +1,6 @@
 import i18n from "@/i18n";
 import type { CacheState, ExtraFiatCurrency, RewardConfig } from "@/types/rewards";
-import { getSessionPriceCache, persistCoinGeckoPriceCache } from "../../api/coingecko";
+import { getSessionPriceCache, persistPriceCache } from "../../api/historical-price";
 import { enrichRecords } from "../transformers";
 import { commitSheet, cacheExtras, prepareSheetRecords } from "./cache-update";
 import { tSheetName } from "./sheet-names";
@@ -23,7 +23,7 @@ interface EnrichPendingWalletTransactionPricingParameters {
 }
 
 /**
- * Slow, rate-limited CoinGecko pass; runs after the MinerWars prefetch so cycle data lands first.
+ * Slow pass pricing wallet transactions from exchange candles; runs after the MinerWars prefetch so cycle data lands first.
  */
 export async function enrichPendingWalletTransactionPricing({
   updatedCache,
@@ -80,7 +80,7 @@ export async function enrichPendingWalletTransactionPricing({
     );
   }
 
-  persistCoinGeckoPriceCache(priceCache);
+  persistPriceCache(priceCache);
 
   return updatedCache;
 }

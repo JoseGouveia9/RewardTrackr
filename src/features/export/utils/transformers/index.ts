@@ -10,7 +10,7 @@ import type {
   SimpleEarnRawRecord,
   WalletTransactionEnrichedRecord,
 } from "@/types/rewards";
-import { fetchCoinGeckoPrice } from "../../api/coingecko";
+import { fetchHistoricalPrice } from "../../api/historical-price";
 import { getRate, prefetchAdditionalRates, prefetchExchangeRates } from "@/lib/fx-rates";
 import {
   currencyFromWalletType,
@@ -65,7 +65,7 @@ export async function reenrichFiatValues(
 
 /**
  * Turns raw API records into enriched rows with USD/fiat values, picking the mapper from config.enrichType.
- * Wallet transactions and non-USD purchases are priced via CoinGecko; malformed records are skipped with a warning.
+ * Wallet transactions and non-USD purchases are priced from exchange candles; malformed records are skipped with a warning.
  */
 export async function enrichRecords(
   config: RewardConfig,
@@ -150,8 +150,6 @@ export async function enrichRecords(
             fiatRate,
             priceCache,
             includeWalletFiat,
-            onProgress,
-            `${index + 1} of ${rawRecords.length}`,
           )) as WalletTransactionEnrichedRecord;
           break;
         }
@@ -172,12 +170,10 @@ export async function enrichRecords(
           } else {
             const coinGeckoId = CURRENCY_TO_COINGECKO[purchaseCurrency];
             if (coinGeckoId) {
-              const result = await fetchCoinGeckoPrice(
+              const result = await fetchHistoricalPrice(
                 coinGeckoId,
                 purchaseRaw.createdAt,
                 priceCache,
-                onProgress,
-                `${index + 1} of ${rawRecords.length}`,
               );
               purchaseValueUsd = result ? purchaseAmount * result.price : 0;
             } else {

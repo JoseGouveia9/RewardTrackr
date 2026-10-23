@@ -8,7 +8,7 @@ import type {
   RewardConfig,
   RewardKey,
 } from "@/types/rewards";
-import { getSessionPriceCache } from "../../api/coingecko";
+import { getSessionPriceCache } from "../../api/historical-price";
 import { enrichRecords, reenrichFiatValues } from "../transformers";
 import { cacheExtras, commitSheet, prepareSheetRecords } from "./cache-update";
 import { fetchAllPages } from "./pagination";

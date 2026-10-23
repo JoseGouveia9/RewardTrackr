@@ -15,7 +15,7 @@ import type {
   WalletTransactionEnrichedRecord,
   WalletTransactionRawRecord,
 } from "@/types/rewards";
-import { fetchCoinGeckoPrice } from "../../api/coingecko";
+import { fetchHistoricalPrice } from "../../api/historical-price";
 import { fetchSoloMiningNftDetails } from "./fetch-nft-details";
 
 function usdToGmt(usd: number, gmtPrice: number): number {
@@ -170,8 +170,6 @@ export async function transformWalletTransactionCoingecko(
   fiatRate: number,
   priceCache: Map<string, CoinGeckoPriceCacheValue>,
   includeFiat: boolean,
-  onWait?: (message: string) => void,
-  entryProgress?: string,
 ): Promise<WalletTransactionEnrichedRecord> {
   const currency = currencyFromWalletType(raw.walletType);
   const reward = parseFloat(raw.valueNumeric || "0") / 1e18;
@@ -203,13 +201,7 @@ export async function transformWalletTransactionCoingecko(
   } else {
     const coinGeckoId = CURRENCY_TO_COINGECKO[currency];
     if (coinGeckoId) {
-      const result = await fetchCoinGeckoPrice(
-        coinGeckoId,
-        raw.createdAt,
-        priceCache,
-        onWait,
-        entryProgress,
-      );
+      const result = await fetchHistoricalPrice(coinGeckoId, raw.createdAt, priceCache);
       if (result) {
         priceAtTime = result.price;
         priceTimestamp = result.priceTimestamp || null;
