@@ -22,7 +22,6 @@ export interface ClanMemberPerformance {
 
   blocksMined: number;
   gmtRewards: number;
-  minerWarsRewardEstBtc: number | null;
   boostCostGmt: number | null;
 }
 

@@ -59,14 +59,10 @@ export function ClanSnapshot({ snapshot, clan, comparison, clanMode, light }: Cl
 
   const members = clan.members;
   const clanBlocksMined = members.reduce((total, member) => total + member.blocksMined, 0);
-  const memberBtcSum = members.reduce(
-    (total, member) => total + (member.minerWarsRewardEstBtc ?? 0),
-    0,
-  );
   const clanBtcMined =
     comparison?.clanMinerWarsSats != null
       ? comparison.clanMinerWarsSats / 1e8
-      : (clan.header.progressBtc ?? memberBtcSum);
+      : (clan.header.progressBtc ?? 0);
   const clanTargetBtc =
     comparison?.clanTargetSoloSats != null
       ? comparison.clanTargetSoloSats / 1e8

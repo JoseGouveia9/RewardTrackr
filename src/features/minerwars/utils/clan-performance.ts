@@ -1,27 +1,13 @@
 import { buildApiHeaders } from "@/lib/http";
-import { mapWithConcurrency } from "@/lib/concurrency";
-import { getCycleStartTuesdayUTC, toDateString } from "../types";
+import { getCycleStartTuesdayUTC } from "../types";
 import { getAbilityCosts, getBoostX1Value } from "../api/abilities";
-import { getAllRoundsInCycle, getCycleRounds } from "../api/cycles";
-import {
-  getClanHeaderInfo,
-  getClanLeaderboardStats,
-  getClanPowerAnalytics,
-  getClanRoster,
-  getCurrentClanPower,
-  getCycleClanData,
-} from "../api/clan";
-import {
-  getClanEarnersForCycle,
-  getClanTerahashByUserByDate,
-  getRoundClanParticipants,
-} from "../api/clan-activity";
+import { getCycleRounds } from "../api/cycles";
+import { getClanHeaderInfo, getClanLeaderboardStats, getClanRoster } from "../api/clan";
+import { getClanEarnersForCycle } from "../api/clan-activity";
 import {
   clearStalePersistedClanPerformance,
   loadPersistedClanPerformance,
-  loadRoundParticipants,
   persistClanPerformance,
-  persistRoundParticipants,
 } from "../stores/cache";
 import type { ClanMemberPerformance, ClanPerformance } from "../types/clan-types";
 
@@ -62,90 +48,10 @@ export function invalidateStaleClanPerformanceCache(currentClanId: number): void
   clearStalePersistedClanPerformance(currentClanId);
 }
 
-const PARTICIPANTS_FETCH_CONCURRENCY = 6;
-
-/**
- * Same per-round split as the Individual tab: each round's clan BTC is divided by day-level
- * TH share of the whole clan, and only reaches members present in that round's leaderboard.
- * Participants of won rounds are fetched in parallel and cached, as one-by-one would dominate cost.
- */
-async function getRoundRewards(
-  headers: Record<string, string>,
-  clanId: number,
-  allRounds: Array<{
-    id: number;
-    power: number;
-    multiplier: number;
-    active: boolean;
-    winnerClanId: number | null;
-    endedAt: string | null;
-  }>,
-  btcFund: number,
-  terahashByUser: Map<number, number>,
-  clanTerahashByUserByDate: Map<string, Map<number, number>>,
-  clanPowerByDate: Map<string, number>,
-  currentClanPower: number | null,
-  clanNftPower: number | null,
-): Promise<Map<number, number>> {
-  const rewardByUser = new Map<number, number>();
-  const today = new Date().toISOString().slice(0, 10);
-
-  const completedRounds = allRounds.filter((round) => !round.active && round.power > 0);
-  const sumAllMultipliers = completedRounds.reduce((sum, round) => sum + round.multiplier, 0);
-  const totalPowerSum = completedRounds.reduce((sum, round) => sum + round.power, 0);
-  const averageRoundNftPower =
-    completedRounds.length > 0 ? totalPowerSum / completedRounds.length : 1;
-  if (sumAllMultipliers <= 0) return rewardByUser;
-
-  const wonRounds = completedRounds.filter((round) => round.winnerClanId === clanId);
-
-  const participantsByRoundId = new Map<number, number[]>();
-  await mapWithConcurrency(wonRounds, PARTICIPANTS_FETCH_CONCURRENCY, async (round) => {
-    let presentUserIds = loadRoundParticipants(round.id);
-    if (!presentUserIds) {
-      const fetched = await getRoundClanParticipants(headers, round.id, clanId).catch(() => null);
-      if (!fetched) return;
-      presentUserIds = [...fetched.keys()];
-      persistRoundParticipants(round.id, presentUserIds);
-    }
-    participantsByRoundId.set(round.id, presentUserIds);
-  });
-
-  for (const round of wonRounds) {
-    if (!round.endedAt) continue;
-    const powerRatio = round.power / averageRoundNftPower;
-    const roundClanBtc = (round.multiplier / sumAllMultipliers) * btcFund * powerRatio;
-    if (roundClanBtc <= 0) continue;
-
-    const date = toDateString(round.endedAt);
-    const isToday = date >= today;
-    const byUserTerahash = clanTerahashByUserByDate.get(date);
-    const effectiveClanPower = byUserTerahash
-      ? [...byUserTerahash.values()].reduce((sum, terahash) => sum + terahash, 0)
-      : (clanPowerByDate.get(date) ??
-        (isToday ? (currentClanPower ?? clanNftPower ?? 0) : (clanNftPower ?? 0)));
-    if (effectiveClanPower <= 0) continue;
-
-    const presentUserIds = participantsByRoundId.get(round.id);
-    if (!presentUserIds) continue;
-
-    for (const userId of presentUserIds) {
-      const memberTerahash = byUserTerahash?.get(userId) ?? terahashByUser.get(userId) ?? 0;
-      if (memberTerahash <= 0) continue;
-      rewardByUser.set(
-        userId,
-        (rewardByUser.get(userId) ?? 0) + roundClanBtc * (memberTerahash / effectiveClanPower),
-      );
-    }
-  }
-
-  return rewardByUser;
-}
-
 /**
  * Only for in-progress/pending cycles: completed ones need historical TH/EE that the live-only clan/get-by-id can't give.
  * Power-Up boost cost = 0.7 x PPS x 100 / Boost X1, with PPS = TH x (20 / EE) as in GoMining's formula.
- * Cached 5 min and deduped per cycle; member rewards come per round, not from the header total.
+ * Cached 5 min and deduped per cycle.
  */
 export async function fetchClanPerformance(
   token: string,
@@ -175,25 +81,15 @@ export async function fetchClanPerformance(
     const today = new Date().toISOString().slice(0, 10);
     const liveCalculatedAt = cycleEnd >= today ? today : calculatedAt;
 
-    const [
-      headerInfo,
-      roster,
-      earners,
-      abilityCatalog,
-      boostX1Value,
-      clanData,
-      allRounds,
-      boardSnapshot,
-    ] = await Promise.all([
-      getClanHeaderInfo(headers, calculatedAt, leagueId, clanId),
-      getClanRoster(headers, clanId),
-      getClanEarnersForCycle(headers, clanId, leagueId, cycleDates),
-      getAbilityCosts(headers),
-      getBoostX1Value(headers, calculatedAt),
-      getCycleClanData(headers, calculatedAt, leagueId, clanId),
-      getAllRoundsInCycle(headers, cycleId, leagueId),
-      getClanLeaderboardStats(headers, liveCalculatedAt, leagueId, clanId),
-    ]);
+    const [headerInfo, roster, earners, abilityCatalog, boostX1Value, boardSnapshot] =
+      await Promise.all([
+        getClanHeaderInfo(headers, calculatedAt, leagueId, clanId),
+        getClanRoster(headers, clanId),
+        getClanEarnersForCycle(headers, clanId, leagueId, cycleDates),
+        getAbilityCosts(headers),
+        getBoostX1Value(headers, calculatedAt),
+        getClanLeaderboardStats(headers, liveCalculatedAt, leagueId, clanId),
+      ]);
     const rosterById = new Map(roster.map((member) => [member.id, member]));
     const terahashByUser = new Map(roster.map((member) => [member.id, member.th]));
     const totalClanTerahash = [...terahashByUser.values()].reduce(
@@ -206,36 +102,6 @@ export async function fetchClanPerformance(
       0,
     );
 
-    const completedRoundsForTerahash = allRounds.filter(
-      (round) => !round.active && round.power > 0,
-    );
-    const [clanTerahashByUserByDate, clanPowerByDate, currentClanPowerInfo] = await Promise.all([
-      getClanTerahashByUserByDate(
-        headers,
-        completedRoundsForTerahash,
-        leagueId,
-        clanId,
-        cycleStart,
-      ).catch(() => new Map<string, Map<number, number>>()),
-      getClanPowerAnalytics(headers, clanId).catch(() => new Map<string, number>()),
-      getCurrentClanPower(headers, clanId).catch(() => ({
-        power: null,
-        createdAt: null,
-      })),
-    ]);
-    const currentClanPower = currentClanPowerInfo.power;
-
-    const rewardByUser = await getRoundRewards(
-      headers,
-      clanId,
-      allRounds,
-      clanData.btcFund,
-      terahashByUser,
-      clanTerahashByUserByDate,
-      clanPowerByDate,
-      currentClanPower,
-      clanData.clanNftPower,
-    );
     const userIds = new Set<number>(rosterById.keys());
 
     const members: ClanMemberPerformance[] = [...userIds].map((userId) => {
@@ -267,8 +133,6 @@ export async function fetchClanPerformance(
         }
       }
 
-      const minerWarsRewardEstimatedBtc = rewardByUser.get(userId) ?? (terahash != null ? 0 : null);
-
       return {
         userId,
         alias: rosterMember?.alias ?? earner?.alias ?? `#${userId}`,
@@ -279,7 +143,6 @@ export async function fetchClanPerformance(
         powerSharePct: powerSharePercent,
         blocksMined: earner?.blocksMined ?? 0,
         gmtRewards: earner?.gmtRewards ?? 0,
-        minerWarsRewardEstBtc: minerWarsRewardEstimatedBtc,
         boostCostGmt,
       };
     });
