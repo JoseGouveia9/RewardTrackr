@@ -205,69 +205,104 @@ const LEAGUE_LEADERBOARD_PAGE_CONCURRENCY = 8;
 
 type LeagueTerahashEntry = { terahash: number; alias: string | null };
 
+// The Individual and Clan tabs both call this with calculatedAt=cycleStart for the same
+// league, so a short cache (same pattern as getAllRoundsInCycle) dedupes the second walk.
+const leagueTerahashCache = new Map<
+  string,
+  { data: Map<number, LeagueTerahashEntry>; ts: number }
+>();
+const leagueTerahashInFlight = new Map<string, Promise<Map<number, LeagueTerahashEntry>>>();
+const LEAGUE_TERAHASH_TIME_TO_LIVE = 30 * 1000;
+
 /** Unfiltered by clan: round participants may have since left the clan. */
 async function getLeagueTerahashByUser(
   headers: Record<string, string>,
   calculatedAt: string,
   leagueId: number,
 ): Promise<Map<number, LeagueTerahashEntry>> {
-  const limit = 50;
+  const key = `${headers.authorization ?? ""}:${calculatedAt}:${leagueId}`;
 
-  type LeaderboardPage = {
-    data: {
-      count: number;
-      me: { user: { userId: number; alias: string }; nftPower?: number } | null;
-      participants: Array<{ user: { userId: number; alias: string }; nftPower?: number }>;
+  const cached = leagueTerahashCache.get(key);
+  if (cached && Date.now() - cached.ts < LEAGUE_TERAHASH_TIME_TO_LIVE) return cached.data;
+
+  const existing = leagueTerahashInFlight.get(key);
+  if (existing) return existing;
+
+  const promise = (async (): Promise<Map<number, LeagueTerahashEntry>> => {
+    const limit = 50;
+
+    type LeaderboardPage = {
+      data: {
+        count: number;
+        me: { user: { userId: number; alias: string }; nftPower?: number } | null;
+        participants: Array<{ user: { userId: number; alias: string }; nftPower?: number }>;
+      };
     };
-  };
 
-  const map = new Map<number, LeagueTerahashEntry>();
-  function applyPage(response: LeaderboardPage, skip: number): void {
-    if (skip === 0 && response.data.me?.user?.userId != null) {
-      map.set(response.data.me.user.userId, {
-        terahash: response.data.me.nftPower ?? 0,
-        alias: response.data.me.user.alias ?? null,
-      });
-    }
-    for (const participant of response.data.participants ?? []) {
-      if (participant.user?.userId != null)
-        map.set(participant.user.userId, {
-          terahash: participant.nftPower ?? 0,
-          alias: participant.user.alias ?? null,
+    const map = new Map<number, LeagueTerahashEntry>();
+    function applyPage(response: LeaderboardPage, skip: number): void {
+      if (skip === 0 && response.data.me?.user?.userId != null) {
+        map.set(response.data.me.user.userId, {
+          terahash: response.data.me.nftPower ?? 0,
+          alias: response.data.me.user.alias ?? null,
         });
+      }
+      for (const participant of response.data.participants ?? []) {
+        if (participant.user?.userId != null)
+          map.set(participant.user.userId, {
+            terahash: participant.nftPower ?? 0,
+            alias: participant.user.alias ?? null,
+          });
+      }
     }
-  }
 
-  const firstPage = await postJson<LeaderboardPage>(
-    `${API}/api/nft-game/user-leaderboard/index`,
-    headers,
-    {
-      calculatedAt,
-      leagueId,
-      pagination: { skip: 0, limit },
-    },
-  );
-  applyPage(firstPage, 0);
+    const firstPage = await postJson<LeaderboardPage>(
+      `${API}/api/nft-game/user-leaderboard/index`,
+      headers,
+      {
+        calculatedAt,
+        leagueId,
+        pagination: { skip: 0, limit },
+      },
+    );
+    applyPage(firstPage, 0);
 
-  const total = firstPage.data.count ?? 0;
-  const pageCount = Math.ceil(total / limit);
-  if (pageCount > 1) {
-    const remainingSkips = Array.from({ length: pageCount - 1 }, (_, index) => (index + 1) * limit);
-    await mapWithConcurrency(remainingSkips, LEAGUE_LEADERBOARD_PAGE_CONCURRENCY, async (skip) => {
-      const response = await postJson<LeaderboardPage>(
-        `${API}/api/nft-game/user-leaderboard/index`,
-        headers,
-        {
-          calculatedAt,
-          leagueId,
-          pagination: { skip, limit },
+    const total = firstPage.data.count ?? 0;
+    const pageCount = Math.ceil(total / limit);
+    if (pageCount > 1) {
+      const remainingSkips = Array.from(
+        { length: pageCount - 1 },
+        (_, index) => (index + 1) * limit,
+      );
+      await mapWithConcurrency(
+        remainingSkips,
+        LEAGUE_LEADERBOARD_PAGE_CONCURRENCY,
+        async (skip) => {
+          const response = await postJson<LeaderboardPage>(
+            `${API}/api/nft-game/user-leaderboard/index`,
+            headers,
+            {
+              calculatedAt,
+              leagueId,
+              pagination: { skip, limit },
+            },
+          );
+          applyPage(response, skip);
         },
       );
-      applyPage(response, skip);
-    });
-  }
+    }
 
-  return map;
+    return map;
+  })();
+
+  leagueTerahashInFlight.set(key, promise);
+  try {
+    const data = await promise;
+    leagueTerahashCache.set(key, { data, ts: Date.now() });
+    return data;
+  } finally {
+    leagueTerahashInFlight.delete(key);
+  }
 }
 
 const CLAN_TERAHASH_BY_DATE_CONCURRENCY = 4;
