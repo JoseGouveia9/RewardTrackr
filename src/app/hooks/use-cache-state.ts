@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ALL_REWARD_KEYS } from "@/config/reward-configs";
 import { reconcileCacheVersions } from "../utils/cache-versions";
 import { loadAllCacheEntries } from "@/lib/reward-cache";
+import { idbReady, setIdbItem } from "@/lib/idb-kv";
 import { LOCAL_STORAGE_KEY_REWARD_PREFIX } from "@/lib/storage-keys";
 import type { CacheState, RewardKey } from "@/types/rewards";
 
@@ -22,6 +23,19 @@ export function useCacheState(includeWalletFiat: boolean) {
     }
   }, [includeWalletFiat]);
 
+  // Re-read once the IndexedDB mirror hydrates, without bumping cacheVersion: that signal also
+  // means "refetch over the network" to unrelated consumers (e.g. MinerWars comparison).
+  useEffect(() => {
+    let cancelled = false;
+    void idbReady.then(() => {
+      if (cancelled) return;
+      setCache(loadAllCacheEntries());
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const handleCacheUpdate = useCallback((nextCache: CacheState) => {
     setCache(nextCache);
     setCacheVersion((version) => version + 1);
@@ -33,7 +47,7 @@ export function useCacheState(includeWalletFiat: boolean) {
       if (!entry || (entry.newEntriesCount ?? 0) <= 0) return previousCache;
       const nextEntry = { ...entry, newEntriesCount: 0 };
       try {
-        localStorage.setItem(LOCAL_STORAGE_KEY_REWARD_PREFIX + key, JSON.stringify(nextEntry));
+        setIdbItem(LOCAL_STORAGE_KEY_REWARD_PREFIX + key, JSON.stringify(nextEntry));
         // eslint-disable-next-line no-empty
       } catch {}
       return { ...previousCache, [key]: nextEntry };

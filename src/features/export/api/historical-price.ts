@@ -1,6 +1,9 @@
 import { LOCAL_STORAGE_KEY_PRICE_CACHE } from "@/lib/storage-keys";
+import { getIdbItem, migrateLegacyKeyToIdb, setIdbItem } from "@/lib/idb-kv";
 import type { CoinGeckoPriceCacheValue, CoinGeckoPriceResult } from "@/types/rewards";
 import { fetchExchangePrice } from "./exchange-prices";
+
+void migrateLegacyKeyToIdb(LOCAL_STORAGE_KEY_PRICE_CACHE);
 
 const SHARED_PRICE_CACHE = new Map<string, CoinGeckoPriceCacheValue>();
 let priceCacheSeeded = false;
@@ -10,7 +13,7 @@ function seedPriceCache(): void {
   if (priceCacheSeeded) return;
   priceCacheSeeded = true;
   try {
-    const raw = localStorage.getItem(LOCAL_STORAGE_KEY_PRICE_CACHE);
+    const raw = getIdbItem(LOCAL_STORAGE_KEY_PRICE_CACHE);
     if (!raw) return;
     const store = JSON.parse(raw) as Record<string, CoinGeckoPriceCacheValue>;
     for (const [key, value] of Object.entries(store)) {
@@ -24,7 +27,7 @@ export function persistPriceCache(cache: Map<string, CoinGeckoPriceCacheValue>):
   try {
     const serialized: Record<string, CoinGeckoPriceCacheValue> = {};
     for (const [key, value] of cache.entries()) serialized[key] = value;
-    localStorage.setItem(LOCAL_STORAGE_KEY_PRICE_CACHE, JSON.stringify(serialized));
+    setIdbItem(LOCAL_STORAGE_KEY_PRICE_CACHE, JSON.stringify(serialized));
     // eslint-disable-next-line no-empty
   } catch {}
 }

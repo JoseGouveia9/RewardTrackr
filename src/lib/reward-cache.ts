@@ -7,12 +7,15 @@ import {
   LOCAL_STORAGE_KEY_MINERWARS_CLAN_PERFORMANCE,
   LOCAL_STORAGE_KEY_MINERWARS_COMPARISON,
   LOCAL_STORAGE_KEY_MINERWARS_CYCLES,
+  LOCAL_STORAGE_KEY_MINERWARS_REWARDS_BY_USER,
   LOCAL_STORAGE_KEY_MINERWARS_ROUND_PARTICIPANTS,
+  LOCAL_STORAGE_KEY_MINERWARS_ROUNDS_BY_CYCLE,
   LOCAL_STORAGE_KEY_MINERWARS_SIMULATION_INPUTS,
   LOCAL_STORAGE_KEY_PRICE_CACHE,
   LOCAL_STORAGE_KEY_REWARD_PREFIX,
 } from "@/lib/storage-keys";
 import { parseJsonSafe } from "@/lib/parse-json-safe";
+import { getIdbItem, migrateLegacyKeyToIdb, removeMigratedItem, setIdbItem } from "@/lib/idb-kv";
 import type { CacheEntry, CacheState, RewardKey, RewardRecord } from "@/types/rewards";
 
 type PriceCacheValue = {
@@ -22,15 +25,22 @@ type PriceCacheValue = {
   priceTimestamp: string | null;
 };
 
+// These grow unbounded with the user's history, so they're IndexedDB-backed instead of
+// localStorage (whose ~5MB-per-origin quota they can otherwise exhaust on their own).
+for (const key of ALL_REWARD_KEYS) {
+  void migrateLegacyKeyToIdb(LOCAL_STORAGE_KEY_REWARD_PREFIX + key);
+}
+void migrateLegacyKeyToIdb(LOCAL_STORAGE_KEY_PRICE_CACHE);
+
 function asNumber(value: unknown): number {
   const parsed = Number(value ?? 0);
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-/** Reads and validates a cached sheet from localStorage; null when absent or malformed. */
+/** Reads and validates a cached sheet from IndexedDB; null when absent or malformed. */
 export function loadCacheEntry(key: RewardKey): CacheEntry | null {
   try {
-    const raw = localStorage.getItem(LOCAL_STORAGE_KEY_REWARD_PREFIX + key);
+    const raw = getIdbItem(LOCAL_STORAGE_KEY_REWARD_PREFIX + key);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<CacheEntry>;
     if (!parsed || typeof parsed !== "object") return null;
@@ -55,10 +65,7 @@ export function wasCacheMigrated(key: RewardKey): boolean {
   return localStorage.getItem(LOCAL_STORAGE_KEY_MIGRATED_PREFIX + key) === "1";
 }
 
-/**
- * Writes a sheet to localStorage and clears its migrated flag; storage errors (e.g. quota) are
- * swallowed.
- */
+/** Writes a sheet to IndexedDB and clears its migrated flag; storage errors are swallowed. */
 export function saveCacheEntry(
   key: RewardKey,
   sheetName: string,
@@ -67,7 +74,7 @@ export function saveCacheEntry(
   extras: Partial<CacheEntry> = {},
 ): void {
   try {
-    localStorage.setItem(
+    setIdbItem(
       LOCAL_STORAGE_KEY_REWARD_PREFIX + key,
       JSON.stringify({ sheetName, records, totalCount, fetchedAt: Date.now(), ...extras }),
     );
@@ -86,38 +93,41 @@ export function loadAllCacheEntries(): CacheState {
 
 export function clearRecordsCacheEntries(): void {
   ALL_REWARD_KEYS.filter((key) => key !== "minerwars").forEach((key) =>
-    localStorage.removeItem(LOCAL_STORAGE_KEY_REWARD_PREFIX + key),
+    removeMigratedItem(LOCAL_STORAGE_KEY_REWARD_PREFIX + key),
   );
 }
 
 /** Removes MinerWars sheet and caches, including legacy pre-rename keys. */
 export function clearMinerWarsCacheEntries(): void {
-  localStorage.removeItem(LOCAL_STORAGE_KEY_REWARD_PREFIX + "minerwars");
-  localStorage.removeItem(LOCAL_STORAGE_KEY_MINERWARS_COMPARISON);
+  removeMigratedItem(LOCAL_STORAGE_KEY_REWARD_PREFIX + "minerwars");
+  removeMigratedItem(LOCAL_STORAGE_KEY_MINERWARS_COMPARISON);
   localStorage.removeItem(LOCAL_STORAGE_KEY_MINERWARS_CYCLES);
   localStorage.removeItem(LOCAL_STORAGE_KEY_MINERWARS_SIMULATION_INPUTS);
-  localStorage.removeItem(LOCAL_STORAGE_KEY_MINERWARS_CLAN_PERFORMANCE);
+  removeMigratedItem(LOCAL_STORAGE_KEY_MINERWARS_CLAN_PERFORMANCE);
+  removeMigratedItem(LOCAL_STORAGE_KEY_MINERWARS_ROUND_PARTICIPANTS);
+  removeMigratedItem(LOCAL_STORAGE_KEY_MINERWARS_ROUNDS_BY_CYCLE);
+  removeMigratedItem(LOCAL_STORAGE_KEY_MINERWARS_REWARDS_BY_USER);
   localStorage.removeItem("rt_mw_comparison_v1");
   localStorage.removeItem("rt_mw_cycles_v1");
   localStorage.removeItem("rt_mw_day_gate_v1");
+  localStorage.removeItem("rt_mw_sim_inputs_v1");
 }
 
 /** Drops the shared price cache so the next pricing pass looks every price up again. */
 export function clearPriceCache(): void {
-  localStorage.removeItem(LOCAL_STORAGE_KEY_PRICE_CACHE);
+  removeMigratedItem(LOCAL_STORAGE_KEY_PRICE_CACHE);
 }
 
 /** Removes the cached wallet-transaction sheets, whose rows carry the prices to look up again. */
 export function clearWalletTransactionCacheEntries(): void {
   WALLET_TRANSACTION_KEYS.forEach((key) =>
-    localStorage.removeItem(LOCAL_STORAGE_KEY_REWARD_PREFIX + key),
+    removeMigratedItem(LOCAL_STORAGE_KEY_REWARD_PREFIX + key),
   );
 }
 
 export function clearAllCacheEntries(): void {
   clearRecordsCacheEntries();
   clearMinerWarsCacheEntries();
-  localStorage.removeItem(LOCAL_STORAGE_KEY_MINERWARS_ROUND_PARTICIPANTS);
 }
 
 /**
@@ -128,7 +138,7 @@ export function persistPriceCache(key: RewardKey, records: RewardRecord[]): void
   if (!WALLET_TRANSACTION_KEYS.has(key) || !records.length) return;
   try {
     const store = parseJsonSafe<Record<string, PriceCacheValue>>(
-      localStorage.getItem(LOCAL_STORAGE_KEY_PRICE_CACHE),
+      getIdbItem(LOCAL_STORAGE_KEY_PRICE_CACHE),
       {},
     );
 
@@ -161,7 +171,7 @@ export function persistPriceCache(key: RewardKey, records: RewardRecord[]): void
       }
     }
 
-    localStorage.setItem(LOCAL_STORAGE_KEY_PRICE_CACHE, JSON.stringify(store));
+    setIdbItem(LOCAL_STORAGE_KEY_PRICE_CACHE, JSON.stringify(store));
     // eslint-disable-next-line no-empty
   } catch {}
 }
