@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { loadCacheEntry } from "@/lib/reward-cache";
+import { useIdbHydrated } from "@/hooks/use-idb-hydrated";
 import { userHasMinerWarsHistory } from "@/features/minerwars/utils/comparison";
 import type { CacheEntry, CacheState, RewardKey } from "@/types/rewards";
 import type { Currency, TabDef } from "@/features/records/types";
@@ -25,8 +26,10 @@ export function useVisibleTabs(
   sharedData: SharedData,
 ): TabDef[] {
   const isSharedContext = sharedData !== null && sharedData !== undefined;
+  const idbHydrated = useIdbHydrated();
   return useMemo(() => {
     void cacheVersion;
+    void idbHydrated;
     const baseTabs = userHasMinerWarsHistory()
       ? ALL_TABS
       : ALL_TABS.filter((tab) => tab.key !== "minerwars");
@@ -40,7 +43,7 @@ export function useVisibleTabs(
     );
 
     return filtered.length > 0 ? filtered : baseTabs;
-  }, [cacheVersion, isFetching, isSharedContext, sharedData]);
+  }, [cacheVersion, isFetching, isSharedContext, sharedData, idbHydrated]);
 }
 
 /**
@@ -53,8 +56,10 @@ export function useRecordsViewInfo(
   cacheVersion: number,
   sharedData: SharedData,
 ): RecordsViewInfo {
+  const idbHydrated = useIdbHydrated();
   return useMemo(() => {
     void cacheVersion;
+    void idbHydrated;
     if (!enabled) return EMPTY_INFO;
     const entry = readEntry(sharedData, activeKey);
     if (!entry?.records?.length) return EMPTY_INFO;
@@ -69,7 +74,7 @@ export function useRecordsViewInfo(
       if (Number(record.rewardInFiat ?? 0) !== 0) hasFiat = true;
     }
     return { currencies: [...currencies], hasUsd, hasFiat };
-  }, [activeKey, enabled, cacheVersion, sharedData]);
+  }, [activeKey, enabled, cacheVersion, sharedData, idbHydrated]);
 }
 
 /**
@@ -82,8 +87,10 @@ export function useHasTrendsData(
   cacheVersion: number,
   sharedData: SharedData,
 ) {
+  const idbHydrated = useIdbHydrated();
   return useMemo(() => {
     void cacheVersion;
+    void idbHydrated;
     if (activeKey === "minerwars") {
       if (currency === "BTC") return false;
       const entry = readEntry(sharedData, "minerwars");
@@ -95,17 +102,19 @@ export function useHasTrendsData(
     const entry = readEntry(sharedData, "solo-mining");
     if (!entry?.records?.length) return false;
     return (entry.records as Record<string, unknown>[]).some((record) => record.satsPerTh != null);
-  }, [activeKey, currency, cacheVersion, sharedData]);
+  }, [activeKey, currency, cacheVersion, sharedData, idbHydrated]);
 }
 
 /**
  * Tabs holding unseen entries; purchases and upgrades are summed, and shared profiles never flag.
  */
 export function useTabsWithNew(cacheVersion: number, sharedData: SharedData) {
+  const idbHydrated = useIdbHydrated();
   return useMemo(() => {
     const flagged = new Set<RewardKey>();
     if (sharedData) return flagged;
     void cacheVersion;
+    void idbHydrated;
     for (const tab of ALL_TABS) {
       const count =
         tab.key === "purchases"
@@ -115,7 +124,7 @@ export function useTabsWithNew(cacheVersion: number, sharedData: SharedData) {
       if (count > 0) flagged.add(tab.key);
     }
     return flagged;
-  }, [cacheVersion, sharedData]);
+  }, [cacheVersion, sharedData, idbHydrated]);
 }
 
 export function useHasActiveData(
@@ -124,8 +133,10 @@ export function useHasActiveData(
   cacheVersion: number,
   sharedData: SharedData,
 ) {
+  const idbHydrated = useIdbHydrated();
   return useMemo(() => {
     void cacheVersion;
+    void idbHydrated;
     if (isPurchaseTab) {
       return (
         hasRecords(readEntry(sharedData, "purchases")) ||
@@ -133,5 +144,5 @@ export function useHasActiveData(
       );
     }
     return hasRecords(readEntry(sharedData, activeKey));
-  }, [activeKey, cacheVersion, isPurchaseTab, sharedData]);
+  }, [activeKey, cacheVersion, isPurchaseTab, sharedData, idbHydrated]);
 }
