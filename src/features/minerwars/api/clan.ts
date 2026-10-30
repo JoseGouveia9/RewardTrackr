@@ -4,20 +4,15 @@ import { API } from "./base";
 
 /** Used to skip/invalidate per-clan caches that belong to a previous clan. */
 export async function getCurrentClanId(headers: Record<string, string>): Promise<number | null> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 15_000);
   try {
-    const response = await fetch(`${API}/api/nft-game/clan/get-my`, {
+    const json = await postJson<{ data?: { id?: number } | null }>(
+      `${API}/api/nft-game/clan/get-my`,
       headers,
-      signal: controller.signal,
-    });
-    if (!response.ok) return null;
-    const json = (await response.json()) as { data?: { id?: number } | null };
+      {},
+    );
     return json.data?.id ?? null;
   } catch {
     return null;
-  } finally {
-    clearTimeout(timeout);
   }
 }
 
