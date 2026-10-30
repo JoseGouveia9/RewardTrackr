@@ -1,6 +1,7 @@
 import { postJson } from "@/lib/http";
 import { mapWithConcurrency } from "@/lib/concurrency";
 import { toDateString } from "../types";
+import { loadRoundParticipants, persistRoundParticipants } from "../stores/cache";
 import { API } from "./base";
 
 type ClanDailyEarner = {
@@ -143,13 +144,19 @@ const ROUND_PARTICIPANTS_PAGE_CONCURRENCY = 8;
 
 /**
  * Only members in a round's own leaderboard (score > 0) share its reward. The endpoint has no
- * clan filter and spans all clans, so pages after the first are fetched in parallel.
+ * clan filter and spans all clans, so pages after the first are fetched in parallel, but only
+ * the requesting clan's placements are kept and persisted (a resolved round never changes).
  */
 export async function getRoundClanParticipants(
   headers: Record<string, string>,
   roundId: number,
   clanId: number,
 ): Promise<Map<number, number>> {
+  const cached = loadRoundParticipants(roundId, clanId);
+  if (cached) {
+    return new Map(cached.map((entry) => [entry.userId, entry.score]));
+  }
+
   const limit = 50;
   const scoreByUser = new Map<number, number>();
 
@@ -198,6 +205,11 @@ export async function getRoundClanParticipants(
     });
   }
 
+  persistRoundParticipants(
+    roundId,
+    clanId,
+    [...scoreByUser].map(([userId, score]) => ({ userId, score })),
+  );
   return scoreByUser;
 }
 

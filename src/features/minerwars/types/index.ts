@@ -112,3 +112,28 @@ export function cycleEndFromStart(cycleStart: string): string {
 export function toDateString(iso: string): string {
   return iso.slice(0, 10);
 }
+
+/** A round of a league's cycle, as returned by round/find-by-cycleId. */
+export type MinerWarsRoundRow = {
+  id: number;
+  power: number;
+  multiplier: number;
+  active: boolean;
+  startedAt: string | null;
+  endedAt: string | null;
+  winnerClanId: number | null;
+};
+
+/** One user's placement in a resolved round's leaderboard (round/user-leaderboard), scoped to a single clan. */
+export type RoundParticipantEntry = { userId: number; score: number };
+
+/** A trimmed rewards-by-user row (round/cycle identity only, not the full API payload). */
+export type MinerWarsRewardRow = {
+  roundId: number;
+  blockNumber: number;
+  multiplier: number;
+  leagueId: number;
+  clanId: number;
+  endedAt: string;
+  cycleId: number;
+};

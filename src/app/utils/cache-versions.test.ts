@@ -6,7 +6,7 @@ vi.mock("@/features/minerwars/utils/comparison", () => ({ invalidateMinerWarsCac
 
 const CURRENT_VERSIONS = {
   rt_records_version: "4",
-  rt_minerwars_version: "4",
+  rt_minerwars_version: "5",
 };
 
 function stubLocalStorage(initial: Record<string, string>) {

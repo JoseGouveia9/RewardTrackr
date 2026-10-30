@@ -1,14 +1,37 @@
+import { getIdbItem, migrateLegacyKeyToIdb, setIdbItem } from "@/lib/idb-kv";
 import {
   LOCAL_STORAGE_KEY_MINERWARS_CLAN_PERFORMANCE,
   LOCAL_STORAGE_KEY_MINERWARS_COMPARISON,
   LOCAL_STORAGE_KEY_MINERWARS_CYCLES,
   LOCAL_STORAGE_KEY_MINERWARS_HISTORICAL_PRICES,
+  LOCAL_STORAGE_KEY_MINERWARS_REWARDS_BY_USER,
   LOCAL_STORAGE_KEY_MINERWARS_ROUND_PARTICIPANTS,
+  LOCAL_STORAGE_KEY_MINERWARS_ROUNDS_BY_CYCLE,
   LOCAL_STORAGE_KEY_REWARD_PREFIX,
 } from "@/lib/storage-keys";
-import type { CycleInfo, CycleStatus, MinerWarsComparison } from "../types";
+import type {
+  CycleInfo,
+  CycleStatus,
+  MinerWarsComparison,
+  MinerWarsRewardRow,
+  MinerWarsRoundRow,
+  RoundParticipantEntry,
+} from "../types";
 import type { ClanPerformance } from "../types/clan-types";
 import { addUtcDays } from "../utils/date-range";
+
+// These grow with the user's cycle/round history, so they're IndexedDB-backed instead of
+// localStorage (whose ~5MB-per-origin quota they can otherwise exhaust on their own).
+for (const key of [
+  LOCAL_STORAGE_KEY_MINERWARS_COMPARISON,
+  LOCAL_STORAGE_KEY_MINERWARS_CLAN_PERFORMANCE,
+  LOCAL_STORAGE_KEY_MINERWARS_ROUND_PARTICIPANTS,
+  LOCAL_STORAGE_KEY_MINERWARS_ROUNDS_BY_CYCLE,
+  LOCAL_STORAGE_KEY_MINERWARS_REWARDS_BY_USER,
+  LOCAL_STORAGE_KEY_MINERWARS_HISTORICAL_PRICES,
+]) {
+  void migrateLegacyKeyToIdb(key);
+}
 
 type CyclesStoreEntry = { data: CycleInfo[]; ts: number };
 
@@ -27,10 +50,7 @@ function parseObjectStore(raw: string | null): Record<string, unknown> {
 
 /** Fallback after a failed write (typically quota): replaces the store with just this entry. */
 function persistSingleEntryStore(key: string, entryKey: string, value: unknown): void {
-  try {
-    localStorage.setItem(key, JSON.stringify({ [entryKey]: value }));
-    // eslint-disable-next-line no-empty
-  } catch {}
+  setIdbItem(key, JSON.stringify({ [entryKey]: value }));
 }
 
 export function loadPersistedCycles(): CyclesStoreEntry | null {
@@ -61,7 +81,7 @@ export type HistoricalPriceEntry = { btcUsd: number; gmtUsd: number };
 export function loadHistoricalPrices(dates: string[]): Map<string, HistoricalPriceEntry> {
   const result = new Map<string, HistoricalPriceEntry>();
   try {
-    const raw = localStorage.getItem(LOCAL_STORAGE_KEY_MINERWARS_HISTORICAL_PRICES);
+    const raw = getIdbItem(LOCAL_STORAGE_KEY_MINERWARS_HISTORICAL_PRICES);
     if (!raw) return result;
     const store = JSON.parse(raw) as Record<string, HistoricalPriceEntry>;
     for (const date of dates) {
@@ -78,12 +98,12 @@ export function loadHistoricalPrices(dates: string[]): Map<string, HistoricalPri
 export function persistHistoricalPrices(prices: Map<string, HistoricalPriceEntry>): void {
   if (prices.size === 0) return;
   try {
-    const raw = localStorage.getItem(LOCAL_STORAGE_KEY_MINERWARS_HISTORICAL_PRICES);
+    const raw = getIdbItem(LOCAL_STORAGE_KEY_MINERWARS_HISTORICAL_PRICES);
     const store = raw ? (JSON.parse(raw) as Record<string, HistoricalPriceEntry>) : {};
     for (const [date, price] of prices) {
       store[date] = price;
     }
-    localStorage.setItem(LOCAL_STORAGE_KEY_MINERWARS_HISTORICAL_PRICES, JSON.stringify(store));
+    setIdbItem(LOCAL_STORAGE_KEY_MINERWARS_HISTORICAL_PRICES, JSON.stringify(store));
     // eslint-disable-next-line no-empty
   } catch {}
 }
@@ -93,7 +113,7 @@ export function loadPersistedComparison(
   cycleId: number,
 ): { data: MinerWarsComparison; ts: number } | null {
   try {
-    const raw = localStorage.getItem(LOCAL_STORAGE_KEY_MINERWARS_COMPARISON);
+    const raw = getIdbItem(LOCAL_STORAGE_KEY_MINERWARS_COMPARISON);
     if (!raw) return null;
     const store = JSON.parse(raw) as Record<string, unknown>;
     const entry = store[String(cycleId)] as
@@ -113,7 +133,7 @@ export function loadPersistedComparison(
     if (typeof legacy.cycleId === "number" && typeof legacy.cycleStart === "string") {
       const migrated = { data: legacy, ts: Date.now() };
       store[String(cycleId)] = migrated;
-      localStorage.setItem(LOCAL_STORAGE_KEY_MINERWARS_COMPARISON, JSON.stringify(store));
+      setIdbItem(LOCAL_STORAGE_KEY_MINERWARS_COMPARISON, JSON.stringify(store));
       return migrated;
     }
 
@@ -128,9 +148,9 @@ export function persistComparison(data: MinerWarsComparison): void {
   const cycleKey = String(data.cycleId);
   const entry = { data, ts: Date.now() };
   try {
-    const store = parseObjectStore(localStorage.getItem(LOCAL_STORAGE_KEY_MINERWARS_COMPARISON));
+    const store = parseObjectStore(getIdbItem(LOCAL_STORAGE_KEY_MINERWARS_COMPARISON));
     store[cycleKey] = entry;
-    localStorage.setItem(LOCAL_STORAGE_KEY_MINERWARS_COMPARISON, JSON.stringify(store));
+    setIdbItem(LOCAL_STORAGE_KEY_MINERWARS_COMPARISON, JSON.stringify(store));
   } catch {
     persistSingleEntryStore(LOCAL_STORAGE_KEY_MINERWARS_COMPARISON, cycleKey, entry);
   }
@@ -138,7 +158,7 @@ export function persistComparison(data: MinerWarsComparison): void {
 
 function loadRewardCacheRecords(key: string): Array<Record<string, unknown>> | null {
   try {
-    const raw = localStorage.getItem(LOCAL_STORAGE_KEY_REWARD_PREFIX + key);
+    const raw = getIdbItem(LOCAL_STORAGE_KEY_REWARD_PREFIX + key);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as { records?: Array<Record<string, unknown>> };
     return Array.isArray(parsed.records) ? parsed.records : null;
@@ -281,18 +301,18 @@ export function resolveCycleStatus(cycleEnd: string, today: string): CycleStatus
 
 export function deletePersistedComparison(cycleId: number): void {
   try {
-    const raw = localStorage.getItem(LOCAL_STORAGE_KEY_MINERWARS_COMPARISON);
+    const raw = getIdbItem(LOCAL_STORAGE_KEY_MINERWARS_COMPARISON);
     if (!raw) return;
     const store = parseObjectStore(raw);
     delete store[String(cycleId)];
-    localStorage.setItem(LOCAL_STORAGE_KEY_MINERWARS_COMPARISON, JSON.stringify(store));
+    setIdbItem(LOCAL_STORAGE_KEY_MINERWARS_COMPARISON, JSON.stringify(store));
     // eslint-disable-next-line no-empty
   } catch {}
 }
 
 export function loadPersistedClanPerformance(cycleId: number): ClanPerformance | null {
   try {
-    const raw = localStorage.getItem(LOCAL_STORAGE_KEY_MINERWARS_CLAN_PERFORMANCE);
+    const raw = getIdbItem(LOCAL_STORAGE_KEY_MINERWARS_CLAN_PERFORMANCE);
     if (!raw) return null;
     const store = JSON.parse(raw) as Record<string, { data?: ClanPerformance }>;
     const entry = store[String(cycleId)];
@@ -307,11 +327,9 @@ export function persistClanPerformance(cycleId: number, data: ClanPerformance): 
   const cycleKey = String(cycleId);
   const entry = { data };
   try {
-    const store = parseObjectStore(
-      localStorage.getItem(LOCAL_STORAGE_KEY_MINERWARS_CLAN_PERFORMANCE),
-    );
+    const store = parseObjectStore(getIdbItem(LOCAL_STORAGE_KEY_MINERWARS_CLAN_PERFORMANCE));
     store[cycleKey] = entry;
-    localStorage.setItem(LOCAL_STORAGE_KEY_MINERWARS_CLAN_PERFORMANCE, JSON.stringify(store));
+    setIdbItem(LOCAL_STORAGE_KEY_MINERWARS_CLAN_PERFORMANCE, JSON.stringify(store));
   } catch {
     persistSingleEntryStore(LOCAL_STORAGE_KEY_MINERWARS_CLAN_PERFORMANCE, cycleKey, entry);
   }
@@ -320,7 +338,7 @@ export function persistClanPerformance(cycleId: number, data: ClanPerformance): 
 /** Drops persisted entries belonging to any clan other than the current one. */
 export function clearStalePersistedClanPerformance(currentClanId: number): void {
   try {
-    const raw = localStorage.getItem(LOCAL_STORAGE_KEY_MINERWARS_CLAN_PERFORMANCE);
+    const raw = getIdbItem(LOCAL_STORAGE_KEY_MINERWARS_CLAN_PERFORMANCE);
     if (!raw) return;
     const store = JSON.parse(raw) as Record<string, { data?: ClanPerformance }>;
     let changed = false;
@@ -330,30 +348,94 @@ export function clearStalePersistedClanPerformance(currentClanId: number): void 
         changed = true;
       }
     }
-    if (changed)
-      localStorage.setItem(LOCAL_STORAGE_KEY_MINERWARS_CLAN_PERFORMANCE, JSON.stringify(store));
+    if (changed) setIdbItem(LOCAL_STORAGE_KEY_MINERWARS_CLAN_PERFORMANCE, JSON.stringify(store));
     // eslint-disable-next-line no-empty
   } catch {}
 }
 
-/** A resolved round never changes, so its participants are cached indefinitely. */
-export function loadRoundParticipants(roundId: number): number[] | null {
+/** A resolved round never changes, so a clan's placements in it are cached indefinitely. */
+export function loadRoundParticipants(
+  roundId: number,
+  clanId: number,
+): RoundParticipantEntry[] | null {
   try {
-    const raw = localStorage.getItem(LOCAL_STORAGE_KEY_MINERWARS_ROUND_PARTICIPANTS);
+    const raw = getIdbItem(LOCAL_STORAGE_KEY_MINERWARS_ROUND_PARTICIPANTS);
     if (!raw) return null;
-    const store = JSON.parse(raw) as Record<string, number[]>;
-    return store[String(roundId)] ?? null;
+    const store = JSON.parse(raw) as Record<string, RoundParticipantEntry[]>;
+    return store[`${roundId}:${clanId}`] ?? null;
   } catch {
     return null;
   }
 }
 
-export function persistRoundParticipants(roundId: number, userIds: number[]): void {
+export function persistRoundParticipants(
+  roundId: number,
+  clanId: number,
+  participants: RoundParticipantEntry[],
+): void {
   try {
-    const raw = localStorage.getItem(LOCAL_STORAGE_KEY_MINERWARS_ROUND_PARTICIPANTS);
-    const store: Record<string, number[]> = raw ? JSON.parse(raw) : {};
-    store[String(roundId)] = userIds;
-    localStorage.setItem(LOCAL_STORAGE_KEY_MINERWARS_ROUND_PARTICIPANTS, JSON.stringify(store));
-    // eslint-disable-next-line no-empty
-  } catch {}
+    const raw = getIdbItem(LOCAL_STORAGE_KEY_MINERWARS_ROUND_PARTICIPANTS);
+    const store: Record<string, RoundParticipantEntry[]> = raw ? JSON.parse(raw) : {};
+    store[`${roundId}:${clanId}`] = participants;
+    setIdbItem(LOCAL_STORAGE_KEY_MINERWARS_ROUND_PARTICIPANTS, JSON.stringify(store));
+  } catch {
+    // Best-effort cache; a failed write just means the next call re-fetches.
+  }
+}
+
+export type RoundsByCycleEntry = {
+  rows: MinerWarsRoundRow[];
+  total: number;
+  hasActiveRound: boolean;
+};
+
+/** A completed cycle's rounds never change; an in-progress one always needs a freshness check. */
+export function loadRoundsByCycle(cycleId: number, leagueId: number): RoundsByCycleEntry | null {
+  try {
+    const raw = getIdbItem(LOCAL_STORAGE_KEY_MINERWARS_ROUNDS_BY_CYCLE);
+    if (!raw) return null;
+    const store = JSON.parse(raw) as Record<string, RoundsByCycleEntry>;
+    return store[`${cycleId}:${leagueId}`] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export function persistRoundsByCycle(
+  cycleId: number,
+  leagueId: number,
+  rows: MinerWarsRoundRow[],
+  total: number,
+): void {
+  const entryKey = `${cycleId}:${leagueId}`;
+  const entry: RoundsByCycleEntry = { rows, total, hasActiveRound: rows.some((row) => row.active) };
+  try {
+    const store = parseObjectStore(getIdbItem(LOCAL_STORAGE_KEY_MINERWARS_ROUNDS_BY_CYCLE));
+    store[entryKey] = entry;
+    setIdbItem(LOCAL_STORAGE_KEY_MINERWARS_ROUNDS_BY_CYCLE, JSON.stringify(store));
+  } catch {
+    persistSingleEntryStore(LOCAL_STORAGE_KEY_MINERWARS_ROUNDS_BY_CYCLE, entryKey, entry);
+  }
+}
+
+export type RewardsByUserRow = MinerWarsRewardRow;
+
+/** The user's full rewards-by-user history, newest first; merged with new rows on each refresh. */
+export function loadRewardsByUserCache(): RewardsByUserRow[] | null {
+  try {
+    const raw = getIdbItem(LOCAL_STORAGE_KEY_MINERWARS_REWARDS_BY_USER);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { rows?: unknown };
+    return Array.isArray(parsed.rows) ? (parsed.rows as RewardsByUserRow[]) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function persistRewardsByUserCache(rows: RewardsByUserRow[]): void {
+  try {
+    setIdbItem(LOCAL_STORAGE_KEY_MINERWARS_REWARDS_BY_USER, JSON.stringify({ rows }));
+  } catch {
+    // Best-effort cache; a failed write just means the next call re-fetches.
+  }
 }

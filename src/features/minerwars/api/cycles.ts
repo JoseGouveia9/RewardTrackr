@@ -1,21 +1,26 @@
 import { postJson } from "@/lib/http";
-import { getCycleStartTuesdayUTC, cycleEndFromStart, type CycleInfo } from "../types";
-import { resolveCycleStatus } from "../stores/cache";
+import {
+  getCycleStartTuesdayUTC,
+  cycleEndFromStart,
+  type CycleInfo,
+  type MinerWarsRewardRow,
+  type MinerWarsRoundRow,
+} from "../types";
+import {
+  loadRewardsByUserCache,
+  loadRoundsByCycle,
+  persistRewardsByUserCache,
+  persistRoundsByCycle,
+  resolveCycleStatus,
+  type RewardsByUserRow,
+} from "../stores/cache";
 import { API } from "./base";
 
 const MULTIPLIERS = [1, 2, 4, 8, 16, 32, 64, 128, 256];
 
-export type RoundRow = {
-  roundId: number;
-  blockNumber: number;
-  multiplier: number;
-  leagueId: number;
-  clanId: number;
-  endedAt: string;
-  cycleId: number;
-};
+export type RoundRow = MinerWarsRewardRow;
 
-type RewardsByUserApiRow = Record<string, unknown>;
+type RewardsByUserApiRow = RewardsByUserRow;
 
 let rewardsByUserSnapshot: {
   auth: string;
@@ -24,18 +29,27 @@ let rewardsByUserSnapshot: {
 } | null = null;
 const REWARDS_BY_USER_SNAPSHOT_TIME_TO_LIVE = 30 * 1000;
 
-type AllRoundsInCycleRow = {
-  id: number;
-  power: number;
-  multiplier: number;
-  active: boolean;
-  startedAt: string | null;
-  endedAt: string | null;
-  winnerClanId: number | null;
-};
+type AllRoundsInCycleRow = MinerWarsRoundRow;
 const allRoundsInCycleCache = new Map<string, { data: AllRoundsInCycleRow[]; ts: number }>();
 const allRoundsInCycleInFlight = new Map<string, Promise<AllRoundsInCycleRow[]>>();
 const ALL_ROUNDS_IN_CYCLE_TIME_TO_LIVE = 30 * 1000;
+
+/** Trims a raw rewards-by-user API row down to the fields cycle/round discovery needs. */
+function toRewardRow(row: Record<string, unknown>): RoundRow {
+  return {
+    roundId: row.roundId as number,
+    blockNumber: row.blockNumber as number,
+    multiplier: row.multiplier as number,
+    leagueId: row.leagueId as number,
+    clanId: row.clanId as number,
+    endedAt: row.endedAt as string,
+    cycleId: row.cycleId as number,
+  };
+}
+
+function rewardsByUserRoundId(row: RewardsByUserApiRow): number | null {
+  return typeof row.roundId === "number" ? row.roundId : null;
+}
 
 /**
  * Short-lived (30s) snapshot saved by fetchAllCyclesFromApi, so the follow-up comparison
@@ -59,21 +73,9 @@ export async function getCycleRounds(
 ): Promise<{ cycleId: number | null; cycleStartDate: string | null; rounds: RoundRow[] }> {
   const snapshotRows = readRewardsByUserSnapshot(headers);
   if (snapshotRows && snapshotRows.length > 0) {
-    const resolvedId = targetCycleId ?? (snapshotRows[0]?.cycleId as number | null) ?? null;
+    const resolvedId = targetCycleId ?? snapshotRows[0]?.cycleId ?? null;
     if (resolvedId != null) {
-      const rounds: RoundRow[] = [];
-      for (const row of snapshotRows) {
-        if ((row.cycleId as number) !== resolvedId) continue;
-        rounds.push({
-          roundId: row.roundId as number,
-          blockNumber: row.blockNumber as number,
-          multiplier: row.multiplier as number,
-          leagueId: row.leagueId as number,
-          clanId: row.clanId as number,
-          endedAt: row.endedAt as string,
-          cycleId: row.cycleId as number,
-        });
-      }
+      const rounds = snapshotRows.filter((row) => row.cycleId === resolvedId);
       if (rounds.length > 0) {
         const cycleStartDate = await resolveCycleStartFromRounds(headers, resolvedId, rounds);
         return { cycleId: resolvedId, cycleStartDate, rounds };
@@ -149,14 +151,21 @@ async function resolveCycleStartFromRounds(
 
 /**
  * Cycle start is the median endedAt's Tuesday: robust against rounds that spill into a
- * neighboring week. Also stores the fetched rows as the rewards-by-user snapshot.
+ * neighboring week. Merges with the persisted rewards-by-user cache, paging only until a page
+ * yields no round the cache doesn't already have (resolved rounds never change), and also
+ * stores the merged rows as the in-memory rewards-by-user snapshot.
  */
 export async function fetchAllCyclesFromApi(headers: Record<string, string>): Promise<CycleInfo[]> {
   const limit = 40;
   let skip = 0;
-  const endedAtByCycle = new Map<number, string[]>();
-  const allRows: RewardsByUserApiRow[] = [];
   const TODAY = new Date().toISOString().slice(0, 10);
+
+  const persistedRows = loadRewardsByUserCache() ?? [];
+  const knownRoundIds = new Set(
+    persistedRows.map(rewardsByUserRoundId).filter((id): id is number => id !== null),
+  );
+  const incrementalMode = knownRoundIds.size > 0;
+  const freshRows: RewardsByUserApiRow[] = [];
 
   while (true) {
     const response = await postJson<{ data: { array: Array<Record<string, unknown>> } }>(
@@ -166,17 +175,31 @@ export async function fetchAllCyclesFromApi(headers: Record<string, string>): Pr
     );
     const array = response.data.array ?? [];
     if (array.length === 0) break;
-    allRows.push(...array);
 
-    for (const row of array) {
-      const id = row.cycleId as number;
-      const list = endedAtByCycle.get(id) ?? [];
-      list.push(row.endedAt as string);
-      endedAtByCycle.set(id, list);
+    if (incrementalMode) {
+      const newRows = array.filter((row) => {
+        const id = row.roundId;
+        return typeof id !== "number" || !knownRoundIds.has(id);
+      });
+      freshRows.push(...newRows.map(toRewardRow));
+      if (newRows.length === 0) break;
+    } else {
+      freshRows.push(...array.map(toRewardRow));
     }
 
     if (array.length < limit) break;
     skip += limit;
+  }
+
+  const allRows = incrementalMode ? [...freshRows, ...persistedRows] : freshRows;
+  persistRewardsByUserCache(allRows);
+
+  const endedAtByCycle = new Map<number, string[]>();
+  for (const row of allRows) {
+    const id = row.cycleId as number;
+    const list = endedAtByCycle.get(id) ?? [];
+    list.push(row.endedAt as string);
+    endedAtByCycle.set(id, list);
   }
 
   const seen = new Map<number, CycleInfo>();
@@ -198,11 +221,53 @@ export async function fetchAllCyclesFromApi(headers: Record<string, string>): Pr
     rows: allRows,
     timestamp: Date.now(),
   };
-
   return [...seen.values()].sort((left, right) => right.cycleId - left.cycleId);
 }
 
-/** Every round of the league in the cycle, including those won by other clans. */
+/**
+ * Every round of the league in the cycle, including those won by other clans. A completed
+ * cycle's rounds never change, so once persisted with no active round, a single lightweight
+ * count probe confirms nothing new was added instead of re-paging the whole cycle.
+ */
+function toRoundRow(row: Record<string, unknown>): AllRoundsInCycleRow {
+  return {
+    id: row.id as number,
+    power: Number(row.power ?? 0),
+    multiplier: Number(row.multiplier ?? 0),
+    active: Boolean(row.active),
+    startedAt: (row.startedAt as string) ?? null,
+    endedAt: (row.endedAt as string) ?? null,
+    winnerClanId: (row.winnerClanId as number | null) ?? null,
+  };
+}
+
+/** Pages find-by-cycleId forward from `startSkip`, merging rows (by id) into `byId` until `total` is reached. */
+async function pageRoundsInto(
+  headers: Record<string, string>,
+  cycleId: number,
+  leagueId: number,
+  startSkip: number,
+  byId: Map<number, AllRoundsInCycleRow>,
+  total: number,
+): Promise<void> {
+  const limit = 50;
+  let skip = startSkip;
+  while (true) {
+    const response = await postJson<{
+      data: { count: number; array: Array<Record<string, unknown>> };
+    }>(`${API}/api/nft-game/round/find-by-cycleId`, headers, {
+      cycleId,
+      multipliers: MULTIPLIERS,
+      pagination: { limit, skip, count: 0 },
+      leagueId,
+    });
+    const array = response.data.array ?? [];
+    for (const row of array) byId.set(row.id as number, toRoundRow(row));
+    if (byId.size >= total || array.length < limit) break;
+    skip += limit;
+  }
+}
+
 export async function getAllRoundsInCycle(
   headers: Record<string, string>,
   cycleId: number,
@@ -211,43 +276,49 @@ export async function getAllRoundsInCycle(
   const key = `${headers.authorization ?? ""}:${cycleId}:${leagueId}`;
 
   const cached = allRoundsInCycleCache.get(key);
-  if (cached && Date.now() - cached.ts < ALL_ROUNDS_IN_CYCLE_TIME_TO_LIVE) return cached.data;
+  if (cached && Date.now() - cached.ts < ALL_ROUNDS_IN_CYCLE_TIME_TO_LIVE) {
+    return cached.data;
+  }
 
   const existing = allRoundsInCycleInFlight.get(key);
-  if (existing) return existing;
+  if (existing) {
+    return existing;
+  }
 
   const promise = (async (): Promise<AllRoundsInCycleRow[]> => {
-    const collected: AllRoundsInCycleRow[] = [];
-    const limit = 50;
-    let skip = 0;
-    let total: number | null = null;
+    const persisted = loadRoundsByCycle(cycleId, leagueId);
 
-    while (true) {
-      const response = await postJson<{
-        data: { count: number; array: Array<Record<string, unknown>> };
-      }>(`${API}/api/nft-game/round/find-by-cycleId`, headers, {
-        cycleId,
-        multipliers: MULTIPLIERS,
-        pagination: { limit, skip, count: 0 },
-        leagueId,
-      });
-      if (total === null) total = response.data.count;
-      const array = response.data.array ?? [];
-      for (const row of array) {
-        collected.push({
-          id: row.id as number,
-          power: Number(row.power ?? 0),
-          multiplier: Number(row.multiplier ?? 0),
-          active: Boolean(row.active),
-          startedAt: (row.startedAt as string) ?? null,
-          endedAt: (row.endedAt as string) ?? null,
-          winnerClanId: (row.winnerClanId as number | null) ?? null,
-        });
-      }
-      if (collected.length >= (total ?? 0) || array.length < limit) break;
-      skip += limit;
+    const probe = await postJson<{ data: { count: number } }>(
+      `${API}/api/nft-game/round/find-by-cycleId`,
+      headers,
+      { cycleId, multipliers: MULTIPLIERS, pagination: { limit: 1, skip: 0, count: 0 }, leagueId },
+    );
+    const total = probe.data.count;
+
+    if (persisted && !persisted.hasActiveRound && total === persisted.total) {
+      return persisted.rows;
     }
 
+    const limit = 50;
+    const byId = new Map<number, AllRoundsInCycleRow>(
+      (persisted?.rows ?? []).map((row) => [row.id, row]),
+    );
+
+    // Rounds are appended in order, so resume near the end of what's cached: this re-checks the
+    // last known page (catching an active round that has since resolved) plus any newly added
+    // rounds, instead of repaging the whole cycle.
+    const resumeSkip = persisted ? Math.max(0, persisted.rows.length - limit) : 0;
+    await pageRoundsInto(headers, cycleId, leagueId, resumeSkip, byId, total);
+
+    // The resume point assumes ascending order; if it didn't converge (e.g. different ordering),
+    // fall back to a full walk from the start so correctness never depends on that assumption.
+    if (byId.size < total) {
+      byId.clear();
+      await pageRoundsInto(headers, cycleId, leagueId, 0, byId, total);
+    }
+
+    const collected = [...byId.values()];
+    persistRoundsByCycle(cycleId, leagueId, collected, total);
     return collected;
   })();
 
