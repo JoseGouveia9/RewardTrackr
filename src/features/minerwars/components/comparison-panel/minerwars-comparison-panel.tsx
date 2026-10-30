@@ -63,8 +63,6 @@ export function MinerWarsComparisonPanel({
     extraFiatRate,
   });
 
-  const showSkeleton = loadingCycles || loading || isPrefetching;
-
   const selectedCycle = cycles.find((cycle) => cycle.cycleId === selectedCycleId);
 
   const [tab, setTab] = useState<"individual" | "clan">("individual");
@@ -72,14 +70,21 @@ export function MinerWarsComparisonPanel({
   useEffect(() => {
     if (clanNotAvailable && tab === "clan") setTab("individual");
   }, [clanNotAvailable, tab]);
+  // Enabled as soon as the cycle supports it (not gated on the active tab), so it loads in
+  // parallel with the individual view instead of only starting once the user switches tabs.
   const clanPerformance = useClanPerformance({
     cycleId: selectedCycleId,
     cycleStatus: selectedCycle?.status,
     cycleStart: data?.cycleStart,
     cycleEnd: data?.cycleEnd,
     clanMinerWarsSats: data?.clanMinerWarsSats,
-    enabled: tab === "clan",
+    enabled: !clanNotAvailable,
   });
+
+  // Covers both tabs so the skeleton doesn't disappear until individual AND clan are both ready,
+  // even if the user is viewing the other tab than the one that happened to finish first.
+  const showBothSkeletons =
+    loadingCycles || loading || isPrefetching || (!clanNotAvailable && clanPerformance.loading);
 
   // Always available (not just while viewing a live/pending cycle) so a newly started
   // live cycle can be discovered by refreshing from a completed one.
@@ -88,19 +93,15 @@ export function MinerWarsComparisonPanel({
   const refreshingSelectedView =
     loading || manualClanRefreshing || (tab === "clan" && clanPerformance.loading);
   const handleSelectedViewRefresh = useCallback(async () => {
-    if (tab === "clan" || clanPerformance.data != null) {
-      setManualClanRefreshing(true);
-      try {
-        await Promise.all([refresh(), clanPerformance.refresh()]);
-      } finally {
-        setManualClanRefreshing(false);
-      }
-      return;
+    setManualClanRefreshing(true);
+    try {
+      await Promise.all([refresh(), clanPerformance.refresh()]);
+    } finally {
+      setManualClanRefreshing(false);
     }
-    return refresh();
-  }, [clanPerformance, refresh, tab]);
+  }, [clanPerformance, refresh]);
 
-  const isBusy = showSkeleton || refreshingSelectedView;
+  const isBusy = showBothSkeletons || refreshingSelectedView;
   useEffect(() => {
     onBusyChange?.(isBusy);
   }, [isBusy, onBusyChange]);
@@ -167,7 +168,7 @@ export function MinerWarsComparisonPanel({
     onCurrencyChange(activeCurrencyOptions[nextIndex]!.key);
   }
 
-  if (error && !data && !showSkeleton) return null;
+  if (error && !data && !showBothSkeletons) return null;
 
   return (
     <div className="minerwars-panel">
@@ -244,7 +245,7 @@ export function MinerWarsComparisonPanel({
       {tab === "clan" ? (
         <MinerWarsClanView
           data={clanPerformance.data}
-          loading={showSkeleton || clanPerformance.loading || manualClanRefreshing}
+          loading={showBothSkeletons || manualClanRefreshing}
           error={clanPerformance.error}
           figures={{
             targetBtc: clanTargetBtc,
@@ -262,7 +263,7 @@ export function MinerWarsComparisonPanel({
           }}
           isLiveCycle={selectedCycle?.status === "in-progress"}
         />
-      ) : showSkeleton || !data ? (
+      ) : showBothSkeletons || !data ? (
         <IndividualSkeletonBody />
       ) : (
         <>

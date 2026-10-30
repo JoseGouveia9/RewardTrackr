@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { buildApiHeaders, decodeJwt } from "@/lib/http";
+import { idbReady } from "@/lib/idb-kv";
 import { LOCAL_STORAGE_KEY_SYNC_TOKEN } from "@/lib/storage-keys";
 import { resolveCycleStatus, persistCycles } from "@/features/minerwars/stores/cache";
 import { getCurrentClanId } from "@/features/minerwars/api/clan";
@@ -156,9 +157,19 @@ export function useMinerWarsComparison({
 
   useEffect(() => {
     if (selectedCycleId === null) return;
-    const cached = getCachedMinerWarsComparison(selectedCycleId);
-    void fetchComparison(selectedCycleId, cached === null);
-    return () => abortRef.current?.abort();
+    let cancelled = false;
+    setLoading(true);
+    // Wait for the IndexedDB mirror to hydrate so a cold read doesn't look like a cache miss
+    // and trigger an unwanted network refetch.
+    void idbReady.then(() => {
+      if (cancelled) return;
+      const cached = getCachedMinerWarsComparison(selectedCycleId);
+      void fetchComparison(selectedCycleId, cached === null);
+    });
+    return () => {
+      cancelled = true;
+      abortRef.current?.abort();
+    };
   }, [selectedCycleId, fetchComparison]);
 
   const refresh = useCallback(async () => {
