@@ -24,6 +24,19 @@ let rewardsByUserSnapshot: {
 } | null = null;
 const REWARDS_BY_USER_SNAPSHOT_TIME_TO_LIVE = 30 * 1000;
 
+type AllRoundsInCycleRow = {
+  id: number;
+  power: number;
+  multiplier: number;
+  active: boolean;
+  startedAt: string | null;
+  endedAt: string | null;
+  winnerClanId: number | null;
+};
+const allRoundsInCycleCache = new Map<string, { data: AllRoundsInCycleRow[]; ts: number }>();
+const allRoundsInCycleInFlight = new Map<string, Promise<AllRoundsInCycleRow[]>>();
+const ALL_ROUNDS_IN_CYCLE_TIME_TO_LIVE = 30 * 1000;
+
 /**
  * Short-lived (30s) snapshot saved by fetchAllCyclesFromApi, so the follow-up comparison
  * fetch reuses the rows instead of re-paging rewards-by-user. Scoped to the auth token.
@@ -195,44 +208,55 @@ export async function getAllRoundsInCycle(
   cycleId: number,
   leagueId: number,
 ) {
-  const collected: Array<{
-    id: number;
-    power: number;
-    multiplier: number;
-    active: boolean;
-    startedAt: string | null;
-    endedAt: string | null;
-    winnerClanId: number | null;
-  }> = [];
-  const limit = 50;
-  let skip = 0;
-  let total: number | null = null;
+  const key = `${headers.authorization ?? ""}:${cycleId}:${leagueId}`;
 
-  while (true) {
-    const response = await postJson<{
-      data: { count: number; array: Array<Record<string, unknown>> };
-    }>(`${API}/api/nft-game/round/find-by-cycleId`, headers, {
-      cycleId,
-      multipliers: MULTIPLIERS,
-      pagination: { limit, skip, count: 0 },
-      leagueId,
-    });
-    if (total === null) total = response.data.count;
-    const array = response.data.array ?? [];
-    for (const row of array) {
-      collected.push({
-        id: row.id as number,
-        power: Number(row.power ?? 0),
-        multiplier: Number(row.multiplier ?? 0),
-        active: Boolean(row.active),
-        startedAt: (row.startedAt as string) ?? null,
-        endedAt: (row.endedAt as string) ?? null,
-        winnerClanId: (row.winnerClanId as number | null) ?? null,
+  const cached = allRoundsInCycleCache.get(key);
+  if (cached && Date.now() - cached.ts < ALL_ROUNDS_IN_CYCLE_TIME_TO_LIVE) return cached.data;
+
+  const existing = allRoundsInCycleInFlight.get(key);
+  if (existing) return existing;
+
+  const promise = (async (): Promise<AllRoundsInCycleRow[]> => {
+    const collected: AllRoundsInCycleRow[] = [];
+    const limit = 50;
+    let skip = 0;
+    let total: number | null = null;
+
+    while (true) {
+      const response = await postJson<{
+        data: { count: number; array: Array<Record<string, unknown>> };
+      }>(`${API}/api/nft-game/round/find-by-cycleId`, headers, {
+        cycleId,
+        multipliers: MULTIPLIERS,
+        pagination: { limit, skip, count: 0 },
+        leagueId,
       });
+      if (total === null) total = response.data.count;
+      const array = response.data.array ?? [];
+      for (const row of array) {
+        collected.push({
+          id: row.id as number,
+          power: Number(row.power ?? 0),
+          multiplier: Number(row.multiplier ?? 0),
+          active: Boolean(row.active),
+          startedAt: (row.startedAt as string) ?? null,
+          endedAt: (row.endedAt as string) ?? null,
+          winnerClanId: (row.winnerClanId as number | null) ?? null,
+        });
+      }
+      if (collected.length >= (total ?? 0) || array.length < limit) break;
+      skip += limit;
     }
-    if (collected.length >= (total ?? 0) || array.length < limit) break;
-    skip += limit;
-  }
 
-  return collected;
+    return collected;
+  })();
+
+  allRoundsInCycleInFlight.set(key, promise);
+  try {
+    const data = await promise;
+    allRoundsInCycleCache.set(key, { data, ts: Date.now() });
+    return data;
+  } finally {
+    allRoundsInCycleInFlight.delete(key);
+  }
 }
