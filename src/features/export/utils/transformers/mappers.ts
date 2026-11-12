@@ -27,15 +27,11 @@ export function currencyFromWalletType(walletType: string | undefined): string {
 }
 
 /**
- * Solo mining: poolRewardInBtc is the gross reward computed server-side; c1/c2InBtc and
- * c1/c2MaintenanceInGmt are the real BTC/GMT maintenance actually deducted. energyEfficiency/
- * satsPerTh come from a separate per-NFT /details call (the /list record no longer has them).
+ * totalInBtc includes the bonus but already deducts BTC-paid maintenance. Preserve the gross
+ * pool and net payout independently, including server rounding. totalInGmt preserves the
+ * server's conversion. Both solo and MinerWars list endpoints use these payout fields.
  */
-export async function transformSoloMining(
-  raw: SoloMiningRawRecord,
-  fiatRate: number,
-  accessToken?: string,
-): Promise<MiningEnrichedRecord> {
+function transformMiningAmounts(raw: SoloMiningRawRecord | MinerWarsRawRecord, fiatRate: number) {
   const btcPrice = raw.incomeStatistic?.btcCourseInUsd ?? 0;
   const gmtPrice = raw.incomeStatistic?.gmtPrice ?? 0;
 
@@ -49,36 +45,86 @@ export async function transformSoloMining(
     rawMaintenanceBtc + (canConvertMaintenance ? (rawMaintenanceGmt * gmtPrice) / btcPrice : 0);
   const maintenanceUSD = rawMaintenanceBtc * btcPrice + rawMaintenanceGmt * gmtPrice;
 
-  const poolReward = raw.poolRewardInBtc ?? 0;
-  const reward = poolReward - maintenanceBtc;
+  const poolReward =
+    raw.totalInBtc != null && rawMaintenanceBtc === 0
+      ? raw.totalInBtc
+      : (raw.poolRewardInBtc ?? 0) + (raw.goBtcPayBonus ?? 0);
+  const reward =
+    raw.totalInBtc != null
+      ? raw.totalInBtc - (maintenanceBtc - rawMaintenanceBtc)
+      : poolReward - maintenanceBtc;
 
   const poolRewardUSD = poolReward * btcPrice;
+  const poolRewardGMT = raw.totalInGmt ?? usdToGmt(poolRewardUSD, gmtPrice);
   const rewardInUSD = reward * btcPrice;
 
-  let satsPerTh: number | undefined;
-  let energyEfficiency: number | undefined;
-  if (accessToken && typeof raw.nftIncomeStatisticId === "number") {
+  return {
+    poolReward,
+    poolRewardGMT,
+    poolRewardUSD,
+    poolRewardFiat: poolRewardUSD * fiatRate,
+    maintenance: maintenanceBtc,
+    maintenanceGMT,
+    maintenanceUSD,
+    maintenanceFiat: maintenanceUSD * fiatRate,
+    reward,
+    rewardGMT:
+      raw.totalInGmt != null ? poolRewardGMT - maintenanceGMT : usdToGmt(rewardInUSD, gmtPrice),
+    rewardInUSD,
+    rewardInFiat: rewardInUSD * fiatRate,
+    btcPriceAtTime: btcPrice > 0 ? btcPrice : undefined,
+    btcPriceGmt: btcPrice > 0 && gmtPrice > 0 ? btcPrice / gmtPrice : undefined,
+  };
+}
+
+/** Daily kWh / TH gives historical farm efficiency; details fill gaps in older records. */
+export async function transformSoloMining(
+  raw: SoloMiningRawRecord,
+  fiatRate: number,
+  accessToken?: string,
+): Promise<MiningEnrichedRecord> {
+  const amounts = transformMiningAmounts(raw, fiatRate);
+  const { poolReward } = amounts;
+  const totalPower = raw.totalPower ?? 0;
+  let satsPerTh = totalPower > 0 ? (poolReward * 1e8) / totalPower : undefined;
+  let energyEfficiency =
+    totalPower > 0 && raw.totalKwConsumed != null
+      ? (raw.totalKwConsumed * 1000) / (24 * totalPower)
+      : undefined;
+  if (
+    (energyEfficiency == null || satsPerTh == null) &&
+    accessToken &&
+    typeof raw.nftIncomeStatisticId === "number"
+  ) {
     try {
       const details = await fetchSoloMiningNftDetails(raw.nftIncomeStatisticId, accessToken);
-      const satsPerThValues: number[] = [];
-      const efficiencyValues: number[] = [];
+      let detailPower = 0;
+      let efficiencyPower = 0;
+      let weightedEfficiency = 0;
       for (const item of details) {
-        if (item.poolRewardInBtc != null && item.power != null && item.power > 0) {
-          satsPerThValues.push((item.poolRewardInBtc * 1e8) / item.power);
+        const power = item.power ?? 0;
+        if (power <= 0) continue;
+        detailPower += power;
+        const efficiency =
+          item.kwConsumed != null
+            ? (item.kwConsumed * 1000) / (24 * power)
+            : (item.nft?.energyEfficiency ?? 0);
+        if (efficiency > 0) {
+          weightedEfficiency += efficiency * power;
+          efficiencyPower += power;
         }
-        const ee = item.nft?.energyEfficiency;
-        if (ee != null && ee > 0) efficiencyValues.push(ee);
       }
-      if (satsPerThValues.length > 0) {
-        satsPerTh =
-          satsPerThValues.reduce((total, value) => total + value, 0) / satsPerThValues.length;
+      if (satsPerTh == null && detailPower > 0) {
+        satsPerTh = (poolReward * 1e8) / detailPower;
       }
-      if (efficiencyValues.length > 0) {
-        energyEfficiency =
-          efficiencyValues.reduce((total, value) => total + value, 0) / efficiencyValues.length;
+      if (energyEfficiency == null && efficiencyPower > 0) {
+        energyEfficiency = weightedEfficiency / efficiencyPower;
       }
-    } catch {
-      // best-effort
+    } catch (error) {
+      console.warn(
+        `[transformSoloMining] failed to fetch details for statistic ${raw.nftIncomeStatisticId}:`,
+        error instanceof Error ? error.message : String(error),
+      );
     }
   }
 
@@ -86,78 +132,32 @@ export async function transformSoloMining(
     createdAt: raw.createdAt,
     currency: "BTC",
     reinvestmentStatus: raw.reinvestmentStatus || null,
-    poolReward,
-    poolRewardGMT: usdToGmt(poolRewardUSD, gmtPrice),
-    poolRewardUSD,
-    poolRewardFiat: poolRewardUSD * fiatRate,
-    maintenance: maintenanceBtc,
-    maintenanceGMT,
-    maintenanceUSD,
-    maintenanceFiat: maintenanceUSD * fiatRate,
-    reward,
-    rewardGMT: usdToGmt(rewardInUSD, gmtPrice),
-    rewardInUSD,
-    rewardInFiat: rewardInUSD * fiatRate,
+    ...amounts,
     reinvested: raw.reinvestmentInPowerNftStatusExecuted === true,
-    totalPower: raw.totalPower ?? 0,
+    totalPower,
     discount: raw.totalDiscount ?? 0,
     energyEfficiency,
     satsPerTh,
-    btcPriceAtTime: btcPrice > 0 ? btcPrice : undefined,
-    btcPriceGmt: btcPrice > 0 && gmtPrice > 0 ? btcPrice / gmtPrice : undefined,
   };
 }
 
 /**
- * MinerWars: poolRewardInBtc is the gross reward computed server-side; c1/c2InBtc and
- * c1/c2MaintenanceInGmt are the real BTC/GMT maintenance actually deducted. There's no
- * MinerWars equivalent of nft-income/details, so energyEfficiency/satsPerTh stay undefined.
+ * MinerWars uses the same payout accounting as solo. Cycle consumption alone cannot determine
+ * W/TH without the effective mining duration, so energyEfficiency/satsPerTh stay undefined.
  */
 export function transformMinerWars(
   raw: MinerWarsRawRecord,
   fiatRate: number,
 ): MiningEnrichedRecord {
-  const btcPrice = raw.incomeStatistic?.btcCourseInUsd ?? 0;
-  const gmtPrice = raw.incomeStatistic?.gmtPrice ?? 0;
-
-  const rawMaintenanceBtc = (raw.c1InBtc ?? 0) + (raw.c2InBtc ?? 0);
-  const rawMaintenanceGmt = (raw.c1MaintenanceInGmt ?? 0) + (raw.c2MaintenanceInGmt ?? 0);
-
-  const canConvertMaintenance = gmtPrice > 0 && btcPrice > 0;
-  const maintenanceGMT =
-    rawMaintenanceGmt + (canConvertMaintenance ? (rawMaintenanceBtc * btcPrice) / gmtPrice : 0);
-  const maintenanceBtc =
-    rawMaintenanceBtc + (canConvertMaintenance ? (rawMaintenanceGmt * gmtPrice) / btcPrice : 0);
-  const maintenanceUSD = rawMaintenanceBtc * btcPrice + rawMaintenanceGmt * gmtPrice;
-
-  const poolReward = raw.poolRewardInBtc ?? 0;
-  const reward = poolReward - maintenanceBtc;
-
-  const poolRewardUSD = poolReward * btcPrice;
-  const rewardUSD = reward * btcPrice;
-
   return {
     createdAt: raw.createdAt,
     currency: "BTC",
     reinvestmentStatus: raw.reinvestmentStatus || null,
-    poolReward,
-    poolRewardGMT: usdToGmt(poolRewardUSD, gmtPrice),
-    poolRewardUSD,
-    poolRewardFiat: poolRewardUSD * fiatRate,
-    maintenance: maintenanceBtc,
-    maintenanceGMT,
-    maintenanceUSD,
-    maintenanceFiat: maintenanceUSD * fiatRate,
-    reward,
-    rewardGMT: usdToGmt(rewardUSD, gmtPrice),
-    rewardInUSD: rewardUSD,
-    rewardInFiat: rewardUSD * fiatRate,
+    ...transformMiningAmounts(raw, fiatRate),
     reinvested: raw.reinvestmentInPowerNftStatusExecuted === true,
     totalPower: raw.avgPower ?? 0,
     discount: raw.totalDiscount ?? 0,
     energyEfficiency: undefined,
-    btcPriceAtTime: btcPrice > 0 ? btcPrice : undefined,
-    btcPriceGmt: btcPrice > 0 && gmtPrice > 0 ? btcPrice / gmtPrice : undefined,
   };
 }
 

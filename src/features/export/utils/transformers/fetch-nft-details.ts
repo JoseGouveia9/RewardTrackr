@@ -4,8 +4,7 @@ import type { GoMiningApiResponse, SoloMiningNftDetailRecord } from "@/types/rew
 const DETAILS_PAGE_SIZE = 50;
 const MAX_DETAILS_PAGES = 20;
 
-// Per-NFT breakdown for a solo-mining day, used only for energyEfficiency/satsPerTh —
-// the day-level /list record no longer embeds this (replaced by this separate endpoint).
+// Used when a historical day's list record lacks farm statistics.
 export async function fetchSoloMiningNftDetails(
   nftIncomeStatisticId: number,
   accessToken: string,

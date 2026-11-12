@@ -141,16 +141,19 @@ export type CoinGeckoPriceCacheValue = CoinGeckoPriceResult | number | null;
 export interface SoloMiningNftDetailRecord {
   poolRewardInBtc?: number;
   power?: number;
+  kwConsumed?: number;
   nft?: { energyEfficiency?: number };
 }
 
 export interface SoloMiningRawRecord {
   createdAt: string;
   nftIncomeStatisticId?: number;
-  totalInBtc?: number;
+  totalInBtc?: number | null;
+  totalInGmt?: number | null;
   poolRewardInBtc?: number;
   goBtcPayBonus?: number;
   totalPower?: number;
+  totalKwConsumed?: number | null;
   c1InBtc?: number;
   c2InBtc?: number;
   c1MaintenanceInGmt?: number;
@@ -164,7 +167,10 @@ export interface SoloMiningRawRecord {
 export interface MinerWarsRawRecord {
   createdAt: string;
   nftGameIncomeStatisticId?: number;
+  totalInBtc?: number | null;
+  totalInGmt?: number | null;
   poolRewardInBtc?: number;
+  goBtcPayBonus?: number;
   avgPower?: number;
   c1InBtc?: number;
   c2InBtc?: number;
