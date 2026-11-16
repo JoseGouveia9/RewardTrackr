@@ -1,4 +1,4 @@
-import { buildDateRange, addUtcDays } from "./date-range";
+import { buildDateRange, addUtcDays, computeLeagueElapsedDays } from "./date-range";
 import { toDateString, type MinerWarsComparison } from "../types";
 import type { HistoricalPriceEntry } from "../stores/cache";
 import { fetchSatsPerTerahashForDates } from "../api/difficulty-adjustments";
@@ -170,7 +170,12 @@ export async function computeLiveComparison({
   const soloEquivSats = solo.soloEquivSats;
 
   const leagueEnergyEfficiency = leagueWeightedEnergyEfficiency ?? userEnergyEfficiency;
-  const elapsedMinerWarsDays = elapsedComparisonDates.filter((date) => !solodays.has(date)).length;
+  const elapsedMinerWarsDays =
+    computeLeagueElapsedDays(
+      completedRounds,
+      CYCLE_START,
+      buildDateRange(CYCLE_START, CYCLE_END).length,
+    ) ?? elapsedComparisonDates.length;
 
   const clanNamesByGroup = new Map<string, string | null>(
     groupData.map((group) => [groupKey(group.leagueId, group.clanId), group.clanName]),

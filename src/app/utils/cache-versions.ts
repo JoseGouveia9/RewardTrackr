@@ -14,7 +14,7 @@ import {
 } from "@/lib/storage-keys";
 
 const RECORDS_VERSION = 5;
-const MINERWARS_VERSION = 6;
+const MINERWARS_VERSION = 7;
 const PRICING_VERSION = 1;
 
 /** A never-set version key is only "nothing to reconcile" for users who never synced before. */
